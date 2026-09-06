@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#7c3aed" />
+  <title>DS Stream Support</title>
+  <meta name="description" content="Wpłaty od 50 PLN, panel twórcy, alerty OBS, cele i moderacja." />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <a class="brand" href="#home"><span>DS</span><b>Stream Support</b></a>
+      <nav>
+        <a href="#home">Start</a>
+        <a href="#creator">Wesprzyj</a>
+        <a href="#dashboard">Panel</a>
+      </nav>
+      <div class="authActions">
+        <button id="loginNav" class="ghost" data-route="auth">Zaloguj się</button>
+        <button id="registerNav" class="primary" data-route="register">Rejestracja</button>
+        <button id="logoutNav" class="ghost hidden">Wyloguj</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="view-home" class="view">
+        <div class="hero">
+          <div class="heroCopy">
+            <h1>Twoje wsparcie.<br><em>Ich pasja.</em></h1>
+            <p>Wpłaty od 50 zł, wiadomości, cele, moderacja i alerty OBS dla polskich twórców.</p>
+            <div class="heroButtons"><a class="primary big" href="#creator">Wesprzyj twórcę</a><a class="ghost big" href="#dashboard">Otwórz panel</a></div>
+            <div class="proof"><span><b>50 PLN</b><small>minimum</small></span><span><b>8</b><small>metod w panelu</small></span><span><b>Realtime</b><small>alerty OBS</small></span></div>
+          </div>
+          <div class="streamMock"><div class="live">● LIVE</div><div class="avatarHero">DS</div><div class="floatAlert"><b>Nowa wpłata!</b><span>Kamil · 100 PLN</span></div></div>
+          <div class="supportCard compact">
+            <h3>Wesprzyj @dominik-demo</h3>
+            <div class="amountBox"><b>50</b><span>PLN</span></div>
+            <div class="methodGrid mini"><button class="method active">Karta<small>od 50 PLN</small></button><button class="method">BLIK<small>do podłączenia</small></button><button class="method">PayPal<small>do podłączenia</small></button><button class="method">SMS<small>do podłączenia</small></button></div>
+            <a class="primary full" target="_blank" rel="noreferrer" href="https://donate.stripe.com/test_5kQ7sN93VdB9dW21SY9ws00">Wpłać testowo kartą</a>
+          </div>
+        </div>
+        <div class="featureGrid">
+          <article><b>Własna strona wpłat</b><span>Profil i osobny URL twórcy</span></article>
+          <article><b>Rejestracja i logowanie</b><span>Supabase Auth</span></article>
+          <article><b>Alerty OBS + TTS</b><span>Realtime i polska mowa</span></article>
+          <article><b>Moderacja</b><span>Filtr słów i ręczna akceptacja</span></article>
+          <article><b>Cele wpłat</b><span>Bezpieczny agregat bez danych darczyńców</span></article>
+          <article><b>Integracje</b><span>Twitch, YouTube, TikTok, Discord</span></article>
+        </div>
+      </section>
+
+      <section id="view-creator" class="view hidden creatorView">
+        <div class="creatorProfile">
+          <div class="avatarLarge">DS</div>
+          <h1 id="creatorName">Dominik</h1>
+          <span id="creatorHandle">@dominik-demo</span>
+          <p id="creatorBio">Wesprzyj gaming, naukę i rozwój Interactive AI Classroom.</p>
+          <div id="goalBox" class="goalBox hidden"><div><b id="goalTitle"></b><span id="goalValue"></span></div><div class="goalTrack"><i id="goalProgress"></i></div></div>
+        </div>
+        <div class="supportCard">
+          <h2>Wyślij wsparcie</h2>
+          <label>Kwota</label>
+          <div class="amountInput"><input id="donationAmount" type="number" min="50" value="50"><span>PLN</span></div>
+          <div class="quickAmounts"><button data-amount="50">50 zł</button><button data-amount="100">100 zł</button><button data-amount="200">200 zł</button><button data-amount="500">500 zł</button></div>
+          <label>Wiadomość</label><textarea id="donationMessage" maxlength="255" placeholder="Napisz coś miłego..."></textarea>
+          <label>Metoda płatności</label>
+          <div class="methodGrid"><button class="method active" data-provider="card">Karta płatnicza<small>AKTYWNA · od 50 PLN</small></button><button class="method unavailable">BLIK<small>wymaga dostępu operatora</small></button><button class="method unavailable">Przelew online<small>wymaga dostępu operatora</small></button><button class="method unavailable">PayPal<small>wymaga API PayPal</small></button><button class="method unavailable">paysafecard<small>wymaga operatora</small></button><button class="method unavailable">SMS Plus<small>wymaga operatora</small></button><button class="method unavailable">SMS<small>wymaga operatora</small></button><button class="method unavailable">SMS FULL<small>wymaga operatora</small></button></div>
+          <a id="stripePay" class="primary full big" target="_blank" rel="noreferrer" href="https://donate.stripe.com/test_5kQ7sN93VdB9dW21SY9ws00">Przejdź do płatności testowej</a>
+          <small class="note">To jest Stripe test mode. Karta jest skonfigurowana; pozostałe metody są przygotowane w DS, ale nie są udawane jako aktywne.</small>
+        </div>
+      </section>
+
+      <section id="view-auth" class="view hidden centerView">
+        <div class="authCard">
+          <div class="authTabs"><button id="tabLogin" class="active">Logowanie</button><button id="tabRegister">Rejestracja</button></div>
+          <h1 id="authTitle">Zaloguj się</h1>
+          <form id="authForm">
+            <label id="nameLabel" class="hidden">Nazwa twórcy<input id="authName" maxlength="100" placeholder="Dominik"></label>
+            <label>E-mail<input id="authEmail" type="email" required placeholder="tworca@example.pl"></label>
+            <label>Hasło<input id="authPassword" type="password" minlength="8" required placeholder="Minimum 8 znaków"></label>
+            <button id="authSubmit" class="primary full big" type="submit">Zaloguj się</button>
+          </form>
+          <div id="authStatus" class="status"></div>
+        </div>
+      </section>
+
+      <section id="view-dashboard" class="view hidden dashboardView">
+        <aside class="sideNav"><div class="brand small"><span>DS</span></div><a href="#dashboard" class="active">Dashboard</a><a href="#payments">Płatności</a><a href="#goals">Cele</a><a href="#integrations">Integracje</a><a href="#settings">Ustawienia</a></aside>
+        <div class="dashboardMain">
+          <div class="dashboardHead"><div><small>Panel twórcy</small><h1 id="dashName">Twórca</h1></div><a id="publicPageLink" class="ghost" href="#creator">Strona wpłat</a></div>
+          <div id="dashboardGate" class="empty hidden"><h2>Zaloguj się, aby otworzyć panel</h2><a class="primary" href="#auth">Logowanie</a></div>
+          <div id="dashboardContent" class="hidden">
+            <div class="stats"><article><span>Próg</span><b>50 PLN</b></article><article><span>Wpłaty</span><b id="dashCount">0</b></article><article><span>Suma testowa</span><b id="dashTotal">0,00 PLN</b></article><article><span>Twój URL</span><b id="dashUrl">—</b></article></div>
+            <div class="dashboardLinks"><a href="#payments">Metody płatności</a><a href="#goals">Cele</a><a href="#integrations">Integracje</a><a href="#settings">Profil</a></div>
+            <div class="panel"><h2>Test całego przepływu</h2><p>Utwórz testową wpłatę bez pobierania pieniędzy. Trafi do bazy i wywoła alert OBS.</p><button id="testDonationBtn" class="primary">Wyślij test 100 PLN</button><a id="overlayLink" class="ghost" target="_blank">Otwórz overlay OBS</a><div id="testStatus" class="status"></div></div>
+            <div class="panel"><h2>Ostatnie wpłaty</h2><div id="donationList" class="donationList"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-payments" class="view hidden subView"><div class="subHead"><div><small>Panel twórcy</small><h1>Metody płatności</h1></div><a class="ghost" href="#dashboard">← Dashboard</a></div><div class="panel"><h2>Próg globalny: 50 PLN</h2><p>Metodę można włączyć dopiero, gdy backend potwierdzi prawidłowe podłączenie operatora.</p><div id="paymentMethodList" class="paymentMethodList"></div><div id="paymentStatus" class="status"></div></div></section>
+
+      <section id="view-goals" class="view hidden subView"><div class="subHead"><div><small>Panel twórcy</small><h1>Cel wpłat</h1></div><a class="ghost" href="#dashboard">← Dashboard</a></div><div class="panel"><label>Nazwa celu<input id="goalInputTitle" maxlength="120"></label><label>Kwota celu (PLN)<input id="goalInputAmount" type="number" min="50" value="5000"></label><button id="saveGoalBtn" class="primary">Zapisz cel</button><div id="goalStatus" class="status"></div></div></section>
+
+      <section id="view-integrations" class="view hidden subView"><div class="subHead"><div><small>Panel twórcy</small><h1>Integracje</h1></div><a class="ghost" href="#dashboard">← Dashboard</a></div><div class="panel"><p>Sekrety API nigdy nie są przechowywane w przeglądarce. Tutaj włączasz funkcje profilu, a właściwe OAuth/API podłącza backend.</p><div id="integrationList" class="integrationList"></div></div></section>
+
+      <section id="view-settings" class="view hidden subView"><div class="subHead"><div><small>Panel twórcy</small><h1>Profil</h1></div><a class="ghost" href="#dashboard">← Dashboard</a></div><div class="panel"><label>Nazwa twórcy<input id="settingsName" maxlength="100"></label><label>Adres strony<input id="settingsUsername" maxlength="32"></label><label>Opis<textarea id="settingsBio" maxlength="500"></textarea></label><label class="check"><input id="settingsPublic" type="checkbox"> Publiczna strona wpłat</label><label class="check"><input id="settingsVoice" type="checkbox"> Głosówki/TTS</label><div class="locked">Minimalna wpłata: <b>50 PLN</b></div><button id="saveSettingsBtn" class="primary">Zapisz profil</button><div id="settingsStatus" class="status"></div></div></section>
+    </main>
+
+    <footer>DS Stream Support · testowe środowisko płatności</footer>
+  </div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
