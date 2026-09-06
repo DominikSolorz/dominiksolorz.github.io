@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="pl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DS OBS Alertbox</title><style>html,body{width:100%;height:100%;margin:0;background:transparent;overflow:hidden;font-family:Inter,system-ui,sans-serif}.stage{width:100%;height:100%;display:grid;place-items:center}.hint{color:#ffffff22;font-size:12px}.alert{min-width:520px;max-width:82vw;text-align:center;background:#070b16e8;border:1px solid #a855f7;border-radius:22px;padding:26px 34px;color:#fff;box-shadow:0 0 80px #7c3aed88;animation:pop .35s ease}.alert .crown{font-size:48px;color:#fbbf24}.alert span{display:block;color:#c4b5fd;text-transform:uppercase;font-size:12px;letter-spacing:.12em}.alert b{display:block;font-size:28px;margin:8px}.alert p{margin:8px 0 0;color:#e9d5ff}.hidden{display:none}@keyframes pop{from{opacity:0;transform:scale(.85) translateY(10px)}to{opacity:1;transform:none}}@media(max-width:600px){.alert{min-width:0;width:82vw;padding:20px}.alert b{font-size:20px}}</style></head>
+<body><main class="stage"><div id="hint" class="hint">DS OBS Alertbox · oczekiwanie</div><div id="alert" class="alert hidden"><div class="crown">♛</div><span>Nowa wpłata!</span><b id="title"></b><p id="message"></p></div></main>
+<script type="module">
+import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
+const supabase=createClient('https://nzfyhteodpyewpatfmgd.supabase.co','sb_publishable_pQyqrQFFZBwjHGDK_RbTsA_R93HWA1_');
+const username=new URLSearchParams(location.search).get('username')||'dominik-demo';
+const hint=document.getElementById('hint'),box=document.getElementById('alert'),title=document.getElementById('title'),message=document.getElementById('message');
+let timer=null;
+const {data:profile}=await supabase.from('stream_profiles').select('id').eq('username',username).maybeSingle();
+if(!profile){hint.textContent='Nie znaleziono profilu twórcy';throw new Error('Creator not found');}
+function speak(p){if(p.voice_url){const a=new Audio(p.voice_url);a.play().catch(()=>{});return;}if(p.message&&'speechSynthesis'in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(p.message).slice(0,300));u.lang='pl-PL';u.rate=1;speechSynthesis.speak(u);}}
+function show(p){hint.classList.add('hidden');box.classList.remove('hidden');title.textContent=`${p.name||'Anonim'} · ${((Number(p.amount_grosz)||0)/100).toFixed(2)} PLN`;message.textContent=p.message?`„${p.message}”`:'';speak(p);clearTimeout(timer);timer=setTimeout(()=>{box.classList.add('hidden');hint.classList.remove('hidden')},7000);}
+supabase.channel('ds-obs-'+profile.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'stream_events',filter:`creator_profile_id=eq.${profile.id}`},payload=>show(payload.new.payload||{})).subscribe(status=>{if(status==='SUBSCRIBED')hint.textContent=`DS OBS Alertbox · ${username} · gotowy`;});
+</script></body></html>
