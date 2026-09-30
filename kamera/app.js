@@ -1,7 +1,7 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=8";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=9";
 
 // Bez logowania, publicznie: każdy, kto otworzy stronę, ogląda kamerę. Supabase służy tylko
 // do wymiany sygnałów WebRTC na jednym stałym kanale; obraz i dźwięk płyną peer-to-peer.
@@ -13,6 +13,9 @@ const CHANNEL = "cam-dominiksolorz-live";
 // Komputer (nie telefon) z kamerą dostaje duży przycisk „Włącz kamerę”, gdy nikt nie nadaje.
 const IS_DESKTOP = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && !!navigator.mediaDevices?.getUserMedia;
 const MAX_VIEWERS = 5;
+// Jakość przesyłu na żywo: HD 720p, 30 kl./s, do 2,5 Mb/s na oglądającego; H.264 = sprzętowe dekodowanie na iPhonie.
+const LIVE_MAX_BITRATE = 2500000;
+const LIVE_FPS = 30;
 // Wirtualne kamery (OBS, Snap, ManyCam…) pokazują zastępczy obrazek, gdy ich program nie działa — pomijamy je.
 const VIRTUAL_CAM = /obs|virtual|snap camera|manycam|xsplit|ndi|splitcam|vcam|droidcam|epoccam|camo|iriun/i; // każdy oglądający to osobny strumień z domowego łącza
 const HEARTBEAT_MS = 15000;
@@ -224,6 +227,48 @@ function reconnectingChannel({ onSignal, onSubscribed, label }) {
 }
 const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", payload });
 
+// ---------- Jakość WebRTC ----------
+// H.264 na pierwszym miejscu (iPhone dekoduje go sprzętowo — płynniej i mniej baterii), reszta jako zapas.
+function preferH264(pc) {
+  const caps = RTCRtpSender.getCapabilities?.("video");
+  if (!caps) return;
+  const h264 = caps.codecs.filter(c => /h264/i.test(c.mimeType));
+  const rest = caps.codecs.filter(c => !/h264/i.test(c.mimeType));
+  for (const t of pc.getTransceivers()) {
+    if (t.sender.track?.kind === "video" && t.setCodecPreferences && h264.length) {
+      try { t.setCodecPreferences([...h264, ...rest]); } catch { /* przeglądarka bez tej opcji */ }
+    }
+  }
+}
+
+// Chrome zaczyna od ~300 kb/s i powoli podnosi jakość — zaczynamy od razu wysoko, żeby obraz był ostry od pierwszej sekundy.
+function fastStart(sdp) {
+  const kbps = Math.round(LIVE_MAX_BITRATE / 1000);
+  let inVideo = false;
+  return sdp.split("\r\n").map(line => {
+    if (line.startsWith("m=")) inVideo = line.startsWith("m=video");
+    if (inVideo && line.startsWith("a=fmtp:") && !line.includes("x-google-start-bitrate")) {
+      return `${line};x-google-min-bitrate=600;x-google-start-bitrate=1500;x-google-max-bitrate=${kbps}`;
+    }
+    return line;
+  }).join("\r\n");
+}
+
+// Wyższy limit przepływności; przy słabszym łączu równoważy ostrość i płynność.
+async function tuneVideoSender(pc) {
+  for (const sender of pc.getSenders()) {
+    if (sender.track?.kind !== "video") continue;
+    try {
+      const p = sender.getParameters();
+      if (!p.encodings?.length) p.encodings = [{}];
+      p.encodings[0].maxBitrate = LIVE_MAX_BITRATE;
+      p.encodings[0].maxFramerate = LIVE_FPS;
+      p.degradationPreference = "balanced";
+      await sender.setParameters(p);
+    } catch { /* starsza przeglądarka — zostają ustawienia domyślne */ }
+  }
+}
+
 // ---------- NADAJNIK (komputer z kamerą) ----------
 const sender = (() => {
   const peers = new Map();
@@ -247,10 +292,13 @@ const sender = (() => {
     const peer = { pc, pending: [] };
     peers.set(viewerId, peer); renderViewers();
     stream.getTracks().forEach(t => pc.addTrack(t, stream));
+    preferH264(pc);
     pc.onicecandidate = e => { if (e.candidate) send(ch, { type: "ice", viewerId, from: "broadcaster", candidate: e.candidate.toJSON() }); };
     pc.onconnectionstatechange = () => { if (["failed", "closed"].includes(pc.connectionState) && peers.get(viewerId)?.pc === pc) closePeer(viewerId); };
     const offer = await pc.createOffer();
+    offer.sdp = fastStart(offer.sdp);
     await pc.setLocalDescription(offer);
+    await tuneVideoSender(pc);
     send(ch, { type: "offer", viewerId, sdp: offer });
   }
 
@@ -270,9 +318,9 @@ const sender = (() => {
   async function requestWakeLock() { try { wakeLock = await navigator.wakeLock?.request("screen") ?? null; } catch { /* brak wsparcia */ } }
 
   const getMedia = deviceId => navigator.mediaDevices.getUserMedia({
-    video: { width: { ideal: 1280 }, height: { ideal: 720 }, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) },
-    audio: prefs.audio ? { echoCancellation: true, noiseSuppression: true } : false,
-  });
+    video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: LIVE_FPS, max: LIVE_FPS }, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) },
+    audio: prefs.audio ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true } : false,
+  }).then(s => { s.getVideoTracks().forEach(t => { t.contentHint = "motion"; }); return s; });
 
   // Lista kamer do wyboru + automatyczny wybór prawdziwej kamery zamiast wirtualnej.
   async function listCameras() {
@@ -425,6 +473,9 @@ const viewer = (() => {
       const conn = new RTCPeerConnection({ iceServers: iceServers() });
       pc = conn;
       conn.ontrack = e => {
+        // Minimalne opóźnienie odtwarzania (obraz „na żywo”, bez zbędnego buforowania).
+        try { e.receiver.jitterBufferTarget = 0; } catch { /* brak wsparcia */ }
+        try { e.receiver.playoutDelayHint = 0; } catch { /* brak wsparcia */ }
         const s = e.streams[0];
         if (video.srcObject !== s) { video.srcObject = s; video.play().catch(() => {}); }
         $("soundBtn").hidden = s.getAudioTracks().length === 0;
