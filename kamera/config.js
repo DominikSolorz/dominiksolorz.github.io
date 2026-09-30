@@ -7,8 +7,7 @@ export const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_yfQyGJT92z7w6QUvBwhgkw_c
 // { urls: ["turn:global.relay.metered.ca:443?transport=tcp"], username: "...", credential: "..." }
 export const TURN_SERVER = null;
 
-// Wspólny kanał sygnalizacji kamery (podgląd na żywo i biblioteka nagrań).
-export const CHANNEL = "cam-dominiksolorz-live";
+// Kanał sygnalizacji wyliczany jest z PIN-u (access.js) — nie ma go w kodzie.
 
 // Odtwarzanie nagrania: wyszukiwanie pliku po nazwie na Google Drive właściciela.
 export const driveWatchUrl = name => `https://drive.google.com/drive/search?q=${encodeURIComponent(name)}`;

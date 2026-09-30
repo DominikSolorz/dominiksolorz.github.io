@@ -1,12 +1,15 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, CHANNEL, driveWatchUrl } from "./config.js?v=13";
-import { b64, deriveKey, sign, targetString } from "./pin.js?v=13";
-import { mountLibrary } from "./library-ui.js?v=13";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, driveWatchUrl } from "./config.js?v=14";
+import { b64, sign, targetString } from "./pin.js?v=14";
+import { mountLibrary } from "./library-ui.js?v=14";
+import { requireAccess } from "./lock.js?v=14";
+import { channelFor, lock } from "./access.js?v=14";
 
-// Bez logowania, publicznie: każdy, kto otworzy stronę, ogląda kamerę. Supabase służy tylko
-// do wymiany sygnałów WebRTC na jednym stałym kanale; obraz i dźwięk płyną peer-to-peer.
+// Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
+// Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
+let ACCESS_KEY = null, CHANNEL = null;
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -58,7 +61,10 @@ if (!prefs.lib1) { prefs.segmentMin = 10; prefs.retentionDays = 30; prefs.lib1 =
 const video = $("video");
 function setStatus(text) { $("status").textContent = text || ""; $("status").hidden = !text; }
 function showPlaceholder(text) { $("placeholder").textContent = text; $("placeholder").hidden = !text; }
-function showLive(text) { $("liveBadge").hidden = !text; if (text) $("liveText").textContent = text; }
+function showLive(text) {
+  $("liveBadge").hidden = !text; if (text) $("liveText").textContent = text;
+  $("topStatus").textContent = text ? "● na żywo" : "offline"; $("topStatus").classList.toggle("live", !!text);
+}
 
 const MIME = (() => {
   if (typeof MediaRecorder === "undefined") return null;
@@ -316,24 +322,22 @@ function reconnectingChannel({ onSignal, onSubscribed, label }) {
 }
 const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", payload });
 
-// ---------- Biblioteka nagrań: polecenia z telefonu (lista / usuwanie z PIN-em) ----------
+// ---------- Biblioteka nagrań: polecenia z telefonu (lista / usuwanie podpisane kluczem z PIN-u) ----------
 const library = (() => {
   const nonces = new Map(); // jednorazowe numery do podpisywania poleceń usunięcia (ważne 5 min)
   let fails = 0, lockedUntil = 0;
   const newNonce = () => { const n = b64(crypto.getRandomValues(new Uint8Array(16))); nonces.set(n, Date.now() + 300000); return n; };
-  const salt = () => { if (!prefs.pinSalt) { prefs.pinSalt = b64(crypto.getRandomValues(new Uint8Array(16))); savePrefs(); } return prefs.pinSalt; };
   setInterval(() => { const now = Date.now(); for (const [k, v] of nonces) if (v < now) nonces.delete(k); }, 60000);
 
   async function handle(sig, ch) {
-    const reply = extra => send(ch, { type: "lib-reply", reqId: sig.reqId, pinSet: !!prefs.pinKey, salt: salt(), nonce: newNonce(), ...extra });
+    const reply = extra => send(ch, { type: "lib-reply", reqId: sig.reqId, nonce: newNonce(), ...extra });
     try {
       if (sig.type === "lib-days") return reply({ days: await archive.listDays() });
       if (sig.type === "lib-day") return reply({ hours: await archive.listDay(sig.day) });
       if (sig.type === "lib-delete") {
-        if (!prefs.pinKey) return reply({ error: "Usuwanie z telefonu jest wyłączone — ustaw PIN na komputerze-kamerze." });
-        if (Date.now() < lockedUntil) return reply({ error: "Za dużo błędnych PIN-ów — spróbuj za 10 minut." });
+        if (Date.now() < lockedUntil) return reply({ error: "Za dużo błędnych prób — spróbuj za 10 minut." });
         const exp = nonces.get(sig.nonce); nonces.delete(sig.nonce);
-        const ok = exp > Date.now() && sig.mac === await sign(prefs.pinKey, `${sig.nonce}|${targetString(sig.target || {})}`);
+        const ok = exp > Date.now() && sig.mac === await sign(ACCESS_KEY, `${sig.nonce}|${targetString(sig.target || {})}`);
         if (!ok) { if (++fails >= 5) { lockedUntil = Date.now() + 600000; fails = 0; } return reply({ error: "Zły PIN.", badPin: true }); }
         fails = 0;
         await archive.remove(sig.target);
@@ -343,8 +347,7 @@ const library = (() => {
     } catch (e) { return reply({ error: errText(e) }); }
   }
 
-  async function setPin(pin) { prefs.pinKey = await deriveKey(pin, salt()); savePrefs(); }
-  return { handle, setPin };
+  return { handle };
 })();
 let pcLibrary = null;
 
@@ -685,21 +688,20 @@ const viewer = (() => {
 })();
 
 // ---------- Widoki ----------
-// Lista nagrań na komputerze-kamerze (usuwanie bez PIN-u — to Twój komputer) + ustawienie PIN-u dla telefonu.
+// Lista nagrań na komputerze-kamerze (działa bezpośrednio na folderze Google Drive).
 function showPcLibrary() {
   if (!pcLibrary) pcLibrary = mountLibrary($("pcLibrary"), { days: () => archive.listDays(), day: d => archive.listDay(d), remove: t => archive.remove(t), watchUrl: driveWatchUrl });
   else pcLibrary.refresh();
-  $("pinState").textContent = prefs.pinKey ? "PIN ustawiony — z telefonu można usuwać nagrania." : "PIN nieustawiony — usuwanie z telefonu wyłączone.";
 }
 function showSender() {
-  $("sendPanel").hidden = false; $("watchPanel").hidden = true;
+  $("sendPanel").hidden = false; $("watchPanel").hidden = true; $("layout").classList.add("sender");
   $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
   archive.init().then(showPcLibrary);
   sender.start();
 }
 
 function showViewer() {
-  $("sendPanel").hidden = true; $("watchPanel").hidden = false;
+  $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("layout").classList.remove("sender");
   $("roleBtn").textContent = "To jest komputer z kamerą — nadawaj z niego";
   viewer.start();
 }
@@ -713,22 +715,18 @@ function setRole(toSend) {
 $("roleBtn").addEventListener("click", () => {
   const toSend = prefs.role !== "send";
   if (!confirm(toSend
-    ? "Ustawić to urządzenie jako kamerę? Będzie nadawać obraz i dźwięk publicznie (każdy na stronie zobaczy) i nagrywać 24/7."
+    ? "Ustawić to urządzenie jako kamerę? Będzie nadawać obraz i dźwięk (widzą je osoby z PIN-em) i nagrywać 24/7."
     : "Wyłączyć nadawanie? To urządzenie będzie tylko oglądać.")) return;
   setRole(toSend);
 });
 $("startHere").addEventListener("click", () => {
-  if (!confirm("Włączyć kamerę i mikrofon tego komputera? Obraz będzie widoczny publicznie na tej stronie.")) return;
+  if (!confirm("Włączyć kamerę i mikrofon tego komputera? Obraz zobaczą osoby z PIN-em.")) return;
   setRole(true);
 });
 $("pickDir").addEventListener("click", () => archive.pick());
 $("grantDir").addEventListener("click", () => archive.grant());
 $("pcLibRefresh").addEventListener("click", () => showPcLibrary());
-$("pinSave").addEventListener("click", async () => {
-  const pin = $("pinInput").value.trim();
-  if (!/^\d{6,12}$/.test(pin)) return alert("PIN musi mieć od 6 do 12 cyfr.");
-  await library.setPin(pin); $("pinInput").value = ""; showPcLibrary();
-});
+$("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("grantBanner").addEventListener("click", () => archive.grant());
 // Chrome po odświeżeniu strony wymaga ponownej zgody na zapis do folderu, a zgodę można poprosić
 // tylko po kliknięciu — wystarczy więc dowolne kliknięcie na stronie, żeby wznowić nagrywanie.
@@ -749,12 +747,16 @@ $("withAudio").addEventListener("change", e => { prefs.audio = e.target.checked;
 $("reconnectBtn").addEventListener("click", () => viewer.rejoin());
 $("watchRecBtn").addEventListener("click", () => viewer.toggleRec());
 $("fullBtn").addEventListener("click", () => (video.requestFullscreen?.() ?? video.webkitEnterFullscreen?.())?.catch?.(() => {}));
-$("soundBtn").addEventListener("click", () => { video.muted = !video.muted; $("soundBtn").textContent = video.muted ? "Włącz dźwięk" : "Wycisz"; });
+$("soundBtn").addEventListener("click", () => { video.muted = !video.muted; $("soundBtn").textContent = video.muted ? "🔊 Włącz dźwięk" : "🔇 Wycisz"; });
 
-// ---------- Start: od razu, bez logowania — domyślnie podgląd ----------
+// ---------- Start: PIN, potem od razu podgląd (albo nadawanie na komputerze-kamerze) ----------
 // Adres dominiksolorz.github.io/#nadaj ustawia to urządzenie jako kamerę (bez klikania na stronie).
 if (location.hash === "#nadaj") { prefs.role = "send"; savePrefs(); history.replaceState(null, "", location.pathname); }
-if (prefs.role === "send") showSender();
-else showViewer();
 window.__kameraReady = true;
 $("bootError").hidden = true;
+ACCESS_KEY = await requireAccess();
+CHANNEL = await channelFor(ACCESS_KEY);
+if (new URLSearchParams(location.search).get("wroc") === "nagrania") location.replace("nagrania.html");
+$("app").hidden = false; $("lockBtn").hidden = false;
+if (prefs.role === "send") showSender();
+else showViewer();
