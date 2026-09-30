@@ -1,11 +1,12 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, driveWatchUrl } from "./config.js?v=14";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, driveWatchUrl } from "./config.js?v=15";
 import { b64, sign, targetString } from "./pin.js?v=14";
-import { mountLibrary } from "./library-ui.js?v=14";
+import { mountLibrary } from "./library-ui.js?v=15";
 import { requireAccess } from "./lock.js?v=14";
 import { channelFor, lock } from "./access.js?v=14";
+import { createDetector, EVENT_LABEL } from "./detect.js?v=15";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
@@ -39,7 +40,7 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, recQuality: "small", segmentMin: 10, retentionDays: 1 };
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "small", segmentMin: 10, retentionDays: 1 };
 
 // Jakość NAGRAŃ (osobno od obrazu na żywo, który zostaje w HD). Mniejsza rozdzielczość, mniej klatek
 // i niska przepływność = małe pliki na Google Drive. Rozmiary to przybliżenie dla 5 minut nagrania.
@@ -129,7 +130,19 @@ const archive = (() => {
     pcLibrary?.refresh();
   }
 
-  async function save(blob, name) {
+  let segEvents = null; // zdarzenia (ruch / dźwięk) w bieżącym pliku nagrania
+  function markEvent(ev) { segEvents?.push(ev); }
+
+  // Zdarzenia zapisujemy obok nagrań: GG-00/zdarzenia.json = { "kamera-….webm": [{kind, at}, …] }.
+  async function saveEvents(hourDir, name, events) {
+    const fh = await hourDir.getFileHandle("zdarzenia.json", { create: true });
+    let all = {};
+    try { all = JSON.parse(await (await fh.getFile()).text() || "{}"); } catch { all = {}; }
+    all[name] = [...(all[name] || []), ...events];
+    const w = await fh.createWritable(); await w.write(JSON.stringify(all)); await w.close();
+  }
+
+  async function save(blob, name, events = []) {
     if (!canWrite()) { lastError = "Brak dostępu do folderu Google Drive — ten fragment nagrania nie został zapisany."; return render(); }
     try {
       // Biblioteka: folder dnia (RRRR-MM-DD) → folder godziny (GG-00) → plik z godziną, minutą i sekundą.
@@ -139,6 +152,7 @@ const archive = (() => {
       const fh = await hourDir.getFileHandle(name, { create: true });
       const w = await fh.createWritable();
       await w.write(blob); await w.close();
+      if (events.length) await saveEvents(hourDir, name, events).catch(() => {});
       saved++; lastName = name; lastError = "";
       await cleanup();
     } catch (e) {
@@ -179,12 +193,13 @@ const archive = (() => {
     const startedAt = new Date();
     const p = recPreset();
     const r = new MediaRecorder(recStream, { ...(MIME ? { mimeType: MIME } : {}), videoBitsPerSecond: p.video, audioBitsPerSecond: p.audio });
-    const chunks = [];
+    const chunks = [], events = [];
+    segEvents = events;
     r.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     r.onstop = () => {
       if (!chunks.length) return;
       const type = r.mimeType || MIME || "video/webm";
-      save(new Blob(chunks, { type }), `kamera-${stamp(startedAt)}.${extFor(type)}`);
+      save(new Blob(chunks, { type }), `kamera-${stamp(startedAt)}.${extFor(type)}`, events);
     };
     r.onerror = e => { lastError = `Błąd nagrywania: ${errText(e.error || e)}`; render(); };
     r.start(5000);
@@ -270,7 +285,14 @@ const archive = (() => {
     for await (const [hn, hh] of dh.entries()) {
       if (hh.kind !== "directory" || !HOUR_RE.test(hn)) continue;
       const files = [];
-      for await (const [fn, fh] of hh.entries()) if (fh.kind === "file" && FILE_RE.test(fn)) files.push({ name: fn, size: (await fh.getFile()).size });
+      let evMap = {};
+      try { evMap = JSON.parse(await (await (await hh.getFileHandle("zdarzenia.json")).getFile()).text() || "{}"); } catch { evMap = {}; }
+      for await (const [fn, fh] of hh.entries()) {
+        if (fh.kind !== "file" || !FILE_RE.test(fn)) continue;
+        const ev = { ruch: 0, dzwiek: 0 };
+        for (const e of evMap[fn] || []) if (e.kind in ev) ev[e.kind]++;
+        files.push({ name: fn, size: (await fh.getFile()).size, ev });
+      }
       files.sort((a, b) => a.name.localeCompare(b.name));
       hours.push({ hour: hn, files });
     }
@@ -289,7 +311,7 @@ const archive = (() => {
     await (await dh.getDirectoryHandle(t.hour)).removeEntry(t.name);
   }
 
-  return { init, pick, grant, start, stop, restart, needsGrant, listDays, listDay, remove };
+  return { init, pick, grant, start, stop, restart, needsGrant, listDays, listDay, remove, markEvent };
 })();
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
@@ -350,6 +372,25 @@ const library = (() => {
   return { handle };
 })();
 let pcLibrary = null;
+
+// ---------- Wykrywanie ruchu i dźwięku (kroki, głosy) na komputerze-kamerze ----------
+const fmtClock = t => new Date(t).toLocaleTimeString("pl-PL");
+const recentEvents = [];
+function renderEvents(listId, items) {
+  const ul = $(listId);
+  if (!ul) return;
+  ul.replaceChildren(...(items.length ? items.map(e => Object.assign(document.createElement("li"), { textContent: `${fmtClock(e.at)} — ${EVENT_LABEL[e.kind] || e.kind}` }))
+    : [Object.assign(document.createElement("li"), { className: "muted", textContent: "Brak zdarzeń." })]));
+}
+const detector = createDetector({
+  getSensitivity: () => prefs.sensitivity,
+  onEvent: ev => {
+    archive.markEvent(ev);
+    sender.notifyViewers(ev);
+    recentEvents.unshift(ev); recentEvents.length = Math.min(recentEvents.length, 30);
+    renderEvents("pcEvents", recentEvents);
+  },
+});
 
 // ---------- Jakość WebRTC ----------
 // H.264 na pierwszym miejscu (iPhone dekoduje go sprzętowo — płynniej i mniej baterii), reszta jako zapas.
@@ -487,6 +528,7 @@ const sender = (() => {
       s.getVideoTracks()[0]?.addEventListener("ended", () => { if (live && stream === s) cameraLost(); });
       camAttempt = 0;
       archive.start(s);
+      if (prefs.detect) detector.start(s, video);
       return true;
     } catch (e) {
       setStatus(`Brak dostępu do kamery/mikrofonu: ${errText(e)}. Zezwól przeglądarce — ponawiam próbę…`);
@@ -495,7 +537,7 @@ const sender = (() => {
   }
 
   function cameraLost() {
-    archive.stop(); closeAll();
+    archive.stop(); detector.stop(); closeAll();
     stream?.getTracks().forEach(t => t.stop()); stream = null;
     video.srcObject = null; showPlaceholder("Utracono obraz z kamery…");
     setStatus("Utracono obraz z kamery — próbuję ją ponownie uruchomić…");
@@ -514,7 +556,7 @@ const sender = (() => {
   // Zmiana kamery z listy: przełącz obraz i daj znać oglądającym, żeby połączyli się ponownie.
   async function switchCamera() {
     if (!live) return;
-    archive.stop(); closeAll();
+    archive.stop(); detector.stop(); closeAll();
     stream?.getTracks().forEach(t => t.stop()); stream = null;
     if (await acquireCamera()) {
       if (!VIRTUAL_CAM.test(stream?.getVideoTracks()[0]?.label || "")) setStatus("");
@@ -541,7 +583,7 @@ const sender = (() => {
   function stop() {
     if (!live) return;
     live = false;
-    archive.stop();
+    archive.stop(); detector.stop();
     clearInterval(heartbeat); clearInterval(keepAlive); clearTimeout(camTimer);
     send(chan.channel, { type: "broadcaster-stop" });
     chan.stop();
@@ -557,7 +599,10 @@ const sender = (() => {
   window.addEventListener("online", () => { if (live) chan.reconnect(); });
   window.addEventListener("beforeunload", () => { if (live) send(chan.channel, { type: "broadcaster-stop" }); });
 
-  return { start, stop, switchCamera, get live() { return live; } };
+  // Powiadomienie oglądających o wykrytym ruchu / dźwięku.
+  function notifyViewers(ev) { if (live) send(chan.channel, { type: "alert", ...ev }); }
+
+  return { start, stop, switchCamera, notifyViewers, get live() { return live; } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -591,6 +636,7 @@ const viewer = (() => {
     }
     if (sig.type === "broadcaster-ready") { reset(); return join(); }
     if (sig.type === "broadcaster-stop") { reset(); lastSeen = 0; showPlaceholder("Kamera jest wyłączona."); return; }
+    if (sig.type === "alert") return showAlert(sig);
     if (sig.viewerId !== viewerId) return;
     if (sig.type === "busy") { showPlaceholder(`Ogląda już ${MAX_VIEWERS} osób — spróbuję ponownie za chwilę…`); return; }
     if (sig.type === "offer") {
@@ -687,6 +733,18 @@ const viewer = (() => {
   return { start, stop, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
 })();
 
+// Zdarzenie na telefonie: wyskakujące powiadomienie, wibracja, lista ostatnich zdarzeń.
+const viewEvents = [];
+let toastTimer = null;
+function showAlert(ev) {
+  viewEvents.unshift(ev); viewEvents.length = Math.min(viewEvents.length, 20);
+  renderEvents("viewEvents", viewEvents);
+  const t = $("toast");
+  t.textContent = `${EVENT_LABEL[ev.kind] || ev.kind} — ${fmtClock(ev.at)}`;
+  t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 6000);
+  try { navigator.vibrate?.([200, 100, 200]); } catch { /* brak wibracji */ }
+}
+
 // ---------- Widoki ----------
 // Lista nagrań na komputerze-kamerze (działa bezpośrednio na folderze Google Drive).
 function showPcLibrary() {
@@ -694,14 +752,14 @@ function showPcLibrary() {
   else pcLibrary.refresh();
 }
 function showSender() {
-  $("sendPanel").hidden = false; $("watchPanel").hidden = true; $("layout").classList.add("sender");
+  $("sendPanel").hidden = false; $("watchPanel").hidden = true; $("viewEventsCard").hidden = true; $("layout").classList.add("sender");
   $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
   archive.init().then(showPcLibrary);
   sender.start();
 }
 
 function showViewer() {
-  $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("layout").classList.remove("sender");
+  $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("viewEventsCard").hidden = false; $("layout").classList.remove("sender");
   $("roleBtn").textContent = "To jest komputer z kamerą — nadawaj z niego";
   viewer.start();
 }
@@ -742,6 +800,11 @@ for (const id of ["segmentMin", "retentionDays"]) {
   $(id).addEventListener("change", e => { prefs[id] = Number(e.target.value); savePrefs(); });
 }
 $("cameraSelect").addEventListener("change", e => { prefs.cameraId = e.target.value; savePrefs(); sender.switchCamera(); });
+$("detectToggle").checked = prefs.detect;
+$("detectToggle").addEventListener("change", e => { prefs.detect = e.target.checked; savePrefs(); sender.switchCamera(); });
+$("sensitivity").value = prefs.sensitivity;
+$("sensitivity").addEventListener("change", e => { prefs.sensitivity = e.target.value; savePrefs(); });
+renderEvents("pcEvents", recentEvents); renderEvents("viewEvents", viewEvents);
 $("withAudio").checked = prefs.audio;
 $("withAudio").addEventListener("change", e => { prefs.audio = e.target.checked; savePrefs(); });
 $("reconnectBtn").addEventListener("click", () => viewer.rejoin());

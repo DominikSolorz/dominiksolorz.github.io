@@ -6,6 +6,7 @@ const timeOf = name => (/_(\d{2})-(\d{2})-(\d{2})\./.exec(name) || []).slice(1).
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 
 export function mountLibrary(root, api) {
+  let onlyEvents = false;
   async function del(target, what) {
     if (!confirm(`Usunąć ${what}? Nagranie zniknie z Google Drive i z komputera — nie da się tego cofnąć ze strony.`)) return;
     try { await api.remove(target); await refresh(); }
@@ -21,14 +22,19 @@ export function mountLibrary(root, api) {
       for (const h of hours) {
         const hh = h.hour.slice(0, 2);
         const list = el("ul", { className: "libFiles" });
-        for (const f of h.files) {
+        const shown = onlyEvents ? h.files.filter(f => f.ev?.ruch || f.ev?.dzwiek) : h.files;
+        if (!shown.length) continue;
+        for (const f of shown) {
           const watch = api.watchUrl ? el("a", { className: "btn ghost small", href: api.watchUrl(f.name), target: "_blank", rel: "noopener", textContent: "▶ Obejrzyj" }) : "";
           const rm = el("button", { className: "btn ghost small danger", textContent: "🗑", title: "Usuń to nagranie", onclick: () => del({ day, hour: h.hour, name: f.name }, `nagranie z ${day} ${timeOf(f.name)}`) });
-          list.append(el("li", {}, el("span", { textContent: `${timeOf(f.name)} · ${mb(f.size)}` }), el("span", { className: "libActions" }, watch, rm)));
+          const badges = [f.ev?.ruch ? `🏃${f.ev.ruch}` : "", f.ev?.dzwiek ? `🔊${f.ev.dzwiek}` : ""].filter(Boolean).join(" ");
+          const label = el("span", { textContent: `${timeOf(f.name)} · ${mb(f.size)}` }, badges ? el("span", { className: "evBadge", title: "Wykryty ruch / dźwięk", textContent: badges }) : "");
+          list.append(el("li", {}, label, el("span", { className: "libActions" }, watch, rm)));
         }
         const rmHour = el("button", { className: "btn ghost small danger", textContent: "🗑 godzina", onclick: () => del({ day, hour: h.hour }, `wszystkie nagrania z ${day}, godz. ${hh}:00–${hh}:59`) });
-        box.append(el("div", { className: "libHour" }, el("div", { className: "libHead" }, el("b", { textContent: `🕐 ${hh}:00–${hh}:59 (${h.files.length})` }), rmHour), list));
+        box.append(el("div", { className: "libHour" }, el("div", { className: "libHead" }, el("b", { textContent: `🕐 ${hh}:00–${hh}:59 (${shown.length})` }), rmHour), list));
       }
+      if (!box.children.length) box.append(el("p", { className: "muted small", textContent: "Brak nagrań z ruchem lub dźwiękiem w tym dniu." }));
     } catch (e) { box.replaceChildren(el("p", { className: "status", textContent: e.message || String(e) })); }
   }
 
@@ -36,7 +42,8 @@ export function mountLibrary(root, api) {
     root.replaceChildren(el("p", { className: "muted small", textContent: "Wczytuję listę nagrań…" }));
     try {
       const days = await api.days();
-      root.replaceChildren();
+      const filter = el("input", { type: "checkbox", checked: onlyEvents, onchange: e => { onlyEvents = e.target.checked; root.querySelectorAll(".libDay[open]").forEach(d => d.dispatchEvent(new Event("toggle"))); } });
+      root.replaceChildren(el("label", { className: "libFilter" }, filter, "Pokaż tylko nagrania z ruchem lub dźwiękiem (🏃 / 🔊)"));
       if (days === null) return root.append(el("p", { className: "status", textContent: "Komputer-kamera nie ma jeszcze dostępu do folderu Google Drive." }));
       if (!days.length) return root.append(el("p", { className: "muted small", textContent: "Brak nagrań." }));
       for (const d of days) {

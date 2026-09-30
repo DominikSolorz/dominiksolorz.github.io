@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
 <header class="topbar">
@@ -63,6 +63,11 @@
       </div>
 
       <div id="status" class="status" hidden></div>
+
+      <div id="viewEventsCard" class="card eventsCard">
+        <div class="cardHead"><h2>🔔 Zdarzenia</h2><span class="muted small">ruch i dźwięk (kroki, głosy)</span></div>
+        <ul id="viewEvents" class="events"></ul>
+      </div>
     </section>
 
     <!-- Nadajnik (komputer z kamerą) -->
@@ -80,6 +85,23 @@
           <button class="btn ghost" id="stopBtn">⏹ Zatrzymaj kamerę</button>
           <button class="btn primary" id="startBtn" hidden>▶ Uruchom kamerę</button>
         </div>
+        <div class="row"><a class="btn ghost" href="kamera-instaluj.bat" download>⬇ Program w tle + skrót na pulpicie (Windows)</a></div>
+      </div>
+
+      <div class="card">
+        <div class="cardHead"><h2>🔔 Wykrywanie</h2><span class="muted small">ruch i dźwięk</span></div>
+        <div class="grid">
+          <label class="check"><input type="checkbox" id="detectToggle"> Wykrywaj ruch i kroki</label>
+          <label>Czułość
+            <select id="sensitivity">
+              <option value="low">Niska</option>
+              <option value="medium">Średnia</option>
+              <option value="high">Wysoka</option>
+            </select>
+          </label>
+        </div>
+        <p class="muted small">Zdarzenie od razu pokazuje się na telefonie i jest zaznaczane przy nagraniu w bibliotece.</p>
+        <ul id="pcEvents" class="events"></ul>
       </div>
 
       <div class="card">
@@ -123,6 +145,7 @@
   <p class="footer"><button class="linkBtn" id="roleBtn">To jest komputer z kamerą — nadawaj z niego</button></p>
 </main>
 
+<div id="toast" class="toast" role="alert" hidden></div>
 <div id="bootError" class="card bootError" hidden></div>
 <script>
 // Zamiast pustego ekranu: pokaż błąd uruchomienia i przycisk odświeżenia.
@@ -134,6 +157,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=14"></script>
+<script type="module" src="app.js?v=15"></script>
 </body>
 </html>
