@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0b1120">
+<title>Prywatna Kamera</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="dot"></span>Prywatna Kamera</div>
+  <button id="logout" class="btn ghost small" hidden>Wyloguj</button>
+</header>
+
+<main>
+  <!-- Logowanie -->
+  <section id="auth" class="card" hidden>
+    <h1>Zaloguj się</h1>
+    <p class="muted">Tylko Ty widzisz swoją kamerę. Zaloguj się tym samym kontem na komputerze i na telefonie.</p>
+    <form id="authForm">
+      <label>E-mail<input id="email" type="email" autocomplete="email" required></label>
+      <label>Hasło<input id="password" type="password" autocomplete="current-password" minlength="8" required></label>
+      <div class="row">
+        <button class="btn primary" type="submit">Zaloguj</button>
+        <button class="btn ghost" type="button" id="signup">Załóż konto</button>
+      </div>
+    </form>
+    <div id="authMsg" class="status" hidden></div>
+  </section>
+
+  <!-- Aplikacja -->
+  <section id="app" hidden>
+    <nav class="tabs">
+      <button data-mode="send" class="tab">Nadajnik (ten komputer)</button>
+      <button data-mode="watch" class="tab">Podgląd (telefon)</button>
+    </nav>
+
+    <div class="card">
+      <div class="stage">
+        <video id="video" autoplay playsinline muted></video>
+        <div id="placeholder" class="placeholder">Kamera wyłączona</div>
+        <div id="liveBadge" class="badge" hidden><i></i><span id="liveText">NA ŻYWO</span></div>
+        <div id="recBadge" class="badge rec" hidden><i></i>REC <span id="recTime">00:00:00</span></div>
+      </div>
+
+      <!-- Nadajnik -->
+      <div id="sendPanel" hidden>
+        <div class="toggles">
+          <label><input type="checkbox" id="autostart"> Tryb 24/7 — włączaj kamerę automatycznie po otwarciu strony</label>
+          <label><input type="checkbox" id="withAudio" checked> Kamera + mikrofon</label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="startBtn">Włącz kamerę</button>
+          <button class="btn ghost" id="stopBtn" hidden>Zatrzymaj kamerę</button>
+          <button class="btn ghost" id="sendRecBtn" disabled>Nagrywaj</button>
+        </div>
+      </div>
+
+      <!-- Podgląd -->
+      <div id="watchPanel" hidden>
+        <div class="row">
+          <button class="btn ghost" id="reconnectBtn">Połącz ponownie</button>
+          <button class="btn ghost" id="soundBtn" hidden>Włącz dźwięk</button>
+          <button class="btn ghost" id="fullBtn" disabled>Pełny ekran</button>
+          <button class="btn ghost" id="watchRecBtn" disabled>Nagrywaj</button>
+        </div>
+      </div>
+
+      <div class="row"><a id="lastRec" class="btn ghost" hidden>Pobierz ostatnie nagranie</a></div>
+      <div id="status" class="status" hidden></div>
+      <p id="hint" class="muted small"></p>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
