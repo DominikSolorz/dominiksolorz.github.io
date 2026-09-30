@@ -1,7 +1,7 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=5";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=6";
 
 // Bez logowania, publicznie: każdy, kto otworzy stronę, ogląda kamerę. Supabase służy tylko
 // do wymiany sygnałów WebRTC na jednym stałym kanale; obraz i dźwięk płyną peer-to-peer.
@@ -501,6 +501,8 @@ $("fullBtn").addEventListener("click", () => (video.requestFullscreen?.() ?? vid
 $("soundBtn").addEventListener("click", () => { video.muted = !video.muted; $("soundBtn").textContent = video.muted ? "Włącz dźwięk" : "Wycisz"; });
 
 // ---------- Start: od razu, bez logowania — domyślnie podgląd ----------
+// Adres dominiksolorz.github.io/#nadaj ustawia to urządzenie jako kamerę (bez klikania na stronie).
+if (location.hash === "#nadaj") { prefs.role = "send"; savePrefs(); history.replaceState(null, "", location.pathname); }
 if (prefs.role === "send") showSender();
 else showViewer();
 window.__kameraReady = true;
