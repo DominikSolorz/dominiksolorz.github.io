@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 <header class="top">
@@ -58,9 +58,7 @@
         <div class="grid">
           <label>Jakość nagrań
             <select id="quality">
-              <option value="300000">Niska (~3,9 GB/doba)</option>
-              <option value="600000">Średnia (~7,2 GB/doba)</option>
-              <option value="1200000">Wysoka (~13,6 GB/doba)</option>
+              <option value="small">Mała — 360p (~4 MB / 5 min)</option>
             </select>
           </label>
           <label>Długość jednego pliku
@@ -83,7 +81,7 @@
           </label>
           <label class="check"><input type="checkbox" id="withAudio"> Kamera + mikrofon</label>
         </div>
-        <p class="muted small">Zmiany jakości i mikrofonu działają po ponownym uruchomieniu kamery.</p>
+        <p class="muted small">Jakość nagrań nie wpływa na obraz na żywo (ten zostaje w HD). Zmiana jakości działa od następnego pliku; zmiana mikrofonu — po ponownym uruchomieniu kamery.</p>
         <div class="row">
           <button class="btn ghost" id="stopBtn">Zatrzymaj kamerę</button>
           <button class="btn primary" id="startBtn" hidden>Uruchom kamerę</button>
@@ -106,6 +104,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=9"></script>
+<script type="module" src="app.js?v=10"></script>
 </body>
 </html>
