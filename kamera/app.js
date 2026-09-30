@@ -1,7 +1,7 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=4";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=5";
 
 // Bez logowania, publicznie: każdy, kto otworzy stronę, ogląda kamerę. Supabase służy tylko
 // do wymiany sygnałów WebRTC na jednym stałym kanale; obraz i dźwięk płyną peer-to-peer.
@@ -67,17 +67,21 @@ const idb = {
   async set(k, v) { const db = await this.open(); return new Promise(res => { const t = db.transaction("kv", "readwrite"); t.objectStore("kv").put(v, k); t.oncomplete = () => res(); t.onerror = () => res(); }); },
 };
 
-// ---------- Nagrywanie ciągłe 24/7 (pliki co N minut → folder Google Drive) ----------
+// ---------- Nagrywanie ciągłe 24/7 → wyłącznie folder Google Drive (nic nie trafia do „Pobrane”) ----------
+// Nagrywa tylko, gdy wybrano folder Google Drive (Dysk Google na komputer w trybie strumieniowania
+// trzyma pliki w chmurze). Bez tego folderu nagrania nie są nigdzie zapisywane.
 const archive = (() => {
   const fsSupported = "showDirectoryPicker" in window;
-  let dir = null, granted = false, stream = null, running = false, rec = null, segTimer = null, clock = null;
+  let dir = null, granted = false, source = null, running = false, rec = null, segTimer = null, clock = null;
   let recSince = 0, saved = 0, lastName = "", lastError = "";
+  const canWrite = () => !!(dir && granted);
 
   async function init() {
-    if (!fsSupported) return render();
-    try { dir = (await idb.get("dir")) || null; } catch { dir = null; }
-    if (dir) granted = (await dir.queryPermission({ mode: "readwrite" }).catch(() => "denied")) === "granted";
-    render();
+    if (fsSupported) {
+      try { dir = (await idb.get("dir")) || null; } catch { dir = null; }
+      if (dir) granted = (await dir.queryPermission({ mode: "readwrite" }).catch(() => "denied")) === "granted";
+    }
+    resume();
   }
 
   async function pick() {
@@ -85,36 +89,35 @@ const archive = (() => {
       dir = await window.showDirectoryPicker({ id: "prywatna-kamera", mode: "readwrite" });
       await idb.set("dir", dir);
       granted = true; lastError = "";
-      render();
+      resume();
     } catch (e) { if (e?.name !== "AbortError") { lastError = errText(e); render(); } }
   }
 
   async function grant() {
     if (!dir) return;
     granted = (await dir.requestPermission({ mode: "readwrite" }).catch(() => "denied")) === "granted";
-    render();
+    resume();
   }
 
   async function save(blob, name) {
-    if (dir && granted) {
-      try {
-        const fh = await dir.getFileHandle(name, { create: true });
-        const w = await fh.createWritable();
-        await w.write(blob); await w.close();
-        saved++; lastName = name; lastError = "";
-        await cleanup();
-        return render();
-      } catch (e) { lastError = `Nie udało się zapisać do folderu (${errText(e)}) — zapisuję do „Pobrane”.`; granted = false; }
+    if (!canWrite()) { lastError = "Brak dostępu do folderu Google Drive — ten fragment nagrania nie został zapisany."; return render(); }
+    try {
+      const fh = await dir.getFileHandle(name, { create: true });
+      const w = await fh.createWritable();
+      await w.write(blob); await w.close();
+      saved++; lastName = name; lastError = "";
+      await cleanup();
+    } catch (e) {
+      lastError = `Nie udało się zapisać do folderu Google Drive (${errText(e)}). Nagrywanie wstrzymane — kliknij „Zezwól na zapis do folderu”.`;
+      granted = false; halt();
     }
-    download(blob, name);
-    saved++; lastName = name;
     render();
   }
 
   // Usuwa własne nagrania starsze niż wybrana liczba dni (tylko pliki „kamera-RRRR-MM-DD_…”).
   async function cleanup() {
     const days = Number(prefs.retentionDays);
-    if (!days || !dir || !granted) return;
+    if (!days || !canWrite()) return;
     const limit = Date.now() - days * 86400000;
     for await (const [name, handle] of dir.entries()) {
       const m = /^kamera-(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})\.(webm|mp4)$/.exec(name);
@@ -126,7 +129,7 @@ const archive = (() => {
 
   function startSegment() {
     const startedAt = new Date();
-    const r = new MediaRecorder(stream, { ...(MIME ? { mimeType: MIME } : {}), videoBitsPerSecond: Number(prefs.quality), audioBitsPerSecond: 64000 });
+    const r = new MediaRecorder(source, { ...(MIME ? { mimeType: MIME } : {}), videoBitsPerSecond: Number(prefs.quality), audioBitsPerSecond: 64000 });
     const chunks = [];
     r.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     r.onstop = () => {
@@ -144,39 +147,43 @@ const archive = (() => {
   // Nowy plik startuje zanim zamkniemy poprzedni — bez dziury w nagraniu.
   function rotate() {
     const old = rec;
-    if (running && stream) startSegment();
+    if (running && source) startSegment();
     if (old && old.state !== "inactive") old.stop();
   }
 
-  function start(s) {
-    if (MIME === null) { lastError = "Ta przeglądarka nie obsługuje nagrywania."; return render(); }
-    stream = s; running = true; recSince = Date.now();
-    startSegment();
-    clearInterval(clock);
-    clock = setInterval(() => { $("recTime").textContent = fmtTime(Math.floor((Date.now() - recSince) / 1000)); }, 1000);
+  // Zaczyna nagrywać, gdy jest obraz z kamery i dostęp do folderu Google Drive.
+  function resume() {
+    if (!running && source && canWrite() && MIME !== null) {
+      running = true; recSince = Date.now();
+      startSegment();
+      clearInterval(clock);
+      clock = setInterval(() => { $("recTime").textContent = fmtTime(Math.floor((Date.now() - recSince) / 1000)); }, 1000);
+    }
     render();
   }
 
-  function stop() {
+  function halt() {
     running = false;
     clearTimeout(segTimer); clearInterval(clock);
     if (rec && rec.state !== "inactive") rec.stop();
-    rec = null; stream = null;
-    render();
+    rec = null;
   }
+
+  function start(s) { source = s; resume(); }
+  function stop() { halt(); source = null; render(); }
 
   function render() {
     $("recBadge").hidden = !running;
-    const where = !fsSupported
-      ? "Pliki zapisują się w folderze „Pobrane” tej przeglądarki — ustaw w niej folder pobierania na folder Google Drive."
-      : dir && granted ? `Folder zapisu: „${dir.name}”.`
-      : dir ? `Folder „${dir.name}” wymaga zgody — kliknij „Zezwól na zapis do folderu”. Do tego czasu pliki idą do „Pobrane”.`
-      : "Nie wybrano folderu — pliki idą do „Pobrane”. Wybierz folder Google Drive.";
-    const state = running ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie zatrzymane.";
+    let text;
+    if (MIME === null) text = "Ta przeglądarka nie obsługuje nagrywania.";
+    else if (!fsSupported) text = "Nagrywanie do Google Drive działa w Chrome lub Edge na komputerze. W tej przeglądarce nic nie jest nagrywane.";
+    else if (!dir) text = "Nagrywanie wyłączone — nic nie zapisuje się na komputerze. Wybierz folder Google Drive, żeby nagrania szły do chmury.";
+    else if (!granted) text = `Folder „${dir.name}” wymaga zgody — kliknij „Zezwól na zapis do folderu”. Do tego czasu nic nie jest nagrywane.`;
+    else text = running ? `Nagrywa bez przerwy do „${dir.name}” (pliki co ${prefs.segmentMin} min).` : `Folder zapisu: „${dir.name}”. Nagrywanie ruszy, gdy kamera będzie włączona.`;
     const count = saved ? ` Zapisano plików: ${saved}, ostatni: ${lastName}.` : "";
-    $("archiveInfo").textContent = `${state} ${where}${count}${lastError ? ` ${lastError}` : ""}`;
+    $("archiveInfo").textContent = `${text}${count}${lastError ? ` ${lastError}` : ""}`;
     $("pickDir").hidden = !fsSupported;
-    $("pickDir").textContent = dir ? "Zmień folder zapisu" : "Wybierz folder zapisu (Google Drive)";
+    $("pickDir").textContent = dir ? "Zmień folder Google Drive" : "Wybierz folder Google Drive";
     $("grantDir").hidden = !(fsSupported && dir && !granted);
   }
 
