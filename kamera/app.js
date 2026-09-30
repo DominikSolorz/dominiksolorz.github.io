@@ -1,7 +1,7 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=9";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=10";
 
 // Bez logowania, publicznie: każdy, kto otworzy stronę, ogląda kamerę. Supabase służy tylko
 // do wymiany sygnałów WebRTC na jednym stałym kanale; obraz i dźwięk płyną peer-to-peer.
@@ -35,7 +35,17 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, quality: 600000, segmentMin: 10, retentionDays: 1 };
+const DEFAULTS = { role: null, cameraId: "", audio: true, recQuality: "small", segmentMin: 10, retentionDays: 1 };
+
+// Jakość NAGRAŃ (osobno od obrazu na żywo, który zostaje w HD). Mniejsza rozdzielczość, mniej klatek
+// i niska przepływność = małe pliki na Google Drive. Rozmiary to przybliżenie dla 5 minut nagrania.
+const REC_PRESETS = {
+  mini:   { w: 426,  h: 240, fps: 8,  video: 40000,  audio: 16000, label: "Mini — 240p (~2 MB / 5 min)" },
+  small:  { w: 640,  h: 360, fps: 10, video: 90000,  audio: 20000, label: "Mała — 360p (~4 MB / 5 min)" },
+  medium: { w: 854,  h: 480, fps: 15, video: 190000, audio: 24000, label: "Średnia — 480p (~8 MB / 5 min)" },
+  hd:     { w: 1280, h: 720, fps: 20, video: 350000, audio: 32000, label: "HD — 720p (~15 MB / 5 min)" },
+};
+const recPreset = () => REC_PRESETS[prefs.recQuality] || REC_PRESETS.small;
 function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } }
 function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* tryb prywatny */ } }
 const prefs = loadPrefs();
@@ -79,7 +89,7 @@ const idb = {
 // trzyma pliki w chmurze). Bez tego folderu nagrania nie są nigdzie zapisywane.
 const archive = (() => {
   const fsSupported = "showDirectoryPicker" in window;
-  let dir = null, granted = false, source = null, running = false, rec = null, segTimer = null, clock = null;
+  let dir = null, granted = false, source = null, recStream = null, running = false, rec = null, segTimer = null, clock = null;
   let recSince = 0, saved = 0, lastName = "", lastError = "";
   const canWrite = () => !!(dir && granted);
 
@@ -134,9 +144,18 @@ const archive = (() => {
     }
   }
 
+  // Osobna, pomniejszona kopia obrazu tylko do nagrywania (podgląd na żywo zostaje w pełnej jakości).
+  async function makeRecStream(s) {
+    const p = recPreset();
+    const v = s.getVideoTracks()[0]?.clone();
+    if (v) { try { await v.applyConstraints({ width: { ideal: p.w }, height: { ideal: p.h }, frameRate: { ideal: p.fps, max: p.fps } }); } catch { /* zostaje oryginalna rozdzielczość */ } }
+    return new MediaStream([...(v ? [v] : []), ...s.getAudioTracks()]);
+  }
+
   function startSegment() {
     const startedAt = new Date();
-    const r = new MediaRecorder(source, { ...(MIME ? { mimeType: MIME } : {}), videoBitsPerSecond: Number(prefs.quality), audioBitsPerSecond: 64000 });
+    const p = recPreset();
+    const r = new MediaRecorder(recStream, { ...(MIME ? { mimeType: MIME } : {}), videoBitsPerSecond: p.video, audioBitsPerSecond: p.audio });
     const chunks = [];
     r.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     r.onstop = () => {
@@ -159,9 +178,11 @@ const archive = (() => {
   }
 
   // Zaczyna nagrywać, gdy jest obraz z kamery i dostęp do folderu Google Drive.
-  function resume() {
+  async function resume() {
     if (!running && source && canWrite() && MIME !== null) {
       running = true; recSince = Date.now();
+      recStream = await makeRecStream(source);
+      if (!running) { recStream.getVideoTracks().forEach(t => t.stop()); recStream = null; return; }
       startSegment();
       clearInterval(clock);
       clock = setInterval(() => { $("recTime").textContent = fmtTime(Math.floor((Date.now() - recSince) / 1000)); }, 1000);
@@ -174,10 +195,15 @@ const archive = (() => {
     clearTimeout(segTimer); clearInterval(clock);
     if (rec && rec.state !== "inactive") rec.stop();
     rec = null;
+    const rs = recStream; recStream = null;
+    // Kopię obrazu zatrzymujemy po domknięciu ostatniego pliku.
+    if (rs) setTimeout(() => rs.getVideoTracks().forEach(t => t.stop()), 1000);
   }
 
   function start(s) { source = s; resume(); }
   function stop() { halt(); source = null; render(); }
+  // Zmiana jakości nagrań: bieżący plik zostaje zapisany, następny już w nowej jakości.
+  function restart() { if (running) { halt(); resume(); } else render(); }
 
   function render() {
     $("recBadge").hidden = !running;
@@ -194,7 +220,7 @@ const archive = (() => {
     $("grantDir").hidden = !(fsSupported && dir && !granted);
   }
 
-  return { init, pick, grant, start, stop };
+  return { init, pick, grant, start, stop, restart };
 })();
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
@@ -597,7 +623,11 @@ $("pickDir").addEventListener("click", () => archive.pick());
 $("grantDir").addEventListener("click", () => archive.grant());
 $("startBtn").addEventListener("click", () => sender.start());
 $("stopBtn").addEventListener("click", () => sender.stop());
-for (const id of ["quality", "segmentMin", "retentionDays"]) {
+$("quality").innerHTML = "";
+for (const [key, p] of Object.entries(REC_PRESETS)) $("quality").append(new Option(p.label, key));
+$("quality").value = prefs.recQuality in REC_PRESETS ? prefs.recQuality : "small";
+$("quality").addEventListener("change", e => { prefs.recQuality = e.target.value; savePrefs(); archive.restart(); });
+for (const id of ["segmentMin", "retentionDays"]) {
   $(id).value = String(prefs[id]);
   $(id).addEventListener("change", e => { prefs[id] = Number(e.target.value); savePrefs(); });
 }
