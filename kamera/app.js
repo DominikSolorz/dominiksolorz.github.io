@@ -1,7 +1,7 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=6";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=7";
 
 // Bez logowania, publicznie: każdy, kto otworzy stronę, ogląda kamerę. Supabase służy tylko
 // do wymiany sygnałów WebRTC na jednym stałym kanale; obraz i dźwięk płyną peer-to-peer.
@@ -10,6 +10,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
 });
 
 const CHANNEL = "cam-dominiksolorz-live";
+// Komputer (nie telefon) z kamerą dostaje duży przycisk „Włącz kamerę”, gdy nikt nie nadaje.
+const IS_DESKTOP = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && !!navigator.mediaDevices?.getUserMedia;
 const MAX_VIEWERS = 5; // każdy oglądający to osobny strumień z domowego łącza
 const HEARTBEAT_MS = 15000;
 const OFFLINE_AFTER_MS = 45000;
@@ -357,7 +359,7 @@ const viewer = (() => {
     stopRec();
     pc?.close(); pc = null; pending = [];
     video.srcObject = null;
-    showLive(""); showPlaceholder("Łączenie…");
+    showLive(""); showPlaceholder("Łączenie…"); $("startHere").hidden = true;
     $("soundBtn").hidden = true; $("fullBtn").disabled = true; $("watchRecBtn").disabled = true;
   }
 
@@ -442,7 +444,10 @@ const viewer = (() => {
       if (pc?.connectionState === "connected") { brokenSince = 0; return; }
       if (!brokenSince) brokenSince = now;
       const offline = !lastSeen || now - lastSeen > OFFLINE_AFTER_MS;
-      if (offline && chan.channel) showPlaceholder("Kamera nie nadaje (komputer offline).\nPołączę się sam, gdy wróci.");
+      if (offline && chan.channel) {
+        showPlaceholder(IS_DESKTOP ? "Kamera nie nadaje.\nJeśli to komputer z kamerą, kliknij przycisk poniżej." : "Kamera nie nadaje (komputer offline).\nPołączę się sam, gdy wróci.");
+        $("startHere").hidden = !IS_DESKTOP;
+      }
       else if (now - brokenSince > 10000 && now - lastJoin > 10000) { reset(); join(); }
     }, 5000);
   }
@@ -476,14 +481,21 @@ function showViewer() {
 }
 
 // ---------- Przyciski ----------
+function setRole(toSend) {
+  sender.stop(); viewer.stop();
+  prefs.role = toSend ? "send" : "watch"; savePrefs();
+  toSend ? showSender() : showViewer();
+}
 $("roleBtn").addEventListener("click", () => {
   const toSend = prefs.role !== "send";
   if (!confirm(toSend
     ? "Ustawić to urządzenie jako kamerę? Będzie nadawać obraz i dźwięk publicznie (każdy na stronie zobaczy) i nagrywać 24/7."
     : "Wyłączyć nadawanie? To urządzenie będzie tylko oglądać.")) return;
-  sender.stop(); viewer.stop();
-  prefs.role = toSend ? "send" : "watch"; savePrefs();
-  toSend ? showSender() : showViewer();
+  setRole(toSend);
+});
+$("startHere").addEventListener("click", () => {
+  if (!confirm("Włączyć kamerę i mikrofon tego komputera? Obraz będzie widoczny publicznie na tej stronie.")) return;
+  setRole(true);
 });
 $("pickDir").addEventListener("click", () => archive.pick());
 $("grantDir").addEventListener("click", () => archive.grant());
