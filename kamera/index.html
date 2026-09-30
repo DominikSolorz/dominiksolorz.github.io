@@ -5,21 +5,45 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#0b1120">
+<meta name="theme-color" content="#070b16">
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
-<header class="top">
-  <div class="brand"><span class="dot"></span>Kamera na żywo</div>
+<header class="topbar">
+  <div class="brand"><span class="dot"></span><span>Kamera na żywo</span></div>
+  <span id="topStatus" class="chip">offline</span>
+  <nav class="nav">
+    <a class="navLink active" href="./">Na żywo</a>
+    <a class="navLink" href="nagrania.html">Nagrania</a>
+    <button id="lockBtn" class="navLink" title="Zablokuj stronę na tym urządzeniu" hidden>🔒</button>
+  </nav>
 </header>
 
-<main>
-  <section id="app">
-    <button id="grantBanner" class="btn grantBanner" hidden>⚠ Nagrywanie wstrzymane — kliknij tutaj, żeby wznowić zapis na Google Drive</button>
-    <div class="card">
+<!-- Wejście PIN-em -->
+<section id="lock" class="lockScreen" hidden>
+  <div class="pinCard">
+    <div class="pinLogo"><span class="dot"></span></div>
+    <h1>Wpisz PIN</h1>
+    <p class="muted small">Dostęp do kamery i nagrań tylko z PIN-em.</p>
+    <div class="pinDots" aria-hidden="true"></div>
+    <p class="pinMsg" role="status"></p>
+    <div class="keypad">
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button data-k="del" class="soft" aria-label="Usuń">⌫</button><button data-k="0">0</button><button data-k="ok" class="soft" aria-label="Wejdź">➜</button>
+    </div>
+    <label class="remember"><input type="checkbox" id="pinRemember" checked> Zapamiętaj to urządzenie</label>
+  </div>
+</section>
+
+<main id="app" hidden>
+  <button id="grantBanner" class="btn grantBanner" hidden>⚠ Nagrywanie wstrzymane — kliknij tutaj, żeby wznowić zapis na Google Drive</button>
+  <div class="layout" id="layout">
+    <section class="mainCol">
       <div class="stage">
         <video id="video" autoplay playsinline muted></video>
         <div id="placeholder" class="placeholder">Łączenie…</div>
@@ -29,40 +53,37 @@
       </div>
 
       <!-- Podgląd -->
-      <div id="watchPanel" hidden>
-        <div class="row">
-          <button class="btn ghost" id="soundBtn" hidden>Włącz dźwięk</button>
-          <button class="btn ghost" id="fullBtn" disabled>Pełny ekran</button>
-          <button class="btn ghost" id="reconnectBtn">Połącz ponownie</button>
-          <button class="btn ghost" id="watchRecBtn" disabled>Nagrywaj tutaj</button>
-        </div>
-        <div class="row"><a id="lastRec" class="btn ghost" hidden>Pobierz nagranie</a></div>
-        <div class="row"><a class="btn primary" href="nagrania.html">📼 Biblioteka nagrań</a></div>
+      <div id="watchPanel" class="toolbar" hidden>
+        <button class="tool" id="soundBtn" hidden>🔊 Włącz dźwięk</button>
+        <button class="tool" id="fullBtn" disabled>⛶ Pełny ekran</button>
+        <button class="tool" id="reconnectBtn">↻ Połącz ponownie</button>
+        <button class="tool" id="watchRecBtn" disabled>⏺ Nagrywaj tutaj</button>
+        <a class="tool primary" href="nagrania.html">📼 Nagrania</a>
+        <a id="lastRec" class="tool" hidden>Pobierz nagranie</a>
       </div>
 
       <div id="status" class="status" hidden></div>
-    </div>
+    </section>
 
-    <!-- Nadajnik -->
-    <div id="sendPanel" hidden>
+    <!-- Nadajnik (komputer z kamerą) -->
+    <aside id="sendPanel" class="sideCol" hidden>
       <div class="card">
-        <h2>Ten komputer nadaje</h2>
-        <p class="muted small">Podgląd jest publiczny: każdy, kto wejdzie na <b>dominiksolorz.github.io</b>, widzi i słyszy tę kamerę na żywo (maks. 5 osób naraz).</p>
-        <div class="row"><a class="btn ghost" href="nagrania.html" target="_blank">📼 Biblioteka nagrań</a></div>
+        <div class="cardHead"><h2>🎥 Nadawanie</h2><span class="muted small">maks. 5 oglądających</span></div>
+        <p class="muted small">Obraz widzą tylko osoby z PIN-em.</p>
+        <div class="grid one">
+          <label>Kamera
+            <select id="cameraSelect"><option value="">Automatycznie (prawdziwa kamera)</option></select>
+          </label>
+          <label class="check"><input type="checkbox" id="withAudio"> Kamera + mikrofon</label>
+        </div>
+        <div class="row">
+          <button class="btn ghost" id="stopBtn">⏹ Zatrzymaj kamerę</button>
+          <button class="btn primary" id="startBtn" hidden>▶ Uruchom kamerę</button>
+        </div>
       </div>
 
       <div class="card">
-        <h2>📼 Nagrania na Google Drive</h2>
-        <p class="muted small">Usunięcie tutaj kasuje nagranie z folderu Google Drive (i z komputera).</p>
-        <div id="pcLibrary" class="libList"></div>
-        <div class="row"><button class="btn ghost small" id="pcLibRefresh">Odśwież listę</button></div>
-        <h3>PIN do usuwania z telefonu</h3>
-        <p class="muted small" id="pinState"></p>
-        <div class="linkRow"><input id="pinInput" type="password" inputmode="numeric" autocomplete="new-password" placeholder="6–12 cyfr"><button class="btn primary" id="pinSave">Ustaw PIN</button></div>
-      </div>
-
-      <div class="card">
-        <h2>Nagrywanie 24/7 → Google Drive</h2>
+        <div class="cardHead"><h2>☁️ Nagrywanie 24/7</h2><span class="muted small">Google Drive</span></div>
         <div id="archiveInfo" class="status"></div>
         <div class="row">
           <button class="btn primary" id="pickDir">Wybierz folder Google Drive</button>
@@ -70,18 +91,16 @@
         </div>
         <div class="grid">
           <label>Jakość nagrań
-            <select id="quality">
-              <option value="small">Mała — 360p (~4 MB / 5 min)</option>
-            </select>
+            <select id="quality"><option value="small">Mała — 360p (~4 MB / 5 min)</option></select>
           </label>
-          <label>Długość jednego pliku
+          <label>Nowy plik co
             <select id="segmentMin">
               <option value="5">5 minut</option>
               <option value="10">10 minut</option>
               <option value="30">30 minut</option>
             </select>
           </label>
-          <label>Usuwaj nagrania starsze niż
+          <label>Usuwaj starsze niż
             <select id="retentionDays">
               <option value="7">7 dni</option>
               <option value="30">30 dni</option>
@@ -89,21 +108,19 @@
               <option value="0">nie usuwaj</option>
             </select>
           </label>
-          <label>Kamera
-            <select id="cameraSelect"><option value="">Automatycznie (prawdziwa kamera)</option></select>
-          </label>
-          <label class="check"><input type="checkbox" id="withAudio"> Kamera + mikrofon</label>
         </div>
-        <p class="muted small">Jakość nagrań nie wpływa na obraz na żywo (ten zostaje w HD). Zmiana jakości działa od następnego pliku; zmiana mikrofonu — po ponownym uruchomieniu kamery.</p>
-        <div class="row">
-          <button class="btn ghost" id="stopBtn">Zatrzymaj kamerę</button>
-          <button class="btn primary" id="startBtn" hidden>Uruchom kamerę</button>
-        </div>
+        <p class="muted small">Jakość nagrań nie wpływa na obraz na żywo (ten zostaje w HD).</p>
       </div>
-    </div>
 
-    <p class="footer"><button class="linkBtn" id="roleBtn">To jest komputer z kamerą — nadawaj z niego</button></p>
-  </section>
+      <div class="card">
+        <div class="cardHead"><h2>📼 Nagrania</h2><button class="btn ghost small" id="pcLibRefresh">↻ Odśwież</button></div>
+        <p class="muted small">Usunięcie kasuje nagranie z Google Drive i z komputera.</p>
+        <div id="pcLibrary" class="libList"></div>
+      </div>
+    </aside>
+  </div>
+
+  <p class="footer"><button class="linkBtn" id="roleBtn">To jest komputer z kamerą — nadawaj z niego</button></p>
 </main>
 
 <div id="bootError" class="card bootError" hidden></div>
@@ -117,6 +134,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=13"></script>
+<script type="module" src="app.js?v=14"></script>
 </body>
 </html>
