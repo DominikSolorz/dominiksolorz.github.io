@@ -1,7 +1,7 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=11";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=12";
 
 // Bez logowania, publicznie: każdy, kto otworzy stronę, ogląda kamerę. Supabase służy tylko
 // do wymiany sygnałów WebRTC na jednym stałym kanale; obraz i dźwięk płyną peer-to-peer.
@@ -112,8 +112,10 @@ const archive = (() => {
     } catch (e) { if (e?.name !== "AbortError") { lastError = errText(e); render(); } }
   }
 
+  const needsGrant = () => !!(fsSupported && dir && !granted);
+
   async function grant() {
-    if (!dir) return;
+    if (!dir || granted) return;
     granted = (await dir.requestPermission({ mode: "readwrite" }).catch(() => "denied")) === "granted";
     resume();
   }
@@ -229,10 +231,11 @@ const archive = (() => {
     $("archiveInfo").textContent = `${text}${count}${lastError ? ` ${lastError}` : ""}`;
     $("pickDir").hidden = !fsSupported;
     $("pickDir").textContent = dir ? "Zmień folder Google Drive" : "Wybierz folder Google Drive";
-    $("grantDir").hidden = !(fsSupported && dir && !granted);
+    $("grantDir").hidden = !needsGrant();
+    $("grantBanner").hidden = !needsGrant();
   }
 
-  return { init, pick, grant, start, stop, restart };
+  return { init, pick, grant, start, stop, restart, needsGrant };
 })();
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
@@ -633,6 +636,10 @@ $("startHere").addEventListener("click", () => {
 });
 $("pickDir").addEventListener("click", () => archive.pick());
 $("grantDir").addEventListener("click", () => archive.grant());
+$("grantBanner").addEventListener("click", () => archive.grant());
+// Chrome po odświeżeniu strony wymaga ponownej zgody na zapis do folderu, a zgodę można poprosić
+// tylko po kliknięciu — wystarczy więc dowolne kliknięcie na stronie, żeby wznowić nagrywanie.
+document.addEventListener("pointerdown", () => { if (prefs.role === "send" && archive.needsGrant()) archive.grant(); }, true);
 $("startBtn").addEventListener("click", () => sender.start());
 $("stopBtn").addEventListener("click", () => sender.stop());
 $("quality").innerHTML = "";
