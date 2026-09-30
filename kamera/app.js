@@ -1,14 +1,16 @@
-// vendor/supabase.js (@supabase/supabase-js 2.117.2) i vendor/qrcode.js (qrcode-generator 1.4.4) ładowane w index.html przed tym modułem.
+// vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=3";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=4";
 
-// Bez logowania: Supabase służy tylko do wymiany sygnałów WebRTC. Dostęp chroni tajny klucz
-// w linku (192 bity losowości) — kanał `cam-<klucz>` zna tylko komputer i osoby z linkiem.
+// Bez logowania, publicznie: każdy, kto otworzy stronę, ogląda kamerę. Supabase służy tylko
+// do wymiany sygnałów WebRTC na jednym stałym kanale; obraz i dźwięk płyną peer-to-peer.
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
 
+const CHANNEL = "cam-dominiksolorz-live";
+const MAX_VIEWERS = 5; // każdy oglądający to osobny strumień z domowego łącza
 const HEARTBEAT_MS = 15000;
 const OFFLINE_AFTER_MS = 45000;
 const PREFS_KEY = "prywatna-kamera-v2";
@@ -26,16 +28,11 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, key: null, audio: true, quality: 600000, segmentMin: 10, retentionDays: 1 };
+const DEFAULTS = { role: null, audio: true, quality: 600000, segmentMin: 10, retentionDays: 1 };
 function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } }
 function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* tryb prywatny */ } }
 const prefs = loadPrefs();
 
-function newKey() {
-  const b = crypto.getRandomValues(new Uint8Array(24));
-  return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-const viewUrl = key => `${location.origin}${location.pathname}#k=${key}`;
 
 // ---------- UI pomocnicze ----------
 const video = $("video");
@@ -190,11 +187,11 @@ const archive = (() => {
 function reconnectingChannel({ onSignal, onSubscribed, label }) {
   let channel = null, attempt = 0, timer = null, active = false;
   function connect() {
-    if (!active || !prefs.key) return;
+    if (!active) return;
     clearTimeout(timer);
     const old = channel; channel = null;
     if (old) supabase.removeChannel(old);
-    const ch = supabase.channel(`cam-${prefs.key}`, { config: { broadcast: { self: false } } });
+    const ch = supabase.channel(CHANNEL, { config: { broadcast: { self: false } } });
     ch.on("broadcast", { event: "signal" }, ({ payload }) => Promise.resolve(onSignal(payload)).catch(e => setStatus(`Błąd połączenia: ${errText(e)}`)));
     channel = ch;
     ch.subscribe(s => {
@@ -233,6 +230,7 @@ const sender = (() => {
   async function connectViewer(viewerId) {
     const ch = chan.channel;
     if (!ch || !stream) return;
+    if (!peers.has(viewerId) && peers.size >= MAX_VIEWERS) return send(ch, { type: "busy", viewerId });
     closePeer(viewerId);
     const pc = new RTCPeerConnection({ iceServers: iceServers() });
     const peer = { pc, pending: [] };
@@ -328,13 +326,11 @@ const sender = (() => {
     showLive(""); showPlaceholder("Kamera wyłączona"); setStatus("");
   }
 
-  function restartChannel() { if (live) { closeAll(); chan.reconnect(); } }
-
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && live) requestWakeLock(); });
   window.addEventListener("online", () => { if (live) chan.reconnect(); });
   window.addEventListener("beforeunload", () => { if (live) send(chan.channel, { type: "broadcaster-stop" }); });
 
-  return { start, stop, restartChannel, get live() { return live; } };
+  return { start, stop, get live() { return live; } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -369,6 +365,7 @@ const viewer = (() => {
     if (sig.type === "broadcaster-ready") { reset(); return join(); }
     if (sig.type === "broadcaster-stop") { reset(); lastSeen = 0; showPlaceholder("Kamera jest wyłączona."); return; }
     if (sig.viewerId !== viewerId) return;
+    if (sig.type === "busy") { showPlaceholder(`Ogląda już ${MAX_VIEWERS} osób — spróbuję ponownie za chwilę…`); return; }
     if (sig.type === "offer") {
       reset();
       const conn = new RTCPeerConnection({ iceServers: iceServers() });
@@ -458,56 +455,28 @@ const viewer = (() => {
 })();
 
 // ---------- Widoki ----------
-function renderLink() {
-  const url = viewUrl(prefs.key);
-  $("viewLink").value = url;
-  try {
-    const qr = window.qrcode(0, "M");
-    qr.addData(url); qr.make();
-    $("qr").innerHTML = "";
-    const img = new Image();
-    img.src = qr.createDataURL(6, 2);
-    img.alt = "Kod QR z linkiem do podglądu";
-    $("qr").appendChild(img);
-  } catch { $("qr").textContent = ""; }
-}
-
 function showSender() {
-  $("setup").hidden = true; $("app").hidden = false; $("resetRole").hidden = false;
   $("sendPanel").hidden = false; $("watchPanel").hidden = true;
-  renderLink();
+  $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
   archive.init();
   sender.start();
 }
 
 function showViewer() {
-  $("setup").hidden = true; $("app").hidden = false; $("resetRole").hidden = false;
   $("sendPanel").hidden = true; $("watchPanel").hidden = false;
+  $("roleBtn").textContent = "To jest komputer z kamerą — nadawaj z niego";
   viewer.start();
 }
 
-function showSetup() {
-  $("setup").hidden = false; $("app").hidden = true; $("resetRole").hidden = true;
-}
-
 // ---------- Przyciski ----------
-$("chooseSend").addEventListener("click", () => { prefs.role = "send"; if (!prefs.key) prefs.key = newKey(); savePrefs(); showSender(); });
-$("chooseWatch").addEventListener("click", () => { $("watchHelp").hidden = false; });
-$("resetRole").addEventListener("click", () => {
-  if (!confirm("Zmienić rolę tego urządzenia? Kamera/podgląd na nim się zatrzyma.")) return;
+$("roleBtn").addEventListener("click", () => {
+  const toSend = prefs.role !== "send";
+  if (!confirm(toSend
+    ? "Ustawić to urządzenie jako kamerę? Będzie nadawać obraz i dźwięk publicznie (każdy na stronie zobaczy) i nagrywać 24/7."
+    : "Wyłączyć nadawanie? To urządzenie będzie tylko oglądać.")) return;
   sender.stop(); viewer.stop();
-  prefs.role = null; savePrefs();
-  history.replaceState(null, "", location.pathname);
-  showSetup();
-});
-$("copyLink").addEventListener("click", async () => {
-  try { await navigator.clipboard.writeText($("viewLink").value); $("copyLink").textContent = "Skopiowano"; }
-  catch { $("viewLink").select(); document.execCommand("copy"); $("copyLink").textContent = "Skopiowano"; }
-  setTimeout(() => { $("copyLink").textContent = "Kopiuj"; }, 2000);
-});
-$("newKey").addEventListener("click", () => {
-  if (!confirm("Utworzyć nowy link? Stary link przestanie działać — trzeba będzie otworzyć nowy na telefonie.")) return;
-  prefs.key = newKey(); savePrefs(); renderLink(); sender.restartChannel();
+  prefs.role = toSend ? "send" : "watch"; savePrefs();
+  toSend ? showSender() : showViewer();
 });
 $("pickDir").addEventListener("click", () => archive.pick());
 $("grantDir").addEventListener("click", () => archive.grant());
@@ -524,13 +493,8 @@ $("watchRecBtn").addEventListener("click", () => viewer.toggleRec());
 $("fullBtn").addEventListener("click", () => (video.requestFullscreen?.() ?? video.webkitEnterFullscreen?.())?.catch?.(() => {}));
 $("soundBtn").addEventListener("click", () => { video.muted = !video.muted; $("soundBtn").textContent = video.muted ? "Włącz dźwięk" : "Wycisz"; });
 
-// ---------- Start: od razu, bez logowania ----------
-const hashKey = new URLSearchParams(location.hash.slice(1)).get("k");
-if (hashKey && hashKey !== prefs.key) { prefs.key = hashKey; prefs.role = "watch"; savePrefs(); }
-else if (hashKey && prefs.role !== "send") { prefs.role = "watch"; savePrefs(); }
-
-if (prefs.role === "send" && prefs.key) showSender();
-else if (prefs.role === "watch" && prefs.key) showViewer();
-else showSetup();
+// ---------- Start: od razu, bez logowania — domyślnie podgląd ----------
+if (prefs.role === "send") showSender();
+else showViewer();
 window.__kameraReady = true;
 $("bootError").hidden = true;

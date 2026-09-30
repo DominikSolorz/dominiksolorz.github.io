@@ -6,28 +6,16 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0b1120">
-<title>Prywatna Kamera</title>
-<link rel="stylesheet" href="style.css?v=3">
+<title>Kamera na żywo</title>
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <header class="top">
-  <div class="brand"><span class="dot"></span>Prywatna Kamera</div>
-  <button id="resetRole" class="btn ghost small" hidden>Zmień urządzenie</button>
+  <div class="brand"><span class="dot"></span>Kamera na żywo</div>
 </header>
 
 <main>
-  <!-- Pierwsze uruchomienie: wybór roli urządzenia -->
-  <section id="setup" class="card" hidden>
-    <h1>Co to za urządzenie?</h1>
-    <p class="muted">Wybierasz tylko raz — później strona od razu działa sama.</p>
-    <div class="choices">
-      <button class="choice" id="chooseSend"><b>Ten komputer to kamera</b><span>Nadaje obraz i dźwięk 24/7 i nagrywa bez przerwy.</span></button>
-      <button class="choice" id="chooseWatch"><b>Chcę oglądać</b><span>Otwórz link albo zeskanuj kod QR z komputera.</span></button>
-    </div>
-    <p id="watchHelp" class="status" hidden>Na komputerze-kamerze skopiuj „Link do podglądu” albo zeskanuj telefonem jego kod QR.</p>
-  </section>
-
-  <section id="app" hidden>
+  <section id="app">
     <div class="card">
       <div class="stage">
         <video id="video" autoplay playsinline muted></video>
@@ -53,11 +41,8 @@
     <!-- Nadajnik -->
     <div id="sendPanel" hidden>
       <div class="card">
-        <h2>Link do podglądu</h2>
-        <p class="muted small">Otwórz go na telefonie (albo zeskanuj kod). Kto ma ten link, widzi kamerę — nie udostępniaj go nikomu.</p>
-        <div class="linkRow"><input id="viewLink" readonly><button class="btn primary" id="copyLink">Kopiuj</button></div>
-        <div id="qr" class="qr"></div>
-        <div class="row"><button class="btn ghost small" id="newKey">Nowy link (stary przestanie działać)</button></div>
+        <h2>Ten komputer nadaje</h2>
+        <p class="muted small">Podgląd jest publiczny: każdy, kto wejdzie na <b>dominiksolorz.github.io</b>, widzi i słyszy tę kamerę na żywo (maks. 5 osób naraz).</p>
       </div>
 
       <div class="card">
@@ -99,6 +84,8 @@
         </div>
       </div>
     </div>
+
+    <p class="footer"><button class="linkBtn" id="roleBtn">To jest komputer z kamerą — nadawaj z niego</button></p>
   </section>
 </main>
 
@@ -113,7 +100,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script src="vendor/qrcode.js?v=1.4.4"></script>
-<script type="module" src="app.js?v=3"></script>
+<script type="module" src="app.js?v=4"></script>
 </body>
 </html>
