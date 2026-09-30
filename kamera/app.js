@@ -1,7 +1,7 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=7";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=8";
 
 // Bez logowania, publicznie: każdy, kto otworzy stronę, ogląda kamerę. Supabase służy tylko
 // do wymiany sygnałów WebRTC na jednym stałym kanale; obraz i dźwięk płyną peer-to-peer.
@@ -12,7 +12,9 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
 const CHANNEL = "cam-dominiksolorz-live";
 // Komputer (nie telefon) z kamerą dostaje duży przycisk „Włącz kamerę”, gdy nikt nie nadaje.
 const IS_DESKTOP = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && !!navigator.mediaDevices?.getUserMedia;
-const MAX_VIEWERS = 5; // każdy oglądający to osobny strumień z domowego łącza
+const MAX_VIEWERS = 5;
+// Wirtualne kamery (OBS, Snap, ManyCam…) pokazują zastępczy obrazek, gdy ich program nie działa — pomijamy je.
+const VIRTUAL_CAM = /obs|virtual|snap camera|manycam|xsplit|ndi|splitcam|vcam|droidcam|epoccam|camo|iriun/i; // każdy oglądający to osobny strumień z domowego łącza
 const HEARTBEAT_MS = 15000;
 const OFFLINE_AFTER_MS = 45000;
 const PREFS_KEY = "prywatna-kamera-v2";
@@ -30,7 +32,7 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, audio: true, quality: 600000, segmentMin: 10, retentionDays: 1 };
+const DEFAULTS = { role: null, cameraId: "", audio: true, quality: 600000, segmentMin: 10, retentionDays: 1 };
 function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } }
 function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* tryb prywatny */ } }
 const prefs = loadPrefs();
@@ -229,7 +231,7 @@ const sender = (() => {
   const chan = reconnectingChannel({
     label: "Nadajnik",
     onSignal,
-    onSubscribed: ch => { if (stream) setStatus(""); send(ch, { type: "broadcaster-ready" }); },
+    onSubscribed: ch => { if (stream && !VIRTUAL_CAM.test(stream.getVideoTracks()[0]?.label || "")) setStatus(""); send(ch, { type: "broadcaster-ready" }); },
   });
 
   function renderViewers() { if (live) showLive(`NA ŻYWO · oglądający: ${peers.size}`); }
@@ -267,13 +269,45 @@ const sender = (() => {
 
   async function requestWakeLock() { try { wakeLock = await navigator.wakeLock?.request("screen") ?? null; } catch { /* brak wsparcia */ } }
 
+  const getMedia = deviceId => navigator.mediaDevices.getUserMedia({
+    video: { width: { ideal: 1280 }, height: { ideal: 720 }, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) },
+    audio: prefs.audio ? { echoCancellation: true, noiseSuppression: true } : false,
+  });
+
+  // Lista kamer do wyboru + automatyczny wybór prawdziwej kamery zamiast wirtualnej.
+  async function listCameras() {
+    const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
+    const sel = $("cameraSelect");
+    sel.innerHTML = "";
+    sel.append(new Option("Automatycznie (prawdziwa kamera)", ""));
+    cams.forEach((c, i) => sel.append(new Option(`${c.label || `Kamera ${i + 1}`}${VIRTUAL_CAM.test(c.label) ? " (wirtualna)" : ""}`, c.deviceId)));
+    sel.value = cams.some(c => c.deviceId === prefs.cameraId) ? prefs.cameraId : "";
+    return cams;
+  }
+
+  async function openBestCamera() {
+    let s;
+    try { s = await getMedia(prefs.cameraId); }
+    catch (e) {
+      if (!prefs.cameraId) throw e;
+      prefs.cameraId = ""; savePrefs(); // zapamiętana kamera zniknęła — wybierz automatycznie
+      s = await getMedia("");
+    }
+    const cams = await listCameras().catch(() => []);
+    const label = s.getVideoTracks()[0]?.label || "";
+    if (!prefs.cameraId && VIRTUAL_CAM.test(label)) {
+      const real = cams.find(c => c.label && !VIRTUAL_CAM.test(c.label));
+      if (real) { s.getTracks().forEach(t => t.stop()); s = await getMedia(real.deviceId); }
+    }
+    return s;
+  }
+
   async function acquireCamera() {
     try {
-      const s = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: prefs.audio ? { echoCancellation: true, noiseSuppression: true } : false,
-      });
+      const s = await openBestCamera();
       if (!live) { s.getTracks().forEach(t => t.stop()); return false; }
+      const label = s.getVideoTracks()[0]?.label || "";
+      if (VIRTUAL_CAM.test(label)) setStatus(`Używana jest wirtualna kamera „${label}” — jeśli widać logo zamiast obrazu, wybierz prawdziwą kamerę na liście „Kamera” poniżej.`);
       stream = s;
       video.srcObject = s; video.muted = true;
       showPlaceholder("");
@@ -302,6 +336,17 @@ const sender = (() => {
       if (await acquireCamera()) { setStatus(""); send(chan.channel, { type: "broadcaster-ready" }); }
       else if (live) scheduleCameraRetry();
     }, retryDelay(camAttempt++));
+  }
+
+  // Zmiana kamery z listy: przełącz obraz i daj znać oglądającym, żeby połączyli się ponownie.
+  async function switchCamera() {
+    if (!live) return;
+    archive.stop(); closeAll();
+    stream?.getTracks().forEach(t => t.stop()); stream = null;
+    if (await acquireCamera()) {
+      if (!VIRTUAL_CAM.test(stream?.getVideoTracks()[0]?.label || "")) setStatus("");
+      send(chan.channel, { type: "broadcaster-ready" });
+    } else scheduleCameraRetry();
   }
 
   async function start() {
@@ -339,7 +384,7 @@ const sender = (() => {
   window.addEventListener("online", () => { if (live) chan.reconnect(); });
   window.addEventListener("beforeunload", () => { if (live) send(chan.channel, { type: "broadcaster-stop" }); });
 
-  return { start, stop, get live() { return live; } };
+  return { start, stop, switchCamera, get live() { return live; } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -505,6 +550,7 @@ for (const id of ["quality", "segmentMin", "retentionDays"]) {
   $(id).value = String(prefs[id]);
   $(id).addEventListener("change", e => { prefs[id] = Number(e.target.value); savePrefs(); });
 }
+$("cameraSelect").addEventListener("change", e => { prefs.cameraId = e.target.value; savePrefs(); sender.switchCamera(); });
 $("withAudio").checked = prefs.audio;
 $("withAudio").addEventListener("change", e => { prefs.audio = e.target.checked; savePrefs(); });
 $("reconnectBtn").addEventListener("click", () => viewer.rejoin());

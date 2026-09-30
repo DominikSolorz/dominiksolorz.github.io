@@ -7,7 +7,7 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0b1120">
 <title>Kamera na żywo</title>
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 <header class="top">
@@ -76,6 +76,9 @@
               <option value="7">7 dni</option>
             </select>
           </label>
+          <label>Kamera
+            <select id="cameraSelect"><option value="">Automatycznie (prawdziwa kamera)</option></select>
+          </label>
           <label class="check"><input type="checkbox" id="withAudio"> Kamera + mikrofon</label>
         </div>
         <p class="muted small">Zmiany jakości i mikrofonu działają po ponownym uruchomieniu kamery.</p>
@@ -101,6 +104,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=7"></script>
+<script type="module" src="app.js?v=8"></script>
 </body>
 </html>
