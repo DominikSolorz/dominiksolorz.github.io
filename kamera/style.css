@@ -49,3 +49,4 @@ select{height:42px;border:1px solid var(--line);border-radius:10px;background:#0
 label.check{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:#0a1222;border-radius:10px;padding:11px;font-size:14px;align-self:end}
 label.check input{width:18px;height:18px}
 @media(max-width:600px){.grid{grid-template-columns:1fr}}
+.bootError{margin-top:12px;border-color:#7f1d1d}
