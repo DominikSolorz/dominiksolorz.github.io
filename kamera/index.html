@@ -12,71 +12,98 @@
 <body>
 <header class="top">
   <div class="brand"><span class="dot"></span>Prywatna Kamera</div>
-  <button id="logout" class="btn ghost small" hidden>Wyloguj</button>
+  <button id="resetRole" class="btn ghost small" hidden>Zmień urządzenie</button>
 </header>
 
 <main>
-  <!-- Logowanie -->
-  <section id="auth" class="card" hidden>
-    <h1>Zaloguj się</h1>
-    <p class="muted">Tylko Ty widzisz swoją kamerę. Zaloguj się tym samym kontem na komputerze i na telefonie.</p>
-    <form id="authForm">
-      <label>E-mail<input id="email" type="email" autocomplete="email" required></label>
-      <label>Hasło<input id="password" type="password" autocomplete="current-password" minlength="8" required></label>
-      <div class="row">
-        <button class="btn primary" type="submit">Zaloguj</button>
-        <button class="btn ghost" type="button" id="signup">Załóż konto</button>
-      </div>
-    </form>
-    <div id="authMsg" class="status" hidden></div>
+  <!-- Pierwsze uruchomienie: wybór roli urządzenia -->
+  <section id="setup" class="card" hidden>
+    <h1>Co to za urządzenie?</h1>
+    <p class="muted">Wybierasz tylko raz — później strona od razu działa sama.</p>
+    <div class="choices">
+      <button class="choice" id="chooseSend"><b>Ten komputer to kamera</b><span>Nadaje obraz i dźwięk 24/7 i nagrywa bez przerwy.</span></button>
+      <button class="choice" id="chooseWatch"><b>Chcę oglądać</b><span>Otwórz link albo zeskanuj kod QR z komputera.</span></button>
+    </div>
+    <p id="watchHelp" class="status" hidden>Na komputerze-kamerze skopiuj „Link do podglądu” albo zeskanuj telefonem jego kod QR.</p>
   </section>
 
-  <!-- Aplikacja -->
   <section id="app" hidden>
-    <nav class="tabs">
-      <button data-mode="send" class="tab">Nadajnik (ten komputer)</button>
-      <button data-mode="watch" class="tab">Podgląd (telefon)</button>
-    </nav>
-
     <div class="card">
       <div class="stage">
         <video id="video" autoplay playsinline muted></video>
-        <div id="placeholder" class="placeholder">Kamera wyłączona</div>
+        <div id="placeholder" class="placeholder">Łączenie…</div>
         <div id="liveBadge" class="badge" hidden><i></i><span id="liveText">NA ŻYWO</span></div>
         <div id="recBadge" class="badge rec" hidden><i></i>REC <span id="recTime">00:00:00</span></div>
-      </div>
-
-      <!-- Nadajnik -->
-      <div id="sendPanel" hidden>
-        <div class="toggles">
-          <label><input type="checkbox" id="autostart"> Tryb 24/7 — włączaj kamerę automatycznie po otwarciu strony</label>
-          <label><input type="checkbox" id="withAudio" checked> Kamera + mikrofon</label>
-        </div>
-        <div class="row">
-          <button class="btn primary" id="startBtn">Włącz kamerę</button>
-          <button class="btn ghost" id="stopBtn" hidden>Zatrzymaj kamerę</button>
-          <button class="btn ghost" id="sendRecBtn" disabled>Nagrywaj</button>
-        </div>
       </div>
 
       <!-- Podgląd -->
       <div id="watchPanel" hidden>
         <div class="row">
-          <button class="btn ghost" id="reconnectBtn">Połącz ponownie</button>
           <button class="btn ghost" id="soundBtn" hidden>Włącz dźwięk</button>
           <button class="btn ghost" id="fullBtn" disabled>Pełny ekran</button>
-          <button class="btn ghost" id="watchRecBtn" disabled>Nagrywaj</button>
+          <button class="btn ghost" id="reconnectBtn">Połącz ponownie</button>
+          <button class="btn ghost" id="watchRecBtn" disabled>Nagrywaj tutaj</button>
         </div>
+        <div class="row"><a id="lastRec" class="btn ghost" hidden>Pobierz nagranie</a></div>
       </div>
 
-      <div class="row"><a id="lastRec" class="btn ghost" hidden>Pobierz ostatnie nagranie</a></div>
       <div id="status" class="status" hidden></div>
-      <p id="hint" class="muted small"></p>
+    </div>
+
+    <!-- Nadajnik -->
+    <div id="sendPanel" hidden>
+      <div class="card">
+        <h2>Link do podglądu</h2>
+        <p class="muted small">Otwórz go na telefonie (albo zeskanuj kod). Kto ma ten link, widzi kamerę — nie udostępniaj go nikomu.</p>
+        <div class="linkRow"><input id="viewLink" readonly><button class="btn primary" id="copyLink">Kopiuj</button></div>
+        <div id="qr" class="qr"></div>
+        <div class="row"><button class="btn ghost small" id="newKey">Nowy link (stary przestanie działać)</button></div>
+      </div>
+
+      <div class="card">
+        <h2>Nagrywanie 24/7 → Google Drive</h2>
+        <div id="archiveInfo" class="status"></div>
+        <div class="row">
+          <button class="btn primary" id="pickDir">Wybierz folder zapisu (Google Drive)</button>
+          <button class="btn ghost" id="grantDir" hidden>Zezwól na zapis do folderu</button>
+        </div>
+        <div class="grid">
+          <label>Jakość nagrań
+            <select id="quality">
+              <option value="300000">Niska (~3,9 GB/doba)</option>
+              <option value="600000">Średnia (~7,2 GB/doba)</option>
+              <option value="1200000">Wysoka (~13,6 GB/doba)</option>
+            </select>
+          </label>
+          <label>Długość jednego pliku
+            <select id="segmentMin">
+              <option value="5">5 minut</option>
+              <option value="10">10 minut</option>
+              <option value="30">30 minut</option>
+            </select>
+          </label>
+          <label>Usuwaj nagrania starsze niż
+            <select id="retentionDays">
+              <option value="0">nie usuwaj</option>
+              <option value="1">1 dzień</option>
+              <option value="2">2 dni</option>
+              <option value="7">7 dni</option>
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" id="withAudio"> Kamera + mikrofon</label>
+        </div>
+        <p class="muted small">Zmiany jakości i mikrofonu działają po ponownym uruchomieniu kamery.</p>
+        <div class="row">
+          <button class="btn ghost" id="stopBtn">Zatrzymaj kamerę</button>
+          <button class="btn primary" id="startBtn" hidden>Uruchom kamerę</button>
+        </div>
+      </div>
     </div>
   </section>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" integrity="sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k" crossorigin="anonymous"></script>
 <script type="module" src="app.js"></script>
 </body>
 </html>
