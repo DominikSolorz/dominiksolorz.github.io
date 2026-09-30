@@ -1,6 +1,7 @@
-// @supabase/supabase-js 2.117.2 i qrcode-generator 1.4.4 (przypięte wersje + SRI) ładowane w index.html przed tym modułem.
+// vendor/supabase.js (@supabase/supabase-js 2.117.2) i vendor/qrcode.js (qrcode-generator 1.4.4) ładowane w index.html przed tym modułem.
+// Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=3";
 
 // Bez logowania: Supabase służy tylko do wymiany sygnałów WebRTC. Dostęp chroni tajny klucz
 // w linku (192 bity losowości) — kanał `cam-<klucz>` zna tylko komputer i osoby z linkiem.
@@ -531,3 +532,5 @@ else if (hashKey && prefs.role !== "send") { prefs.role = "watch"; savePrefs(); 
 if (prefs.role === "send" && prefs.key) showSender();
 else if (prefs.role === "watch" && prefs.key) showViewer();
 else showSetup();
+window.__kameraReady = true;
+$("bootError").hidden = true;
