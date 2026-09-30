@@ -44,3 +44,5 @@ label.check input{width:18px;height:18px}
 .bootError{margin-top:12px;border-color:#7f1d1d}
 .footer{text-align:center;margin-top:18px}
 .linkBtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:13px;cursor:pointer;padding:8px}
+.startHere{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:2;font-size:15px;padding:12px 18px;white-space:nowrap}
+.placeholder{white-space:pre-line}

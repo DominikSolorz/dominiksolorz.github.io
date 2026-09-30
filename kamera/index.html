@@ -7,7 +7,7 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0b1120">
 <title>Kamera na żywo</title>
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 <header class="top">
@@ -20,6 +20,7 @@
       <div class="stage">
         <video id="video" autoplay playsinline muted></video>
         <div id="placeholder" class="placeholder">Łączenie…</div>
+        <button id="startHere" class="btn primary startHere" hidden>Włącz kamerę tego komputera</button>
         <div id="liveBadge" class="badge" hidden><i></i><span id="liveText">NA ŻYWO</span></div>
         <div id="recBadge" class="badge rec" hidden><i></i>REC <span id="recTime">00:00:00</span></div>
       </div>
@@ -100,6 +101,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=6"></script>
+<script type="module" src="app.js?v=7"></script>
 </body>
 </html>
