@@ -34,3 +34,18 @@ input[type=email],input[type=password]{height:44px;border:1px solid var(--line);
 .status{margin-top:12px;border:1px solid #2c3d62;background:#0d1730;border-radius:10px;padding:10px 12px;font-size:14px}
 [hidden]{display:none!important}
 @media(max-width:600px){.tab{font-size:13px;padding:10px 6px}.btn{flex:1 1 auto;justify-content:center}}
+h2{margin:0 0 6px;font-size:18px}
+.card+.card,#sendPanel .card{margin-top:12px}
+.choices{display:grid;gap:10px;margin-top:14px}
+.choice{display:grid;gap:4px;text-align:left;border:1px solid var(--line);background:#0a1222;color:var(--text);border-radius:12px;padding:16px;cursor:pointer;font-size:16px}
+.choice span{color:var(--muted);font-size:13px}
+.choice:hover{border-color:var(--accent)}
+.linkRow{display:flex;gap:8px;margin-top:10px}
+.linkRow input{flex:1;min-width:0;height:42px;border:1px solid var(--line);border-radius:10px;background:#0a1222;color:var(--text);padding:0 10px;font-size:13px}
+.qr{margin-top:12px;display:flex;justify-content:center}
+.qr img{background:#fff;padding:8px;border-radius:10px;width:200px;height:200px;image-rendering:pixelated}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+select{height:42px;border:1px solid var(--line);border-radius:10px;background:#0a1222;color:var(--text);padding:0 8px;font-size:14px}
+label.check{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:#0a1222;border-radius:10px;padding:11px;font-size:14px;align-self:end}
+label.check input{width:18px;height:18px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
