@@ -7,7 +7,7 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0b1120">
 <title>Biblioteka nagrań</title>
-<link rel="stylesheet" href="style.css?v=11">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 <header class="top">
@@ -16,20 +16,82 @@
 </header>
 <main>
   <div class="card">
-    <p class="muted small">Nagrania z kamery na Google Drive: <b>data → godzina → pliki co 10 minut</b> (nazwa pliku = data i godzina:minuta:sekunda startu). Kliknij folder, żeby wejść, a plik — żeby obejrzeć.</p>
-    <div class="library">
-      <iframe id="lib" title="Nagrania z kamery" loading="lazy" referrerpolicy="no-referrer"></iframe>
-    </div>
-    <div class="row">
-      <a class="btn ghost" id="openDrive" target="_blank" rel="noopener">Otwórz w Google Drive</a>
-    </div>
+    <p class="muted small">Nagrania z kamery na Google Drive: <b>dzień → godzina → pliki co 10 minut</b>. „🗑” usuwa nagranie z Google Drive i z komputera (wymaga PIN-u ustawionego na komputerze-kamerze).</p>
+    <div id="library" class="libList"></div>
+    <div class="row"><button class="btn ghost small" id="refresh">Odśwież listę</button></div>
+  </div>
+  <div class="card">
+    <details>
+      <summary class="muted">Folder na Google Drive (podgląd)</summary>
+      <div class="library"><iframe id="lib" title="Nagrania z kamery" loading="lazy" referrerpolicy="no-referrer"></iframe></div>
+      <div class="row"><a class="btn ghost" id="openDrive" target="_blank" rel="noopener">Otwórz w Google Drive</a></div>
+    </details>
   </div>
 </main>
-<script>
-  // Folder „nagrania” na Google Drive właściciela kamery (udostępniony „każdy z linkiem — przeglądający”).
-  var FOLDER_ID = "15c9XPFi55XkQnCjfW_cvDHqhEXo_M5V2";
-  document.getElementById("lib").src = "https://drive.google.com/embeddedfolderview?id=" + FOLDER_ID + "#list";
-  document.getElementById("openDrive").href = "https://drive.google.com/drive/folders/" + FOLDER_ID;
+<script src="vendor/supabase.js?v=2.117.2"></script>
+<script type="module">
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, CHANNEL, driveWatchUrl } from "./config.js?v=13";
+import { deriveKey, sign, targetString } from "./pin.js?v=13";
+import { mountLibrary } from "./library-ui.js?v=13";
+
+// Folder „nagrania” na Google Drive (podgląd; widoczny, jeśli udostępniony „każdy z linkiem”).
+const FOLDER_ID = "15c9XPFi55XkQnCjfW_cvDHqhEXo_M5V2";
+document.getElementById("lib").src = `https://drive.google.com/embeddedfolderview?id=${FOLDER_ID}#list`;
+document.getElementById("openDrive").href = `https://drive.google.com/drive/folders/${FOLDER_ID}`;
+
+// Lista i usuwanie idą przez komputer-kamerę (to on ma dostęp do folderu Google Drive).
+const KEY_STORE = "kamera-pin-key";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+const pending = new Map();
+let last = null; // ostatnia odpowiedź komputera: { salt, nonce, pinSet }
+const ready = new Promise(res => {
+  const ch = supabase.channel(CHANNEL, { config: { broadcast: { self: false } } });
+  ch.on("broadcast", { event: "signal" }, ({ payload: m }) => {
+    if (m?.type !== "lib-reply" || !pending.has(m.reqId)) return;
+    last = m; pending.get(m.reqId)(m); pending.delete(m.reqId);
+  });
+  ch.subscribe(s => { if (s === "SUBSCRIBED") res(ch); });
+});
+
+async function request(type, extra = {}) {
+  const ch = await ready;
+  const reqId = crypto.randomUUID();
+  const reply = new Promise((res, rej) => {
+    pending.set(reqId, res);
+    setTimeout(() => { if (pending.delete(reqId)) rej(new Error("Komputer z kamerą nie odpowiada (jest wyłączony albo strona kamery nie jest otwarta).")); }, 12000);
+  });
+  ch.send({ type: "broadcast", event: "signal", payload: { type, reqId, ...extra } });
+  const m = await reply;
+  if (m.error) { const e = new Error(m.error); e.badPin = m.badPin; throw e; }
+  return m;
+}
+
+async function remove(target) {
+  if (!last?.nonce) await request("lib-days");
+  if (!last.pinSet) throw new Error("Usuwanie z telefonu jest wyłączone — ustaw PIN na komputerze-kamerze.");
+  let key = localStorage.getItem(KEY_STORE);
+  if (!key) {
+    const pin = prompt("Podaj PIN do usuwania nagrań (ustawiony na komputerze-kamerze):");
+    if (!pin) throw new Error("Nie podano PIN-u.");
+    key = await deriveKey(pin.trim(), last.salt);
+  }
+  const nonce = last.nonce;
+  try {
+    await request("lib-delete", { target, nonce, mac: await sign(key, `${nonce}|${targetString(target)}`) });
+    try { localStorage.setItem(KEY_STORE, key); } catch { /* tryb prywatny */ }
+  } catch (e) {
+    if (e.badPin) try { localStorage.removeItem(KEY_STORE); } catch { /* tryb prywatny */ }
+    throw e;
+  }
+}
+
+const lib = mountLibrary(document.getElementById("library"), {
+  days: async () => (await request("lib-days")).days,
+  day: async d => (await request("lib-day", { day: d })).hours,
+  remove,
+  watchUrl: driveWatchUrl,
+});
+document.getElementById("refresh").addEventListener("click", () => lib.refresh());
 </script>
 </body>
 </html>
