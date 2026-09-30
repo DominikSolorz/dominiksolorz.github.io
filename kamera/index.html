@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 <header class="top">
@@ -49,6 +49,16 @@
         <h2>Ten komputer nadaje</h2>
         <p class="muted small">Podgląd jest publiczny: każdy, kto wejdzie na <b>dominiksolorz.github.io</b>, widzi i słyszy tę kamerę na żywo (maks. 5 osób naraz).</p>
         <div class="row"><a class="btn ghost" href="nagrania.html" target="_blank">📼 Biblioteka nagrań</a></div>
+      </div>
+
+      <div class="card">
+        <h2>📼 Nagrania na Google Drive</h2>
+        <p class="muted small">Usunięcie tutaj kasuje nagranie z folderu Google Drive (i z komputera).</p>
+        <div id="pcLibrary" class="libList"></div>
+        <div class="row"><button class="btn ghost small" id="pcLibRefresh">Odśwież listę</button></div>
+        <h3>PIN do usuwania z telefonu</h3>
+        <p class="muted small" id="pinState"></p>
+        <div class="linkRow"><input id="pinInput" type="password" inputmode="numeric" autocomplete="new-password" placeholder="6–12 cyfr"><button class="btn primary" id="pinSave">Ustaw PIN</button></div>
       </div>
 
       <div class="card">
@@ -107,6 +117,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=12"></script>
+<script type="module" src="app.js?v=13"></script>
 </body>
 </html>

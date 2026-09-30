@@ -1,7 +1,9 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=12";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, CHANNEL, driveWatchUrl } from "./config.js?v=13";
+import { b64, deriveKey, sign, targetString } from "./pin.js?v=13";
+import { mountLibrary } from "./library-ui.js?v=13";
 
 // Bez logowania, publicznie: każdy, kto otworzy stronę, ogląda kamerę. Supabase służy tylko
 // do wymiany sygnałów WebRTC na jednym stałym kanale; obraz i dźwięk płyną peer-to-peer.
@@ -9,7 +11,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
 
-const CHANNEL = "cam-dominiksolorz-live";
 // Komputer (nie telefon) z kamerą dostaje duży przycisk „Włącz kamerę”, gdy nikt nie nadaje.
 const IS_DESKTOP = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && !!navigator.mediaDevices?.getUserMedia;
 const MAX_VIEWERS = 5;
@@ -109,6 +110,7 @@ const archive = (() => {
       await idb.set("dir", dir);
       granted = true; lastError = "";
       resume();
+      pcLibrary?.refresh();
     } catch (e) { if (e?.name !== "AbortError") { lastError = errText(e); render(); } }
   }
 
@@ -118,6 +120,7 @@ const archive = (() => {
     if (!dir || granted) return;
     granted = (await dir.requestPermission({ mode: "readwrite" }).catch(() => "denied")) === "granted";
     resume();
+    pcLibrary?.refresh();
   }
 
   async function save(blob, name) {
@@ -235,7 +238,52 @@ const archive = (() => {
     $("grantBanner").hidden = !needsGrant();
   }
 
-  return { init, pick, grant, start, stop, restart, needsGrant };
+  // ----- Biblioteka: lista i usuwanie nagrań w folderze Google Drive (dzień → godzina → pliki) -----
+  const DAY_RE = /^\d{4}-\d{2}-\d{2}$/, HOUR_RE = /^\d{2}-00$/, FILE_RE = /^kamera-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.(webm|mp4)$/;
+
+  async function listDays() {
+    if (!canWrite()) return null;
+    const days = [];
+    for await (const [name, h] of dir.entries()) {
+      if (h.kind !== "directory" || !DAY_RE.test(name)) continue;
+      let count = 0;
+      for await (const [hn, hh] of h.entries()) {
+        if (hh.kind !== "directory" || !HOUR_RE.test(hn)) continue;
+        for await (const [fn, fh] of hh.entries()) if (fh.kind === "file" && FILE_RE.test(fn)) count++;
+      }
+      days.push({ day: name, count });
+    }
+    return days.sort((a, b) => b.day.localeCompare(a.day));
+  }
+
+  async function listDay(day) {
+    if (!canWrite() || !DAY_RE.test(day)) return null;
+    const dh = await dir.getDirectoryHandle(day).catch(() => null);
+    if (!dh) return [];
+    const hours = [];
+    for await (const [hn, hh] of dh.entries()) {
+      if (hh.kind !== "directory" || !HOUR_RE.test(hn)) continue;
+      const files = [];
+      for await (const [fn, fh] of hh.entries()) if (fh.kind === "file" && FILE_RE.test(fn)) files.push({ name: fn, size: (await fh.getFile()).size });
+      files.sort((a, b) => a.name.localeCompare(b.name));
+      hours.push({ hour: hn, files });
+    }
+    return hours.sort((a, b) => a.hour.localeCompare(b.hour));
+  }
+
+  // Usuwa cały dzień, całą godzinę albo jeden plik (nazwy sprawdzane — nic poza nagraniami kamery).
+  async function remove(t = {}) {
+    if (!canWrite()) throw new Error("komputer nie ma dostępu do folderu Google Drive");
+    if (!DAY_RE.test(t.day || "")) throw new Error("zła data");
+    if (!t.hour) return dir.removeEntry(t.day, { recursive: true });
+    if (!HOUR_RE.test(t.hour)) throw new Error("zła godzina");
+    const dh = await dir.getDirectoryHandle(t.day);
+    if (!t.name) return dh.removeEntry(t.hour, { recursive: true });
+    if (!FILE_RE.test(t.name)) throw new Error("zła nazwa pliku");
+    await (await dh.getDirectoryHandle(t.hour)).removeEntry(t.name);
+  }
+
+  return { init, pick, grant, start, stop, restart, needsGrant, listDays, listDay, remove };
 })();
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
@@ -267,6 +315,38 @@ function reconnectingChannel({ onSignal, onSubscribed, label }) {
   };
 }
 const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", payload });
+
+// ---------- Biblioteka nagrań: polecenia z telefonu (lista / usuwanie z PIN-em) ----------
+const library = (() => {
+  const nonces = new Map(); // jednorazowe numery do podpisywania poleceń usunięcia (ważne 5 min)
+  let fails = 0, lockedUntil = 0;
+  const newNonce = () => { const n = b64(crypto.getRandomValues(new Uint8Array(16))); nonces.set(n, Date.now() + 300000); return n; };
+  const salt = () => { if (!prefs.pinSalt) { prefs.pinSalt = b64(crypto.getRandomValues(new Uint8Array(16))); savePrefs(); } return prefs.pinSalt; };
+  setInterval(() => { const now = Date.now(); for (const [k, v] of nonces) if (v < now) nonces.delete(k); }, 60000);
+
+  async function handle(sig, ch) {
+    const reply = extra => send(ch, { type: "lib-reply", reqId: sig.reqId, pinSet: !!prefs.pinKey, salt: salt(), nonce: newNonce(), ...extra });
+    try {
+      if (sig.type === "lib-days") return reply({ days: await archive.listDays() });
+      if (sig.type === "lib-day") return reply({ hours: await archive.listDay(sig.day) });
+      if (sig.type === "lib-delete") {
+        if (!prefs.pinKey) return reply({ error: "Usuwanie z telefonu jest wyłączone — ustaw PIN na komputerze-kamerze." });
+        if (Date.now() < lockedUntil) return reply({ error: "Za dużo błędnych PIN-ów — spróbuj za 10 minut." });
+        const exp = nonces.get(sig.nonce); nonces.delete(sig.nonce);
+        const ok = exp > Date.now() && sig.mac === await sign(prefs.pinKey, `${sig.nonce}|${targetString(sig.target || {})}`);
+        if (!ok) { if (++fails >= 5) { lockedUntil = Date.now() + 600000; fails = 0; } return reply({ error: "Zły PIN.", badPin: true }); }
+        fails = 0;
+        await archive.remove(sig.target);
+        pcLibrary?.refresh();
+        return reply({ ok: true });
+      }
+    } catch (e) { return reply({ error: errText(e) }); }
+  }
+
+  async function setPin(pin) { prefs.pinKey = await deriveKey(pin, salt()); savePrefs(); }
+  return { handle, setPin };
+})();
+let pcLibrary = null;
 
 // ---------- Jakość WebRTC ----------
 // H.264 na pierwszym miejscu (iPhone dekoduje go sprzętowo — płynniej i mniej baterii), reszta jako zapas.
@@ -344,6 +424,7 @@ const sender = (() => {
   }
 
   async function onSignal(sig) {
+    if (typeof sig.type === "string" && sig.type.startsWith("lib-") && sig.type !== "lib-reply") return library.handle(sig, chan.channel);
     if (sig.type === "viewer-join") return connectViewer(sig.viewerId);
     if (sig.type === "viewer-leave") return closePeer(sig.viewerId);
     const peer = sig.viewerId ? peers.get(sig.viewerId) : null;
@@ -604,10 +685,16 @@ const viewer = (() => {
 })();
 
 // ---------- Widoki ----------
+// Lista nagrań na komputerze-kamerze (usuwanie bez PIN-u — to Twój komputer) + ustawienie PIN-u dla telefonu.
+function showPcLibrary() {
+  if (!pcLibrary) pcLibrary = mountLibrary($("pcLibrary"), { days: () => archive.listDays(), day: d => archive.listDay(d), remove: t => archive.remove(t), watchUrl: driveWatchUrl });
+  else pcLibrary.refresh();
+  $("pinState").textContent = prefs.pinKey ? "PIN ustawiony — z telefonu można usuwać nagrania." : "PIN nieustawiony — usuwanie z telefonu wyłączone.";
+}
 function showSender() {
   $("sendPanel").hidden = false; $("watchPanel").hidden = true;
   $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
-  archive.init();
+  archive.init().then(showPcLibrary);
   sender.start();
 }
 
@@ -636,6 +723,12 @@ $("startHere").addEventListener("click", () => {
 });
 $("pickDir").addEventListener("click", () => archive.pick());
 $("grantDir").addEventListener("click", () => archive.grant());
+$("pcLibRefresh").addEventListener("click", () => showPcLibrary());
+$("pinSave").addEventListener("click", async () => {
+  const pin = $("pinInput").value.trim();
+  if (!/^\d{6,12}$/.test(pin)) return alert("PIN musi mieć od 6 do 12 cyfr.");
+  await library.setPin(pin); $("pinInput").value = ""; showPcLibrary();
+});
 $("grantBanner").addEventListener("click", () => archive.grant());
 // Chrome po odświeżeniu strony wymaga ponownej zgody na zapis do folderu, a zgodę można poprosić
 // tylko po kliknięciu — wystarczy więc dowolne kliknięcie na stronie, żeby wznowić nagrywanie.
