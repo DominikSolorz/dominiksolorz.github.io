@@ -1,12 +1,13 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, driveWatchUrl } from "./config.js?v=15";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, driveWatchUrl } from "./config.js?v=16";
 import { b64, sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=15";
 import { requireAccess } from "./lock.js?v=14";
 import { channelFor, lock } from "./access.js?v=14";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=15";
+import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
@@ -420,12 +421,14 @@ function fastStart(sdp) {
 }
 
 // Wyższy limit przepływności; przy słabszym łączu równoważy ostrość i płynność.
-async function tuneVideoSender(pc) {
+// cropWidth: szerokość wysyłanego kadru — powyżej Full HD zmniejszamy, żeby łącze i procesor nadążały.
+async function tuneVideoSender(pc, cropWidth = 0) {
   for (const sender of pc.getSenders()) {
     if (sender.track?.kind !== "video") continue;
     try {
       const p = sender.getParameters();
       if (!p.encodings?.length) p.encodings = [{}];
+      p.encodings[0].scaleResolutionDownBy = Math.max(1, (cropWidth || 1920) / 1920);
       p.encodings[0].maxBitrate = LIVE_MAX_BITRATE;
       p.encodings[0].maxFramerate = LIVE_FPS;
       p.degradationPreference = "balanced";
@@ -437,6 +440,7 @@ async function tuneVideoSender(pc) {
 // ---------- NADAJNIK (komputer z kamerą) ----------
 const sender = (() => {
   const peers = new Map();
+  let zoomer = null, cropWidth = 0; // zbliżenie: wycinany kadr z pełnej rozdzielczości kamery
   let stream = null, live = false, heartbeat = null, keepAlive = null, camTimer = null, camAttempt = 0, wakeLock = null;
   const chan = reconnectingChannel({
     label: "Nadajnik",
@@ -456,20 +460,23 @@ const sender = (() => {
     const pc = new RTCPeerConnection({ iceServers: iceServers() });
     const peer = { pc, pending: [] };
     peers.set(viewerId, peer); renderViewers();
-    stream.getTracks().forEach(t => pc.addTrack(t, stream));
+    const out = zoomer?.stream || stream;
+    out.getTracks().forEach(t => pc.addTrack(t, out));
     preferH264(pc);
     pc.onicecandidate = e => { if (e.candidate) send(ch, { type: "ice", viewerId, from: "broadcaster", candidate: e.candidate.toJSON() }); };
     pc.onconnectionstatechange = () => { if (["failed", "closed"].includes(pc.connectionState) && peers.get(viewerId)?.pc === pc) closePeer(viewerId); };
     const offer = await pc.createOffer();
     offer.sdp = fastStart(offer.sdp);
     await pc.setLocalDescription(offer);
-    await tuneVideoSender(pc);
+    await tuneVideoSender(pc, cropWidth);
     send(ch, { type: "offer", viewerId, sdp: offer });
   }
 
   async function onSignal(sig) {
     if (typeof sig.type === "string" && sig.type.startsWith("lib-") && sig.type !== "lib-reply") return library.handle(sig, chan.channel);
     if (sig.type === "viewer-join") return connectViewer(sig.viewerId);
+    if (sig.type === "zoom" && zoomer) { zoomer.set(sig); return sendZoomState(); }
+    if (sig.type === "zoom-get") return sendZoomState();
     if (sig.type === "viewer-leave") return closePeer(sig.viewerId);
     const peer = sig.viewerId ? peers.get(sig.viewerId) : null;
     if (!peer) return;
@@ -484,7 +491,8 @@ const sender = (() => {
   async function requestWakeLock() { try { wakeLock = await navigator.wakeLock?.request("screen") ?? null; } catch { /* brak wsparcia */ } }
 
   const getMedia = deviceId => navigator.mediaDevices.getUserMedia({
-    video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: LIVE_FPS, max: LIVE_FPS }, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) },
+    // Maksymalna rozdzielczość kamery (do 4K) — zapas pikseli na zbliżenie bez utraty jakości.
+    video: { width: { ideal: 3840 }, height: { ideal: 2160 }, frameRate: { ideal: LIVE_FPS, max: LIVE_FPS }, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) },
     audio: prefs.audio ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true } : false,
   }).then(s => { s.getVideoTracks().forEach(t => { t.contentHint = "motion"; }); return s; });
 
@@ -524,6 +532,8 @@ const sender = (() => {
       if (VIRTUAL_CAM.test(label)) setStatus(`Używana jest wirtualna kamera „${label}” — jeśli widać logo zamiast obrazu, wybierz prawdziwą kamerę na liście „Kamera” poniżej.`);
       stream = s;
       video.srcObject = s; video.muted = true;
+      zoomer?.stop();
+      zoomer = createZoomer(s, w => { cropWidth = w; peers.forEach(p => tuneVideoSender(p.pc, w)); });
       showPlaceholder("");
       s.getVideoTracks()[0]?.addEventListener("ended", () => { if (live && stream === s) cameraLost(); });
       camAttempt = 0;
@@ -538,6 +548,7 @@ const sender = (() => {
 
   function cameraLost() {
     archive.stop(); detector.stop(); closeAll();
+    zoomer?.stop(); zoomer = null;
     stream?.getTracks().forEach(t => t.stop()); stream = null;
     video.srcObject = null; showPlaceholder("Utracono obraz z kamery…");
     setStatus("Utracono obraz z kamery — próbuję ją ponownie uruchomić…");
@@ -557,6 +568,7 @@ const sender = (() => {
   async function switchCamera() {
     if (!live) return;
     archive.stop(); detector.stop(); closeAll();
+    zoomer?.stop(); zoomer = null;
     stream?.getTracks().forEach(t => t.stop()); stream = null;
     if (await acquireCamera()) {
       if (!VIRTUAL_CAM.test(stream?.getVideoTracks()[0]?.label || "")) setStatus("");
@@ -588,6 +600,7 @@ const sender = (() => {
     send(chan.channel, { type: "broadcaster-stop" });
     chan.stop();
     closeAll();
+    zoomer?.stop(); zoomer = null;
     stream?.getTracks().forEach(t => t.stop()); stream = null;
     video.srcObject = null;
     wakeLock?.release().catch(() => {}); wakeLock = null;
@@ -600,6 +613,11 @@ const sender = (() => {
   window.addEventListener("beforeunload", () => { if (live) send(chan.channel, { type: "broadcaster-stop" }); });
 
   // Powiadomienie oglądających o wykrytym ruchu / dźwięku.
+  function sendZoomState() {
+    if (!live || !zoomer) return;
+    send(chan.channel, { type: "zoom-state", ...zoomer.state, lossless: zoomer.lossless, supported: zoomer.supported, max: MAX_ZOOM });
+  }
+
   function notifyViewers(ev) { if (live) send(chan.channel, { type: "alert", ...ev }); }
 
   return { start, stop, switchCamera, notifyViewers, get live() { return live; } };
@@ -637,6 +655,7 @@ const viewer = (() => {
     if (sig.type === "broadcaster-ready") { reset(); return join(); }
     if (sig.type === "broadcaster-stop") { reset(); lastSeen = 0; showPlaceholder("Kamera jest wyłączona."); return; }
     if (sig.type === "alert") return showAlert(sig);
+    if (sig.type === "zoom-state") return zoomUi.apply(sig);
     if (sig.viewerId !== viewerId) return;
     if (sig.type === "busy") { showPlaceholder(`Ogląda już ${MAX_VIEWERS} osób — spróbuję ponownie za chwilę…`); return; }
     if (sig.type === "offer") {
@@ -657,6 +676,7 @@ const viewer = (() => {
         const st = conn.connectionState;
         if (st === "connected") {
           brokenSince = 0; showPlaceholder(""); showLive("NA ŻYWO"); setStatus("");
+          send(chan.channel, { type: "zoom-get" });
           $("fullBtn").disabled = false; $("watchRecBtn").disabled = MIME === null;
         } else if (st === "failed") { showLive(""); setStatus("Nie udało się zestawić połączenia. Przy sieci komórkowej może być potrzebny serwer TURN."); }
         else if (st === "disconnected") { showLive(""); setStatus("Połączenie przerwane — wznawiam…"); }
@@ -730,7 +750,9 @@ const viewer = (() => {
   window.addEventListener("online", () => { if (active) chan.reconnect(); });
   window.addEventListener("beforeunload", () => { if (active) send(chan.channel, { type: "viewer-leave", viewerId }); });
 
-  return { start, stop, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
+  function sendZoom(st) { send(chan.channel, { type: "zoom", ...st }); }
+
+  return { start, stop, sendZoom, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
 })();
 
 // Zdarzenie na telefonie: wyskakujące powiadomienie, wibracja, lista ostatnich zdarzeń.
@@ -744,6 +766,60 @@ function showAlert(ev) {
   t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 6000);
   try { navigator.vibrate?.([200, 100, 200]); } catch { /* brak wibracji */ }
 }
+
+// ---------- Zbliżenie na telefonie: szczypanie, przesuwanie, kółko myszy, przyciski ----------
+const zoomUi = (() => {
+  let state = { z: 1, cx: 0.5, cy: 0.5 }, lossless = 1, max = MAX_ZOOM, enabled = false, timer = null;
+  const pointers = new Map();
+  let pinch = null;
+
+  function label() {
+    $("zoomLabel").textContent = `${state.z.toFixed(1)}×`;
+    $("zoomHint").textContent = state.z <= 1.01 ? "" : state.z <= lossless + 0.05 ? "pełna jakość" : `pełna jakość do ${lossless.toFixed(1)}×`;
+  }
+  function push() { clearTimeout(timer); timer = setTimeout(() => viewer.sendZoom(state), 60); label(); }
+  function set(next) { state = normalize(next); push(); }
+
+  function apply(sig) {
+    enabled = !!sig.supported; lossless = sig.lossless || 1; max = sig.max || MAX_ZOOM;
+    $("zoomBar").hidden = !enabled; $("stage").classList.toggle("zoomable", enabled);
+    if (!pointers.size) state = normalize(sig);
+    label();
+  }
+
+  const stage = $("stage");
+  const rect = () => stage.getBoundingClientRect();
+  stage.addEventListener("pointerdown", e => { if (!enabled || prefs.role === "send" || e.target.closest("#zoomBar, #startHere")) return; stage.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); });
+  stage.addEventListener("pointermove", e => {
+    if (!pointers.has(e.pointerId)) return;
+    const prev = pointers.get(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch) set({ ...state, z: Math.min(max, state.z * dist / pinch) });
+      pinch = dist;
+    } else if (pointers.size === 1 && state.z > 1) {
+      const r = rect();
+      set({ ...state, cx: state.cx - (e.clientX - prev.x) / r.width / state.z, cy: state.cy - (e.clientY - prev.y) / r.height / state.z });
+    }
+  });
+  const end = e => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; };
+  stage.addEventListener("pointerup", end); stage.addEventListener("pointercancel", end);
+  stage.addEventListener("wheel", e => {
+    if (!enabled || prefs.role === "send") return;
+    e.preventDefault();
+    const r = rect();
+    // Zbliżaj w miejsce kursora.
+    const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+    const z = Math.min(max, Math.max(1, state.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+    set({ z, cx: state.cx + (px - 0.5) / state.z - (px - 0.5) / z, cy: state.cy + (py - 0.5) / state.z - (py - 0.5) / z });
+  }, { passive: false });
+  $("zoomIn").addEventListener("click", () => set({ ...state, z: Math.min(max, state.z * 1.25) }));
+  $("zoomOut").addEventListener("click", () => set({ ...state, z: state.z / 1.25 }));
+  $("zoomReset").addEventListener("click", () => set({ z: 1, cx: 0.5, cy: 0.5 }));
+  return { apply };
+})();
 
 // ---------- Widoki ----------
 // Lista nagrań na komputerze-kamerze (działa bezpośrednio na folderze Google Drive).

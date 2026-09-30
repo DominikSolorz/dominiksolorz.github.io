@@ -123,3 +123,11 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 .evBadge{font-size:12px;margin-left:6px;color:#fcd34d}
 .libFilter{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
 .libFilter input{width:16px;height:16px;accent-color:var(--accent)}
+.stage.zoomable{touch-action:none;cursor:grab}
+.stage.zoomable:active{cursor:grabbing}
+.zoomBar{position:absolute;right:10px;bottom:10px;z-index:3;display:flex;align-items:center;gap:6px;padding:5px;border-radius:999px;background:rgba(3,6,13,.72);border:1px solid var(--line2);backdrop-filter:blur(6px)}
+.zoomBar button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line2);background:#16213a;color:var(--text);font-size:20px;line-height:1;cursor:pointer}
+.zoomBar button.soft{font-size:13px;font-weight:700}
+.zoomBar span{min-width:44px;text-align:center;font-weight:800;font-size:14px}
+.zoomBar small{color:#86efac;font-size:11px;padding-right:6px;white-space:nowrap}
+.zoomBar small:empty{display:none}

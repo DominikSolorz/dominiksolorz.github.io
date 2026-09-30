@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=15">
+<link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
 <header class="topbar">
@@ -44,8 +44,15 @@
   <button id="grantBanner" class="btn grantBanner" hidden>⚠ Nagrywanie wstrzymane — kliknij tutaj, żeby wznowić zapis na Google Drive</button>
   <div class="layout" id="layout">
     <section class="mainCol">
-      <div class="stage">
+      <div class="stage" id="stage">
         <video id="video" autoplay playsinline muted></video>
+        <div id="zoomBar" class="zoomBar" hidden>
+          <button id="zoomOut" aria-label="Oddal">−</button>
+          <span id="zoomLabel">1.0×</span>
+          <button id="zoomIn" aria-label="Przybliż">+</button>
+          <button id="zoomReset" class="soft" aria-label="Cały kadr">1×</button>
+          <small id="zoomHint"></small>
+        </div>
         <div id="placeholder" class="placeholder">Łączenie…</div>
         <button id="startHere" class="btn primary startHere" hidden>Włącz kamerę tego komputera</button>
         <div id="liveBadge" class="badge" hidden><i></i><span id="liveText">NA ŻYWO</span></div>
@@ -157,6 +164,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=15"></script>
+<script type="module" src="app.js?v=16"></script>
 </body>
 </html>
