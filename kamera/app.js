@@ -1,7 +1,7 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=10";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER } from "./config.js?v=11";
 
 // Bez logowania, publicznie: każdy, kto otworzy stronę, ogląda kamerę. Supabase służy tylko
 // do wymiany sygnałów WebRTC na jednym stałym kanale; obraz i dźwięk płyną peer-to-peer.
@@ -49,6 +49,8 @@ const recPreset = () => REC_PRESETS[prefs.recQuality] || REC_PRESETS.small;
 function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } }
 function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* tryb prywatny */ } }
 const prefs = loadPrefs();
+// Jednorazowo: nowy plik co 10 minut i przechowywanie 30 dni (biblioteka nagrań na Google Drive).
+if (!prefs.lib1) { prefs.segmentMin = 10; prefs.retentionDays = 30; prefs.lib1 = true; savePrefs(); }
 
 
 // ---------- UI pomocnicze ----------
@@ -119,7 +121,11 @@ const archive = (() => {
   async function save(blob, name) {
     if (!canWrite()) { lastError = "Brak dostępu do folderu Google Drive — ten fragment nagrania nie został zapisany."; return render(); }
     try {
-      const fh = await dir.getFileHandle(name, { create: true });
+      // Biblioteka: folder dnia (RRRR-MM-DD) → folder godziny (GG-00) → plik z godziną, minutą i sekundą.
+      const m = /^kamera-(\d{4}-\d{2}-\d{2})_(\d{2})-\d{2}-\d{2}\./.exec(name);
+      const dayDir = m ? await dir.getDirectoryHandle(m[1], { create: true }) : dir;
+      const hourDir = m ? await dayDir.getDirectoryHandle(`${m[2]}-00`, { create: true }) : dir;
+      const fh = await hourDir.getFileHandle(name, { create: true });
       const w = await fh.createWritable();
       await w.write(blob); await w.close();
       saved++; lastName = name; lastError = "";
@@ -131,12 +137,18 @@ const archive = (() => {
     render();
   }
 
-  // Usuwa własne nagrania starsze niż wybrana liczba dni (tylko pliki „kamera-RRRR-MM-DD_…”).
+  // Usuwa własne nagrania starsze niż wybrana liczba dni: całe foldery dni „RRRR-MM-DD”
+  // oraz starsze pojedyncze pliki „kamera-RRRR-MM-DD_…” (sprzed podziału na foldery).
   async function cleanup() {
     const days = Number(prefs.retentionDays);
     if (!days || !canWrite()) return;
     const limit = Date.now() - days * 86400000;
     for await (const [name, handle] of dir.entries()) {
+      const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(name);
+      if (d && handle.kind === "directory") {
+        if (new Date(+d[1], +d[2] - 1, +d[3], 23, 59, 59).getTime() < limit) await dir.removeEntry(name, { recursive: true }).catch(() => {});
+        continue;
+      }
       const m = /^kamera-(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})\.(webm|mp4)$/.exec(name);
       if (!m || handle.kind !== "file") continue;
       const t = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime();

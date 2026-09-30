@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=10">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
 <header class="top">
@@ -36,6 +36,7 @@
           <button class="btn ghost" id="watchRecBtn" disabled>Nagrywaj tutaj</button>
         </div>
         <div class="row"><a id="lastRec" class="btn ghost" hidden>Pobierz nagranie</a></div>
+        <div class="row"><a class="btn primary" href="nagrania.html">📼 Biblioteka nagrań</a></div>
       </div>
 
       <div id="status" class="status" hidden></div>
@@ -46,6 +47,7 @@
       <div class="card">
         <h2>Ten komputer nadaje</h2>
         <p class="muted small">Podgląd jest publiczny: każdy, kto wejdzie na <b>dominiksolorz.github.io</b>, widzi i słyszy tę kamerę na żywo (maks. 5 osób naraz).</p>
+        <div class="row"><a class="btn ghost" href="nagrania.html" target="_blank">📼 Biblioteka nagrań</a></div>
       </div>
 
       <div class="card">
@@ -70,10 +72,10 @@
           </label>
           <label>Usuwaj nagrania starsze niż
             <select id="retentionDays">
-              <option value="0">nie usuwaj</option>
-              <option value="1">1 dzień</option>
-              <option value="2">2 dni</option>
               <option value="7">7 dni</option>
+              <option value="30">30 dni</option>
+              <option value="90">90 dni</option>
+              <option value="0">nie usuwaj</option>
             </select>
           </label>
           <label>Kamera
@@ -104,6 +106,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=10"></script>
+<script type="module" src="app.js?v=11"></script>
 </body>
 </html>
