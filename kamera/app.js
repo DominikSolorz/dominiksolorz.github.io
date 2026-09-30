@@ -1,7 +1,7 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, driveWatchUrl } from "./config.js?v=16";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, driveWatchUrl } from "./config.js?v=17";
 import { b64, sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=15";
 import { requireAccess } from "./lock.js?v=14";
@@ -23,7 +23,7 @@ const MAX_VIEWERS = 5;
 const LIVE_MAX_BITRATE = 2500000;
 const LIVE_FPS = 30;
 // Wirtualne kamery (OBS, Snap, ManyCam…) pokazują zastępczy obrazek, gdy ich program nie działa — pomijamy je.
-const VIRTUAL_CAM = /obs|virtual|snap camera|manycam|xsplit|ndi|splitcam|vcam|droidcam|epoccam|camo|iriun/i; // każdy oglądający to osobny strumień z domowego łącza
+const VIRTUAL_CAM = /obs|virtual|snap camera|manycam|xsplit|ndi|splitcam|vcam|droidcam|epoccam|camo|iriun/i; // wirtualne kamery — nigdy nieużywane
 const HEARTBEAT_MS = 15000;
 const OFFLINE_AFTER_MS = 45000;
 const PREFS_KEY = "prywatna-kamera-v2";
@@ -445,7 +445,7 @@ const sender = (() => {
   const chan = reconnectingChannel({
     label: "Nadajnik",
     onSignal,
-    onSubscribed: ch => { if (stream && !VIRTUAL_CAM.test(stream.getVideoTracks()[0]?.label || "")) setStatus(""); send(ch, { type: "broadcaster-ready" }); },
+    onSubscribed: ch => { if (stream) setStatus(""); send(ch, { type: "broadcaster-ready" }); },
   });
 
   function renderViewers() { if (live) showLive(`NA ŻYWO · oglądający: ${peers.size}`); }
@@ -497,12 +497,13 @@ const sender = (() => {
   }).then(s => { s.getVideoTracks().forEach(t => { t.contentHint = "motion"; }); return s; });
 
   // Lista kamer do wyboru + automatyczny wybór prawdziwej kamery zamiast wirtualnej.
+  // Tylko prawdziwe kamery — wirtualne (OBS, Snap, ManyCam…) nie pojawiają się na liście i nigdy nie są używane.
   async function listCameras() {
-    const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
+    const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput" && !VIRTUAL_CAM.test(d.label));
     const sel = $("cameraSelect");
     sel.innerHTML = "";
-    sel.append(new Option("Automatycznie (prawdziwa kamera)", ""));
-    cams.forEach((c, i) => sel.append(new Option(`${c.label || `Kamera ${i + 1}`}${VIRTUAL_CAM.test(c.label) ? " (wirtualna)" : ""}`, c.deviceId)));
+    sel.append(new Option("Automatycznie", ""));
+    cams.forEach((c, i) => sel.append(new Option(c.label || `Kamera ${i + 1}`, c.deviceId)));
     sel.value = cams.some(c => c.deviceId === prefs.cameraId) ? prefs.cameraId : "";
     return cams;
   }
@@ -516,10 +517,11 @@ const sender = (() => {
       s = await getMedia("");
     }
     const cams = await listCameras().catch(() => []);
-    const label = s.getVideoTracks()[0]?.label || "";
-    if (!prefs.cameraId && VIRTUAL_CAM.test(label)) {
-      const real = cams.find(c => c.label && !VIRTUAL_CAM.test(c.label));
-      if (real) { s.getTracks().forEach(t => t.stop()); s = await getMedia(real.deviceId); }
+    if (VIRTUAL_CAM.test(s.getVideoTracks()[0]?.label || "")) {
+      s.getTracks().forEach(t => t.stop());
+      if (prefs.cameraId) { prefs.cameraId = ""; savePrefs(); }
+      if (!cams.length) throw new Error("nie znaleziono prawdziwej kamery (wirtualne kamery, np. OBS, są pomijane) — podłącz kamerę");
+      s = await getMedia(cams[0].deviceId);
     }
     return s;
   }
@@ -528,8 +530,6 @@ const sender = (() => {
     try {
       const s = await openBestCamera();
       if (!live) { s.getTracks().forEach(t => t.stop()); return false; }
-      const label = s.getVideoTracks()[0]?.label || "";
-      if (VIRTUAL_CAM.test(label)) setStatus(`Używana jest wirtualna kamera „${label}” — jeśli widać logo zamiast obrazu, wybierz prawdziwą kamerę na liście „Kamera” poniżej.`);
       stream = s;
       video.srcObject = s; video.muted = true;
       zoomer?.stop();
@@ -571,7 +571,7 @@ const sender = (() => {
     zoomer?.stop(); zoomer = null;
     stream?.getTracks().forEach(t => t.stop()); stream = null;
     if (await acquireCamera()) {
-      if (!VIRTUAL_CAM.test(stream?.getVideoTracks()[0]?.label || "")) setStatus("");
+      setStatus("");
       send(chan.channel, { type: "broadcaster-ready" });
     } else scheduleCameraRetry();
   }
