@@ -12,7 +12,7 @@ import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "24"; // musi się zgadzać z version.json
+const VERSION = "25"; // musi się zgadzać z version.json
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -58,6 +58,9 @@ function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(pref
 const prefs = loadPrefs();
 // Jednorazowo: nowy plik co 10 minut i przechowywanie 30 dni (biblioteka nagrań na Google Drive).
 if (!prefs.lib1) { prefs.segmentMin = 10; prefs.retentionDays = 30; prefs.lib1 = true; savePrefs(); }
+// Jednorazowo: nagrania w 360p (~4 MB / 10 min zamiast ~20 MB w HD) — szybkie wysyłanie na Google Drive.
+// Obraz na żywo zostaje w HD; jakość nagrań można potem zmienić na stronie.
+if (!prefs.q360) { prefs.recQuality = "small"; prefs.q360 = true; savePrefs(); }
 
 
 // ---------- UI pomocnicze ----------
@@ -150,49 +153,56 @@ const archive = (() => {
     pump();
   }
 
-  // Wysyła po kolei: najpierw nowe nagrania z kolejki, potem stare pliki z dysku G:. Przy błędzie ponawia za minutę.
+  // Wysyła po kolei: najpierw nowe nagrania z kolejki, potem stare pliki z dysku G:. Plik, którego nie udało się
+  // wysłać, zostaje pominięty w tej rundzie (nie blokuje reszty) i wraca w następnej, po minucie.
   async function pump() {
     if (!cloud.enabled || pumping) return;
     pumping = true; clearTimeout(retryTimer);
+    const skip = new Set();
+    const failed = (name, e) => { skip.add(name); lastError = `Nie udało się wysłać ${name} (${errText(e)}). Spróbuję ponownie — nagranie czeka bezpiecznie na komputerze.`; };
     try {
       for (;;) {
         const keys = await idb.qKeys();
         queued = keys.length; render();
-        if (keys.length) {
-          const item = await idb.qGet(keys[0]);
-          if (item?.blob) {
-            await cloud.upload(item.blob, keys[0], item.events || []);
-            saved++; lastName = keys[0];
-          }
-          await idb.qDel(keys[0]);
-          lastError = "";
+        const key = keys.find(k => !skip.has(k));
+        if (key) {
+          const item = await idb.qGet(key);
+          try {
+            if (item?.blob) { await cloud.upload(item.blob, key, item.events || []); saved++; lastName = key; }
+            await idb.qDel(key);
+            lastError = "";
+          } catch (e) { failed(key, e); }
           continue;
         }
-        if (await migrateOne()) continue;
+        if (await migrateOne(skip, failed)) continue;
         break;
       }
       await cleanup();
     } catch (e) {
       lastError = `Nie udało się wysłać na Google Drive (${errText(e)}). Ponawiam za minutę — nagrania czekają bezpiecznie na komputerze.`;
-      retryTimer = setTimeout(pump, 60000);
-    } finally { pumping = false; render(); }
+    } finally {
+      pumping = false; render();
+      if (skip.size || lastError) retryTimer = setTimeout(pump, 60000);
+    }
   }
 
   // Jedno stare nagranie z folderu na komputerze → Google Drive; z dysku znika dopiero po potwierdzeniu rozmiaru.
-  async function migrateOne() {
+  async function migrateOne(skip = new Set(), failed = () => {}) {
     if (!dir || !granted) return false;
     for await (const [dn, dh] of dir.entries()) {
       if (dh.kind !== "directory" || !DAY_RE.test(dn)) continue;
       for await (const [hn, hh] of dh.entries()) {
         if (hh.kind !== "directory" || !HOUR_RE.test(hn)) continue;
         for await (const [fn, fh] of hh.entries()) {
-          if (fh.kind !== "file" || !FILE_RE.test(fn)) continue;
+          if (fh.kind !== "file" || !FILE_RE.test(fn) || skip.has(fn)) continue;
           const file = await fh.getFile();
           let events = [];
           try { events = JSON.parse(await (await (await hh.getFileHandle("zdarzenia.json")).getFile()).text() || "{}")[fn] || []; } catch { events = []; }
           if (file.size) {
-            const r = await cloud.upload(file, fn, events);
-            if (r.size !== file.size) throw new Error(`rozmiar pliku ${fn} na Google Drive się nie zgadza`);
+            try {
+              const r = await cloud.upload(file, fn, events);
+              if (r.size !== file.size) throw new Error("rozmiar na Google Drive się nie zgadza");
+            } catch (e) { failed(fn, e); return true; }
           }
           await hh.removeEntry(fn);
           migrated++; lastName = fn; lastError = "";
