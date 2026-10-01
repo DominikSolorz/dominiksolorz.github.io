@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#070b16">
+<title>Nagrania na Google Drive — instalacja</title>
+<link rel="stylesheet" href="style.css?v=18">
+<style>
+  ol.steps { padding-left: 1.2em; line-height: 1.6; }
+  ol.steps li { margin: .5em 0; }
+  pre.code { max-height: 220px; overflow: auto; font-size: 11px; white-space: pre; background: rgba(0,0,0,.35); padding: 10px; border-radius: 10px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="dot"></span><span>Kamera na żywo</span></div>
+  <nav class="nav"><a class="navLink" href="./">Na żywo</a><a class="navLink" href="nagrania.html">Nagrania</a></nav>
+</header>
+<main>
+  <div class="layout">
+    <div class="card">
+      <div class="cardHead"><h2>☁️ Nagrania prosto na Google Drive</h2></div>
+      <p class="muted small">Jednorazowo, około 3 minuty. Potem kamera wysyła każde nagranie przez internet prosto na Twój Google Drive, bez programu na komputerze.</p>
+      <ol class="steps">
+        <li><button class="btn primary" id="copy">📋 Kopiuj kod</button> <span id="copied" class="muted small"></span></li>
+        <li>Otwórz <a href="https://script.google.com/home/projects/create" target="_blank" rel="noopener"><b>script.google.com → Nowy projekt</b></a> (konto <b>goldservicepoland@gmail.com</b>; na telefonie najlepiej w Chrome z „Wersją na komputer”).</li>
+        <li>Zaznacz cały przykładowy kod w edytorze, usuń go i <b>wklej</b> skopiowany kod. Kliknij 💾 <b>Zapisz</b>.</li>
+        <li>Kliknij <b>Wdróż → Nowe wdrożenie</b>, przy „Wybierz typ” (⚙) wybierz <b>Aplikacja internetowa</b>.<br>
+          <b>Wykonaj jako:</b> Ja &nbsp;·&nbsp; <b>Kto ma dostęp:</b> Każdy → <b>Wdróż</b>.</li>
+        <li>Kliknij <b>Autoryzuj dostęp</b>, wybierz swoje konto. Jeśli pojawi się „Google nie zweryfikował tej aplikacji” — to Twój własny skrypt: <b>Zaawansowane → Przejdź do projektu → Zezwól</b>.</li>
+        <li>Skopiuj <b>Adres URL aplikacji internetowej</b> (kończy się na <code>/exec</code>) i wyślij go Claude w czacie.</li>
+      </ol>
+      <p class="muted small">Skrypt działa tylko w folderze „nagrania” i przyjmuje polecenia wyłącznie od Twojej kamery (tajny token z PIN-u).</p>
+      <details><summary class="muted small">Podgląd kodu</summary><pre class="code" id="code">Wczytuję…</pre></details>
+    </div>
+  </div>
+</main>
+<script>
+  let code = "";
+  fetch("drive-skrypt.gs?v=1").then(r => r.text()).then(t => { code = t; document.getElementById("code").textContent = t; });
+  document.getElementById("copy").addEventListener("click", async () => {
+    const out = document.getElementById("copied");
+    try { await navigator.clipboard.writeText(code); out.textContent = "Skopiowano ✔"; }
+    catch { out.textContent = "Zaznacz kod w „Podgląd kodu” i skopiuj ręcznie."; document.querySelector("details").open = true; }
+  });
+</script>
+</body>
+</html>

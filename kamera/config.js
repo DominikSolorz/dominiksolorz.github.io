@@ -9,5 +9,11 @@ export const TURN_SERVER = null;
 
 // Kanał sygnalizacji wyliczany jest z PIN-u (access.js) — nie ma go w kodzie.
 
-// Odtwarzanie nagrania: wyszukiwanie pliku po nazwie na Google Drive właściciela.
-export const driveWatchUrl = name => `https://drive.google.com/drive/search?q=${encodeURIComponent(name)}`;
+// Zapis nagrań prosto na Google Drive przez skrypt Google Apps Script (kamera/drive-skrypt.gs).
+// Adres aplikacji internetowej (…/exec). Pusty = stary tryb: zapis do folderu Dysku Google na komputerze.
+export const DRIVE_SCRIPT_URL = "";
+
+// Odtwarzanie nagrania: plik na Google Drive (po identyfikatorze, a bez niego wyszukiwanie po nazwie).
+export const driveWatchUrl = (name, id) => id
+  ? `https://drive.google.com/file/d/${encodeURIComponent(id)}/view`
+  : `https://drive.google.com/drive/search?q=${encodeURIComponent(name)}`;
