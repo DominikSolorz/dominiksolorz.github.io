@@ -12,7 +12,7 @@ import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "28"; // musi się zgadzać z version.json
+const VERSION = "29"; // musi się zgadzać z version.json
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -127,24 +127,21 @@ const cloud = (() => {
   }
   let mbps = 0; // zmierzona szybkość ostatniego wysłania (Mb/s)
   let progress = null; // { name, sent, total, t0 } — bieżące wysyłanie (widoczne w stanie kamery)
-  // Wysyłanie pliku przez XHR: w odróżnieniu od fetch pokazuje postęp, więc widać, czy łącze w ogóle coś przesyła.
+  // Wysyłanie pliku zwykłym „prostym” zapytaniem (fetch, text/plain). Uwaga: nasłuch postępu w XHR
+  // (xhr.upload.onprogress) wymusza zapytanie wstępne CORS, którego Apps Script nie obsługuje — wtedy nic nie wychodzi.
   async function post(body, timeoutMs, name) {
-    return new Promise((resolve, reject) => {
-      const x = new XMLHttpRequest();
-      x.open("POST", DRIVE_SCRIPT_URL);
-      x.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
-      x.timeout = timeoutMs;
-      progress = { name, sent: 0, total: body.length, t0: Date.now() };
-      x.upload.onprogress = e => { if (progress) { progress.sent = e.loaded; if (e.total) progress.total = e.total; } };
-      x.onload = () => {
-        if (x.status < 200 || x.status >= 300) return reject(new Error(`Google Drive odpowiedział ${x.status}`));
-        try { const out = JSON.parse(x.responseText); out.error ? reject(new Error(out.error)) : resolve(out); }
-        catch { reject(new Error("niezrozumiała odpowiedź Google Drive")); }
-      };
-      x.onerror = () => reject(new Error("brak połączenia z Google Drive"));
-      x.ontimeout = () => reject(new Error(`przekroczono czas wysyłania (wysłano ${Math.round((progress?.sent || 0) / 1048576)} z ${Math.round((progress?.total || 0) / 1048576)} MB)`));
-      x.send(body);
-    }).finally(() => { progress = null; });
+    progress = { name, size: body.length, t0: Date.now() };
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const res = await fetch(DRIVE_SCRIPT_URL, { method: "POST", body, headers: { "Content-Type": "text/plain;charset=utf-8" }, signal: ctrl.signal });
+      if (!res.ok) throw new Error(`Google Drive odpowiedział ${res.status}`);
+      const out = await res.json();
+      if (out.error) throw new Error(out.error);
+      return out;
+    } catch (e) {
+      throw new Error(e?.name === "AbortError" ? `przekroczono czas wysyłania (${Math.round(timeoutMs / 60000)} min)` : errText(e));
+    } finally { clearTimeout(t); progress = null; }
   }
   const toBase64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const u = String(r.result), i = u.indexOf("base64,"); res(i < 0 ? "" : u.slice(i + 7)); }; r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
   async function upload(blob, name, events = []) {
@@ -157,12 +154,11 @@ const cloud = (() => {
     if (!out.duplicate) mbps = (blob.size * 8 * 4 / 3) / Math.max(1, Date.now() - t0) / 1000;
     return out;
   }
-  // Opis bieżącego wysyłania: „kamera-…webm: 45% (1.2 Mb/s)”.
+  // Opis bieżącego wysyłania: „Wysyłam kamera-…webm (7 MB) od 3 min”.
   function sending() {
     if (!progress) return "";
-    const sec = Math.max(1, (Date.now() - progress.t0) / 1000);
-    const pct = progress.total ? Math.round(100 * progress.sent / progress.total) : 0;
-    return `Wysyłam ${progress.name}: ${pct}% (${(progress.sent * 8 / sec / 1e6).toFixed(1)} Mb/s).`;
+    const min = Math.floor((Date.now() - progress.t0) / 60000);
+    return `Wysyłam ${progress.name} (${Math.round(progress.size / 1048576)} MB) od ${min} min.`;
   }
   return { enabled, call, upload, sending, get mbps() { return mbps; } };
 })();
