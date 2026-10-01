@@ -15,7 +15,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "37"; // musi się zgadzać z version.json
+const VERSION = "38"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -23,7 +23,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
 
 // Komputer (nie telefon) z kamerą dostaje duży przycisk „Włącz kamerę”, gdy nikt nie nadaje.
 const IS_DESKTOP = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && !!navigator.mediaDevices?.getUserMedia;
-const MAX_VIEWERS = 5;
+// 8 odbiorców przy 2,5 Mb/s wymaga ok. 20 Mb/s uploadu; przy słabszym łączu obraz sam obniży jakość zamiast zrywać połączenie.
+const MAX_VIEWERS = 8;
 // Jakość przesyłu na żywo: HD 720p, 30 kl./s, do 2,5 Mb/s na oglądającego; H.264 = sprzętowe dekodowanie na iPhonie.
 const LIVE_MAX_BITRATE = 2500000;
 const LIVE_FPS = 30;
