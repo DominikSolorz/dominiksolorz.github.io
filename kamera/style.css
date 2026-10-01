@@ -135,3 +135,28 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 .recStatus{margin:10px 0 0;padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.4;border:1px solid transparent}
 .recStatus.ok{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35);color:#86efac}
 .recStatus.bad{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.45);color:#fca5a5;font-weight:600}
+
+/* ---------- Rejestrator (DVR): pasek czasu nagrań pod obrazem na żywo ---------- */
+.dvrCard{margin-top:12px}
+.stage .playback{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#03060d;z-index:1}
+.dvrBadge{top:auto;bottom:12px;left:12px;z-index:2}
+.dvrDays{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 12px}
+.dvrDate{height:34px;border:1px solid var(--line2);border-radius:10px;background:#0a1222;color:var(--text);padding:0 8px;font:inherit;font-size:13px;color-scheme:dark}
+.dvrLive.off{background:#16213a;border-color:var(--line2)}
+.dvrBar{position:relative;height:46px;border-radius:10px;background:repeating-linear-gradient(135deg,#1a2238 0 6px,#151c2f 6px 12px);border:1px solid var(--line2);overflow:hidden;touch-action:none;cursor:pointer;user-select:none}
+.dvrSegs,.dvrEvents{position:absolute;inset:0}
+.dvrSeg{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,#6d28d9,#4c1d95);border-right:1px solid #2e1065}
+.dvrSeg.rec{background:linear-gradient(180deg,#b91c1c,#7f1d1d)}
+.dvrSeg.cloud{box-shadow:inset 0 3px 0 #38bdf8}
+.dvrEv{position:absolute;top:2px;transform:translateX(-50%);border:0;background:none;padding:0;font-size:15px;line-height:1;cursor:pointer;filter:drop-shadow(0 1px 2px #000)}
+.dvrEvents .dvrEv:nth-child(even){top:22px}
+.dvrCursor{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#facc15;box-shadow:0 0 6px #facc15;pointer-events:none}
+.dvrNow{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--red);pointer-events:none}
+.dvrTicks{position:relative;height:18px;margin-top:4px;font-size:11px;color:var(--muted)}
+.dvrTicks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.dvrTicks span:first-child{transform:none}.dvrTicks span:last-child{transform:translateX(-100%)}
+.dvrJumps{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px}
+.dvrTime{min-width:70px;text-align:center;font-variant-numeric:tabular-nums}
+.dvrInfo{margin:8px 0}
+.dvrLibBox{margin-top:8px}
+.dvrLibBox .libList{padding:0 12px 12px}
