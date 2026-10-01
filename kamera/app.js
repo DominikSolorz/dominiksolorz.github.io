@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "41"; // musi się zgadzać z version.json
+const VERSION = "42"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -77,6 +77,7 @@ function showPlaceholder(text) { $("placeholder").textContent = text; $("placeho
 function showLive(text) {
   $("liveBadge").hidden = !text; if (text) $("liveText").textContent = text;
   $("topStatus").textContent = text ? "● na żywo" : "offline"; $("topStatus").classList.toggle("live", !!text);
+  const operational = $("opLive"); if (operational) operational.textContent = text ? "Działa" : "Offline";
 }
 
 const MIME = (() => {
@@ -440,6 +441,8 @@ const archive = (() => {
   function render() {
     $("recBadge").hidden = !running;
     $("archiveInfo").textContent = describe();
+    const operational = $("opArchive");
+    if (operational) operational.textContent = disk.ready ? `Dysk: ${disk.saved} pl.` : "Wybierz folder";
   }
 
   // ----- Dla telefonu (kanał danych): nagrania z pamięci komputera -----
