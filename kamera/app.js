@@ -1,21 +1,21 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=32";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=33";
 import { b64, sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=19";
 import { requireAccess } from "./lock.js?v=14";
 import { channelFor, lock } from "./access.js?v=14";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=32";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
-import * as recstore from "./recstore.js?v=32";
-import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=32";
-import { mountDvr } from "./dvr-ui.js?v=32";
+import * as recstore from "./recstore.js?v=33";
+import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=33";
+import { mountDvr } from "./dvr-ui.js?v=33";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "32"; // musi się zgadzać z version.json
+const VERSION = "33"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -213,11 +213,11 @@ const cloud = (() => {
   return { enabled, call, upload, sending, version, get big() { return scriptVersion >= 2; }, get mbps() { return mbps; } };
 })();
 
-// ---------- Nagrywanie ciągłe 24/7 → pamięć strony na komputerze-kamerze (pętla zapisu) ----------
-// Każdy 10-minutowy plik zostaje na komputerze (IndexedDB, recstore.js). Gdy wolnego miejsca jest mniej
-// niż 1 GB, najstarsze nagrania są kasowane. Na Google Drive idą automatycznie tylko pliki z wykrytym ruchem
-// lub dźwiękiem (bezpiecznik na dowody) — resztę wysyła się ręcznie z telefonu („☁️ Wyślij na Google Drive”).
-// Telefon ogląda i pobiera nagrania z komputera przez kanał danych WebRTC (recproto.js).
+// ---------- Nagrywanie ciągłe 24/7 → Google Drive (przechowywanie w chmurze) ----------
+// Każdy 10-minutowy plik idzie na Google Drive i tam jest przechowywany; strona pokazuje nagrania z Drive.
+// Komputer trzyma plik tylko jako bufor (IndexedDB, recstore.js) do chwili wysłania — potem kasuje go.
+// Bez internetu bufor rośnie, a gdy wolnego miejsca jest mniej niż 1 GB, najstarsze niewysłane są kasowane.
+// Telefon widzi też pliki jeszcze niewysłane — przez kanał danych WebRTC (recproto.js).
 // Obraz w pełnej rozdzielczości kamery: 5 kl./s gdy spokojnie, 30 kl./s przy ruchu/dźwięku (+10 s po ustaniu).
 const REC_MIME = (() => {
   if (typeof MediaRecorder === "undefined") return null;
@@ -246,6 +246,13 @@ const archive = (() => {
 
   async function init() {
     persisted = !!(await recstore.persist());
+    // Nagrania zostawione na komputerze przez wersję 32 (tylko lokalnie) — też do wysłania na Google Drive.
+    if (cloud.enabled) {
+      try {
+        const inQueue = new Set(await idb.qKeys());
+        for (const m of await recstore.list()) if (!inQueue.has(m.name)) await idb.qPut(m.name, { ref: m.name, events: m.events || [] });
+      } catch { /* brak IndexedDB */ }
+    }
     await refreshLocal();
     resume();
     pump();
@@ -278,7 +285,7 @@ const archive = (() => {
         if (!key) break;
         try {
           await cloud.upload(data, key, item.events || []);
-          if (item.ref) await recstore.update(item.ref, { uploaded: true }).catch(() => {});
+          if (item.ref) await recstore.remove(item.ref).catch(() => {}); // na Drive — kopia na komputerze zbędna
           await idb.qDel(key);
           sentToDrive++; lastError = "";
         } catch (e) { failed(key, e); }
@@ -311,8 +318,8 @@ const archive = (() => {
     } catch (e) {
       lastError = `Nie udało się zapisać ${name} na komputerze (${errText(e)}).`;
     }
-    // Bezpiecznik na dowody: plik z ruchem lub dźwiękiem od razu na Google Drive.
-    if (events.length && cloud.enabled) await idb.qPut(name, { ref: name, events }).catch(() => {});
+    // Każdy plik na Google Drive (przechowywanie w chmurze); z komputera znika po wysłaniu.
+    if (cloud.enabled) await idb.qPut(name, { ref: name, events }).catch(() => {});
     refreshLocal();
     pump();
   }
@@ -393,16 +400,15 @@ const archive = (() => {
   const gb = n => `${(n / 1073741824).toFixed(1)} GB`;
   function describe() {
     if (REC_MIME === null) return "Ta przeglądarka nie obsługuje nagrywania.";
-    let text = running ? `Nagrywa bez przerwy na tym komputerze (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
-    text += ` Na komputerze: ${local.count} nagr. (${gb(local.bytes)})${local.oldest ? `, najstarsze z ${new Date(local.oldest).toLocaleString("pl-PL")}` : ""}.`;
+    let text = running ? `Nagrywa bez przerwy na Google Drive (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
+    text += ` Na komputerze czeka na wysłanie: ${local.count} nagr. (${gb(local.bytes)}).`;
     if (Number.isFinite(free)) text += ` Wolne miejsce: ${gb(free)} (poniżej 1 GB najstarsze nagrania są kasowane).`;
     if (looped) text += ` Skasowano najstarszych: ${looped}.`;
     if (!persisted) text += " Pamięć nietrwała — przeglądarka może sama skasować nagrania przy braku miejsca.";
     const set = source?.getVideoTracks()[0]?.getSettings?.() || {};
     if (set.width) text += ` Obraz: ${set.width}×${set.height}, ${fast ? FAST_FPS : SLOW_FPS} kl./s${fast && adaptive() ? " (ruch)" : ""}, ${(REC_MIME || "").split(";")[0] || "domyślny kodek"}.`;
     if (cloud.enabled) {
-      text += " Google Drive: pliki z ruchem/dźwiękiem automatycznie, reszta na życzenie.";
-      if (queued) text += ` Czeka na wysłanie: ${queued}.`;
+      if (queued) text += ` W kolejce: ${queued}.`;
       if (sentToDrive) text += ` Wysłano: ${sentToDrive}.`;
       if (oversize.size) text += ` Za duże na starą wersję skryptu: ${oversize.size}.`;
       const now = cloud.sending();
@@ -1031,7 +1037,7 @@ function toastMsg(text) {
 let dvr = null;
 function showViewer() {
   $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("viewEventsCard").hidden = false; $("layout").classList.remove("sender");
-  dvr ??= mountDvr({ client: recClient, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg });
+  dvr ??= mountDvr({ client: recClient, drive: cloud.enabled ? { day: d => cloud.call("day", { day: d }) } : null, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg });
   recClient.onopen = () => dvr.refresh();
   $("dvrCard").hidden = false;
   dvr.start();

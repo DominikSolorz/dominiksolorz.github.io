@@ -11,7 +11,7 @@ export const TURN_SERVER = null;
 
 // Zapis nagrań prosto na Google Drive przez skrypt Google Apps Script (kamera/drive-skrypt.gs).
 // Adres aplikacji internetowej (…/exec). Pusty = stary tryb: zapis do folderu Dysku Google na komputerze.
-export const DRIVE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxO6lrctfAD_OPbhv2YLY8IbuHd176E99u15M-yUpVEW4JhyePWQVTGiqNuNjAgF19l/exec";
+export const DRIVE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxg64KxpFb4YtdfdA-NyGUv5OYf1WuXrk0W_FWXtE69AHci-DgcgV67QBztTpStPTR/exec";
 
 // Odtwarzanie nagrania: plik na Google Drive (po identyfikatorze, a bez niego wyszukiwanie po nazwie).
 export const driveWatchUrl = (name, id) => id
