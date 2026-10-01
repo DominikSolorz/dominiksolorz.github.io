@@ -12,7 +12,7 @@ import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "27"; // musi się zgadzać z version.json
+const VERSION = "28"; // musi się zgadzać z version.json
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -197,9 +197,14 @@ const archive = (() => {
       for (;;) {
         const keys = await idb.qKeys();
         queued = keys.length; render();
-        const key = keys.find(k => !skip.has(k));
+        // Najpierw najmniejsze pliki — przy wolnym łączu nagrania pojawiają się w chmurze od razu, duże idą później.
+        let key = null, item = null;
+        for (const k of keys) {
+          if (skip.has(k)) continue;
+          const it = await idb.qGet(k);
+          if (!item || (it?.blob?.size || 0) < (item?.blob?.size || 0)) { key = k; item = it; }
+        }
         if (key) {
-          const item = await idb.qGet(key);
           try {
             if (item?.blob) { await cloud.upload(item.blob, key, item.events || []); saved++; lastName = key; }
             await idb.qDel(key);
