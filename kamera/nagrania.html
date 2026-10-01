@@ -21,7 +21,7 @@
   <div class="layout">
     <div class="card">
       <div class="cardHead"><h2>📼 Nagrania</h2><button class="btn ghost small" id="refresh">↻ Odśwież</button></div>
-      <p class="muted small">Dzień → godzina → pliki co 10 minut. „▶ Obejrzyj” otwiera nagranie w Google Drive, „🗑” przenosi je do kosza Google Drive.</p>
+      <p class="muted small">Dzień → godzina → pliki co 10 minut. „▶ Obejrzyj” otwiera nagranie w Google Drive, „🗑” przenosi je do kosza Google Drive. Lista działa także przy wyłączonym komputerze.</p>
       <div id="library" class="libList"></div>
     </div>
     <div class="card">
@@ -35,7 +35,7 @@
 </main>
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module">
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, driveWatchUrl } from "./config.js?v=21";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=22";
 import { sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=19";
 import { savedKey, channelFor } from "./access.js?v=14";
@@ -84,7 +84,23 @@ async function remove(target) {
   await request("lib-delete", { target, nonce, mac: await sign(KEY, `${nonce}|${targetString(target)}`) });
 }
 
-const lib = mountLibrary(document.getElementById("library"), {
+// Z podłączonym skryptem Google Drive lista idzie prosto z chmury — działa też przy wyłączonym komputerze.
+// Token do skryptu wyliczany jest z klucza PIN-u (ten sam co na komputerze-kamerze).
+async function drive(action, extra = {}) {
+  const token = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`drive:${KEY}`)))].map(b => b.toString(16).padStart(2, "0")).join("");
+  const res = await fetch(DRIVE_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action, token, ...extra }), headers: { "Content-Type": "text/plain;charset=utf-8" } });
+  if (!res.ok) throw new Error(`Google Drive odpowiedział ${res.status}`);
+  const out = await res.json();
+  if (out.error) throw new Error(out.error);
+  return out;
+}
+
+const lib = mountLibrary(document.getElementById("library"), DRIVE_SCRIPT_URL ? {
+  days: async () => (await drive("days")).days,
+  day: async d => (await drive("day", { day: d })).hours,
+  remove: t => drive("remove", { target: t }),
+  watchUrl: driveWatchUrl,
+} : {
   days: async () => (await request("lib-days")).days,
   day: async d => (await request("lib-day", { day: d })).hours,
   remove,
