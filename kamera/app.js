@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "43"; // musi się zgadzać z version.json
+const VERSION = "44"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -375,7 +375,9 @@ const archive = (() => {
     r.onstop = () => {
       if (!chunks.length) return;
       const type = r.mimeType || REC_MIME || "video/webm";
-      save(new Blob(chunks, { type }), `kamera-${stamp(startedAt)}.${extFor(type)}`, events, startedAt.getTime(), Date.now());
+      const file = new Blob(chunks, { type });
+      if (!file.size) return; // przerwane przełączenie nigdy nie tworzy pustego „nagrania”
+      save(file, `kamera-${stamp(startedAt)}.${extFor(type)}`, events, startedAt.getTime(), Date.now());
     };
     r.onerror = e => { lastError = `Błąd nagrywania: ${errText(e.error || e)}`; render(); };
     r.start(5000);
