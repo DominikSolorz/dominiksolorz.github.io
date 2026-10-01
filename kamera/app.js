@@ -15,7 +15,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "35"; // musi się zgadzać z version.json
+const VERSION = "36"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -1104,14 +1104,8 @@ $("startHere").addEventListener("click", () => {
   if (!confirm("Włączyć kamerę i mikrofon tego komputera? Obraz zobaczą osoby z PIN-em.")) return;
   setRole(true);
 });
-$("pickDir").addEventListener("click", () => archive.pick());
-$("grantDir").addEventListener("click", () => archive.grant());
 $("pcLibRefresh").addEventListener("click", () => showPcLibrary());
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
-$("grantBanner").addEventListener("click", () => archive.grant());
-// Chrome po odświeżeniu strony wymaga ponownej zgody na zapis do folderu, a zgodę można poprosić
-// tylko po kliknięciu — wystarczy więc dowolne kliknięcie na stronie, żeby wznowić nagrywanie.
-document.addEventListener("pointerdown", () => { if (prefs.role === "send" && archive.needsGrant()) archive.grant(); }, true);
 $("startBtn").addEventListener("click", () => sender.start());
 $("stopBtn").addEventListener("click", () => sender.stop());
 $("retryCameraBtn").addEventListener("click", () => sender.retryCamera());
@@ -1129,8 +1123,18 @@ $("sensitivity").value = prefs.sensitivity;
 $("sensitivity").addEventListener("change", e => { prefs.sensitivity = e.target.value; savePrefs(); });
 renderEvents("pcEvents", recentEvents); renderEvents("viewEvents", viewEvents);
 $("withAudio").checked = prefs.audio;
-$("withAudio").addEventListener("change", e => { prefs.audio = e.target.checked; savePrefs(); });
-$("reconnectBtn").addEventListener("click", () => viewer.rejoin());
+$("withAudio").addEventListener("change", e => {
+  prefs.audio = e.target.checked; savePrefs();
+  // Zmiana ścieżki audio wymaga nowego MediaStreamu; bez tego checkbox wyglądał jak działający, ale nic nie zmieniał.
+  if (prefs.role === "send") sender.switchCamera();
+});
+$("reconnectBtn").addEventListener("click", () => {
+  const b = $("reconnectBtn");
+  if (b.disabled) return;
+  b.disabled = true; b.textContent = "Łączę…";
+  viewer.rejoin();
+  setTimeout(() => { b.disabled = false; b.textContent = "↻ Połącz ponownie"; }, 2000);
+});
 $("watchRecBtn").addEventListener("click", () => viewer.toggleRec());
 $("fullBtn").addEventListener("click", () => (video.requestFullscreen?.() ?? video.webkitEnterFullscreen?.())?.catch?.(() => {}));
 $("soundBtn").addEventListener("click", () => { video.muted = !video.muted; video.volume = 1; $("soundBtn").textContent = video.muted ? "🔊 Włącz dźwięk" : "🔇 Wycisz"; });

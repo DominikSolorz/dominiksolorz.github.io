@@ -41,7 +41,6 @@
 </section>
 
 <main id="app" hidden>
-  <button id="grantBanner" class="btn grantBanner" hidden>⚠ Nagrywanie wstrzymane — kliknij tutaj, żeby wznowić zapis na Google Drive</button>
   <div class="layout" id="layout">
     <section class="mainCol">
       <div class="stage" id="stage">
@@ -71,7 +70,7 @@
 
       <div id="recStatus" class="recStatus" hidden></div>
       <div id="dvrCard" class="card dvrCard" hidden></div>
-      <div id="status" class="status" hidden></div>
+      <div id="status" class="status" role="status" aria-live="polite" hidden></div>
 
       <div id="viewEventsCard" class="card eventsCard">
         <div class="cardHead"><h2>🔔 Zdarzenia</h2><span class="muted small">ruch i dźwięk (kroki, głosy)</span></div>
@@ -115,12 +114,8 @@
       </div>
 
       <div class="card">
-        <div class="cardHead"><h2>☁️ Nagrywanie 24/7</h2><span class="muted small">Google Drive</span></div>
+        <div class="cardHead"><h2>📼 Nagrywanie 24/7</h2><span class="muted small">na tym urządzeniu</span></div>
         <div id="archiveInfo" class="status"></div>
-        <div class="row">
-          <button class="btn primary" id="pickDir">Wybierz folder Google Drive</button>
-          <button class="btn ghost" id="grantDir" hidden>Zezwól na zapis do folderu</button>
-        </div>
         <div class="grid">
           <label>Jakość nagrań
             <select id="quality"><option value="small">Mała — 360p (~4 MB / 5 min)</option></select>
@@ -141,7 +136,7 @@
             </select>
           </label>
         </div>
-        <p class="muted small">Jakość nagrań nie wpływa na obraz na żywo (ten zostaje w HD).</p>
+        <p class="muted small">Jakość nagrań nie wpływa na obraz na żywo. Wybrany plik możesz później wysłać do Google Drive z widoku Nagrania.</p>
       </div>
 
       <div class="card">
@@ -155,7 +150,7 @@
   <p class="footer"><button class="linkBtn" id="roleBtn">To jest komputer z kamerą — nadawaj z niego</button></p>
 </main>
 
-<div id="toast" class="toast" role="alert" hidden></div>
+<div id="toast" class="toast" role="alert" aria-live="assertive" hidden></div>
 <div id="bootError" class="card bootError" hidden></div>
 <script>
 // Zamiast pustego ekranu: pokaż błąd uruchomienia i przycisk odświeżenia.
@@ -167,6 +162,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=35"></script>
+<script type="module" src="app.js?v=36"></script>
 </body>
 </html>
