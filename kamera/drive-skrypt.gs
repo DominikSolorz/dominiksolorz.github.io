@@ -16,7 +16,9 @@ const DAY_RE = /^\d{4}-\d{2}-\d{2}$/, HOUR_RE = /^\d{2}-00$/;
 const FILE_RE = /^kamera-(\d{4}-\d{2}-\d{2})_(\d{2})-\d{2}-\d{2}\.(webm|mp4)$/;
 const EVENTS = "zdarzenia.json";
 
-function doGet() { return json({ ok: true, app: "kamera-drive", version: 1 }); }
+const VERSION = 2; // 2 = wysyłanie dużych plików w kawałkach prosto do Google Drive (bez limitu wielkości)
+
+function doGet() { return json({ ok: true, app: "kamera-drive", version: VERSION }); }
 
 function doPost(e) {
   try {
@@ -24,7 +26,9 @@ function doPost(e) {
     checkToken(req.token);
     const root = DriveApp.getFolderById(ROOT_ID);
     switch (req.action) {
-      case "ping": return json({ ok: true });
+      case "ping": return json({ ok: true, version: VERSION });
+      case "session": return json(session(root, req));
+      case "events": return json(eventsFor(root, req));
       case "upload": return json(upload(root, req));
       case "days": return json({ days: listDays(root) });
       case "day": return json({ hours: listDay(root, req.day) });
@@ -77,6 +81,50 @@ function upload(root, req) {
   if (Array.isArray(req.events) && req.events.length) addEvents(hour, req.name, req.events);
   return { id: file.getId(), size: file.getSize() };
 }
+
+// Sesja wysyłania wznawialnego (Drive API): przeglądarka wysyła plik kawałkami prosto do Google,
+// bez limitu ~50 MB na zapytanie do skryptu. Origin pozwala przeglądarce wysłać dane pod zwrócony adres.
+function hourFolder(root, name) {
+  const m = FILE_RE.exec(name || "");
+  if (!m) throw new Error("zła nazwa pliku");
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try { return child(child(root, m[1], true), `${m[2]}-00`, true); } finally { lock.releaseLock(); }
+}
+
+function session(root, req) {
+  const hour = hourFolder(root, req.name);
+  const size = Number(req.size) || 0;
+  const same = hour.getFilesByName(req.name);
+  while (same.hasNext()) {
+    const f = same.next();
+    if (f.getSize() === size) return { duplicate: true, id: f.getId(), size };
+  }
+  const mime = req.mime || "video/webm";
+  const res = UrlFetchApp.fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,size", {
+    method: "post",
+    contentType: "application/json; charset=UTF-8",
+    headers: {
+      Authorization: "Bearer " + ScriptApp.getOAuthToken(),
+      "X-Upload-Content-Type": mime,
+      "X-Upload-Content-Length": String(size),
+      Origin: "https://dominiksolorz.github.io",
+    },
+    payload: JSON.stringify({ name: req.name, mimeType: mime, parents: [hour.getId()] }),
+    muteHttpExceptions: true,
+  });
+  if (res.getResponseCode() !== 200) throw new Error("Google Drive: " + res.getResponseCode() + " " + res.getContentText().slice(0, 200));
+  const h = res.getAllHeaders();
+  return { url: h.Location || h.location };
+}
+
+function eventsFor(root, req) {
+  if (Array.isArray(req.events) && req.events.length) addEvents(hourFolder(root, req.name), req.name, req.events);
+  return { ok: true };
+}
+
+// Wywołaj raz ręcznie (Uruchom → autoryzacja), jeśli Google nie poprosił o nowe uprawnienia przy wdrożeniu.
+function autoryzuj() { UrlFetchApp.fetch("https://www.googleapis.com/discovery/v1/apis"); DriveApp.getFolderById(ROOT_ID).getName(); }
 
 function readEvents(hour) {
   const it = hour.getFilesByName(EVENTS);

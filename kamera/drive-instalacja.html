@@ -32,6 +32,13 @@
         <li>Kliknij <b>Autoryzuj dostęp</b>, wybierz swoje konto. Jeśli pojawi się „Google nie zweryfikował tej aplikacji” — to Twój własny skrypt: <b>Zaawansowane → Przejdź do projektu → Zezwól</b>.</li>
         <li>Skopiuj <b>Adres URL aplikacji internetowej</b> (kończy się na <code>/exec</code>) i wyślij go Claude w czacie.</li>
       </ol>
+      <div class="card" style="margin:12px 0"><b>Aktualizacja skryptu (masz już zainstalowany):</b>
+        <ol class="steps">
+          <li><button class="btn primary" onclick="document.getElementById('copy').click()">📋 Kopiuj nowy kod</button></li>
+          <li>Otwórz swój projekt na <a href="https://script.google.com/home" target="_blank" rel="noopener">script.google.com</a>, zaznacz cały kod, wklej nowy, 💾 Zapisz.</li>
+          <li><b>Wdróż → Zarządzaj wdrożeniami</b> → ✏️ (ołówek) → <b>Wersja: Nowa wersja</b> → <b>Wdróż</b>.</li>
+          <li>Jeśli pojawi się prośba o dostęp — <b>Autoryzuj → Zaawansowane → Przejdź do projektu → Zezwól</b>. Adres /exec zostaje ten sam.</li>
+        </ol></div>
       <p class="muted small">Skrypt działa tylko w folderze „nagrania” i przyjmuje polecenia wyłącznie od Twojej kamery (tajny token z PIN-u).</p>
       <details><summary class="muted small">Podgląd kodu</summary><pre class="code" id="code">Wczytuję…</pre></details>
     </div>
@@ -39,7 +46,7 @@
 </main>
 <script>
   let code = "";
-  fetch("drive-skrypt.gs?v=1").then(r => r.text()).then(t => { code = t; document.getElementById("code").textContent = t; });
+  fetch("drive-skrypt.gs?v=2").then(r => r.text()).then(t => { code = t; document.getElementById("code").textContent = t; });
   document.getElementById("copy").addEventListener("click", async () => {
     const out = document.getElementById("copied");
     try { await navigator.clipboard.writeText(code); out.textContent = "Skopiowano ✔"; }
