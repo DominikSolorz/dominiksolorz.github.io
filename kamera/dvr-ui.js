@@ -68,7 +68,7 @@ export function mountDvr({ client, drive, root, stage, liveVideo, toast }) {
   function draw() {
     const r = range();
     segsLayer.replaceChildren(...files.map(f => el("div", {
-      className: `dvrSeg${f.recording ? " rec" : ""}${f.local ? " local" : ""}`,
+      className: `dvrSeg${f.recording ? " rec" : ""}`,
       title: `${hm(f.start)}–${hm(f.end)}`,
       style: `left:${pct(f.start, r)};width:calc(${pct(f.end, r)} - ${pct(f.start, r)})`,
     })));
@@ -190,7 +190,7 @@ export function mountDvr({ client, drive, root, stage, liveVideo, toast }) {
     try { download(await fetchFile(f), f.name); } catch (e) { toast(`Nie udało się pobrać: ${e.message || e}`); }
   }
   async function toDrive(f) {
-    try { const r = await client.upload(f.name); toast(r.uploaded ? "To nagranie już jest na Google Drive." : "Wysyłam na Google Drive — komputer wyśle je w tle."); refresh(); }
+    try { const r = await client.upload(f.name); toast(r.uploaded ? "To nagranie już jest na Google Drive." : "Przesyłam na Google Drive — komputer wyśle je w tle, nagranie zostaje też na stronie."); refresh(); }
     catch (e) { toast(`Nie udało się zlecić wysłania: ${e.message || e}`); }
   }
 
@@ -204,12 +204,12 @@ export function mountDvr({ client, drive, root, stage, liveVideo, toast }) {
       el("ul", { className: "libFiles" }, ...list.map(f => {
         const ruch = (f.events || []).filter(e => e.kind === "ruch").length, dzwiek = (f.events || []).filter(e => e.kind === "dzwiek").length;
         return el("li", {},
-          el("span", { textContent: `${hm(f.start)}–${hm(f.end)} · ${mb(f.size || 0)}` }, ruch ? el("span", { className: "evBadge", textContent: ` 🏃${ruch}` }) : null, dzwiek ? el("span", { className: "evBadge", textContent: ` 🔊${dzwiek}` }) : null, f.local ? el("span", { className: "evBadge", textContent: " ⏳ wysyła się" }) : el("span", { className: "evBadge", textContent: " ☁️" })),
+          el("span", { textContent: `${hm(f.start)}–${hm(f.end)} · ${mb(f.size || 0)}` }, ruch ? el("span", { className: "evBadge", textContent: ` 🏃${ruch}` }) : null, dzwiek ? el("span", { className: "evBadge", textContent: ` 🔊${dzwiek}` }) : null, f.uploaded || !f.local ? el("span", { className: "evBadge", textContent: " ☁️ na Drive" }) : null),
           el("span", { className: "libActions" },
             el("button", { className: "btn ghost small", textContent: "▶", title: "Odtwórz", onclick: () => { cursor = f.start; play(f); window.scrollTo({ top: 0, behavior: "smooth" }); } }),
             el("button", { className: "btn ghost small", textContent: "📤 Udostępnij", onclick: () => share(f) }),
             el("button", { className: "btn ghost small", textContent: "⬇ Pobierz", onclick: () => save(f) }),
-            f.local ? el("button", { className: "btn ghost small", textContent: "☁️ Na Drive teraz", onclick: () => toDrive(f) }) : null));
+            f.local && !f.uploaded ? el("button", { className: "btn ghost small", textContent: "☁️ Prześlij do Google Drive", onclick: () => toDrive(f) }) : null));
       })))));
   }
 
@@ -238,7 +238,7 @@ export function mountDvr({ client, drive, root, stage, liveVideo, toast }) {
     now = lr?.now || Date.now();
     const total = files.filter(f => !f.recording);
     info.textContent = (total.length
-      ? `${total.length} nagr. z tego dnia (od ${hm(total[0].start)}) na Google Drive${total.some(f => f.local) ? ", część jeszcze się wysyła ⏳" : ""}. Szare = brak nagrania. Przeciągnij po pasku albo dotknij 🏃/🔊.`
+      ? `${total.length} nagr. z tego dnia (od ${hm(total[0].start)}). Szare = brak nagrania. Przeciągnij po pasku albo dotknij 🏃/🔊.`
       : "Brak nagrań z tego dnia.") + (driveErr ? ` (Google Drive: ${driveErr.message || driveErr})` : "");
     draw(); drawLib();
   }
