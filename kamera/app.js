@@ -12,7 +12,7 @@ import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "22"; // musi się zgadzać z version.json
+const VERSION = "23"; // musi się zgadzać z version.json
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -122,9 +122,11 @@ const cloud = (() => {
       throw new Error(e?.name === "AbortError" ? "przekroczono czas wysyłania" : errText(e));
     } finally { clearTimeout(t); }
   }
-  const toBase64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+  const toBase64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const u = String(r.result), i = u.indexOf("base64,"); res(i < 0 ? "" : u.slice(i + 7)); }; r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
   async function upload(blob, name, events = []) {
-    return call("upload", { name, mime: blob.type || "video/webm", events, data: await toBase64(blob) }, 6 * 60000);
+    // Typ bez kodeków („video/webm;codecs=vp9,opus” → „video/webm”) — przecinek psuł adres data: przy kodowaniu.
+    const mime = (blob.type || "video/webm").split(";")[0];
+    return call("upload", { name, mime, events, data: await toBase64(new Blob([blob], { type: mime })) }, 6 * 60000);
   }
   return { enabled, call, upload };
 })();
