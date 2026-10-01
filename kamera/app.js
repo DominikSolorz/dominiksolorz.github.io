@@ -12,7 +12,7 @@ import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "26"; // musi się zgadzać z version.json
+const VERSION = "27"; // musi się zgadzać z version.json
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -47,10 +47,10 @@ const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitiv
 // Jakość NAGRAŃ (osobno od obrazu na żywo, który zostaje w HD). Mniejsza rozdzielczość, mniej klatek
 // i niska przepływność = małe pliki na Google Drive. Rozmiary to przybliżenie dla 5 minut nagrania.
 const REC_PRESETS = {
-  mini:   { w: 426,  h: 240, fps: 8,  video: 40000,  audio: 16000, label: "Mini — 240p (~2 MB / 5 min)" },
-  small:  { w: 640,  h: 360, fps: 10, video: 90000,  audio: 20000, label: "Mała — 360p (~4 MB / 5 min)" },
-  medium: { w: 854,  h: 480, fps: 15, video: 190000, audio: 24000, label: "Średnia — 480p (~8 MB / 5 min)" },
-  hd:     { w: 1280, h: 720, fps: 20, video: 350000, audio: 32000, label: "HD — 720p (~15 MB / 5 min)" },
+  mini:   { w: 426,  h: 240, fps: 8,  video: 40000,  audio: 32000, label: "Mini — 240p (~2 MB / 5 min)" },
+  small:  { w: 640,  h: 360, fps: 10, video: 90000,  audio: 48000, label: "Mała — 360p (~4 MB / 5 min)" },
+  medium: { w: 854,  h: 480, fps: 15, video: 190000, audio: 64000, label: "Średnia — 480p (~8 MB / 5 min)" },
+  hd:     { w: 1280, h: 720, fps: 20, video: 350000, audio: 96000, label: "HD — 720p (~15 MB / 5 min)" },
 };
 const recPreset = () => REC_PRESETS[prefs.recQuality] || REC_PRESETS.small;
 function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } }
@@ -126,16 +126,45 @@ const cloud = (() => {
     } finally { clearTimeout(t); }
   }
   let mbps = 0; // zmierzona szybkość ostatniego wysłania (Mb/s)
+  let progress = null; // { name, sent, total, t0 } — bieżące wysyłanie (widoczne w stanie kamery)
+  // Wysyłanie pliku przez XHR: w odróżnieniu od fetch pokazuje postęp, więc widać, czy łącze w ogóle coś przesyła.
+  async function post(body, timeoutMs, name) {
+    return new Promise((resolve, reject) => {
+      const x = new XMLHttpRequest();
+      x.open("POST", DRIVE_SCRIPT_URL);
+      x.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
+      x.timeout = timeoutMs;
+      progress = { name, sent: 0, total: body.length, t0: Date.now() };
+      x.upload.onprogress = e => { if (progress) { progress.sent = e.loaded; if (e.total) progress.total = e.total; } };
+      x.onload = () => {
+        if (x.status < 200 || x.status >= 300) return reject(new Error(`Google Drive odpowiedział ${x.status}`));
+        try { const out = JSON.parse(x.responseText); out.error ? reject(new Error(out.error)) : resolve(out); }
+        catch { reject(new Error("niezrozumiała odpowiedź Google Drive")); }
+      };
+      x.onerror = () => reject(new Error("brak połączenia z Google Drive"));
+      x.ontimeout = () => reject(new Error(`przekroczono czas wysyłania (wysłano ${Math.round((progress?.sent || 0) / 1048576)} z ${Math.round((progress?.total || 0) / 1048576)} MB)`));
+      x.send(body);
+    }).finally(() => { progress = null; });
+  }
   const toBase64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const u = String(r.result), i = u.indexOf("base64,"); res(i < 0 ? "" : u.slice(i + 7)); }; r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
   async function upload(blob, name, events = []) {
     // Typ bez kodeków („video/webm;codecs=vp9,opus” → „video/webm”) — przecinek psuł adres data: przy kodowaniu.
     const mime = (blob.type || "video/webm").split(";")[0];
     const t0 = Date.now();
-    const out = await call("upload", { name, mime, events, data: await toBase64(new Blob([blob], { type: mime })) }, 25 * 60000); // wolne łącze + podgląd na żywo
+    token ??= [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`drive:${ACCESS_KEY}`)))].map(b => b.toString(16).padStart(2, "0")).join("");
+    const body = JSON.stringify({ action: "upload", token, name, mime, events, data: await toBase64(new Blob([blob], { type: mime })) });
+    const out = await post(body, 25 * 60000, name); // wolne łącze + podgląd na żywo
     if (!out.duplicate) mbps = (blob.size * 8 * 4 / 3) / Math.max(1, Date.now() - t0) / 1000;
     return out;
   }
-  return { enabled, call, upload, get mbps() { return mbps; } };
+  // Opis bieżącego wysyłania: „kamera-…webm: 45% (1.2 Mb/s)”.
+  function sending() {
+    if (!progress) return "";
+    const sec = Math.max(1, (Date.now() - progress.t0) / 1000);
+    const pct = progress.total ? Math.round(100 * progress.sent / progress.total) : 0;
+    return `Wysyłam ${progress.name}: ${pct}% (${(progress.sent * 8 / sec / 1e6).toFixed(1)} Mb/s).`;
+  }
+  return { enabled, call, upload, sending, get mbps() { return mbps; } };
 })();
 
 // ---------- Nagrywanie ciągłe 24/7 → Google Drive (nic nie trafia do „Pobrane”) ----------
@@ -398,8 +427,10 @@ const archive = (() => {
       if (migrated) text += ` Dosłano starych nagrań z komputera: ${migrated}.`;
       const set = source?.getVideoTracks()[0]?.getSettings?.() || {};
       text += ` Jakość nagrań: ${effPreset().label.split(" (")[0]}${degraded() ? " (chwilowo obniżona — łącze nie nadąża)" : ""}.`;
-      if (set.width) text += ` Kamera: ${set.width}×${set.height}.`;
-      if (cloud.mbps) text += ` Wysyłanie: ${cloud.mbps.toFixed(1)} Mb/s.`;
+      if (set.width) text += ` Kamera: ${set.width}×${set.height}${set.frameRate ? `, ${Math.round(set.frameRate)} kl./s` : ""}.`;
+      if (cloud.mbps) text += ` Ostatnie wysyłanie: ${cloud.mbps.toFixed(1)} Mb/s.`;
+      const now = cloud.sending();
+      if (now) text += ` ${now}`;
       if (dir && !granted) text += " Stare nagrania z dysku G: czekają — kliknij „Wyślij stare nagrania z komputera”.";
     }
     else if (!fsSupported) text = "Nagrywanie do Google Drive działa w Chrome lub Edge na komputerze. W tej przeglądarce nic nie jest nagrywane.";
@@ -576,9 +607,11 @@ function preferH264(pc) {
 // Chrome zaczyna od ~300 kb/s i powoli podnosi jakość — zaczynamy od razu wysoko, żeby obraz był ostry od pierwszej sekundy.
 function fastStart(sdp) {
   const kbps = Math.round(LIVE_MAX_BITRATE / 1000);
-  let inVideo = false;
+  let inVideo = false, inAudio = false;
   return sdp.split("\r\n").map(line => {
-    if (line.startsWith("m=")) inVideo = line.startsWith("m=video");
+    if (line.startsWith("m=")) { inVideo = line.startsWith("m=video"); inAudio = line.startsWith("m=audio"); }
+    // Dźwięk na żywo w wysokiej jakości (Opus do 128 kb/s, odporny na utratę pakietów).
+    if (inAudio && line.startsWith("a=fmtp:") && line.includes("useinbandfec") && !line.includes("maxaveragebitrate")) return `${line};maxaveragebitrate=128000`;
     if (inVideo && line.startsWith("a=fmtp:") && !line.includes("x-google-start-bitrate")) {
       return `${line};x-google-min-bitrate=600;x-google-start-bitrate=1500;x-google-max-bitrate=${kbps}`;
     }
@@ -657,9 +690,10 @@ const sender = (() => {
   async function requestWakeLock() { try { wakeLock = await navigator.wakeLock?.request("screen") ?? null; } catch { /* brak wsparcia */ } }
 
   const getMedia = deviceId => navigator.mediaDevices.getUserMedia({
-    // Maksymalna rozdzielczość kamery (do 4K) — zapas pikseli na zbliżenie bez utraty jakości.
-    video: { width: { ideal: 3840 }, height: { ideal: 2160 }, frameRate: { ideal: LIVE_FPS, max: LIVE_FPS }, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) },
-    audio: prefs.audio ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true } : false,
+    // Ok. 1920 px szerokości przy 30 kl./s — płynny obraz. Pełne 5 MP kamery dają tylko kilka klatek na sekundę.
+    video: { width: { ideal: 1920 }, frameRate: { ideal: LIVE_FPS, max: LIVE_FPS }, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) },
+    // Mikrofon na pełną czułość: bez tłumienia szumów i echa (te wycinają ciche dźwięki, np. kroki), z automatycznym wzmocnieniem.
+    audio: prefs.audio ? { echoCancellation: false, noiseSuppression: false, autoGainControl: true } : false,
   }).then(s => { s.getVideoTracks().forEach(t => { t.contentHint = "motion"; }); return s; });
 
   // Lista kamer do wyboru + automatyczny wybór prawdziwej kamery zamiast wirtualnej.
@@ -1098,7 +1132,7 @@ $("withAudio").addEventListener("change", e => { prefs.audio = e.target.checked;
 $("reconnectBtn").addEventListener("click", () => viewer.rejoin());
 $("watchRecBtn").addEventListener("click", () => viewer.toggleRec());
 $("fullBtn").addEventListener("click", () => (video.requestFullscreen?.() ?? video.webkitEnterFullscreen?.())?.catch?.(() => {}));
-$("soundBtn").addEventListener("click", () => { video.muted = !video.muted; $("soundBtn").textContent = video.muted ? "🔊 Włącz dźwięk" : "🔇 Wycisz"; });
+$("soundBtn").addEventListener("click", () => { video.muted = !video.muted; video.volume = 1; $("soundBtn").textContent = video.muted ? "🔊 Włącz dźwięk" : "🔇 Wycisz"; });
 
 // ---------- Start: PIN, potem od razu podgląd (albo nadawanie na komputerze-kamerze) ----------
 // Adres dominiksolorz.github.io/#nadaj ustawia to urządzenie jako kamerę (bez klikania na stronie).
