@@ -12,7 +12,7 @@ import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "25"; // musi się zgadzać z version.json
+const VERSION = "26"; // musi się zgadzać z version.json
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -58,9 +58,9 @@ function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(pref
 const prefs = loadPrefs();
 // Jednorazowo: nowy plik co 10 minut i przechowywanie 30 dni (biblioteka nagrań na Google Drive).
 if (!prefs.lib1) { prefs.segmentMin = 10; prefs.retentionDays = 30; prefs.lib1 = true; savePrefs(); }
-// Jednorazowo: nagrania w 360p (~4 MB / 10 min zamiast ~20 MB w HD) — szybkie wysyłanie na Google Drive.
-// Obraz na żywo zostaje w HD; jakość nagrań można potem zmienić na stronie.
-if (!prefs.q360) { prefs.recQuality = "small"; prefs.q360 = true; savePrefs(); }
+// Jednorazowo: nagrania w HD 720p. Gdy łącze nie nadąża (≥3 pliki w kolejce), archiwum samo
+// chwilowo nagrywa w 360p i wraca do HD po opróżnieniu kolejki — żadna godzina nie przepada.
+if (!prefs.q720) { prefs.recQuality = "hd"; prefs.q720 = true; savePrefs(); }
 
 
 // ---------- UI pomocnicze ----------
@@ -125,13 +125,17 @@ const cloud = (() => {
       throw new Error(e?.name === "AbortError" ? "przekroczono czas wysyłania" : errText(e));
     } finally { clearTimeout(t); }
   }
+  let mbps = 0; // zmierzona szybkość ostatniego wysłania (Mb/s)
   const toBase64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const u = String(r.result), i = u.indexOf("base64,"); res(i < 0 ? "" : u.slice(i + 7)); }; r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
   async function upload(blob, name, events = []) {
     // Typ bez kodeków („video/webm;codecs=vp9,opus” → „video/webm”) — przecinek psuł adres data: przy kodowaniu.
     const mime = (blob.type || "video/webm").split(";")[0];
-    return call("upload", { name, mime, events, data: await toBase64(new Blob([blob], { type: mime })) }, 25 * 60000); // wolne łącze + podgląd na żywo
+    const t0 = Date.now();
+    const out = await call("upload", { name, mime, events, data: await toBase64(new Blob([blob], { type: mime })) }, 25 * 60000); // wolne łącze + podgląd na żywo
+    if (!out.duplicate) mbps = (blob.size * 8 * 4 / 3) / Math.max(1, Date.now() - t0) / 1000;
+    return out;
   }
-  return { enabled, call, upload };
+  return { enabled, call, upload, get mbps() { return mbps; } };
 })();
 
 // ---------- Nagrywanie ciągłe 24/7 → Google Drive (nic nie trafia do „Pobrane”) ----------
@@ -319,9 +323,20 @@ const archive = (() => {
     return new MediaStream([...(v ? [v] : []), ...s.getAudioTracks()]);
   }
 
-  function startSegment() {
+  // Jakość bieżącego pliku: wybrana, a przy zatkanym łączu chwilowo 360p.
+  const BACKLOG = 3;
+  const degraded = () => cloud.enabled && queued >= BACKLOG && recPreset() !== REC_PRESETS.small;
+  const effPreset = () => (degraded() ? REC_PRESETS.small : recPreset());
+  let appliedPreset = null;
+
+  async function startSegment() {
     const startedAt = new Date();
-    const p = recPreset();
+    const p = effPreset();
+    if (p !== appliedPreset) {
+      appliedPreset = p;
+      try { await recStream?.getVideoTracks()[0]?.applyConstraints({ width: { ideal: p.w }, height: { ideal: p.h }, frameRate: { ideal: p.fps, max: p.fps } }); } catch { /* zostaje poprzednia rozdzielczość */ }
+    }
+    if (!running || !recStream) return;
     const r = new MediaRecorder(recStream, { ...(MIME ? { mimeType: MIME } : {}), videoBitsPerSecond: p.video, audioBitsPerSecond: p.audio });
     const chunks = [], events = [];
     segEvents = events;
@@ -339,9 +354,9 @@ const archive = (() => {
   }
 
   // Nowy plik startuje zanim zamkniemy poprzedni — bez dziury w nagraniu.
-  function rotate() {
+  async function rotate() {
     const old = rec;
-    if (running && source) startSegment();
+    if (running && source) await startSegment();
     if (old && old.state !== "inactive") old.stop();
   }
 
@@ -351,7 +366,8 @@ const archive = (() => {
       running = true; recSince = Date.now();
       recStream = await makeRecStream(source);
       if (!running) { recStream.getVideoTracks().forEach(t => t.stop()); recStream = null; return; }
-      startSegment();
+      appliedPreset = recPreset();
+      await startSegment();
       clearInterval(clock);
       clock = setInterval(() => { $("recTime").textContent = fmtTime(Math.floor((Date.now() - recSince) / 1000)); }, 1000);
     }
@@ -380,6 +396,10 @@ const archive = (() => {
       text = running ? `Nagrywa bez przerwy prosto na Google Drive, folder „nagrania” (pliki co ${prefs.segmentMin} min).` : "Nagrywanie na Google Drive ruszy, gdy kamera będzie włączona.";
       if (queued) text += ` Czeka na wysłanie: ${queued}.`;
       if (migrated) text += ` Dosłano starych nagrań z komputera: ${migrated}.`;
+      const set = source?.getVideoTracks()[0]?.getSettings?.() || {};
+      text += ` Jakość nagrań: ${effPreset().label.split(" (")[0]}${degraded() ? " (chwilowo obniżona — łącze nie nadąża)" : ""}.`;
+      if (set.width) text += ` Kamera: ${set.width}×${set.height}.`;
+      if (cloud.mbps) text += ` Wysyłanie: ${cloud.mbps.toFixed(1)} Mb/s.`;
       if (dir && !granted) text += " Stare nagrania z dysku G: czekają — kliknij „Wyślij stare nagrania z komputera”.";
     }
     else if (!fsSupported) text = "Nagrywanie do Google Drive działa w Chrome lub Edge na komputerze. W tej przeglądarce nic nie jest nagrywane.";
