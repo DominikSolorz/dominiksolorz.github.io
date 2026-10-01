@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "42"; // musi się zgadzać z version.json
+const VERSION = "43"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -235,6 +235,7 @@ const archive = (() => {
   let source = null, recStream = null, running = false, rec = null, segTimer = null, clock = null;
   let recSince = 0, saved = 0, lastName = "", lastError = "", queued = 0, sentToDrive = 0, pumping = false, retryTimer = null, looped = 0;
   let local = { count: 0, bytes: 0, oldest: 0 }, free = Infinity, persisted = false;
+  let diskFiles = { count: 0, bytes: 0, oldest: 0 };
   let disk = { selected: false, name: "", ready: false, saved: 0, error: "" };
   let fast = false, slowTimer = null, segStart = 0;
   // Limit skryptu Google w starej wersji (bez wysyłania w kawałkach): ok. 35 MB pliku.
@@ -244,6 +245,10 @@ const archive = (() => {
 
   async function refreshLocal() {
     try { local = await recstore.stats(); free = (await recstore.space()).free; } catch { /* brak IndexedDB */ }
+    try {
+      const files = await diskstore.list();
+      diskFiles = { count: files.length, bytes: files.reduce((sum, f) => sum + f.size, 0), oldest: files.length ? Math.min(...files.map(f => nameTime(f.name) || f.lastModified)) : 0 };
+    } catch { /* folder zostanie opisany przez stan dysku */ }
     render();
   }
 
@@ -325,17 +330,14 @@ const archive = (() => {
   function markEvent(ev) { segEvents?.push(ev); }
 
   async function save(data, name, events, start, end) {
+    let savedToDisk = false;
     try {
-      const savedToDisk = await diskstore.save(name, data);
-      if (savedToDisk) { disk.saved++; disk.ready = true; disk.error = ""; }
+      savedToDisk = await diskstore.save(name, data);
+      if (savedToDisk) { disk.saved++; disk.ready = true; disk.error = ""; saved++; lastName = name; lastError = ""; }
       else if (disk.selected) { disk.ready = false; disk.error = "Brak zgody na zapis do folderu. Wybierz folder ponownie."; }
     } catch (e) { disk.error = `Nie udało się zapisać do folderu: ${errText(e)}`; }
-    try {
-      looped += await recstore.put({ name, start, end, events, type: data.type, uploaded: false }, data);
-      saved++; lastName = name; lastError = "";
-    } catch (e) {
-      lastError = `Nie udało się zapisać ${name} na komputerze (${errText(e)}).`;
-    }
+    if (!savedToDisk) lastError = `Nie udało się zapisać ${name} w folderze archiwum.`;
+    // Nowe pliki NIE trafiają do IndexedDB: każda 10-minutowa część istnieje tylko raz — na dysku.
     // Na Google Drive tylko po kliknięciu „☁️ Prześlij do Google Drive” (requestUpload).
     refreshLocal();
     pump();
@@ -418,12 +420,10 @@ const archive = (() => {
   function describe() {
     if (REC_MIME === null) return "Ta przeglądarka nie obsługuje nagrywania.";
     let text = running ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
-    if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; zapisano plików: ${disk.saved}.`;
+    if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; plików na dysku: ${diskFiles.count} (${gb(diskFiles.bytes)}).`;
     else text += " ⚠ Trwałe archiwum nie jest ustawione — kliknij „Wybierz folder archiwum”.";
-    text += ` Kopia do odtwarzania na stronie: ${local.count} (${gb(local.bytes)})${local.oldest ? `, od ${new Date(local.oldest).toLocaleString("pl-PL")}` : ""}. Na Google Drive tylko po kliknięciu.`;
-    if (Number.isFinite(free)) text += ` Wolne miejsce: ${gb(free)} (poniżej 1 GB najstarsze nagrania są kasowane).`;
-    if (looped) text += ` Skasowano najstarszych: ${looped}.`;
-    if (!persisted) text += " Kopia w przeglądarce może być kasowana przy braku miejsca, ale pliki w folderze archiwum pozostają.";
+    text += " Każdy nowy plik jest zapisywany tylko raz, bezpośrednio na dysku. Na Google Drive tylko po kliknięciu.";
+    if (local.count) text += ` Starsza pamięć strony zawiera ${local.count} wcześniejszych plików i nie jest już używana dla nowych nagrań.`;
     const set = source?.getVideoTracks()[0]?.getSettings?.() || {};
     if (set.width) text += ` Obraz: ${set.width}×${set.height}, ${fast ? FAST_FPS : SLOW_FPS} kl./s${fast && adaptive() ? " (ruch)" : ""}, ${(REC_MIME || "").split(";")[0] || "domyślny kodek"}.`;
     if (cloud.enabled) {
@@ -442,7 +442,7 @@ const archive = (() => {
     $("recBadge").hidden = !running;
     $("archiveInfo").textContent = describe();
     const operational = $("opArchive");
-    if (operational) operational.textContent = disk.ready ? `Dysk: ${disk.saved} pl.` : "Wybierz folder";
+    if (operational) operational.textContent = disk.ready ? `Dysk: ${diskFiles.count} pl.` : "Wybierz folder";
   }
 
   // ----- Dla telefonu (kanał danych): nagrania z pamięci komputera -----
