@@ -131,3 +131,7 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 .zoomBar span{min-width:44px;text-align:center;font-weight:800;font-size:14px}
 .zoomBar small{color:#86efac;font-size:11px;padding-right:6px;white-space:nowrap}
 .zoomBar small:empty{display:none}
+
+.recStatus{margin:10px 0 0;padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.4;border:1px solid transparent}
+.recStatus.ok{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35);color:#86efac}
+.recStatus.bad{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.45);color:#fca5a5;font-weight:600}

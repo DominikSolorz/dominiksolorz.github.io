@@ -1,7 +1,7 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, driveWatchUrl } from "./config.js?v=17";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, driveWatchUrl } from "./config.js?v=18";
 import { b64, sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=15";
 import { requireAccess } from "./lock.js?v=14";
@@ -12,6 +12,7 @@ import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
+const VERSION = "18";
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -244,16 +245,23 @@ const archive = (() => {
   // Zmiana jakości nagrań: bieżący plik zostaje zapisany, następny już w nowej jakości.
   function restart() { if (running) { halt(); resume(); } else render(); }
 
-  function render() {
-    $("recBadge").hidden = !running;
+  function describe() {
     let text;
     if (MIME === null) text = "Ta przeglądarka nie obsługuje nagrywania.";
     else if (!fsSupported) text = "Nagrywanie do Google Drive działa w Chrome lub Edge na komputerze. W tej przeglądarce nic nie jest nagrywane.";
     else if (!dir) text = "Nagrywanie wyłączone — nic nie zapisuje się na komputerze. Wybierz folder Google Drive, żeby nagrania szły do chmury.";
     else if (!granted) text = `Folder „${dir.name}” wymaga zgody — kliknij „Zezwól na zapis do folderu”. Do tego czasu nic nie jest nagrywane.`;
     else text = running ? `Nagrywa bez przerwy do „${dir.name}” (pliki co ${prefs.segmentMin} min).` : `Folder zapisu: „${dir.name}”. Nagrywanie ruszy, gdy kamera będzie włączona.`;
+    return `${text}${lastError ? ` ${lastError}` : ""}`;
+  }
+
+  // Stan nagrywania widoczny także na telefonie (sygnał „heartbeat”) i na serwerze.
+  const status = () => ({ recording: running, reason: describe(), folder: dir?.name || "", lastFile: lastName, saved });
+
+  function render() {
+    $("recBadge").hidden = !running;
     const count = saved ? ` Zapisano plików: ${saved}, ostatni: ${lastName}.` : "";
-    $("archiveInfo").textContent = `${text}${count}${lastError ? ` ${lastError}` : ""}`;
+    $("archiveInfo").textContent = `${describe()}${count}`;
     $("pickDir").hidden = !fsSupported;
     $("pickDir").textContent = dir ? "Zmień folder Google Drive" : "Wybierz folder Google Drive";
     $("grantDir").hidden = !needsGrant();
@@ -312,7 +320,7 @@ const archive = (() => {
     await (await dh.getDirectoryHandle(t.hour)).removeEntry(t.name);
   }
 
-  return { init, pick, grant, start, stop, restart, needsGrant, listDays, listDay, remove, markEvent };
+  return { init, pick, grant, start, stop, restart, needsGrant, listDays, listDay, remove, markEvent, status };
 })();
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
@@ -441,7 +449,7 @@ async function tuneVideoSender(pc, cropWidth = 0) {
 const sender = (() => {
   const peers = new Map();
   let zoomer = null, cropWidth = 0; // zbliżenie: wycinany kadr z pełnej rozdzielczości kamery
-  let stream = null, live = false, heartbeat = null, keepAlive = null, camTimer = null, camAttempt = 0, wakeLock = null;
+  let stream = null, live = false, heartbeat = null, reportTimer = null, keepAlive = null, camTimer = null, camAttempt = 0, wakeLock = null;
   const chan = reconnectingChannel({
     label: "Nadajnik",
     onSignal,
@@ -585,7 +593,10 @@ const sender = (() => {
     if (!(await acquireCamera()) && live) scheduleCameraRetry();
     chan.start();
     clearInterval(heartbeat);
-    heartbeat = setInterval(() => { if (stream) send(chan.channel, { type: "heartbeat" }); }, HEARTBEAT_MS);
+    heartbeat = setInterval(() => { if (stream) send(chan.channel, { type: "heartbeat", rec: archive.status() }); }, HEARTBEAT_MS);
+    clearInterval(reportTimer);
+    reportTimer = setInterval(report, 60000);
+    setTimeout(report, 5000);
     // Lekki sygnał do Supabase co 6 h, żeby darmowy projekt nie był uznany za nieużywany.
     clearInterval(keepAlive);
     keepAlive = setInterval(() => { fetch(`${SUPABASE_URL}/auth/v1/health`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY } }).catch(() => {}); }, 6 * 3600000);
@@ -596,8 +607,9 @@ const sender = (() => {
     if (!live) return;
     live = false;
     archive.stop(); detector.stop();
-    clearInterval(heartbeat); clearInterval(keepAlive); clearTimeout(camTimer);
+    clearInterval(heartbeat); clearInterval(reportTimer); clearInterval(keepAlive); clearTimeout(camTimer);
     send(chan.channel, { type: "broadcaster-stop" });
+    report();
     chan.stop();
     closeAll();
     zoomer?.stop(); zoomer = null;
@@ -619,6 +631,19 @@ const sender = (() => {
   }
 
   function notifyViewers(ev) { if (live) send(chan.channel, { type: "alert", ...ev }); }
+
+  // Co minutę zapis stanu nagrywania na serwerze — da się sprawdzić zdalnie, czy i dlaczego nie nagrywa.
+  const INSTANCE = crypto.randomUUID().slice(0, 8);
+  function report() {
+    const r = archive.status();
+    const s = { id: CHANNEL, instance: INSTANCE, live: live && !!stream, recording: r.recording, reason: r.reason, folder: r.folder,
+      last_file: r.lastFile, saved: r.saved, viewers: peers.size, version: VERSION, user_agent: navigator.userAgent };
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/report_camera_status`, {
+      method: "POST", keepalive: true,
+      headers: { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ s }),
+    }).catch(() => {});
+  }
 
   return { start, stop, switchCamera, notifyViewers, get live() { return live; } };
 })();
@@ -648,6 +673,7 @@ const viewer = (() => {
     if (!active) return;
     if (!["viewer-join", "viewer-leave"].includes(sig.type) && !(sig.type === "ice" && sig.from === "viewer")) lastSeen = Date.now();
     if (sig.type === "heartbeat") {
+      if (sig.rec) showRecStatus(sig.rec);
       const st = pc?.connectionState;
       if ((!st || st === "failed" || st === "closed") && Date.now() - lastJoin > 10000) join();
       return;
@@ -758,6 +784,16 @@ const viewer = (() => {
 // Zdarzenie na telefonie: wyskakujące powiadomienie, wibracja, lista ostatnich zdarzeń.
 const viewEvents = [];
 let toastTimer = null;
+// Linijka pod obrazem na telefonie: czy komputer nagrywa do Google Drive, a jeśli nie — dlaczego.
+function showRecStatus(r) {
+  const el = $("recStatus");
+  el.hidden = false;
+  el.className = `recStatus ${r.recording ? "ok" : "bad"}`;
+  el.textContent = r.recording
+    ? `⏺ Nagrywanie: działa — folder „${r.folder}”${r.saved ? `, zapisano ${r.saved} pl., ostatni ${r.lastFile}` : ", pierwszy plik po ~10 min"}`
+    : `⚠ ${r.reason}`;
+}
+
 function showAlert(ev) {
   viewEvents.unshift(ev); viewEvents.length = Math.min(viewEvents.length, 20);
   renderEvents("viewEvents", viewEvents);
