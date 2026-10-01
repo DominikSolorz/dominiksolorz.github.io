@@ -3,20 +3,20 @@
 const { createClient } = window.supabase;
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=34";
 import { b64, sign, targetString } from "./pin.js?v=14";
-import { mountLibrary } from "./library-ui.js?v=19";
+import { mountLibrary } from "./library-ui.js?v=20";
 import { requireAccess } from "./lock.js?v=14";
 import { channelFor, lock } from "./access.js?v=14";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=32";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 import * as recstore from "./recstore.js?v=34";
-import * as diskstore from "./diskstore.js?v=1";
+import * as diskstore from "./diskstore.js?v=2";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
 import { mountDvr } from "./dvr-ui.js?v=34";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "40"; // musi się zgadzać z version.json
+const VERSION = "41"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -312,9 +312,10 @@ const archive = (() => {
   // Ręczne „☁️ Wyślij na Google Drive” z telefonu.
   async function requestUpload(name) {
     const m = await recstore.meta(name);
-    if (!m) throw new Error("tego nagrania nie ma już na komputerze");
-    if (m.uploaded) return { uploaded: true };
-    await idb.qPut(name, { ref: name, events: m.events || [] });
+    const diskFile = !m ? await diskstore.load(name) : null;
+    if (!m && !diskFile) throw new Error("tego nagrania nie ma już na komputerze");
+    if (m?.uploaded) return { uploaded: true };
+    await idb.qPut(name, m ? { ref: name, events: m.events || [] } : { blob: diskFile, events: [] });
     pump();
     return { queued: true };
   }
@@ -444,14 +445,20 @@ const archive = (() => {
   // ----- Dla telefonu (kanał danych): nagrania z pamięci komputera -----
   const dayOf = t => { const d = new Date(t); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
   const brief = m => ({ name: m.name, start: m.start, end: m.end, size: m.size, type: m.type, uploaded: !!m.uploaded, events: m.events || [] });
+  const diskBrief = f => { const start = nameTime(f.name) || f.lastModified; return { name: f.name, start, end: start + 600000, size: f.size, type: f.type, uploaded: false, events: [] }; };
+  async function savedFiles() {
+    const files = new Map((await recstore.list()).map(m => [m.name, brief(m)]));
+    for (const f of await diskstore.list()) if (!files.has(f.name)) files.set(f.name, diskBrief(f));
+    return [...files.values()];
+  }
   const local_ = {
     async days() {
       const map = {};
-      for (const m of await recstore.list()) { const d = dayOf(m.start); map[d] = (map[d] || 0) + 1; }
+      for (const m of await savedFiles()) { const d = dayOf(m.start); map[d] = (map[d] || 0) + 1; }
       return Object.keys(map).sort().reverse().map(day => ({ day, count: map[day] }));
     },
     async list(day) {
-      const out = (await recstore.list()).filter(m => dayOf(m.start) === day).map(brief);
+      const out = (await savedFiles()).filter(m => dayOf(m.start) === day);
       // Bieżący, jeszcze nagrywany plik — żeby oś czasu sięgała do „teraz”.
       if (running && rec && dayOf(Date.now()) === day) out.push({ name: null, start: segStart, end: Date.now(), recording: true, events: [...(segEvents || [])] });
       return { files: out, now: Date.now() };

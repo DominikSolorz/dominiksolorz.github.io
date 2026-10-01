@@ -41,3 +41,16 @@ export async function load(name) {
   if (!(await usable(h))) return null;
   try { return await (await h.getFileHandle(name)).getFile(); } catch { return null; }
 }
+
+// Lista plików na dysku pozwala stronie i telefonowi odzyskać starsze nagrania nawet po
+// wyczyszczeniu podręcznej pamięci przeglądarki.
+export async function list() {
+  const h = await get("folder");
+  if (!(await usable(h))) return [];
+  const out = [];
+  for await (const [name, entry] of h.entries()) {
+    if (entry.kind !== "file" || !/^kamera-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.(webm|mp4)$/i.test(name)) continue;
+    try { out.push(await entry.getFile()); } catch { /* plik mógł zostać zmieniony poza stroną */ }
+  }
+  return out.sort((a, b) => b.name.localeCompare(a.name));
+}
