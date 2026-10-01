@@ -12,7 +12,7 @@ import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "30"; // musi się zgadzać z version.json
+const VERSION = "31"; // musi się zgadzać z version.json
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -144,9 +144,53 @@ const cloud = (() => {
     } finally { clearTimeout(t); progress = null; }
   }
   const toBase64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const u = String(r.result), i = u.indexOf("base64,"); res(i < 0 ? "" : u.slice(i + 7)); }; r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+  // Wersja skryptu Google: 2+ umie wysyłanie wznawialne (duże pliki kawałkami prosto do Google Drive).
+  // Dopóki skrypt jest w starej wersji, sprawdzamy co 10 min — po jego aktualizacji duże pliki ruszą same.
+  let scriptVersion = 0, versionAt = 0;
+  async function version() {
+    if (scriptVersion < 2 && Date.now() - versionAt > 10 * 60000) {
+      versionAt = Date.now();
+      try { scriptVersion = Number((await call("ping", {}, 30000)).version) || 1; } catch { scriptVersion ||= 1; }
+    }
+    return scriptVersion;
+  }
+  // Jeden kawałek pliku prosto do Google Drive (adres sesji od skryptu). 308 = kawałek przyjęty, czekamy na kolejne.
+  function putChunk(url, part, start, total) {
+    return new Promise((resolve, reject) => {
+      const x = new XMLHttpRequest();
+      x.open("PUT", url);
+      x.setRequestHeader("Content-Range", `bytes ${start}-${start + part.size - 1}/${total}`);
+      x.timeout = 10 * 60000;
+      x.upload.onprogress = e => { if (progress) progress.sent = start + e.loaded; };
+      x.onload = () => {
+        if (x.status === 308) return resolve(null);
+        if (x.status === 200 || x.status === 201) { try { return resolve(JSON.parse(x.responseText)); } catch { return resolve({}); } }
+        reject(new Error(`Google Drive odpowiedział ${x.status}`));
+      };
+      x.onerror = () => reject(new Error("przerwane połączenie z Google Drive"));
+      x.ontimeout = () => reject(new Error("przekroczono czas wysyłania kawałka"));
+      x.send(part);
+    });
+  }
+  const CHUNK = 8 * 1024 * 1024; // wielokrotność 256 KB (wymóg Google)
+  async function uploadResumable(blob, name, events, mime) {
+    const s = await call("session", { name, mime, size: blob.size }, 60000);
+    if (s.duplicate) return s;
+    if (!s.url) throw new Error("Google Drive nie dał adresu wysyłania");
+    progress = { name, size: blob.size, sent: 0, t0: Date.now() };
+    try {
+      let out = null;
+      for (let start = 0; start < blob.size; start += CHUNK) out = await putChunk(s.url, blob.slice(start, Math.min(blob.size, start + CHUNK)), start, blob.size);
+      if (events.length) await call("events", { name, events }).catch(() => {});
+      mbps = blob.size * 8 / Math.max(1, Date.now() - progress.t0) / 1000;
+      return { id: out?.id, size: Number(out?.size ?? blob.size) };
+    } finally { progress = null; }
+  }
+
   async function upload(blob, name, events = []) {
     // Typ bez kodeków („video/webm;codecs=vp9,opus” → „video/webm”) — przecinek psuł adres data: przy kodowaniu.
     const mime = (blob.type || "video/webm").split(";")[0];
+    if (blob.size && await version() >= 2) return uploadResumable(blob, name, events, mime);
     const t0 = Date.now();
     token ??= [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`drive:${ACCESS_KEY}`)))].map(b => b.toString(16).padStart(2, "0")).join("");
     const body = JSON.stringify({ action: "upload", token, name, mime, events, data: await toBase64(new Blob([blob], { type: mime })) });
@@ -154,13 +198,15 @@ const cloud = (() => {
     if (!out.duplicate) mbps = (blob.size * 8 * 4 / 3) / Math.max(1, Date.now() - t0) / 1000;
     return out;
   }
-  // Opis bieżącego wysyłania: „Wysyłam kamera-…webm (7 MB) od 3 min”.
+  // Opis bieżącego wysyłania: „Wysyłam kamera-…webm (62 MB): 45%, 1.8 Mb/s” albo „… od 3 min”.
   function sending() {
     if (!progress) return "";
-    const min = Math.floor((Date.now() - progress.t0) / 60000);
-    return `Wysyłam ${progress.name} (${Math.round(progress.size / 1048576)} MB) od ${min} min.`;
+    const sec = Math.max(1, (Date.now() - progress.t0) / 1000);
+    const mb = Math.round(progress.size / 1048576);
+    if (progress.sent !== undefined) return `Wysyłam ${progress.name} (${mb} MB): ${Math.round(100 * progress.sent / progress.size)}%, ${(progress.sent * 8 / sec / 1e6).toFixed(1)} Mb/s.`;
+    return `Wysyłam ${progress.name} (${mb} MB) od ${Math.floor(sec / 60)} min.`;
   }
-  return { enabled, call, upload, sending, get mbps() { return mbps; } };
+  return { enabled, call, upload, sending, version, get big() { return scriptVersion >= 2; }, get mbps() { return mbps; } };
 })();
 
 // ---------- Nagrywanie ciągłe 24/7 → Google Drive (nic nie trafia do „Pobrane”) ----------
@@ -192,6 +238,7 @@ const archive = (() => {
     pumping = true; clearTimeout(retryTimer);
     const skip = new Set();
     oversize.clear();
+    await cloud.version();
     const failed = (name, e) => { skip.add(name); lastError = `Nie udało się wysłać ${name} (${errText(e)}). Spróbuję ponownie — nagranie czeka bezpiecznie na komputerze.`; };
     try {
       for (;;) {
@@ -202,7 +249,7 @@ const archive = (() => {
         for (const k of keys) {
           if (skip.has(k)) continue;
           const it = await idb.qGet(k);
-          if ((it?.blob?.size || 0) > MAX_UPLOAD) { skip.add(k); oversize.add(k); continue; }
+          if (!cloud.big && (it?.blob?.size || 0) > MAX_UPLOAD) { skip.add(k); oversize.add(k); continue; }
           if (!item || (it?.blob?.size || 0) < (item?.blob?.size || 0)) { key = k; item = it; }
         }
         if (key) {
@@ -235,7 +282,7 @@ const archive = (() => {
         for await (const [fn, fh] of hh.entries()) {
           if (fh.kind !== "file" || !FILE_RE.test(fn) || skip.has(fn)) continue;
           const file = await fh.getFile();
-          if (file.size > MAX_UPLOAD) { skip.add(fn); oversize.add(fn); continue; }
+          if (!cloud.big && file.size > MAX_UPLOAD) { skip.add(fn); oversize.add(fn); continue; }
           let events = [];
           try { events = JSON.parse(await (await (await hh.getFileHandle("zdarzenia.json")).getFile()).text() || "{}")[fn] || []; } catch { events = []; }
           if (file.size) {
