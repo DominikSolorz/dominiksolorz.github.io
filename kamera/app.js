@@ -12,7 +12,7 @@ import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "29"; // musi się zgadzać z version.json
+const VERSION = "30"; // musi się zgadzać z version.json
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -171,6 +171,9 @@ const archive = (() => {
   const fsSupported = "showDirectoryPicker" in window;
   let dir = null, granted = false, source = null, recStream = null, running = false, rec = null, segTimer = null, clock = null;
   let recSince = 0, saved = 0, lastName = "", lastError = "", queued = 0, migrated = 0, pumping = false, retryTimer = null, lastCleanup = 0;
+  // Limit skryptu Google (Apps Script) na jedno zapytanie: ok. 50 MB po zakodowaniu base64 → ok. 35 MB pliku.
+  const MAX_UPLOAD = 34 * 1024 * 1024;
+  const oversize = new Set();
   const canWrite = () => cloud.enabled || !!(dir && granted);
 
   async function init() {
@@ -188,6 +191,7 @@ const archive = (() => {
     if (!cloud.enabled || pumping) return;
     pumping = true; clearTimeout(retryTimer);
     const skip = new Set();
+    oversize.clear();
     const failed = (name, e) => { skip.add(name); lastError = `Nie udało się wysłać ${name} (${errText(e)}). Spróbuję ponownie — nagranie czeka bezpiecznie na komputerze.`; };
     try {
       for (;;) {
@@ -198,6 +202,7 @@ const archive = (() => {
         for (const k of keys) {
           if (skip.has(k)) continue;
           const it = await idb.qGet(k);
+          if ((it?.blob?.size || 0) > MAX_UPLOAD) { skip.add(k); oversize.add(k); continue; }
           if (!item || (it?.blob?.size || 0) < (item?.blob?.size || 0)) { key = k; item = it; }
         }
         if (key) {
@@ -230,6 +235,7 @@ const archive = (() => {
         for await (const [fn, fh] of hh.entries()) {
           if (fh.kind !== "file" || !FILE_RE.test(fn) || skip.has(fn)) continue;
           const file = await fh.getFile();
+          if (file.size > MAX_UPLOAD) { skip.add(fn); oversize.add(fn); continue; }
           let events = [];
           try { events = JSON.parse(await (await (await hh.getFileHandle("zdarzenia.json")).getFile()).text() || "{}")[fn] || []; } catch { events = []; }
           if (file.size) {
@@ -359,6 +365,9 @@ const archive = (() => {
   const effPreset = () => (degraded() ? REC_PRESETS.small : recPreset());
   let appliedPreset = null;
 
+  // Skrypt Google przyjmuje do ok. 35 MB na plik — dłuższy plik zamykamy wcześniej (nowy startuje bez przerwy).
+  const SEGMENT_MAX_BYTES = 30 * 1024 * 1024;
+
   async function startSegment() {
     const startedAt = new Date();
     const p = effPreset();
@@ -370,7 +379,12 @@ const archive = (() => {
     const r = new MediaRecorder(recStream, { ...(MIME ? { mimeType: MIME } : {}), videoBitsPerSecond: p.video, audioBitsPerSecond: p.audio });
     const chunks = [], events = [];
     segEvents = events;
-    r.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    let bytes = 0;
+    r.ondataavailable = e => {
+      if (!e.data.size) return;
+      chunks.push(e.data); bytes += e.data.size;
+      if (bytes > SEGMENT_MAX_BYTES && rec === r) rotate();
+    };
     r.onstop = () => {
       if (!chunks.length) return;
       const type = r.mimeType || MIME || "video/webm";
@@ -426,6 +440,7 @@ const archive = (() => {
       text = running ? `Nagrywa bez przerwy prosto na Google Drive, folder „nagrania” (pliki co ${prefs.segmentMin} min).` : "Nagrywanie na Google Drive ruszy, gdy kamera będzie włączona.";
       if (queued) text += ` Czeka na wysłanie: ${queued}.`;
       if (migrated) text += ` Dosłano starych nagrań z komputera: ${migrated}.`;
+      if (oversize.size) text += ` Za duże na skrypt Google (>${Math.round(MAX_UPLOAD / 1048576)} MB), czekają bezpiecznie na komputerze: ${oversize.size}.`;
       const set = source?.getVideoTracks()[0]?.getSettings?.() || {};
       text += ` Jakość nagrań: ${effPreset().label.split(" (")[0]}${degraded() ? " (chwilowo obniżona — łącze nie nadąża)" : ""}.`;
       if (set.width) text += ` Kamera: ${set.width}×${set.height}${set.frameRate ? `, ${Math.round(set.frameRate)} kl./s` : ""}.`;
