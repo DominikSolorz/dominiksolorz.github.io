@@ -116,6 +116,7 @@
       <div class="card">
         <div class="cardHead"><h2>📼 Nagrywanie 24/7</h2><span class="muted small">na tym urządzeniu</span></div>
         <div id="archiveInfo" class="status"></div>
+        <div class="row"><button class="btn primary" id="chooseArchiveDir">📁 Wybierz folder archiwum</button></div>
         <div class="grid">
           <label>Jakość nagrań
             <select id="quality"><option value="small">Mała — 360p (~4 MB / 5 min)</option></select>
@@ -136,7 +137,7 @@
             </select>
           </label>
         </div>
-        <p class="muted small">Jakość nagrań nie wpływa na obraz na żywo. Wybrany plik możesz później wysłać do Google Drive z widoku Nagrania.</p>
+        <p class="muted small">Nagrania są trwale zapisywane w wybranym folderze tego komputera. Jakość nagrań nie wpływa na obraz na żywo. Wybrany plik możesz później wysłać do Google Drive z widoku Nagrania.</p>
       </div>
 
       <div class="card">
@@ -162,6 +163,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=39"></script>
+  <script type="module" src="app.js?v=40"></script>
 </body>
 </html>
