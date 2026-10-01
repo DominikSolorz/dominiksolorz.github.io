@@ -591,7 +591,7 @@ async function tuneVideoSender(pc, cropWidth = 0) {
 const sender = (() => {
   const peers = new Map();
   let zoomer = null, cropWidth = 0; // zbliżenie: wycinany kadr z pełnej rozdzielczości kamery
-  let stream = null, live = false, heartbeat = null, reportTimer = null, keepAlive = null, camTimer = null, camAttempt = 0, wakeLock = null;
+  let stream = null, live = false, heartbeat = null, reportTimer = null, keepAlive = null, camTimer = null, camAttempt = 0, wakeLock = null, lastCameraError = "";
   const chan = reconnectingChannel({
     label: "Nadajnik",
     onSignal,
@@ -642,12 +642,34 @@ const sender = (() => {
 
   async function requestWakeLock() { try { wakeLock = await navigator.wakeLock?.request("screen") ?? null; } catch { /* brak wsparcia */ } }
 
-  const getMedia = deviceId => navigator.mediaDevices.getUserMedia({
+  const mediaConstraints = deviceId => ({
     // Ok. 1920 px szerokości przy 30 kl./s — płynny obraz. Pełne 5 MP kamery dają tylko kilka klatek na sekundę.
     video: { width: { ideal: 1920 }, frameRate: { ideal: LIVE_FPS, max: LIVE_FPS }, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) },
     // Mikrofon: tłumienie szumów, usuwanie echa i automatyczne wzmocnienie włączone (czysty, wyrównany dźwięk).
     audio: prefs.audio ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true } : false,
-  }).then(s => { s.getVideoTracks().forEach(t => { t.contentHint = "motion"; }); return s; });
+  });
+  const getMedia = async deviceId => {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia(mediaConstraints(deviceId));
+      s.getVideoTracks().forEach(t => { t.contentHint = "motion"; });
+      return s;
+    } catch (e) {
+      // Starsze/tańsze kamery czasem odrzucają 1080p/30 fps mimo że działają bez dodatkowych wymagań.
+      if (e?.name !== "OverconstrainedError") throw e;
+      const s = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId } } : true, audio: prefs.audio ? true : false });
+      s.getVideoTracks().forEach(t => { t.contentHint = "motion"; });
+      return s;
+    }
+  };
+
+  function cameraErrorMessage(e) {
+    const name = e?.name || "";
+    if (name === "NotAllowedError" || name === "SecurityError") return "Brak zgody na kamerę lub mikrofon. W ustawieniach strony zezwól na dostęp, potem kliknij „Spróbuj ponownie”.";
+    if (name === "NotReadableError" || name === "TrackStartError") return "Kamera jest zajęta przez inny program albo kartę. Zamknij program używający kamery (np. Teams, Zoom, OBS lub inną kartę), potem kliknij „Spróbuj ponownie”.";
+    if (name === "NotFoundError" || name === "DevicesNotFoundError") return "Nie znaleziono kamery. Sprawdź kabel/USB albo wybierz kamerę z listy.";
+    if (name === "AbortError") return "Uruchamianie kamery zostało przerwane. Kliknij „Spróbuj ponownie”.";
+    return `Nie udało się uruchomić kamery${e?.message ? `: ${e.message}` : ""}. Kliknij „Spróbuj ponownie”.`;
+  }
 
   // Lista kamer do wyboru + automatyczny wybór prawdziwej kamery zamiast wirtualnej.
   // Tylko prawdziwe kamery — wirtualne (OBS, Snap, ManyCam…) nie pojawiają się na liście i nigdy nie są używane.
@@ -684,6 +706,7 @@ const sender = (() => {
       const s = await openBestCamera();
       if (!live) { s.getTracks().forEach(t => t.stop()); return false; }
       stream = s;
+      lastCameraError = ""; $("retryCameraBtn").hidden = true;
       video.srcObject = s; video.muted = true;
       zoomer?.stop();
       zoomer = createZoomer(s, w => { cropWidth = w; peers.forEach(p => tuneVideoSender(p.pc, w)); });
@@ -694,7 +717,9 @@ const sender = (() => {
       if (prefs.detect) detector.start(s, video);
       return true;
     } catch (e) {
-      setStatus(`Brak dostępu do kamery/mikrofonu: ${errText(e)}. Zezwól przeglądarce — ponawiam próbę…`);
+      lastCameraError = cameraErrorMessage(e);
+      $("retryCameraBtn").hidden = false;
+      setStatus(`${lastCameraError} Automatyczna próba zostanie ponowiona.`);
       return false;
     }
   }
@@ -717,12 +742,21 @@ const sender = (() => {
     }, retryDelay(camAttempt++));
   }
 
+  async function retryCamera() {
+    if (!live) return start();
+    clearTimeout(camTimer); camAttempt = 0;
+    setStatus("Ponawiam uruchamianie kamery…");
+    if (await acquireCamera()) { setStatus(""); send(chan.channel, { type: "broadcaster-ready" }); }
+    else if (live) scheduleCameraRetry();
+  }
+
   // Zmiana kamery z listy: przełącz obraz i daj znać oglądającym, żeby połączyli się ponownie.
   async function switchCamera() {
     if (!live) return;
     archive.stop(); detector.stop(); closeAll();
     zoomer?.stop(); zoomer = null;
     stream?.getTracks().forEach(t => t.stop()); stream = null;
+    lastCameraError = ""; $("retryCameraBtn").hidden = true;
     if (await acquireCamera()) {
       setStatus("");
       send(chan.channel, { type: "broadcaster-ready" });
@@ -808,7 +842,7 @@ const sender = (() => {
     }).catch(() => {});
   }
 
-  return { start, stop, switchCamera, notifyViewers, get live() { return live; } };
+  return { start, stop, retryCamera, switchCamera, notifyViewers, get live() { return live; } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -1080,6 +1114,7 @@ $("grantBanner").addEventListener("click", () => archive.grant());
 document.addEventListener("pointerdown", () => { if (prefs.role === "send" && archive.needsGrant()) archive.grant(); }, true);
 $("startBtn").addEventListener("click", () => sender.start());
 $("stopBtn").addEventListener("click", () => sender.stop());
+$("retryCameraBtn").addEventListener("click", () => sender.retryCamera());
 // Jakość nagrań jest stała (pełna rozdzielczość, 5/30 kl./s), a stare nagrania kasuje pętla zapisu — te ustawienia znikają.
 $("quality").closest("label").hidden = true;
 $("retentionDays").closest("label").hidden = true;
