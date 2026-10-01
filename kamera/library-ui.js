@@ -3,11 +3,12 @@
 // (przez komputer). `api` = { days(), day(d), remove(target), watchUrl(name) }.
 const mb = n => `${(n / 1048576).toFixed(1)} MB`;
 const timeOf = name => (/_(\d{2})-(\d{2})-(\d{2})\./.exec(name) || []).slice(1).join(":");
-const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
+const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids.filter(k => k !== null && k !== undefined)); return e; };
 
 export function mountLibrary(root, api) {
   let onlyEvents = false;
   async function share(file) {
+    if (api.share) return api.share(file);
     const url = api.watchUrl?.(file.name, file.id);
     try {
       if (navigator.share && url) await navigator.share({ title: `Nagranie z kamery ${file.name}`, text: "Prywatne nagranie z kamery", url });
@@ -34,13 +35,13 @@ export function mountLibrary(root, api) {
         if (!shown.length) continue;
         for (const f of shown) {
           const watch = api.watchUrl ? el("a", { className: "btn ghost small", href: api.watchUrl(f.name, f.id), target: "_blank", rel: "noopener", textContent: "▶ Obejrzyj" }) : "";
-          const rm = el("button", { className: "btn ghost small danger", textContent: "🗑", title: "Usuń to nagranie", onclick: () => del({ day, hour: h.hour, name: f.name }, `nagranie z ${day} ${timeOf(f.name)}`) });
+          const rm = api.remove ? el("button", { className: "btn ghost small danger", textContent: "🗑", title: "Usuń to nagranie", onclick: () => del({ day, hour: h.hour, name: f.name }, `nagranie z ${day} ${timeOf(f.name)}`) }) : null;
           const shareBtn = el("button", { className: "btn ghost small", textContent: "📤 Udostępnij", title: "Wyślij ręcznie przez Messenger, WhatsApp, SMS lub e-mail", onclick: () => share(f) });
           const badges = [f.ev?.ruch ? `🏃${f.ev.ruch}` : "", f.ev?.dzwiek ? `🔊${f.ev.dzwiek}` : ""].filter(Boolean).join(" ");
           const label = el("span", { textContent: `${timeOf(f.name)} · ${mb(f.size)}` }, badges ? el("span", { className: "evBadge", title: "Wykryty ruch / dźwięk", textContent: badges }) : "");
           list.append(el("li", {}, label, el("span", { className: "libActions" }, watch, shareBtn, rm)));
         }
-        const rmHour = el("button", { className: "btn ghost small danger", textContent: "🗑 godzina", onclick: () => del({ day, hour: h.hour }, `wszystkie nagrania z ${day}, godz. ${hh}:00–${hh}:59`) });
+        const rmHour = api.remove ? el("button", { className: "btn ghost small danger", textContent: "🗑 godzina", onclick: () => del({ day, hour: h.hour }, `wszystkie nagrania z ${day}, godz. ${hh}:00–${hh}:59`) }) : null;
         box.append(el("div", { className: "libHour" }, el("div", { className: "libHead" }, el("b", { textContent: `🕐 ${hh}:00–${hh}:59 (${shown.length})` }), rmHour), list));
       }
       if (!box.children.length) box.append(el("p", { className: "muted small", textContent: "Brak nagrań z ruchem lub dźwiękiem w tym dniu." }));
@@ -57,7 +58,7 @@ export function mountLibrary(root, api) {
       if (!days.length) return root.append(el("p", { className: "muted small", textContent: "Brak nagrań." }));
       for (const d of days) {
         const box = el("div", { className: "libDayBody" });
-        const rmDay = el("button", { className: "btn ghost small danger", textContent: "🗑 cały dzień", onclick: e => { e.preventDefault(); del({ day: d.day }, `wszystkie nagrania z dnia ${d.day}`); } });
+        const rmDay = api.remove ? el("button", { className: "btn ghost small danger", textContent: "🗑 cały dzień", onclick: e => { e.preventDefault(); del({ day: d.day }, `wszystkie nagrania z dnia ${d.day}`); } }) : null;
         const det = el("details", { className: "libDay" }, el("summary", {}, el("b", { textContent: `📅 ${d.day}` }), el("span", { className: "muted small", textContent: ` ${d.count} nagr.` }), rmDay), box);
         det.addEventListener("toggle", () => { if (det.open) renderDay(box, d.day); });
         root.append(det);

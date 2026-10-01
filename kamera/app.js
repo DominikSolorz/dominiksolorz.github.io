@@ -3,7 +3,7 @@
 const { createClient } = window.supabase;
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=34";
 import { b64, sign, targetString } from "./pin.js?v=14";
-import { mountLibrary } from "./library-ui.js?v=20";
+import { mountLibrary } from "./library-ui.js?v=21";
 import { requireAccess } from "./lock.js?v=14";
 import { channelFor, lock } from "./access.js?v=14";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=32";
@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "44"; // musi się zgadzać z version.json
+const VERSION = "45"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -477,6 +477,24 @@ const archive = (() => {
     upload: requestUpload,
   };
 
+  async function localHours(day) {
+    const byHour = {};
+    for (const f of (await local_.list(day)).files) {
+      if (!f.name) continue;
+      const hour = `${pad(new Date(f.start).getHours())}-00`;
+      (byHour[hour] ||= []).push({ name: f.name, size: f.size, ev: { ruch: (f.events || []).filter(e => e.kind === "ruch").length, dzwiek: (f.events || []).filter(e => e.kind === "dzwiek").length });
+    }
+    return Object.keys(byHour).sort().map(hour => ({ hour, files: byHour[hour].sort((a, b) => a.name.localeCompare(b.name)) }));
+  }
+  async function shareLocal(f) {
+    const got = await local_.file(f.name);
+    if (!got) throw new Error("tego pliku nie ma w archiwum na dysku");
+    const file = new File([got.blob], f.name, { type: got.blob.type || "video/mp4" });
+    if (navigator.canShare?.({ files: [file] }) && navigator.share) return navigator.share({ files: [file], title: "Nagranie z kamery" });
+    download(got.blob, f.name);
+    toastMsg("Pobrano plik — możesz go dodać do Messengera, WhatsAppa, SMS-a lub e-maila.");
+  }
+
   // ----- Biblioteka Google Drive na komputerze (karta „Nagrania”) -----
   async function listDays() { return cloud.enabled ? (await cloud.call("days")).days : []; }
   async function listDay(day) { return cloud.enabled ? (await cloud.call("day", { day })).hours : []; }
@@ -492,7 +510,7 @@ const archive = (() => {
     return name;
   }
 
-  return { init, chooseDisk, start, stop, restart, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_ };
+  return { init, chooseDisk, start, stop, restart, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
 })();
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
@@ -1091,7 +1109,7 @@ const zoomUi = (() => {
 // ---------- Widoki ----------
 // Lista nagrań na komputerze-kamerze (działa bezpośrednio na folderze Google Drive).
 function showPcLibrary() {
-  if (!pcLibrary) pcLibrary = mountLibrary($("pcLibrary"), { days: () => archive.listDays(), day: d => archive.listDay(d), remove: t => archive.remove(t), watchUrl: driveWatchUrl });
+  if (!pcLibrary) pcLibrary = mountLibrary($("pcLibrary"), { days: () => archive.local.days(), day: d => archive.localHours(d), share: f => archive.shareLocal(f) });
   else pcLibrary.refresh();
 }
 function showSender() {
