@@ -10,13 +10,14 @@ const SENS = {
 };
 const W = 64, H = 36, COOLDOWN_MS = 10000;
 
-export function createDetector({ onEvent, getSensitivity }) {
+export function createDetector({ onEvent, onActivity, getSensitivity }) {
   let track = null, capture = null, timer = null, prev = null, audioCtx = null, analyser = null, buf = null, noise = 0.004;
   const last = { ruch: 0, dzwiek: 0 };
   const canvas = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(W, H) : Object.assign(document.createElement("canvas"), { width: W, height: H });
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
   function fire(kind) {
+    onActivity?.(kind); // bez przerwy między zdarzeniami — np. przełącza nagrywanie na 30 kl./s
     const now = Date.now();
     if (now - last[kind] < COOLDOWN_MS) return;
     last[kind] = now;
