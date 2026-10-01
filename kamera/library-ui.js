@@ -8,7 +8,7 @@ const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.crea
 export function mountLibrary(root, api) {
   let onlyEvents = false;
   async function del(target, what) {
-    if (!confirm(`Usunąć ${what}? Nagranie zniknie z Google Drive i z komputera — nie da się tego cofnąć ze strony.`)) return;
+    if (!confirm(`Usunąć ${what}? Nagranie trafi do kosza Google Drive (można je stamtąd przywrócić przez 30 dni).`)) return;
     try { await api.remove(target); await refresh(); }
     catch (e) { alert(`Nie udało się usunąć: ${e.message || e}`); }
   }
@@ -25,7 +25,7 @@ export function mountLibrary(root, api) {
         const shown = onlyEvents ? h.files.filter(f => f.ev?.ruch || f.ev?.dzwiek) : h.files;
         if (!shown.length) continue;
         for (const f of shown) {
-          const watch = api.watchUrl ? el("a", { className: "btn ghost small", href: api.watchUrl(f.name), target: "_blank", rel: "noopener", textContent: "▶ Obejrzyj" }) : "";
+          const watch = api.watchUrl ? el("a", { className: "btn ghost small", href: api.watchUrl(f.name, f.id), target: "_blank", rel: "noopener", textContent: "▶ Obejrzyj" }) : "";
           const rm = el("button", { className: "btn ghost small danger", textContent: "🗑", title: "Usuń to nagranie", onclick: () => del({ day, hour: h.hour, name: f.name }, `nagranie z ${day} ${timeOf(f.name)}`) });
           const badges = [f.ev?.ruch ? `🏃${f.ev.ruch}` : "", f.ev?.dzwiek ? `🔊${f.ev.dzwiek}` : ""].filter(Boolean).join(" ");
           const label = el("span", { textContent: `${timeOf(f.name)} · ${mb(f.size)}` }, badges ? el("span", { className: "evBadge", title: "Wykryty ruch / dźwięk", textContent: badges }) : "");

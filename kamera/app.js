@@ -1,9 +1,9 @@
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, driveWatchUrl } from "./config.js?v=18";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=19";
 import { b64, sign, targetString } from "./pin.js?v=14";
-import { mountLibrary } from "./library-ui.js?v=15";
+import { mountLibrary } from "./library-ui.js?v=19";
 import { requireAccess } from "./lock.js?v=14";
 import { channelFor, lock } from "./access.js?v=14";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=15";
@@ -12,7 +12,7 @@ import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "18";
+const VERSION = "19";
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -87,23 +87,57 @@ function download(blob, name) {
 const idb = {
   open() {
     return new Promise((res, rej) => {
-      const r = indexedDB.open("prywatna-kamera", 1);
-      r.onupgradeneeded = () => r.result.createObjectStore("kv");
+      const r = indexedDB.open("prywatna-kamera", 2);
+      r.onupgradeneeded = () => { for (const s of ["kv", "queue"]) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s); };
       r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
     });
   },
   async get(k) { const db = await this.open(); return new Promise(res => { const q = db.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(undefined); }); },
   async set(k, v) { const db = await this.open(); return new Promise(res => { const t = db.transaction("kv", "readwrite"); t.objectStore("kv").put(v, k); t.oncomplete = () => res(); t.onerror = () => res(); }); },
+  // Kolejka nagrań czekających na wysłanie (przetrwa brak internetu i odświeżenie strony).
+  async qPut(k, v) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction("queue", "readwrite"); t.objectStore("queue").put(v, k); t.oncomplete = () => res(); t.onerror = () => rej(t.error); }); },
+  async qDel(k) { const db = await this.open(); return new Promise(res => { const t = db.transaction("queue", "readwrite"); t.objectStore("queue").delete(k); t.oncomplete = () => res(); t.onerror = () => res(); }); },
+  async qKeys() { const db = await this.open(); return new Promise(res => { const q = db.transaction("queue").objectStore("queue").getAllKeys(); q.onsuccess = () => res(q.result.map(String).sort()); q.onerror = () => res([]); }); },
+  async qGet(k) { const db = await this.open(); return new Promise(res => { const q = db.transaction("queue").objectStore("queue").get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(undefined); }); },
 };
 
-// ---------- Nagrywanie ciągłe 24/7 → wyłącznie folder Google Drive (nic nie trafia do „Pobrane”) ----------
-// Nagrywa tylko, gdy wybrano folder Google Drive (Dysk Google na komputer w trybie strumieniowania
-// trzyma pliki w chmurze). Bez tego folderu nagrania nie są nigdzie zapisywane.
+// ---------- Google Drive bez programu na komputerze: skrypt Google Apps Script (kamera/drive-skrypt.gs) ----------
+// Strona wysyła każdy plik nagrania prosto przez internet na Google Drive właściciela — nic nie zależy
+// od dysku C: ani od programu „Dysk Google na komputer”. Token do skryptu wyliczany jest z klucza PIN-u.
+const cloud = (() => {
+  const enabled = !!DRIVE_SCRIPT_URL;
+  let token = null;
+  async function call(action, extra = {}, timeoutMs = 60000) {
+    token ??= [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`drive:${ACCESS_KEY}`)))].map(b => b.toString(16).padStart(2, "0")).join("");
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      // text/plain = bez zapytania wstępnego CORS (Apps Script go nie obsługuje).
+      const res = await fetch(DRIVE_SCRIPT_URL, { method: "POST", body: JSON.stringify({ action, token, ...extra }), headers: { "Content-Type": "text/plain;charset=utf-8" }, signal: ctrl.signal });
+      if (!res.ok) throw new Error(`Google Drive odpowiedział ${res.status}`);
+      const out = await res.json();
+      if (out.error) throw new Error(out.error);
+      return out;
+    } catch (e) {
+      throw new Error(e?.name === "AbortError" ? "przekroczono czas wysyłania" : errText(e));
+    } finally { clearTimeout(t); }
+  }
+  const toBase64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+  async function upload(blob, name, events = []) {
+    return call("upload", { name, mime: blob.type || "video/webm", events, data: await toBase64(blob) }, 6 * 60000);
+  }
+  return { enabled, call, upload };
+})();
+
+// ---------- Nagrywanie ciągłe 24/7 → Google Drive (nic nie trafia do „Pobrane”) ----------
+// Z adresem skryptu (DRIVE_SCRIPT_URL) każdy plik idzie prosto przez internet na Google Drive, a stare
+// nagrania z folderu Dysku Google na komputerze są dosyłane i dopiero po potwierdzeniu usuwane z dysku.
+// Bez skryptu: stary tryb — zapis do folderu Dysku Google na komputerze (wybór folderu na stronie).
 const archive = (() => {
   const fsSupported = "showDirectoryPicker" in window;
   let dir = null, granted = false, source = null, recStream = null, running = false, rec = null, segTimer = null, clock = null;
-  let recSince = 0, saved = 0, lastName = "", lastError = "";
-  const canWrite = () => !!(dir && granted);
+  let recSince = 0, saved = 0, lastName = "", lastError = "", queued = 0, migrated = 0, pumping = false, retryTimer = null, lastCleanup = 0;
+  const canWrite = () => cloud.enabled || !!(dir && granted);
 
   async function init() {
     if (fsSupported) {
@@ -111,6 +145,73 @@ const archive = (() => {
       if (dir) granted = (await dir.queryPermission({ mode: "readwrite" }).catch(() => "denied")) === "granted";
     }
     resume();
+    pump();
+  }
+
+  // Wysyła po kolei: najpierw nowe nagrania z kolejki, potem stare pliki z dysku G:. Przy błędzie ponawia za minutę.
+  async function pump() {
+    if (!cloud.enabled || pumping) return;
+    pumping = true; clearTimeout(retryTimer);
+    try {
+      for (;;) {
+        const keys = await idb.qKeys();
+        queued = keys.length; render();
+        if (keys.length) {
+          const item = await idb.qGet(keys[0]);
+          if (item?.blob) {
+            await cloud.upload(item.blob, keys[0], item.events || []);
+            saved++; lastName = keys[0];
+          }
+          await idb.qDel(keys[0]);
+          lastError = "";
+          continue;
+        }
+        if (await migrateOne()) continue;
+        break;
+      }
+      await cleanup();
+    } catch (e) {
+      lastError = `Nie udało się wysłać na Google Drive (${errText(e)}). Ponawiam za minutę — nagrania czekają bezpiecznie na komputerze.`;
+      retryTimer = setTimeout(pump, 60000);
+    } finally { pumping = false; render(); }
+  }
+
+  // Jedno stare nagranie z folderu na komputerze → Google Drive; z dysku znika dopiero po potwierdzeniu rozmiaru.
+  async function migrateOne() {
+    if (!dir || !granted) return false;
+    for await (const [dn, dh] of dir.entries()) {
+      if (dh.kind !== "directory" || !DAY_RE.test(dn)) continue;
+      for await (const [hn, hh] of dh.entries()) {
+        if (hh.kind !== "directory" || !HOUR_RE.test(hn)) continue;
+        for await (const [fn, fh] of hh.entries()) {
+          if (fh.kind !== "file" || !FILE_RE.test(fn)) continue;
+          const file = await fh.getFile();
+          let events = [];
+          try { events = JSON.parse(await (await (await hh.getFileHandle("zdarzenia.json")).getFile()).text() || "{}")[fn] || []; } catch { events = []; }
+          if (file.size) {
+            const r = await cloud.upload(file, fn, events);
+            if (r.size !== file.size) throw new Error(`rozmiar pliku ${fn} na Google Drive się nie zgadza`);
+          }
+          await hh.removeEntry(fn);
+          migrated++; lastName = fn; lastError = "";
+          await removeIfEmpty(dh, hn, ["zdarzenia.json"]);
+          await removeIfEmpty(dir, dn);
+          return true;
+        }
+        await removeIfEmpty(dh, hn, ["zdarzenia.json"]);
+      }
+      await removeIfEmpty(dir, dn);
+    }
+    return false;
+  }
+
+  // Usuwa folder z komputera tylko wtedy, gdy nie ma w nim już żadnego nagrania.
+  async function removeIfEmpty(parent, name, allowed = []) {
+    try {
+      const h = await parent.getDirectoryHandle(name);
+      for await (const [n] of h.entries()) if (!allowed.includes(n)) return;
+      await parent.removeEntry(name, { recursive: true });
+    } catch { /* folder zajęty albo już usunięty */ }
   }
 
   async function pick() {
@@ -129,6 +230,7 @@ const archive = (() => {
     if (!dir || granted) return;
     granted = (await dir.requestPermission({ mode: "readwrite" }).catch(() => "denied")) === "granted";
     resume();
+    pump();
     pcLibrary?.refresh();
   }
 
@@ -145,6 +247,14 @@ const archive = (() => {
   }
 
   async function save(blob, name, events = []) {
+    if (cloud.enabled) {
+      try { await idb.qPut(name, { blob, events }); }
+      catch (e) { // brak miejsca w przeglądarce — wysyłamy od razu, bez kolejki
+        try { await cloud.upload(blob, name, events); saved++; lastName = name; lastError = ""; }
+        catch (e2) { lastError = `Fragment ${name} nie został zapisany (${errText(e2)}).`; }
+      }
+      return pump();
+    }
     if (!canWrite()) { lastError = "Brak dostępu do folderu Google Drive — ten fragment nagrania nie został zapisany."; return render(); }
     try {
       // Biblioteka: folder dnia (RRRR-MM-DD) → folder godziny (GG-00) → plik z godziną, minutą i sekundą.
@@ -168,6 +278,12 @@ const archive = (() => {
   // oraz starsze pojedyncze pliki „kamera-RRRR-MM-DD_…” (sprzed podziału na foldery).
   async function cleanup() {
     const days = Number(prefs.retentionDays);
+    if (cloud.enabled) {
+      if (!days || Date.now() - lastCleanup < 3600000) return;
+      lastCleanup = Date.now();
+      await cloud.call("cleanup", { days }).catch(() => {});
+      return;
+    }
     if (!days || !canWrite()) return;
     const limit = Date.now() - days * 86400000;
     for await (const [name, handle] of dir.entries()) {
@@ -248,6 +364,12 @@ const archive = (() => {
   function describe() {
     let text;
     if (MIME === null) text = "Ta przeglądarka nie obsługuje nagrywania.";
+    else if (cloud.enabled) {
+      text = running ? `Nagrywa bez przerwy prosto na Google Drive, folder „nagrania” (pliki co ${prefs.segmentMin} min).` : "Nagrywanie na Google Drive ruszy, gdy kamera będzie włączona.";
+      if (queued) text += ` Czeka na wysłanie: ${queued}.`;
+      if (migrated) text += ` Dosłano starych nagrań z komputera: ${migrated}.`;
+      if (dir && !granted) text += " Stare nagrania z dysku G: czekają — kliknij „Wyślij stare nagrania z komputera”.";
+    }
     else if (!fsSupported) text = "Nagrywanie do Google Drive działa w Chrome lub Edge na komputerze. W tej przeglądarce nic nie jest nagrywane.";
     else if (!dir) text = "Nagrywanie wyłączone — nic nie zapisuje się na komputerze. Wybierz folder Google Drive, żeby nagrania szły do chmury.";
     else if (!granted) text = `Folder „${dir.name}” wymaga zgody — kliknij „Zezwól na zapis do folderu”. Do tego czasu nic nie jest nagrywane.`;
@@ -256,22 +378,24 @@ const archive = (() => {
   }
 
   // Stan nagrywania widoczny także na telefonie (sygnał „heartbeat”) i na serwerze.
-  const status = () => ({ recording: running, reason: describe(), folder: dir?.name || "", lastFile: lastName, saved });
+  const status = () => ({ recording: running, reason: describe(), folder: cloud.enabled ? "nagrania (Google Drive)" : dir?.name || "", lastFile: lastName, saved, queued, migrated });
 
   function render() {
     $("recBadge").hidden = !running;
     const count = saved ? ` Zapisano plików: ${saved}, ostatni: ${lastName}.` : "";
     $("archiveInfo").textContent = `${describe()}${count}`;
-    $("pickDir").hidden = !fsSupported;
+    $("pickDir").hidden = !fsSupported || cloud.enabled;
     $("pickDir").textContent = dir ? "Zmień folder Google Drive" : "Wybierz folder Google Drive";
     $("grantDir").hidden = !needsGrant();
-    $("grantBanner").hidden = !needsGrant();
+    $("grantDir").textContent = cloud.enabled ? "Wyślij stare nagrania z komputera" : "Zezwól na zapis do folderu";
+    $("grantBanner").hidden = !needsGrant() || cloud.enabled;
   }
 
   // ----- Biblioteka: lista i usuwanie nagrań w folderze Google Drive (dzień → godzina → pliki) -----
   const DAY_RE = /^\d{4}-\d{2}-\d{2}$/, HOUR_RE = /^\d{2}-00$/, FILE_RE = /^kamera-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.(webm|mp4)$/;
 
   async function listDays() {
+    if (cloud.enabled) return (await cloud.call("days")).days;
     if (!canWrite()) return null;
     const days = [];
     for await (const [name, h] of dir.entries()) {
@@ -287,6 +411,7 @@ const archive = (() => {
   }
 
   async function listDay(day) {
+    if (cloud.enabled) return (await cloud.call("day", { day })).hours;
     if (!canWrite() || !DAY_RE.test(day)) return null;
     const dh = await dir.getDirectoryHandle(day).catch(() => null);
     if (!dh) return [];
@@ -310,6 +435,7 @@ const archive = (() => {
 
   // Usuwa cały dzień, całą godzinę albo jeden plik (nazwy sprawdzane — nic poza nagraniami kamery).
   async function remove(t = {}) {
+    if (cloud.enabled) return void await cloud.call("remove", { target: { day: t.day, hour: t.hour, name: t.name } });
     if (!canWrite()) throw new Error("komputer nie ma dostępu do folderu Google Drive");
     if (!DAY_RE.test(t.day || "")) throw new Error("zła data");
     if (!t.hour) return dir.removeEntry(t.day, { recursive: true });
@@ -790,7 +916,7 @@ function showRecStatus(r) {
   el.hidden = false;
   el.className = `recStatus ${r.recording ? "ok" : "bad"}`;
   el.textContent = r.recording
-    ? `⏺ Nagrywanie: działa — folder „${r.folder}”${r.saved ? `, zapisano ${r.saved} pl., ostatni ${r.lastFile}` : ", pierwszy plik po ~10 min"}`
+    ? `⏺ Nagrywanie: działa — folder „${r.folder}”${r.saved ? `, zapisano ${r.saved} pl., ostatni ${r.lastFile}` : ", pierwszy plik po ~10 min"}${r.queued ? `, czeka na wysłanie: ${r.queued}` : ""}${r.migrated ? `, dosłano starych: ${r.migrated}` : ""}`
     : `⚠ ${r.reason}`;
 }
 
