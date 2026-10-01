@@ -12,7 +12,7 @@ import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "19";
+const VERSION = "20"; // musi się zgadzać z version.json
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -726,6 +726,8 @@ const sender = (() => {
     // Lekki sygnał do Supabase co 6 h, żeby darmowy projekt nie był uznany za nieużywany.
     clearInterval(keepAlive);
     keepAlive = setInterval(() => { fetch(`${SUPABASE_URL}/auth/v1/health`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY } }).catch(() => {}); }, 6 * 3600000);
+    clearInterval(updateTimer);
+    updateTimer = setInterval(checkUpdate, 10 * 60000);
     requestWakeLock();
   }
 
@@ -733,7 +735,7 @@ const sender = (() => {
     if (!live) return;
     live = false;
     archive.stop(); detector.stop();
-    clearInterval(heartbeat); clearInterval(reportTimer); clearInterval(keepAlive); clearTimeout(camTimer);
+    clearInterval(heartbeat); clearInterval(reportTimer); clearInterval(keepAlive); clearInterval(updateTimer); clearTimeout(camTimer);
     send(chan.channel, { type: "broadcaster-stop" });
     report();
     chan.stop();
@@ -749,6 +751,22 @@ const sender = (() => {
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && live) requestWakeLock(); });
   window.addEventListener("online", () => { if (live) chan.reconnect(); });
   window.addEventListener("beforeunload", () => { if (live) send(chan.channel, { type: "broadcaster-stop" }); });
+
+  // Samoaktualizacja komputera-kamery: nowa wersja strony (version.json) = domknięcie bieżącego pliku
+  // nagrania i przeładowanie — bez klikania przy komputerze. Najwyżej raz na 30 min (pamięć podręczna Pages).
+  let updateTimer = null;
+  async function checkUpdate() {
+    try {
+      const v = (await (await fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })).json()).version;
+      if (!v || String(v) === VERSION) return;
+      const last = Number(sessionStorage.getItem("kamera-update") || 0);
+      if (Date.now() - last < 30 * 60000) return;
+      sessionStorage.setItem("kamera-update", String(Date.now()));
+      setStatus("Nowa wersja strony kamery — zapisuję nagranie i odświeżam…");
+      archive.stop();
+      setTimeout(() => location.reload(), 8000);
+    } catch { /* brak internetu — sprawdzimy później */ }
+  }
 
   // Powiadomienie oglądających o wykrytym ruchu / dźwięku.
   function sendZoomState() {
