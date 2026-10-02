@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "55"; // musi się zgadzać z version.json
+const VERSION = "56"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -82,6 +82,8 @@ function updateMonitorClock() {
   const now = new Date();
   $("monitorDate").textContent = now.toLocaleDateString("pl-PL", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
   $("monitorTime").textContent = now.toLocaleTimeString("pl-PL", { hour12: false });
+  $("headerDate").textContent = now.toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
+  $("headerTime").textContent = now.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
 }
 updateMonitorClock(); setInterval(updateMonitorClock, 1000);
 function setStatus(text) { $("status").textContent = text || ""; $("status").hidden = !text; }
