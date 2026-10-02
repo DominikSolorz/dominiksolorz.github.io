@@ -906,7 +906,9 @@ const sender = (() => {
       sessionStorage.setItem("kamera-update", String(Date.now()));
       setStatus("Nowa wersja strony kamery — zapisuję nagranie i odświeżam…");
       archive.stop();
-      setTimeout(() => location.reload(), 8000);
+      // Adres z numerem wersji: przeglądarka pobiera świeżą stronę zamiast starej z pamięci podręcznej.
+      const u = new URL(location.href); u.searchParams.set("v", String(v));
+      setTimeout(() => location.replace(u.href), 8000);
     } catch { /* brak internetu — sprawdzimy później */ }
   }
 
