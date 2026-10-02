@@ -67,6 +67,8 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 .stage.visual-cool video{filter:contrast(1.08) saturate(.88) hue-rotate(175deg)}
 .stage.visual-warm video{filter:sepia(.24) saturate(1.2) hue-rotate(-8deg) brightness(1.04)}
 .stage.visual-negative video{filter:invert(1) hue-rotate(180deg) contrast(1.08)}
+.monitorClock{position:absolute;top:12px;right:12px;z-index:4;display:flex;flex-direction:column;align-items:flex-end;gap:1px;min-width:145px;padding:8px 11px;border:1px solid rgba(167,139,250,.48);border-radius:12px;background:rgba(3,8,22,.76);backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,.32);font-variant-numeric:tabular-nums;color:#dbeafe}
+.monitorClock span{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#a5b4fc}.monitorClock strong{font-size:18px;letter-spacing:.04em;color:#fff}
 .placeholder{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px 16px 70px;color:var(--muted);white-space:pre-line;font-size:15px}
 .badge{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:7px;background:rgba(3,6,13,.72);border:1px solid #3b2a5c;border-radius:999px;padding:5px 11px;font-size:11px;font-weight:800;letter-spacing:.05em;backdrop-filter:blur(6px)}
 .badge i{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
@@ -199,3 +201,10 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 .pictureControls{position:relative;grid-template-columns:minmax(220px,1fr) minmax(190px,.55fr);gap:12px}.picturePanel p{position:relative;margin:10px 0 0;padding-top:9px;border-top:1px solid rgba(110,124,169,.22)}
 .dvrCard{border-color:rgba(124,58,237,.4);background:linear-gradient(145deg,rgba(20,28,61,.98),rgba(11,22,44,.98))}.eventsCard{border-color:rgba(64,151,116,.38)}
 @media(max-width:600px){.pictureControls{grid-template-columns:1fr}.toolbar{display:grid;grid-template-columns:1fr 1fr}.toolbar .tool,.toolbar a{min-height:48px}.card{padding:14px}.dvrJumps{gap:5px}.dvrJumps .tool{padding:8px 9px}}
+
+/* Pełny układ stanowiska: obraz po lewej, sterowanie po prawej. */
+.layout.sender{grid-template-columns:minmax(0,1fr) minmax(340px,400px);gap:18px}.layout.sender .mainCol{min-width:0}.layout.sender .sideCol{position:sticky;top:76px;max-height:calc(100vh - 92px);overflow:auto;padding-right:3px}
+.layout.sender .sideCol::-webkit-scrollbar{width:7px}.layout.sender .sideCol::-webkit-scrollbar-thumb{background:#34436d;border-radius:999px}
+.layout.sender .stage{min-height:420px}.layout.sender .picturePanel{margin-top:14px}
+@media(max-width:1000px){.layout.sender{grid-template-columns:1fr}.layout.sender .sideCol{position:static;max-height:none;overflow:visible}.layout.sender .stage{min-height:0}}
+@media(max-width:600px){.monitorClock{top:9px;right:9px;min-width:116px;padding:5px 8px}.monitorClock strong{font-size:14px}.monitorClock span{font-size:8px}.badge{top:9px;left:9px}.badge.rec{right:9px;left:auto;top:48px}}
