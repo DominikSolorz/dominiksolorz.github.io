@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=34">
+<link rel="stylesheet" href="style.css?v=49">
 </head>
 <body>
 <header class="topbar">
@@ -69,6 +69,13 @@
       </div>
 
       <div id="recStatus" class="recStatus" hidden></div>
+      <div id="modeCard" class="card modeCard" hidden>
+        <div class="modeRow">
+          <button class="tool" data-mode="record">⏺ Nagrywaj</button>
+          <button class="tool" data-mode="preview">👁 Tylko podgląd</button>
+          <button class="tool" data-mode="off">⏸ Wyłącz kamerę</button>
+        </div>
+      </div>
       <div id="dvrCard" class="card dvrCard" hidden></div>
       <div id="status" class="status" role="status" aria-live="polite" hidden></div>
 
@@ -168,6 +175,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=48"></script>
+  <script type="module" src="app.js?v=49"></script>
 </body>
 </html>
