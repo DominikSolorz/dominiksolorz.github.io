@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "59"; // musi się zgadzać z version.json
+const VERSION = "60"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -80,7 +80,7 @@ if (!prefs.q720) { prefs.recQuality = "hd"; prefs.q720 = true; savePrefs(); }
 const video = $("video");
 function updateMonitorClock() {
   const now = new Date();
-  $("monitorDate").textContent = now.toLocaleDateString("pl-PL", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
+  $("monitorDate").textContent = now.toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
   $("monitorTime").textContent = now.toLocaleTimeString("pl-PL", { hour12: false });
 }
 updateMonitorClock(); setInterval(updateMonitorClock, 1000);
@@ -384,7 +384,7 @@ const archive = (() => {
         if (stopped) return;
         if (input.readyState >= 2) {
           ctx.drawImage(input, 0, 0, width, height);
-          const text = new Date().toLocaleString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+          const text = `KAMERA DOMOWA · ${new Date().toLocaleString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}`;
           const size = Math.max(20, Math.round(width / 38));
           ctx.font = `700 ${size}px Arial, sans-serif`; ctx.textBaseline = "middle";
           const pad = Math.round(size * .6), boxW = Math.ceil(ctx.measureText(text).width + pad * 2), boxH = Math.round(size * 1.8);
