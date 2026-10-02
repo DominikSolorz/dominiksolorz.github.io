@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "57"; // musi się zgadzać z version.json
+const VERSION = "58"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -251,7 +251,7 @@ const archive = (() => {
   let local = { count: 0, bytes: 0, oldest: 0 }, free = Infinity, persisted = false;
   let diskFiles = { count: 0, bytes: 0, oldest: 0 };
   let disk = { selected: false, name: "", ready: false, saved: 0, error: "" };
-  let fast = false, slowTimer = null, segStart = 0;
+  let fast = false, slowTimer = null, segStart = 0, watermarkStop = null;
   // Limit skryptu Google w starej wersji (bez wysyłania w kawałkach): ok. 35 MB pliku.
   const MAX_UPLOAD = 34 * 1024 * 1024;
   const oversize = new Set();
@@ -363,12 +363,48 @@ const archive = (() => {
     pump();
   }
 
-  // Kopia obrazu tylko do nagrywania: pełna rozdzielczość kamery, zmienna liczba klatek.
+  // Kopia obrazu tylko do nagrywania: pełna rozdzielczość kamery, zmienna liczba klatek
+  // oraz trwały znacznik daty i godziny wewnątrz zapisanego kadru.
   async function makeRecStream(s) {
     const v = s.getVideoTracks()[0]?.clone();
     fast = !adaptive();
     if (v) { try { await v.applyConstraints({ frameRate: { ideal: fast ? FAST_FPS : SLOW_FPS, max: fast ? FAST_FPS : SLOW_FPS } }); } catch { /* zostaje 30 kl./s */ } }
-    return new MediaStream([...(v ? [v] : []), ...s.getAudioTracks()]);
+    if (!v || !HTMLCanvasElement.prototype.captureStream) return new MediaStream([...(v ? [v] : []), ...s.getAudioTracks()]);
+    const input = document.createElement("video");
+    input.muted = true; input.playsInline = true; input.srcObject = new MediaStream([v]);
+    try {
+      await new Promise((resolve, reject) => { input.onloadedmetadata = resolve; input.onerror = reject; });
+      await input.play();
+      const settings = v.getSettings();
+      const width = settings.width || input.videoWidth || 1280;
+      const height = settings.height || input.videoHeight || 720;
+      const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("brak obsługi znacznika obrazu");
+      let frame = 0, stopped = false;
+      const draw = () => {
+        if (stopped) return;
+        if (input.readyState >= 2) {
+          ctx.drawImage(input, 0, 0, width, height);
+          const text = new Date().toLocaleString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+          const size = Math.max(20, Math.round(width / 38));
+          ctx.font = `700 ${size}px Arial, sans-serif`; ctx.textBaseline = "middle";
+          const pad = Math.round(size * .6), boxW = Math.ceil(ctx.measureText(text).width + pad * 2), boxH = Math.round(size * 1.8);
+          const x = width - boxW - pad, y = pad;
+          ctx.fillStyle = "rgba(3, 8, 22, .78)"; ctx.fillRect(x, y, boxW, boxH);
+          ctx.strokeStyle = "rgba(196, 181, 253, .9)"; ctx.lineWidth = Math.max(2, Math.round(size / 13)); ctx.strokeRect(x, y, boxW, boxH);
+          ctx.fillStyle = "#ffffff"; ctx.fillText(text, x + pad, y + boxH / 2);
+        }
+        frame = requestAnimationFrame(draw);
+      };
+      draw();
+      const marked = canvas.captureStream(fast ? FAST_FPS : SLOW_FPS).getVideoTracks()[0];
+      watermarkStop = () => { stopped = true; cancelAnimationFrame(frame); input.pause(); input.srcObject = null; v.stop(); marked.stop(); };
+      return new MediaStream([marked, ...s.getAudioTracks()]);
+    } catch {
+      input.pause(); input.srcObject = null;
+      return new MediaStream([v, ...s.getAudioTracks()]);
+    }
   }
 
   function setFps(fps) { recStream?.getVideoTracks()[0]?.applyConstraints({ frameRate: { ideal: fps, max: fps } }).catch(() => {}); }
@@ -430,8 +466,9 @@ const archive = (() => {
     clearTimeout(segTimer); clearInterval(clock); clearTimeout(slowTimer);
     if (rec && rec.state !== "inactive") rec.stop();
     rec = null;
+    const stopWatermark = watermarkStop; watermarkStop = null;
     const rs = recStream; recStream = null;
-    if (rs) setTimeout(() => rs.getVideoTracks().forEach(t => t.stop()), 1000);
+    setTimeout(() => { stopWatermark?.(); rs?.getVideoTracks().forEach(t => t.stop()); }, 1000);
   }
 
   function start(s) { source = s; resume(); }
