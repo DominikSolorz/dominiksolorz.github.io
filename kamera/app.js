@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "51"; // musi się zgadzać z version.json
+const VERSION = "52"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -49,7 +49,7 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "small", segmentMin: 10, retentionDays: 1, mode: "record" };
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "small", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false };
 
 // Jakość NAGRAŃ (osobno od obrazu na żywo, który zostaje w HD). Mniejsza rozdzielczość, mniej klatek
 // i niska przepływność = małe pliki na Google Drive. Rozmiary to przybliżenie dla 5 minut nagrania.
@@ -63,6 +63,12 @@ const recPreset = () => REC_PRESETS[prefs.recQuality] || REC_PRESETS.small;
 function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } }
 function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* tryb prywatny */ } }
 const prefs = loadPrefs();
+function recordingScheduledNow() {
+  const hour = new Date().getHours();
+  if (prefs.recordPlan === "day") return hour >= 7 && hour < 22;
+  if (prefs.recordPlan === "night") return hour < 7 || hour >= 22;
+  return true;
+}
 // Jednorazowo: nowy plik co 10 minut i przechowywanie 30 dni (biblioteka nagrań na Google Drive).
 if (!prefs.lib1) { prefs.segmentMin = 10; prefs.retentionDays = 30; prefs.lib1 = true; savePrefs(); }
 // Jednorazowo: nagrania w HD 720p. Gdy łącze nie nadąża (≥3 pliki w kolejce), archiwum samo
@@ -651,7 +657,7 @@ async function tuneVideoSender(pc, cropWidth = 0) {
 const sender = (() => {
   const peers = new Map();
   let zoomer = null, cropWidth = 0; // zbliżenie: wycinany kadr z pełnej rozdzielczości kamery
-  let stream = null, live = false, heartbeat = null, reportTimer = null, keepAlive = null, camTimer = null, camAttempt = 0, wakeLock = null, lastCameraError = "";
+  let stream = null, live = false, heartbeat = null, reportTimer = null, keepAlive = null, camTimer = null, scheduleTimer = null, camAttempt = 0, wakeLock = null, lastCameraError = "";
   const chan = reconnectingChannel({
     label: "Nadajnik",
     onSignal,
@@ -777,7 +783,8 @@ const sender = (() => {
       showPlaceholder("");
       s.getVideoTracks()[0]?.addEventListener("ended", () => { if (live && stream === s) cameraLost(); });
       camAttempt = 0;
-      if (prefs.mode !== "preview") archive.start(s);
+      if (prefs.mode !== "preview" && recordingScheduledNow()) archive.start(s);
+      else archive.stop();
       if (prefs.detect) detector.start(s, video);
       return true;
     } catch (e) {
@@ -822,7 +829,7 @@ const sender = (() => {
       camAttempt = 0; setStatus("Uruchamiam kamerę i mikrofon…");
       if (await acquireCamera()) { setStatus(""); send(chan.channel, { type: "broadcaster-ready" }); }
       else if (live) scheduleCameraRetry();
-    } else if (m === "record") archive.start(stream);
+    } else if (m === "record" && recordingScheduledNow()) archive.start(stream);
     else archive.stop();
     send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode });
     report();
@@ -834,6 +841,13 @@ const sender = (() => {
     setStatus("Ponawiam uruchamianie kamery…");
     if (await acquireCamera()) { setStatus(""); send(chan.channel, { type: "broadcaster-ready" }); }
     else if (live) scheduleCameraRetry();
+  }
+
+  function applyRecordingPlan() {
+    if (!live || !stream) return;
+    if (prefs.mode === "record" && recordingScheduledNow()) archive.start(stream);
+    else archive.stop();
+    report();
   }
 
   // Zmiana kamery z listy: przełącz obraz i daj znać oglądającym, żeby połączyli się ponownie.
@@ -862,6 +876,8 @@ const sender = (() => {
     chan.start();
     clearInterval(heartbeat);
     heartbeat = setInterval(() => send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode }), HEARTBEAT_MS);
+    clearInterval(scheduleTimer);
+    scheduleTimer = setInterval(applyRecordingPlan, 30000);
     clearInterval(reportTimer);
     reportTimer = setInterval(report, 60000);
     setTimeout(report, 5000);
@@ -877,7 +893,7 @@ const sender = (() => {
     if (!live) return;
     live = false;
     archive.stop(); detector.stop();
-    clearInterval(heartbeat); clearInterval(reportTimer); clearInterval(keepAlive); clearInterval(updateTimer); clearTimeout(camTimer);
+    clearInterval(heartbeat); clearInterval(reportTimer); clearInterval(keepAlive); clearInterval(updateTimer); clearInterval(scheduleTimer); clearTimeout(camTimer);
     send(chan.channel, { type: "broadcaster-stop" });
     report();
     chan.stop();
@@ -936,7 +952,7 @@ const sender = (() => {
     }).catch(() => {});
   }
 
-  return { start, stop, retryCamera, switchCamera, notifyViewers, get live() { return live; } };
+  return { start, stop, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, get live() { return live; } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -1217,6 +1233,19 @@ $("startHere").addEventListener("click", () => {
   setRole(true);
 });
 $("pcLibRefresh").addEventListener("click", () => showPcLibrary());
+function applyPictureLayout() {
+  const style = prefs.pictureStyle || "color";
+  $("pictureStyle").value = style;
+  $("stage").classList.toggle("visual-mono", style === "mono");
+  $("stage").classList.toggle("visual-contrast", style === "contrast");
+  $("stage").classList.toggle("visual-night", style === "night");
+  $("stage").classList.toggle("frame-grid", !!prefs.pictureGrid);
+  $("gridBtn").textContent = `▦ Siatka kadru: ${prefs.pictureGrid ? "wł." : "wył."}`;
+  $("gridBtn").setAttribute("aria-pressed", prefs.pictureGrid ? "true" : "false");
+}
+$("pictureStyle").addEventListener("change", e => { prefs.pictureStyle = e.target.value; savePrefs(); applyPictureLayout(); toastMsg("Zmieniono efekt podglądu."); });
+$("gridBtn").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictureGrid; savePrefs(); applyPictureLayout(); toastMsg(prefs.pictureGrid ? "Włączono siatkę kadru." : "Wyłączono siatkę kadru."); });
+applyPictureLayout();
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
 document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.addEventListener("click", () => viewer.setMode(b.dataset.mode)));
@@ -1236,6 +1265,12 @@ for (const id of ["segmentMin", "retentionDays"]) {
   $(id).value = String(prefs[id]);
   $(id).addEventListener("change", e => { prefs[id] = Number(e.target.value); savePrefs(); });
 }
+$("recordPlan").value = prefs.recordPlan || "always";
+$("recordPlan").addEventListener("change", e => {
+  prefs.recordPlan = e.target.value; savePrefs();
+  sender.applyRecordingPlan();
+  toastMsg(`Harmonogram: ${e.target.options[e.target.selectedIndex].text}.`);
+});
 $("cameraSelect").addEventListener("change", e => { prefs.cameraId = e.target.value; savePrefs(); sender.switchCamera(); });
 $("detectToggle").checked = prefs.detect;
 $("detectToggle").addEventListener("change", e => { prefs.detect = e.target.checked; savePrefs(); sender.switchCamera(); });

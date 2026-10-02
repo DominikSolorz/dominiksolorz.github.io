@@ -60,6 +60,10 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 /* Obraz */
 .stage{position:relative;aspect-ratio:16/9;background:#03060d;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
 .stage video{width:100%;height:100%;object-fit:contain;display:block}
+.stage.frame-grid::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(to right,transparent 33.1%,rgba(255,255,255,.38) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.38) 66.7%,transparent 66.9%),linear-gradient(to bottom,transparent 33.1%,rgba(255,255,255,.38) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.38) 66.7%,transparent 66.9%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.stage.visual-mono video{filter:grayscale(1) contrast(1.08)}
+.stage.visual-contrast video{filter:contrast(1.45) saturate(1.15)}
+.stage.visual-night video{filter:brightness(.72) contrast(1.2) saturate(.72) hue-rotate(65deg)}
 .placeholder{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px 16px 70px;color:var(--muted);white-space:pre-line;font-size:15px}
 .badge{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:7px;background:rgba(3,6,13,.72);border:1px solid #3b2a5c;border-radius:999px;padding:5px 11px;font-size:11px;font-weight:800;letter-spacing:.05em;backdrop-filter:blur(6px)}
 .badge i{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
@@ -165,6 +169,10 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 .dvrLibBox{margin-top:8px}
 .dvrLibBox .libList{padding:0 12px 12px}
 .modeCard{margin-top:10px;padding:10px}
+.picturePanel{margin-top:12px}
+.pictureControls{display:grid;grid-template-columns:minmax(180px,1fr) minmax(150px,.8fr);align-items:end;gap:10px}
+.pictureControls .tool{min-height:42px}
+@media(max-width:600px){.pictureControls{grid-template-columns:1fr}}
 .modeRow{display:flex;gap:8px;flex-wrap:wrap}
 .modeRow .tool.on{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.6);color:#86efac;font-weight:700}
 .modeRow .tool[data-mode="off"].on{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.55);color:#fca5a5}

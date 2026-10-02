@@ -68,6 +68,22 @@
         <a id="lastRec" class="tool" hidden>Pobierz nagranie</a>
       </div>
 
+      <section id="picturePanel" class="card picturePanel" aria-label="Układ obrazu">
+        <div class="cardHead"><h2>◫ Układ obrazu</h2><span class="muted small">podgląd na tym urządzeniu</span></div>
+        <div class="pictureControls">
+          <label>Efekt obrazu
+            <select id="pictureStyle">
+              <option value="color">Kolor naturalny</option>
+              <option value="mono">Czarno-biały</option>
+              <option value="contrast">Wysoki kontrast</option>
+              <option value="night">Tryb nocny</option>
+            </select>
+          </label>
+          <button class="tool" id="gridBtn" type="button" aria-pressed="false">▦ Siatka kadru: wył.</button>
+        </div>
+        <p class="muted small">Efekt i siatka pomagają ustawić kadr. Oryginalne nagranie pozostaje w kolorze i pełnej jakości.</p>
+      </section>
+
       <div id="recStatus" class="recStatus" hidden></div>
       <div id="modeCard" class="card modeCard" hidden>
         <div class="modeRow">
@@ -130,6 +146,13 @@
         <div id="archiveInfo" class="status"></div>
         <div class="row"><button class="btn primary" id="chooseArchiveDir">📁 Wybierz folder archiwum</button></div>
         <div class="grid">
+          <label>Harmonogram
+            <select id="recordPlan">
+              <option value="always">Zawsze (24/7)</option>
+              <option value="day">Tylko dzień (07:00–22:00)</option>
+              <option value="night">Tylko noc (22:00–07:00)</option>
+            </select>
+          </label>
           <label>Jakość nagrań
             <select id="quality"><option value="small">Mała — 360p (~4 MB / 5 min)</option></select>
           </label>
@@ -177,6 +200,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=51"></script>
+  <script type="module" src="app.js?v=52"></script>
 </body>
 </html>
