@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "47"; // musi się zgadzać z version.json
+const VERSION = "48"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -752,9 +752,12 @@ const sender = (() => {
     return s;
   }
 
+  let camWaitSince = 0; // >0 = czekamy na kamerę (np. okno zgody przeglądarki)
   async function acquireCamera() {
+    camWaitSince = Date.now();
     try {
       const s = await openBestCamera();
+      camWaitSince = 0;
       if (!live) { s.getTracks().forEach(t => t.stop()); return false; }
       stream = s;
       lastCameraError = ""; $("retryCameraBtn").hidden = true;
@@ -768,7 +771,8 @@ const sender = (() => {
       if (prefs.detect) detector.start(s, video);
       return true;
     } catch (e) {
-      lastCameraError = cameraErrorMessage(e);
+      camWaitSince = 0;
+      lastCameraError = `${cameraErrorMessage(e)} [${e?.name || "błąd"}]`;
       $("retryCameraBtn").hidden = false;
       setStatus(`${lastCameraError} Automatyczna próba zostanie ponowiona.`);
       return false;
@@ -884,7 +888,10 @@ const sender = (() => {
   const INSTANCE = crypto.randomUUID().slice(0, 8);
   function report() {
     const r = archive.status();
-    const s = { id: CHANNEL, instance: INSTANCE, live: live && !!stream, recording: r.recording, reason: r.reason, folder: r.folder,
+    // Dlaczego nie ma obrazu — widać zdalnie w raporcie (błąd kamery albo czekanie na zgodę przeglądarki).
+    const cam = !live || stream ? "" : lastCameraError ? `KAMERA: ${lastCameraError} `
+      : camWaitSince ? `KAMERA: czekam na kamerę od ${Math.round((Date.now() - camWaitSince) / 1000)} s (okno zgody przeglądarki?). ` : "";
+    const s = { id: CHANNEL, instance: INSTANCE, live: live && !!stream, recording: r.recording, reason: cam + r.reason, folder: r.folder,
       last_file: r.lastFile, saved: r.saved, viewers: peers.size, version: VERSION, user_agent: navigator.userAgent };
     fetch(`${SUPABASE_URL}/rest/v1/rpc/report_camera_status`, {
       method: "POST", keepalive: true,
