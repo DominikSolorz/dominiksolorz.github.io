@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "48"; // musi się zgadzać z version.json
+const VERSION = "49"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -49,7 +49,7 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "small", segmentMin: 10, retentionDays: 1 };
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "small", segmentMin: 10, retentionDays: 1, mode: "record" };
 
 // Jakość NAGRAŃ (osobno od obrazu na żywo, który zostaje w HD). Mniejsza rozdzielczość, mniej klatek
 // i niska przepływność = małe pliki na Google Drive. Rozmiary to przybliżenie dla 5 minut nagrania.
@@ -421,7 +421,9 @@ const archive = (() => {
   const gb = n => `${(n / 1073741824).toFixed(1)} GB`;
   function describe() {
     if (REC_MIME === null) return "Ta przeglądarka nie obsługuje nagrywania.";
-    let text = running ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
+    let text = prefs.mode === "off" ? "Kamera wstrzymana z telefonu — nie nagrywa i nie nadaje."
+      : prefs.mode === "preview" ? "Tylko podgląd — nagrywanie wyłączone z telefonu."
+      : running ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
     if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; plików na dysku: ${diskFiles.count} (${gb(diskFiles.bytes)}).`;
     else text += " ⚠ Trwałe archiwum nie jest ustawione — kliknij „Wybierz folder archiwum”.";
     text += " Każdy nowy plik jest zapisywany tylko raz, bezpośrednio na dysku. Na Google Drive tylko po kliknięciu.";
@@ -680,6 +682,7 @@ const sender = (() => {
     if (sig.type === "viewer-join") return connectViewer(sig.viewerId);
     if (sig.type === "zoom" && zoomer) { zoomer.set(sig); return sendZoomState(); }
     if (sig.type === "zoom-get") return sendZoomState();
+    if (sig.type === "mode-set") return setMode(sig.mode);
     if (sig.type === "viewer-leave") return closePeer(sig.viewerId);
     const peer = sig.viewerId ? peers.get(sig.viewerId) : null;
     if (!peer) return;
@@ -767,7 +770,7 @@ const sender = (() => {
       showPlaceholder("");
       s.getVideoTracks()[0]?.addEventListener("ended", () => { if (live && stream === s) cameraLost(); });
       camAttempt = 0;
-      archive.start(s);
+      if (prefs.mode !== "preview") archive.start(s);
       if (prefs.detect) detector.start(s, video);
       return true;
     } catch (e) {
@@ -791,10 +794,31 @@ const sender = (() => {
   function scheduleCameraRetry() {
     clearTimeout(camTimer);
     camTimer = setTimeout(async () => {
-      if (!live) return;
+      if (!live || prefs.mode === "off") return;
       if (await acquireCamera()) { setStatus(""); send(chan.channel, { type: "broadcaster-ready" }); }
       else if (live) scheduleCameraRetry();
     }, retryDelay(camAttempt++));
+  }
+
+  // Tryb ustawiany z telefonu: „record” = podgląd + nagrywanie, „preview” = tylko podgląd, „off” = kamera wyłączona.
+  // Przy „off” strona dalej słucha poleceń, więc telefon może ją w każdej chwili włączyć z powrotem.
+  async function setMode(m) {
+    if (!live || !["record", "preview", "off"].includes(m)) return;
+    prefs.mode = m; savePrefs();
+    if (m === "off") {
+      clearTimeout(camTimer);
+      archive.stop(); detector.stop(); closeAll();
+      zoomer?.stop(); zoomer = null;
+      stream?.getTracks().forEach(t => t.stop()); stream = null;
+      video.srcObject = null; setStatus(""); showPlaceholder("Kamera wstrzymana — włącz ją z telefonu.");
+    } else if (!stream) {
+      camAttempt = 0; setStatus("Uruchamiam kamerę i mikrofon…");
+      if (await acquireCamera()) { setStatus(""); send(chan.channel, { type: "broadcaster-ready" }); }
+      else if (live) scheduleCameraRetry();
+    } else if (m === "record") archive.start(stream);
+    else archive.stop();
+    send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode });
+    report();
   }
 
   async function retryCamera() {
@@ -823,11 +847,14 @@ const sender = (() => {
     live = true;
     $("startBtn").hidden = true; $("stopBtn").hidden = false;
     showLive("NA ŻYWO · oglądający: 0");
-    setStatus("Uruchamiam kamerę i mikrofon…");
-    if (!(await acquireCamera()) && live) scheduleCameraRetry();
+    if (prefs.mode === "off") { setStatus(""); showPlaceholder("Kamera wstrzymana — włącz ją z telefonu."); }
+    else {
+      setStatus("Uruchamiam kamerę i mikrofon…");
+      if (!(await acquireCamera()) && live) scheduleCameraRetry();
+    }
     chan.start();
     clearInterval(heartbeat);
-    heartbeat = setInterval(() => { if (stream) send(chan.channel, { type: "heartbeat", rec: archive.status() }); }, HEARTBEAT_MS);
+    heartbeat = setInterval(() => send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode }), HEARTBEAT_MS);
     clearInterval(reportTimer);
     reportTimer = setInterval(report, 60000);
     setTimeout(report, 5000);
@@ -907,7 +934,7 @@ const sender = (() => {
 const viewer = (() => {
   const viewerId = crypto.randomUUID();
   let pc = null, pending = [], lastSeen = 0, lastJoin = 0, brokenSince = 0, watchdog = null, active = false;
-  let rec = null, recClock = null;
+  let rec = null, recClock = null, camOff = false;
   const chan = reconnectingChannel({
     label: "Podgląd",
     onSignal,
@@ -929,11 +956,13 @@ const viewer = (() => {
     if (!["viewer-join", "viewer-leave"].includes(sig.type) && !(sig.type === "ice" && sig.from === "viewer")) lastSeen = Date.now();
     if (sig.type === "heartbeat") {
       if (sig.rec) showRecStatus(sig.rec);
+      if (sig.mode) applyMode(sig.mode);
+      if (camOff) return;
       const st = pc?.connectionState;
       if ((!st || st === "failed" || st === "closed") && Date.now() - lastJoin > 10000) join();
       return;
     }
-    if (sig.type === "broadcaster-ready") { reset(); return join(); }
+    if (sig.type === "broadcaster-ready") { if (camOff) return; reset(); return join(); }
     if (sig.type === "broadcaster-stop") { reset(); lastSeen = 0; showPlaceholder("Kamera jest wyłączona."); return; }
     if (sig.type === "alert") return showAlert(sig);
     if (sig.type === "zoom-state") return zoomUi.apply(sig);
@@ -973,6 +1002,22 @@ const viewer = (() => {
     }
   }
 
+  // Przyciski trybu kamery na telefonie: podświetlony = bieżący tryb komputera.
+  function applyMode(m) {
+    $("modeCard").hidden = false;
+    document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode === m));
+    const off = m === "off";
+    if (off && !camOff) { reset(); showPlaceholder("Kamera wstrzymana.\nNaciśnij „Nagrywaj” albo „Tylko podgląd”, aby ją włączyć."); }
+    if (!off && camOff) { reset(); join(); }
+    camOff = off;
+  }
+  function setMode(m) {
+    if (m === "off" && !confirm("Wyłączyć kamerę? Nie będzie podglądu ani nagrywania, dopóki nie włączysz jej z powrotem.")) return;
+    send(chan.channel, { type: "mode-set", mode: m });
+    setStatus("Wysłano polecenie do kamery…");
+    setTimeout(() => setStatus(""), 4000);
+  }
+
   // Ręczne nagranie na telefonie (niezależne od nagrywania 24/7 na komputerze).
   function startRec() {
     const s = video.srcObject;
@@ -1010,7 +1055,7 @@ const viewer = (() => {
     // Strażnik 24/7: wznawia zerwane połączenie, wykrywa brak nadajnika.
     watchdog = setInterval(() => {
       const now = Date.now();
-      if (pc?.connectionState === "connected") { brokenSince = 0; return; }
+      if (pc?.connectionState === "connected" || (camOff && now - lastSeen < OFFLINE_AFTER_MS)) { brokenSince = 0; return; }
       if (!brokenSince) brokenSince = now;
       const offline = !lastSeen || now - lastSeen > OFFLINE_AFTER_MS;
       if (offline && chan.channel) {
@@ -1034,7 +1079,7 @@ const viewer = (() => {
 
   function sendZoom(st) { send(chan.channel, { type: "zoom", ...st }); }
 
-  return { start, stop, sendZoom, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
+  return { start, stop, sendZoom, setMode, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
 })();
 
 // Zdarzenie na telefonie: wyskakujące powiadomienie, wibracja, lista ostatnich zdarzeń.
@@ -1165,6 +1210,7 @@ $("startHere").addEventListener("click", () => {
 $("pcLibRefresh").addEventListener("click", () => showPcLibrary());
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
+document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.addEventListener("click", () => viewer.setMode(b.dataset.mode)));
 $("stopBtn").addEventListener("click", () => sender.stop());
 $("retryCameraBtn").addEventListener("click", () => sender.retryCamera());
 $("chooseArchiveDir").addEventListener("click", async () => {
