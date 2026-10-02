@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "58"; // musi się zgadzać z version.json
+const VERSION = "59"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -82,8 +82,6 @@ function updateMonitorClock() {
   const now = new Date();
   $("monitorDate").textContent = now.toLocaleDateString("pl-PL", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
   $("monitorTime").textContent = now.toLocaleTimeString("pl-PL", { hour12: false });
-  $("headerDate").textContent = now.toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
-  $("headerTime").textContent = now.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
 }
 updateMonitorClock(); setInterval(updateMonitorClock, 1000);
 function setStatus(text) { $("status").textContent = text || ""; $("status").hidden = !text; }
@@ -1237,6 +1235,8 @@ function showPcLibrary() {
 function showSender() {
   dvr?.stop(); $("dvrCard").hidden = true;
   $("sendPanel").hidden = false; $("watchPanel").hidden = true; $("viewEventsCard").hidden = true; $("layout").classList.add("sender");
+  // Jedna konsola po prawej: ustawienia kadru nie mieszają się pod obrazem kamery.
+  if ($("picturePanel").parentElement !== $("sendPanel")) $("sendPanel").prepend($("picturePanel"));
   $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
   archive.init().then(showPcLibrary);
   sender.start();
@@ -1251,6 +1251,8 @@ function toastMsg(text) {
 let dvr = null;
 function showViewer() {
   $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("viewEventsCard").hidden = false; $("layout").classList.remove("sender");
+  // Na telefonie/podglądzie ustawienia wracają pod obraz, aby nie powstawała pusta prawa kolumna.
+  if ($("picturePanel").parentElement !== $("layout").querySelector(".mainCol")) $("layout").querySelector(".mainCol").insertBefore($("picturePanel"), $("recStatus"));
   // Oś czasu i biblioteka pokazują nagrania zapisane na stronie (nie z Google Drive).
   dvr ??= mountDvr({ client: recClient, drive: null, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg });
   recClient.onopen = () => dvr.refresh();
