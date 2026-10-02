@@ -64,6 +64,9 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 .stage.visual-mono video{filter:grayscale(1) contrast(1.08)}
 .stage.visual-contrast video{filter:contrast(1.45) saturate(1.15)}
 .stage.visual-night video{filter:brightness(.72) contrast(1.2) saturate(.72) hue-rotate(65deg)}
+.stage.visual-cool video{filter:contrast(1.08) saturate(.88) hue-rotate(175deg)}
+.stage.visual-warm video{filter:sepia(.24) saturate(1.2) hue-rotate(-8deg) brightness(1.04)}
+.stage.visual-negative video{filter:invert(1) hue-rotate(180deg) contrast(1.08)}
 .placeholder{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px 16px 70px;color:var(--muted);white-space:pre-line;font-size:15px}
 .badge{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:7px;background:rgba(3,6,13,.72);border:1px solid #3b2a5c;border-radius:999px;padding:5px 11px;font-size:11px;font-weight:800;letter-spacing:.05em;backdrop-filter:blur(6px)}
 .badge i{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
