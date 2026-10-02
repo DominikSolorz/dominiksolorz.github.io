@@ -16,7 +16,11 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "60"; // musi się zgadzać z version.json
+// Link odbiorcy zawiera wyłącznie niezgadywalną nazwę kanału WebRTC, nigdy PIN ani klucz właściciela.
+// Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
+const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
+const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
+const VERSION = "61"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -1072,6 +1076,7 @@ const viewer = (() => {
 
   // Przyciski trybu kamery na telefonie: podświetlony = bieżący tryb komputera.
   function applyMode(m) {
+    if (RECEIVER_ONLY) return;
     $("modeCard").hidden = false;
     document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode === m));
     const off = m === "off";
@@ -1242,6 +1247,16 @@ function showSender() {
   sender.start();
 }
 
+function copyReceiverLink() {
+  const url = new URL(location.href);
+  url.hash = "";
+  url.search = "";
+  url.searchParams.set("odbiorca", CHANNEL);
+  navigator.clipboard.writeText(url.href)
+    .then(() => toastMsg("Skopiowano link odbiorcy. Otwiera podgląd bez PIN-u — przekaż go tylko zaufanej osobie."))
+    .catch(() => prompt("Skopiuj ten link i przekaż go zaufanej osobie:", url.href));
+}
+
 // Krótki komunikat na dole ekranu (ten sam element co powiadomienia o ruchu).
 function toastMsg(text) {
   const t = $("toast");
@@ -1254,11 +1269,19 @@ function showViewer() {
   // Na telefonie/podglądzie ustawienia wracają pod obraz, aby nie powstawała pusta prawa kolumna.
   if ($("picturePanel").parentElement !== $("layout").querySelector(".mainCol")) $("layout").querySelector(".mainCol").insertBefore($("picturePanel"), $("recStatus"));
   // Oś czasu i biblioteka pokazują nagrania zapisane na stronie (nie z Google Drive).
-  dvr ??= mountDvr({ client: recClient, drive: null, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg });
+  dvr ??= mountDvr({ client: recClient, drive: null, allowUpload: !RECEIVER_ONLY, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg });
   recClient.onopen = () => dvr.refresh();
   $("dvrCard").hidden = false;
   dvr.start();
   $("roleBtn").textContent = "To jest komputer z kamerą — nadawaj z niego";
+  if (RECEIVER_ONLY) {
+    $("picturePanel").hidden = true;
+    $("modeCard").hidden = true;
+    $("viewEventsCard").hidden = true;
+    $("watchRecBtn").hidden = true;
+    $("roleBtn").hidden = true;
+    document.querySelectorAll('a[href="nagrania.html"]').forEach(a => a.hidden = true);
+  }
   viewer.start();
 }
 
@@ -1280,6 +1303,7 @@ $("startHere").addEventListener("click", () => {
   setRole(true);
 });
 $("pcLibRefresh").addEventListener("click", () => showPcLibrary());
+$("copyViewerLink").addEventListener("click", copyReceiverLink);
 function applyPictureLayout() {
   const style = prefs.pictureStyle || "color";
   $("pictureStyle").value = style;
@@ -1298,7 +1322,7 @@ $("gridBtn").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictur
 applyPictureLayout();
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
-document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.addEventListener("click", () => viewer.setMode(b.dataset.mode)));
+document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.addEventListener("click", () => { if (!RECEIVER_ONLY) viewer.setMode(b.dataset.mode); }));
 $("stopBtn").addEventListener("click", () => sender.stop());
 $("retryCameraBtn").addEventListener("click", () => sender.retryCamera());
 $("chooseArchiveDir").addEventListener("click", async () => {
@@ -1349,9 +1373,15 @@ $("soundBtn").addEventListener("click", () => { video.muted = !video.muted; vide
 if (location.hash === "#nadaj") { prefs.role = "send"; savePrefs(); history.replaceState(null, "", location.pathname); }
 window.__kameraReady = true;
 $("bootError").hidden = true;
-ACCESS_KEY = await requireAccess();
-CHANNEL = await channelFor(ACCESS_KEY);
-if (new URLSearchParams(location.search).get("wroc") === "nagrania") location.replace("nagrania.html");
-$("app").hidden = false; $("lockBtn").hidden = false;
-if (prefs.role === "send") showSender();
-else showViewer();
+if (RECEIVER_ONLY) {
+  CHANNEL = receiverChannel;
+  $("app").hidden = false;
+  showViewer();
+} else {
+  ACCESS_KEY = await requireAccess();
+  CHANNEL = await channelFor(ACCESS_KEY);
+  if (new URLSearchParams(location.search).get("wroc") === "nagrania") location.replace("nagrania.html");
+  $("app").hidden = false; $("lockBtn").hidden = false;
+  if (prefs.role === "send") showSender();
+  else showViewer();
+}

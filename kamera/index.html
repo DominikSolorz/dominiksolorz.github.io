@@ -114,7 +114,8 @@
     <aside id="sendPanel" class="sideCol" hidden>
       <div class="card">
         <div class="cardHead"><h2>🎥 Nadawanie</h2><span class="muted small">maks. 12 oglądających</span></div>
-        <p class="muted small">Obraz widzą tylko osoby z PIN-em.</p>
+        <p class="muted small">Właściciel steruje po PIN-ie. Odbiorcy dostają osobny link tylko do oglądania.</p>
+        <div class="row"><button id="copyViewerLink" class="btn ghost" type="button">🔗 Skopiuj link dla odbiorcy (bez PIN-u)</button></div>
         <div class="opsGrid" aria-label="Stan systemu monitoringu">
           <div class="opsTile"><span>● Transmisja</span><b id="opLive">Uruchamianie</b></div>
           <div class="opsTile"><span>◉ Archiwum</span><b id="opArchive">Sprawdzam dysk</b></div>
@@ -209,6 +210,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=60"></script>
+  <script type="module" src="app.js?v=61"></script>
 </body>
 </html>

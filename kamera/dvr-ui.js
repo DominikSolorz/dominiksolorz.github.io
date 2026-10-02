@@ -14,7 +14,7 @@ const DAY_MS = 86400000;
 const nameTime = n => { const m = /kamera-(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})/.exec(n || ""); return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : 0; };
 const SEG_MS = 600000;
 
-export function mountDvr({ client, drive, root, stage, liveVideo, toast }) {
+export function mountDvr({ client, drive, allowUpload = true, root, stage, liveVideo, toast }) {
   const playback = el("video", { className: "playback", playsInline: true, controls: true, hidden: true });
   playback.setAttribute("playsinline", "");
   // Nagrania z Google Drive odtwarza odtwarzacz Google (zalogowane konto właściciela).
@@ -209,7 +209,7 @@ export function mountDvr({ client, drive, root, stage, liveVideo, toast }) {
             el("button", { className: "btn ghost small", textContent: "▶", title: "Odtwórz", onclick: () => { cursor = f.start; play(f); window.scrollTo({ top: 0, behavior: "smooth" }); } }),
             el("button", { className: "btn ghost small", textContent: "📤 Udostępnij", onclick: () => share(f) }),
             el("button", { className: "btn ghost small", textContent: "⬇ Pobierz", onclick: () => save(f) }),
-            f.local && !f.uploaded ? el("button", { className: "btn ghost small", textContent: "☁️ Prześlij do Google Drive", onclick: () => toDrive(f) }) : null));
+            allowUpload && f.local && !f.uploaded ? el("button", { className: "btn ghost small", textContent: "☁️ Prześlij do Google Drive", onclick: () => toDrive(f) }) : null));
       })))));
   }
 
