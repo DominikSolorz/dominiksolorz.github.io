@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "49"; // musi się zgadzać z version.json
+const VERSION = "50"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -336,8 +336,14 @@ const archive = (() => {
       if (savedToDisk) { disk.saved++; disk.ready = true; disk.error = ""; saved++; lastName = name; lastError = ""; }
       else if (disk.selected) { disk.ready = false; disk.error = "Brak zgody na zapis do folderu. Wybierz folder ponownie."; }
     } catch (e) { disk.error = `Nie udało się zapisać do folderu: ${errText(e)}`; }
-    if (!savedToDisk) lastError = `Nie udało się zapisać ${name} w folderze archiwum.`;
-    // Nowe pliki NIE trafiają do IndexedDB: każda 10-minutowa część istnieje tylko raz — na dysku.
+    // Bez folderu archiwum (albo gdy zapis do niego się nie udał) nagranie trafia do pamięci strony —
+    // nigdy nie przepada. Każda 10-minutowa część istnieje tylko raz: w folderze albo w pamięci strony.
+    if (!savedToDisk) {
+      try {
+        await recstore.put({ name, start, end, events: events || [], type: data.type, uploaded: false }, data);
+        saved++; lastName = name; lastError = "";
+      } catch (e) { lastError = `Nie udało się zapisać ${name}: ${errText(e)}`; }
+    }
     // Na Google Drive tylko po kliknięciu „☁️ Prześlij do Google Drive” (requestUpload).
     refreshLocal();
     pump();
@@ -425,9 +431,9 @@ const archive = (() => {
       : prefs.mode === "preview" ? "Tylko podgląd — nagrywanie wyłączone z telefonu."
       : running ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
     if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; plików na dysku: ${diskFiles.count} (${gb(diskFiles.bytes)}).`;
-    else text += " ⚠ Trwałe archiwum nie jest ustawione — kliknij „Wybierz folder archiwum”.";
-    text += " Każdy nowy plik jest zapisywany tylko raz, bezpośrednio na dysku. Na Google Drive tylko po kliknięciu.";
-    if (local.count) text += ` Starsza pamięć strony zawiera ${local.count} wcześniejszych plików i nie jest już używana dla nowych nagrań.`;
+    else text += " Nagrania zapisują się w pamięci strony (folder archiwum nie jest ustawiony).";
+    text += " Na Google Drive tylko po kliknięciu.";
+    if (local.count) text += ` W pamięci strony: ${local.count} nagrań (${gb(local.bytes)}).`;
     const set = source?.getVideoTracks()[0]?.getSettings?.() || {};
     if (set.width) text += ` Obraz: ${set.width}×${set.height}, ${fast ? FAST_FPS : SLOW_FPS} kl./s${fast && adaptive() ? " (ruch)" : ""}, ${(REC_MIME || "").split(";")[0] || "domyślny kodek"}.`;
     if (cloud.enabled) {
