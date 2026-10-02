@@ -16,7 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=34";
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "46"; // musi się zgadzać z version.json
+const VERSION = "47"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -482,7 +482,7 @@ const archive = (() => {
     for (const f of (await local_.list(day)).files) {
       if (!f.name) continue;
       const hour = `${pad(new Date(f.start).getHours())}-00`;
-      (byHour[hour] ||= []).push({ name: f.name, size: f.size, ev: { ruch: (f.events || []).filter(e => e.kind === "ruch").length, dzwiek: (f.events || []).filter(e => e.kind === "dzwiek").length });
+      (byHour[hour] ||= []).push({ name: f.name, size: f.size, ev: { ruch: (f.events || []).filter(e => e.kind === "ruch").length, dzwiek: (f.events || []).filter(e => e.kind === "dzwiek").length } });
     }
     return Object.keys(byHour).sort().map(hour => ({ hour, files: byHour[hour].sort((a, b) => a.name.localeCompare(b.name)) }));
   }
