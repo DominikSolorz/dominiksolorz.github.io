@@ -3,20 +3,20 @@
 const { createClient } = window.supabase;
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=34";
 import { b64, sign, targetString } from "./pin.js?v=14";
-import { mountLibrary } from "./library-ui.js?v=21";
+import { mountLibrary } from "./library-ui.js?v=22";
 import { requireAccess } from "./lock.js?v=14";
 import { channelFor, lock } from "./access.js?v=14";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=32";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 import * as recstore from "./recstore.js?v=34";
-import * as diskstore from "./diskstore.js?v=2";
+import * as diskstore from "./diskstore.js?v=3";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
 import { mountDvr } from "./dvr-ui.js?v=34";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
 let ACCESS_KEY = null, CHANNEL = null;
-const VERSION = "50"; // musi się zgadzać z version.json
+const VERSION = "51"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -498,7 +498,8 @@ const archive = (() => {
     const got = await local_.file(f.name);
     if (!got) throw new Error("tego pliku nie ma w archiwum na dysku");
     const file = new File([got.blob], f.name, { type: got.blob.type || "video/mp4" });
-    if (navigator.canShare?.({ files: [file] }) && navigator.share) return navigator.share({ files: [file], title: "Nagranie z kamery" });
+    const canShareFiles = typeof navigator.canShare === "function" && navigator.canShare({ files: [file] });
+    if (canShareFiles && typeof navigator.share === "function") return navigator.share({ files: [file], title: "Nagranie z kamery" });
     download(got.blob, f.name);
     toastMsg("Pobrano plik — możesz go dodać do Messengera, WhatsAppa, SMS-a lub e-maila.");
   }

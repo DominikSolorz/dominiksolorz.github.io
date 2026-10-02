@@ -27,7 +27,7 @@ export async function choose() {
   await put("folder", handle);
   return handle.name;
 }
-export async function status(ask = false) { const h = await get("folder"); return { selected: !!h, name: h?.name || "", ready: await usable(h, ask) }; }
+export async function status(ask = false) { const h = await get("folder"); return { selected: !!h, name: h && h.name ? h.name : "", ready: await usable(h, ask) }; }
 export async function save(name, blob) {
   const h = await get("folder");
   if (!(await usable(h))) return false;
@@ -48,7 +48,13 @@ export async function list() {
   const h = await get("folder");
   if (!(await usable(h))) return [];
   const out = [];
-  for await (const [name, entry] of h.entries()) {
+  // Nie używamy "for await", bo starsze telefony potrafią zatrzymać na nim
+  // ładowanie całego modułu zanim pokaże się ekran podglądu.
+  const iterator = h.entries();
+  while (true) {
+    const next = await iterator.next();
+    if (next.done) break;
+    const name = next.value[0], entry = next.value[1];
     if (entry.kind !== "file" || !/^kamera-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.(webm|mp4)$/i.test(name)) continue;
     try { out.push(await entry.getFile()); } catch { /* plik mógł zostać zmieniony poza stroną */ }
   }

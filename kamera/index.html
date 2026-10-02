@@ -171,10 +171,12 @@
   function show(msg){var b=document.getElementById("bootError");if(!b)return;b.hidden=false;b.innerHTML='<b>Strona nie uruchomiła się poprawnie.</b><br><span class="muted small"></span><div class="row"><button class="btn primary" onclick="location.reload()">Odśwież</button></div>';b.querySelector("span").textContent=msg||"";}
   window.addEventListener("error",function(e){if(!window.__kameraReady)show(e.message||"Błąd ładowania pliku");},true);
   window.addEventListener("unhandledrejection",function(e){if(!window.__kameraReady)show(String(e.reason&&e.reason.message||e.reason));});
-  setTimeout(function(){if(!window.__kameraReady)show("Przekroczono czas ładowania. Sprawdź internet i odśwież.");},10000);
+  // Na telefonie pierwsze pobranie biblioteki połączenia może trwać dłużej niż 10 s.
+  // Nie pokazujemy fałszywego błędu w czasie, gdy strona nadal poprawnie się ładuje.
+  setTimeout(function(){if(!window.__kameraReady)show("Ładowanie trwa dłużej niż zwykle. Sprawdź połączenie z internetem i odśwież stronę.");},45000);
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=50"></script>
+  <script type="module" src="app.js?v=51"></script>
 </body>
 </html>

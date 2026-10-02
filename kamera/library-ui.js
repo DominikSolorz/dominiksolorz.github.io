@@ -9,12 +9,12 @@ export function mountLibrary(root, api) {
   let onlyEvents = false;
   async function share(file) {
     if (api.share) return api.share(file);
-    const url = api.watchUrl?.(file.name, file.id);
+    const url = typeof api.watchUrl === "function" ? api.watchUrl(file.name, file.id) : null;
     try {
       if (navigator.share && url) await navigator.share({ title: `Nagranie z kamery ${file.name}`, text: "Prywatne nagranie z kamery", url });
       else if (url && navigator.clipboard) { await navigator.clipboard.writeText(url); alert("Skopiowano link. Wklej go w Messengerze, WhatsAppie, SMS-ie lub e-mailu."); }
       else alert("Otwórz nagranie i użyj przycisku pobierania, aby wysłać plik.");
-    } catch (e) { if (e?.name !== "AbortError") alert(`Nie udało się przygotować udostępniania: ${e.message || e}`); }
+    } catch (e) { if (!e || e.name !== "AbortError") alert(`Nie udało się przygotować udostępniania: ${e && e.message ? e.message : e}`); }
   }
   async function del(target, what) {
     if (!confirm(`Usunąć ${what}? Nagranie trafi do kosza Google Drive (można je stamtąd przywrócić przez 30 dni).`)) return;
@@ -27,17 +27,17 @@ export function mountLibrary(root, api) {
     try {
       const hours = await api.day(day);
       box.replaceChildren();
-      if (!hours?.length) return box.append(el("p", { className: "muted small", textContent: "Brak nagrań w tym dniu." }));
+      if (!hours || !hours.length) return box.append(el("p", { className: "muted small", textContent: "Brak nagrań w tym dniu." }));
       for (const h of hours) {
         const hh = h.hour.slice(0, 2);
         const list = el("ul", { className: "libFiles" });
-        const shown = onlyEvents ? h.files.filter(f => f.ev?.ruch || f.ev?.dzwiek) : h.files;
+        const shown = onlyEvents ? h.files.filter(f => f.ev && (f.ev.ruch || f.ev.dzwiek)) : h.files;
         if (!shown.length) continue;
         for (const f of shown) {
           const watch = api.watchUrl ? el("a", { className: "btn ghost small", href: api.watchUrl(f.name, f.id), target: "_blank", rel: "noopener", textContent: "▶ Obejrzyj" }) : "";
           const rm = api.remove ? el("button", { className: "btn ghost small danger", textContent: "🗑", title: "Usuń to nagranie", onclick: () => del({ day, hour: h.hour, name: f.name }, `nagranie z ${day} ${timeOf(f.name)}`) }) : null;
           const shareBtn = el("button", { className: "btn ghost small", textContent: "📤 Udostępnij", title: "Wyślij ręcznie przez Messenger, WhatsApp, SMS lub e-mail", onclick: () => share(f) });
-          const badges = [f.ev?.ruch ? `🏃${f.ev.ruch}` : "", f.ev?.dzwiek ? `🔊${f.ev.dzwiek}` : ""].filter(Boolean).join(" ");
+          const badges = [f.ev && f.ev.ruch ? `🏃${f.ev.ruch}` : "", f.ev && f.ev.dzwiek ? `🔊${f.ev.dzwiek}` : ""].filter(Boolean).join(" ");
           const label = el("span", { textContent: `${timeOf(f.name)} · ${mb(f.size)}` }, badges ? el("span", { className: "evBadge", title: "Wykryty ruch / dźwięk", textContent: badges }) : "");
           list.append(el("li", {}, label, el("span", { className: "libActions" }, watch, shareBtn, rm)));
         }
