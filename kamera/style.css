@@ -308,3 +308,57 @@ main,.topbar{position:relative;z-index:1}
 .layout.sender .sideCol .modeRow{grid-template-columns:repeat(2,1fr)}
 .layout.sender .sideCol .modeCard{order:-2}
 .pictureControls{grid-template-columns:minmax(0,1fr) minmax(0,auto)!important}.pictureControls .tool{white-space:nowrap;min-width:0}
+
+/* ===================== UKŁAD JEDNOKOLUMNOWY (v70) ===================== */
+main{max-width:1180px}
+.layout,.layout.sender{grid-template-columns:1fr!important;gap:14px}
+.layout.sender .sideCol{position:static!important;max-height:none!important;overflow:visible!important;padding:0!important;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;align-items:start}
+.layout.sender .dvrCard{display:block!important}
+.mainCol{display:grid;gap:12px;align-content:start}
+.mainCol>*{margin-top:0!important}
+
+/* Cienki pasek daty i zegara u góry obrazu */
+.monitorClock{top:0!important;left:0!important;right:0!important;bottom:auto!important;min-width:0!important;height:30px;padding:0 14px!important;
+  flex-direction:row!important;align-items:center!important;justify-content:flex-end;gap:10px!important;border:0!important;border-radius:0!important;
+  background:linear-gradient(180deg,rgba(2,6,16,.82),rgba(2,6,16,.35))!important;box-shadow:none!important;backdrop-filter:blur(4px);z-index:12}
+.monitorClock span,.monitorClock .evidenceLabel{font-size:11px!important;letter-spacing:.06em;color:#cbd5e1!important;display:inline!important}
+.monitorClock .evidenceLabel{margin-right:auto;color:#67e8f9!important;opacity:.85}
+.monitorClock strong{font-size:13px!important;letter-spacing:.06em;line-height:1;text-shadow:none!important}
+.badge{top:4px!important;left:10px!important;padding:3px 9px!important;font-size:10px!important;z-index:13}
+.badge.rec{left:auto!important;right:auto!important;left:120px!important}
+.stage::before{inset:38px 10px 10px 10px!important}
+@media(max-width:600px){.monitorClock{height:26px;padding:0 10px!important;gap:7px!important}.monitorClock .evidenceLabel{display:none!important}
+  .monitorClock span{font-size:10px!important}.monitorClock strong{font-size:12px!important}.badge{top:3px!important}.badge.rec{left:96px!important}}
+/* przy nadawaniu etykieta „KAMERA DOMOWA” ustępuje miejsca plakietkom */
+.stage .monitorClock .evidenceLabel{padding-left:200px}
+@media(max-width:600px){.stage .monitorClock .evidenceLabel{padding-left:0}}
+
+/* Pasek Start / Stop / Restart z licznikiem */
+.ctrlBar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 14px}
+.recClock{display:flex;align-items:center;gap:12px;min-width:220px;flex:1 1 220px}
+.recClock strong{display:block;font:800 30px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.recClock small{display:block;margin-top:4px;font-size:12px;color:var(--muted)}
+.recDot{width:16px;height:16px;border-radius:50%;background:#475569;flex:0 0 auto}
+.ctrlBar[data-state="rec"] .recDot{background:var(--red);box-shadow:0 0 14px var(--red);animation:pulseDot 1.4s ease-in-out infinite}
+.ctrlBar[data-state="rec"] .recClock strong{color:#fecaca;text-shadow:0 0 18px rgba(239,68,68,.45)}
+.ctrlBar[data-state="live"] .recDot{background:#22d3ee;box-shadow:0 0 12px #22d3ee}
+.ctrlBar[data-state="off"] .recClock strong{color:#64748b}
+.ctrlBtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;flex:2 1 360px}
+.ctrl{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;border-radius:14px;border:1px solid rgba(148,163,255,.25);
+  color:#fff;font:800 15px/1.1 inherit;cursor:pointer;transition:transform .12s,box-shadow .2s,filter .2s}
+.ctrl small{font-size:10px;font-weight:600;opacity:.8}
+.ctrl:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.ctrl:active{transform:translateY(0) scale(.97)}
+.ctrl.start{background:linear-gradient(160deg,#16a34a,#065f46);border-color:rgba(134,239,172,.6);box-shadow:0 8px 22px rgba(22,163,74,.3)}
+.ctrl.stop{background:linear-gradient(160deg,#dc2626,#7f1d1d);border-color:rgba(252,165,165,.6);box-shadow:0 8px 22px rgba(220,38,38,.28)}
+.ctrl.restart{background:linear-gradient(160deg,#2563eb,#1e3a8a);border-color:rgba(147,197,253,.6);box-shadow:0 8px 22px rgba(37,99,235,.28)}
+.ctrlBar[data-state="rec"] .ctrl.start{outline:2px solid rgba(134,239,172,.8);outline-offset:2px}
+.ctrlBar[data-state="off"] .ctrl.stop{outline:2px solid rgba(252,165,165,.8);outline-offset:2px}
+@media(max-width:600px){.recClock strong{font-size:26px}.ctrl{min-height:54px;font-size:14px}}
+/* Sterowanie trybem: 4 przyciski w rzędzie na szerokim ekranie */
+.layout.sender .modeRow,.modeRow{grid-template-columns:repeat(2,1fr)}
+@media(min-width:760px){.modeRow,.layout.sender .modeRow{grid-template-columns:repeat(4,1fr)}}
+.badge.rec{top:auto!important;bottom:10px!important;left:10px!important;right:auto!important}
+.stage .monitorClock .evidenceLabel{padding-left:105px}
+@media(max-width:600px){.badge.rec{bottom:8px!important;left:8px!important}}

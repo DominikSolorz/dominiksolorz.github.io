@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=68">
+<link rel="stylesheet" href="style.css?v=70">
 </head>
 <body>
 <header class="topbar">
@@ -57,13 +57,24 @@
         <div id="liveBadge" class="badge" hidden><i></i><span id="liveText">NA ŻYWO</span></div>
         <div id="recBadge" class="badge rec" hidden><i></i>REC <span id="recTime">00:00:00</span></div>
         <div class="monitorClock" aria-live="off">
-          <span class="evidenceLabel">KAMERA DOMOWA · CZAS ZAPISU</span>
+          <span class="evidenceLabel">KAMERA DOMOWA</span>
           <span id="monitorDate">--</span>
           <strong id="monitorTime">--:--:--</strong>
-          <span class="evidenceZone">Europe/Warsaw · lokalny czas urządzenia</span>
         </div>
       </div>
 
+      <div id="dvrCard" class="card dvrCard" hidden></div>
+      <div id="ctrlBar" class="card ctrlBar">
+        <div class="recClock" id="recClock">
+          <span class="recDot" id="ctrlDot"></span>
+          <div><strong id="ctrlTime">00:00:00</strong><small id="ctrlLabel">łączenie…</small></div>
+        </div>
+        <div class="ctrlBtns">
+          <button class="ctrl start" id="ctrlStart" type="button">▶ Start<small>na żywo + nagrywanie</small></button>
+          <button class="ctrl stop" id="ctrlStop" type="button">⏹ Stop<small>wyłącz kamerę</small></button>
+          <button class="ctrl restart" id="ctrlRestart" type="button">↻ Restart<small>uruchom ponownie</small></button>
+        </div>
+      </div>
       <div id="recStatus" class="recStatus" hidden></div>
       <div id="modeCard" class="card modeCard" hidden>
         <div class="modeHead"><span class="modeTitle">Sterowanie kamerą</span><span class="modeHint">wybierz tryb pracy</span></div>
@@ -98,7 +109,6 @@
       </div>
 
 
-      <div id="dvrCard" class="card dvrCard" hidden></div>
       <div id="status" class="status" role="status" aria-live="polite" hidden></div>
 
       <div id="viewEventsCard" class="card eventsCard">
@@ -226,6 +236,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=69"></script>
+  <script type="module" src="app.js?v=70"></script>
 </body>
 </html>
