@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "68"; // musi się zgadzać z version.json
+const VERSION = "69"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -495,9 +495,11 @@ const archive = (() => {
       : running && prefs.recordUntil > Date.now() ? `Nagranie jednorazowe do ${new Date(prefs.recordUntil).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}, potem tylko podgląd.`
       : running ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
     if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; plików na dysku: ${diskFiles.count} (${gb(diskFiles.bytes)}).`;
+    else if (disk.selected) text += ` ⚠ Folder „${disk.name}” czeka na ponowną zgodę Chrome (po odświeżeniu strony) — na komputerze kliknij „Przywróć dostęp do folderu”. Pliki w folderze są bezpieczne; do tego czasu nagrania zapisują się w pamięci strony.`;
     else text += " Nagrania zapisują się w pamięci strony (folder archiwum nie jest ustawiony).";
     text += " Na Google Drive tylko po kliknięciu.";
     if (local.count) text += ` W pamięci strony: ${local.count} nagrań (${gb(local.bytes)}).`;
+    if (Number.isFinite(free)) text += ` Wolne miejsce dla strony: ${gb(free)}${free < 2 * 1073741824 ? " ⚠ mało miejsca — najstarsze nagrania w pamięci strony są kasowane, żeby nagrywanie nie stanęło" : ""}.${persisted ? "" : " Pamięć nietrwała."}`;
     const set = source?.getVideoTracks()[0]?.getSettings?.() || {};
     if (set.width) text += ` Obraz: ${set.width}×${set.height}, ${fast ? FAST_FPS : SLOW_FPS} kl./s${fast && adaptive() ? " (ruch)" : ""}, ${(REC_MIME || "").split(";")[0] || "domyślny kodek"}, jakość ${recQuality().short}.`;
     if (cloud.enabled) {
@@ -516,7 +518,9 @@ const archive = (() => {
     $("recBadge").hidden = !running;
     $("archiveInfo").textContent = describe();
     const operational = $("opArchive");
-    if (operational) operational.textContent = disk.ready ? `Dysk: ${diskFiles.count} pl.` : "Wybierz folder";
+    if (operational) operational.textContent = disk.ready ? `Dysk: ${diskFiles.count} pl.` : disk.selected ? "Przywróć dostęp" : "Wybierz folder";
+    const btn = $("chooseArchiveDir");
+    if (btn && !btn.disabled) btn.textContent = disk.selected && !disk.ready ? `🔓 Przywróć dostęp do folderu „${disk.name}”` : "📁 Wybierz folder archiwum";
   }
 
   // ----- Dla telefonu (kanał danych): nagrania z pamięci komputera -----
@@ -576,6 +580,14 @@ const archive = (() => {
     await cloud.call("remove", { target: { day: t.day, hour: t.hour, name: t.name } });
   }
 
+  // Chrome po odświeżeniu strony pyta ponownie o zgodę na zapis do folderu — wymaga kliknięcia.
+  async function regrantDisk() {
+    disk = { ...disk, ...(await diskstore.status(true)) };
+    if (disk.ready) { disk.error = ""; await refreshLocal(); }
+    render();
+    return disk.ready;
+  }
+
   async function chooseDisk() {
     const name = await diskstore.choose();
     disk = { ...disk, selected: true, name, ready: true, error: "" };
@@ -583,7 +595,7 @@ const archive = (() => {
     return name;
   }
 
-  return { init, chooseDisk, start, stop, restart, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
+  return { init, chooseDisk, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
 })();
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
@@ -1390,7 +1402,16 @@ $("stopBtn").addEventListener("click", () => sender.stop());
 $("retryCameraBtn").addEventListener("click", () => sender.retryCamera());
 $("chooseArchiveDir").addEventListener("click", async () => {
   const button = $("chooseArchiveDir"), old = button.textContent;
-  button.disabled = true; button.textContent = "Otwieram wybór folderu…";
+  button.disabled = true;
+  if (archive.diskNeedsGrant) {
+    button.textContent = "Czekam na zgodę Chrome…";
+    let ok = false;
+    try { ok = await archive.regrantDisk(); } catch { /* brak zgody — poniżej wybór folderu od nowa */ }
+    button.disabled = false;
+    if (ok) { button.textContent = "📁 Wybierz folder archiwum"; toastMsg("Dostęp do folderu przywrócony — nagrania znów zapisują się na dysku."); return; }
+    button.disabled = true;
+  }
+  button.textContent = "Otwieram wybór folderu…";
   try { toastMsg(`Trwałe archiwum ustawione: ${await archive.chooseDisk()}`); }
   catch (e) { setStatus(`Folder archiwum nie został ustawiony: ${errText(e)}`); }
   finally { button.disabled = false; button.textContent = old; }
