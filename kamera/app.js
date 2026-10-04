@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "71"; // musi się zgadzać z version.json
+const VERSION = "72"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -40,8 +40,11 @@ const IS_DESKTOP = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
 // 12 odbiorców przy 2,5 Mb/s wymaga do ok. 30 Mb/s uploadu; przy słabszym łączu obraz sam obniży jakość zamiast zrywać połączenie.
 const MAX_VIEWERS = 12;
 // Jakość przesyłu na żywo: HD 720p, 30 kl./s, do 2,5 Mb/s na oglądającego; H.264 = sprzętowe dekodowanie na iPhonie.
-const LIVE_MAX_BITRATE = 2500000;
+const LIVE_MAX_BITRATE = 1500000;
 const LIVE_FPS = 30;
+// Wysyłka na żywo lżejsza dla procesora (cichsze wentylatory): 1280 px szerokości i 20 kl./s.
+// Nagrania nadal w pełnej rozdzielczości kamery.
+const LIVE_SEND_WIDTH = 1280, LIVE_SEND_FPS = 20;
 // Wirtualne kamery (OBS, Snap, ManyCam…) pokazują zastępczy obrazek, gdy ich program nie działa — pomijamy je.
 const VIRTUAL_CAM = /obs|virtual|snap camera|manycam|xsplit|ndi|splitcam|vcam|droidcam|epoccam|camo|iriun/i; // wirtualne kamery — nigdy nieużywane
 const HEARTBEAT_MS = 15000;
@@ -712,7 +715,7 @@ function fastStart(sdp) {
     // Dźwięk na żywo w wysokiej jakości (Opus do 128 kb/s, odporny na utratę pakietów).
     if (inAudio && line.startsWith("a=fmtp:") && line.includes("useinbandfec") && !line.includes("maxaveragebitrate")) return `${line};maxaveragebitrate=128000`;
     if (inVideo && line.startsWith("a=fmtp:") && !line.includes("x-google-start-bitrate")) {
-      return `${line};x-google-min-bitrate=600;x-google-start-bitrate=1500;x-google-max-bitrate=${kbps}`;
+      return `${line};x-google-min-bitrate=600;x-google-start-bitrate=1000;x-google-max-bitrate=${kbps}`;
     }
     return line;
   }).join("\r\n");
@@ -726,9 +729,9 @@ async function tuneVideoSender(pc, cropWidth = 0) {
     try {
       const p = sender.getParameters();
       if (!p.encodings?.length) p.encodings = [{}];
-      p.encodings[0].scaleResolutionDownBy = Math.max(1, (cropWidth || 1920) / 1920);
+      p.encodings[0].scaleResolutionDownBy = Math.max(1, (cropWidth || sender.track.getSettings?.().width || 1920) / LIVE_SEND_WIDTH);
       p.encodings[0].maxBitrate = LIVE_MAX_BITRATE;
-      p.encodings[0].maxFramerate = LIVE_FPS;
+      p.encodings[0].maxFramerate = LIVE_SEND_FPS;
       p.degradationPreference = "balanced";
       await sender.setParameters(p);
     } catch { /* starsza przeglądarka — zostają ustawienia domyślne */ }
