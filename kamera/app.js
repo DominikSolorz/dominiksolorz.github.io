@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "66"; // musi się zgadzać z version.json
+const VERSION = "67"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -78,6 +78,9 @@ if (!prefs.lib1) { prefs.segmentMin = 10; prefs.retentionDays = 30; prefs.lib1 =
 // Jednorazowo: nagrania w HD 720p. Gdy łącze nie nadąża (≥3 pliki w kolejce), archiwum samo
 // chwilowo nagrywa w 360p i wraca do HD po opróżnieniu kolejki — żadna godzina nie przepada.
 if (!prefs.qBps) { prefs.recQuality = "high"; prefs.qBps = true; savePrefs(); } // nowe stopnie jakości: domyślnie wysoka
+// Jednorazowo (życzenie właściciela): nagrywanie bez przerwy — dzień i noc, bez harmonogramu i bez trybu „tylko podgląd”.
+// Później tryb można dowolnie zmieniać z telefonu.
+if (!prefs.rec247) { prefs.mode = "record"; prefs.recordPlan = "always"; prefs.recordUntil = 0; prefs.rec247 = true; savePrefs(); }
 
 
 // ---------- UI pomocnicze ----------
