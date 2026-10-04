@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "74"; // musi się zgadzać z version.json
+const VERSION = "75"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {

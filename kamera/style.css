@@ -369,3 +369,9 @@ body.cameraPc::before{display:none}
 body.cameraPc .card,body.cameraPc .stage,body.cameraPc .ctrl,body.cameraPc .tool{box-shadow:none!important}
 body.cameraPc{background:#05070f!important}
 .reloadPc{width:100%;margin-top:12px;font-size:13px}
+.fanRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.btn.fan{flex-direction:column;justify-content:center;text-align:center;gap:2px;font-weight:800;min-height:62px;color:#fff}
+.btn.fan small{font-size:10px;font-weight:600;opacity:.85}
+.btn.fan.quiet{background:linear-gradient(160deg,#0e7490,#164e63);border-color:rgba(103,232,249,.55)}
+.btn.fan.normal{background:linear-gradient(160deg,#4338ca,#1e1b4b);border-color:rgba(165,180,252,.55)}
+.btn.fan.max{background:linear-gradient(160deg,#c2410c,#7c2d12);border-color:rgba(253,186,116,.55)}

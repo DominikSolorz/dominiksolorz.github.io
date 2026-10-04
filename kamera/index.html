@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=73">
+<link rel="stylesheet" href="style.css?v=75">
 </head>
 <body>
 <header class="topbar">
@@ -162,6 +162,16 @@
         <div class="row"><a class="btn ghost" href="kamera-instaluj.bat" download>⬇ Program 24/7 + skrót na pulpicie (Windows)</a></div>
       </div>
 
+      <div class="card fanCard">
+        <div class="cardHead"><h2>🌀 Wentylatory</h2><span class="muted small">tryb pracy procesora (Windows)</span></div>
+        <p class="muted small">Strona nie steruje wentylatorem bezpośrednio — zmienia to Windows. Pobierz plik trybu i uruchom go raz (dwuklik). Kamera i nagrywanie działają dalej bez zmian; tryb możesz zmienić w każdej chwili.</p>
+        <div class="fanRow">
+          <a class="btn fan quiet" href="wentylator-cichy.bat" download>🤫 Cichy<small>procesor max 70%, bez turbo</small></a>
+          <a class="btn fan normal" href="wentylator-normalny.bat" download>🙂 Normalny<small>max 90%, bez turbo</small></a>
+          <a class="btn fan max" href="wentylator-pelna-moc.bat" download>🔥 Pełna moc<small>100% z turbo — głośniej</small></a>
+        </div>
+        <p class="muted small">Ręczne sterowanie obrotami (krzywa temperatury): darmowy program <a href="https://getfancontrol.com/" target="_blank" rel="noopener">FanControl</a>, a w laptopie tryb „Cichy” w programie producenta.</p>
+      </div>
       <div class="card">
         <div class="cardHead"><h2>🔔 Wykrywanie</h2><span class="muted small">ruch i dźwięk</span></div>
         <div class="grid">
@@ -237,6 +247,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=74"></script>
+  <script type="module" src="app.js?v=75"></script>
 </body>
 </html>
