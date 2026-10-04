@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "67"; // musi się zgadzać z version.json
+const VERSION = "68"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -711,6 +711,15 @@ async function tuneVideoSender(pc, cropWidth = 0) {
   }
 }
 
+// Panel „Sterowanie kamerą” (telefon i komputer): podświetla bieżący tryb i pokazuje czas nagrania jednorazowego.
+function paintMode(m, until = 0) {
+  $("modeCard").hidden = false;
+  const once = m === "record" && until > Date.now();
+  const shown = once ? "once" : m;
+  document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode === shown));
+  $("onceLeft").textContent = once ? `zostało ${Math.max(1, Math.ceil((until - Date.now()) / 60000))} min` : "";
+}
+
 // ---------- NADAJNIK (komputer z kamerą) ----------
 const sender = (() => {
   const peers = new Map();
@@ -1014,7 +1023,7 @@ const sender = (() => {
     if (lastCameraError) return lastCameraError;
     return camWaitSince ? `Czekam na kamerę od ${Math.round((Date.now() - camWaitSince) / 1000)} s (okno zgody przeglądarki?).` : "";
   }
-  const beat = () => send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, camError: camProblem() });
+  const beat = () => (paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, camError: camProblem() }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
   function setQuality(q) {
     if (!REC_QUALITY[q]) return;
@@ -1036,7 +1045,7 @@ const sender = (() => {
     }).catch(() => {});
   }
 
-  return { start, stop, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, get live() { return live; } };
+  return { start, stop, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -1117,12 +1126,7 @@ const viewer = (() => {
   // Przyciski trybu kamery na telefonie: podświetlony = bieżący tryb komputera.
   function applyMode(m, until = 0) {
     if (RECEIVER_ONLY) return;
-    $("modeCard").hidden = false;
-    const once = m === "record" && until > Date.now();
-    const shown = once ? "once" : m;
-    document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode === shown));
-    const left = once ? Math.max(1, Math.ceil((until - Date.now()) / 60000)) : 0;
-    $("onceLeft").textContent = once ? `zostało ${left} min` : "";
+    paintMode(m, until);
     const off = m === "off";
     if (off && !camOff) { reset(); showPlaceholder("Kamera wstrzymana.\nNaciśnij „Nagrywaj” albo „Tylko podgląd”, aby ją włączyć."); }
     if (!off && camOff) { reset(); join(); }
@@ -1292,9 +1296,11 @@ function showSender() {
   $("sendPanel").hidden = false; $("watchPanel").hidden = true; $("viewEventsCard").hidden = true; $("layout").classList.add("sender");
   // Jedna konsola po prawej: ustawienia kadru nie mieszają się pod obrazem kamery.
   if ($("picturePanel").parentElement !== $("sendPanel")) $("sendPanel").prepend($("picturePanel"));
+  $("sendPanel").prepend($("modeCard")); // sterowanie trybem na samej górze prawego panelu
   $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
   archive.init().then(showPcLibrary);
   sender.start();
+  sender.beat();
 }
 
 function copyReceiverLink() {
@@ -1318,6 +1324,7 @@ function showViewer() {
   $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("viewEventsCard").hidden = false; $("layout").classList.remove("sender");
   // Na telefonie/podglądzie ustawienia wracają pod obraz, aby nie powstawała pusta prawa kolumna.
   if ($("picturePanel").parentElement !== $("layout").querySelector(".mainCol")) $("layout").querySelector(".mainCol").appendChild($("picturePanel"));
+  $("recStatus").after($("modeCard"));
   // Oś czasu i biblioteka pokazują nagrania zapisane na stronie (nie z Google Drive).
   dvr ??= mountDvr({ client: recClient, drive: null, allowUpload: !RECEIVER_ONLY, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg });
   recClient.onopen = () => dvr.refresh();
@@ -1372,7 +1379,13 @@ $("gridBtn").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictur
 applyPictureLayout();
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
-document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.addEventListener("click", () => { if (!RECEIVER_ONLY) viewer.setMode(b.dataset.mode); }));
+// Na komputerze z kamerą przyciski działają od razu, na telefonie wysyłają polecenie do komputera.
+document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.addEventListener("click", () => {
+  if (RECEIVER_ONLY) return;
+  if (!sender.live) return viewer.setMode(b.dataset.mode);
+  if (b.dataset.mode === "off" && !confirm("Wyłączyć kamerę? Nie będzie podglądu ani nagrywania, dopóki nie włączysz jej z powrotem.")) return;
+  sender.setMode(b.dataset.mode, Number($("onceMin").value));
+}));
 $("stopBtn").addEventListener("click", () => sender.stop());
 $("retryCameraBtn").addEventListener("click", () => sender.retryCamera());
 $("chooseArchiveDir").addEventListener("click", async () => {
@@ -1388,7 +1401,7 @@ for (const id of ["quality", "viewQuality"]) {
   $(id).value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high";
 }
 $("quality").addEventListener("change", e => sender.setQuality(e.target.value));
-$("viewQuality").addEventListener("change", e => viewer.setQuality(e.target.value));
+$("viewQuality").addEventListener("change", e => sender.live ? sender.setQuality(e.target.value) : viewer.setQuality(e.target.value));
 $("retentionDays").closest("label").hidden = true;
 for (const id of ["segmentMin", "retentionDays"]) {
   $(id).value = String(prefs[id]);

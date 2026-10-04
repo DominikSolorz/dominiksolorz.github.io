@@ -305,3 +305,6 @@ main,.topbar{position:relative;z-index:1}
 .modeRow .tool small{display:block;font-size:11px;font-weight:600;opacity:.9}
 .modeRow .tool[data-mode="once"].on{background:linear-gradient(160deg,rgba(245,158,11,.55),rgba(120,53,15,.65))!important;border-color:rgba(253,230,138,.8)!important;box-shadow:0 0 26px rgba(245,158,11,.45);animation:livePulse 2.4s ease-in-out infinite}
 @media(min-width:700px){.modeRow{grid-template-columns:repeat(4,1fr)}}
+.layout.sender .sideCol .modeRow{grid-template-columns:repeat(2,1fr)}
+.layout.sender .sideCol .modeCard{order:-2}
+.pictureControls{grid-template-columns:minmax(0,1fr) minmax(0,auto)!important}.pictureControls .tool{white-space:nowrap;min-width:0}
