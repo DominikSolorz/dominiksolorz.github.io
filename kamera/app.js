@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "73"; // musi się zgadzać z version.json
+const VERSION = "74"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -72,7 +72,7 @@ const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitiv
 const REC_QUALITY = {
   eco:  { bps: 600000,  label: "Oszczędna — ok. 45 MB / 10 min", short: "oszczędna" },
   high: { bps: 1500000, label: "Wysoka — ok. 110 MB / 10 min", short: "wysoka" },
-  max:  { bps: 4000000, label: "Maksymalna (pełna rozdzielczość, głośniej) — ok. 300 MB / 10 min", short: "maksymalna" },
+  max:  { bps: 4000000, label: "Maksymalna — ok. 300 MB / 10 min", short: "maksymalna" },
 };
 const recQuality = () => REC_QUALITY[prefs.recQuality] || REC_QUALITY.high;
 function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } }
@@ -400,11 +400,9 @@ const archive = (() => {
       await new Promise((resolve, reject) => { input.onloadedmetadata = resolve; input.onerror = reject; });
       await input.play();
       const settings = v.getSettings();
-      // Jakość „Maksymalna” = pełna rozdzielczość kamery; pozostałe nagrywają do 1280 px szerokości
-      // (ok. 2× mniej pracy dla procesora — cichsze wentylatory, nadal wyraźny obraz).
-      const srcW = settings.width || input.videoWidth || 1280, srcH = settings.height || input.videoHeight || 720;
-      const scale = prefs.recQuality === "max" ? 1 : Math.min(1, 1280 / srcW);
-      const width = Math.round(srcW * scale / 2) * 2, height = Math.round(srcH * scale / 2) * 2;
+      // Nagrania zawsze w pełnej rozdzielczości kamery.
+      const width = settings.width || input.videoWidth || 1280;
+      const height = settings.height || input.videoHeight || 720;
       const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("brak obsługi znacznika obrazu");
