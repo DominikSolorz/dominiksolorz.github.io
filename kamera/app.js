@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "64"; // musi się zgadzać z version.json
+const VERSION = "65"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -53,17 +53,16 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "small", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false };
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "high", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false };
 
-// Jakość NAGRAŃ (osobno od obrazu na żywo, który zostaje w HD). Mniejsza rozdzielczość, mniej klatek
-// i niska przepływność = małe pliki na Google Drive. Rozmiary to przybliżenie dla 5 minut nagrania.
-const REC_PRESETS = {
-  mini:   { w: 426,  h: 240, fps: 8,  video: 40000,  audio: 32000, label: "Mini — 240p (~2 MB / 5 min)" },
-  small:  { w: 640,  h: 360, fps: 10, video: 90000,  audio: 48000, label: "Mała — 360p (~4 MB / 5 min)" },
-  medium: { w: 854,  h: 480, fps: 15, video: 190000, audio: 64000, label: "Średnia — 480p (~8 MB / 5 min)" },
-  hd:     { w: 1280, h: 720, fps: 20, video: 350000, audio: 96000, label: "HD — 720p (~15 MB / 5 min)" },
+// Jakość NAGRAŃ (osobno od obrazu na żywo). Zawsze pełna rozdzielczość kamery i 5/30 kl./s (spokój/ruch);
+// wybór zmienia przepływność, czyli ostrość szczegółów i wielkość plików. Rozmiary to przybliżenie dla 10 minut.
+const REC_QUALITY = {
+  eco:  { bps: 600000,  label: "Oszczędna — ok. 45 MB / 10 min", short: "oszczędna" },
+  high: { bps: 1500000, label: "Wysoka — ok. 110 MB / 10 min", short: "wysoka" },
+  max:  { bps: 4000000, label: "Maksymalna — ok. 300 MB / 10 min", short: "maksymalna" },
 };
-const recPreset = () => REC_PRESETS[prefs.recQuality] || REC_PRESETS.small;
+const recQuality = () => REC_QUALITY[prefs.recQuality] || REC_QUALITY.high;
 function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } }
 function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* tryb prywatny */ } }
 const prefs = loadPrefs();
@@ -77,7 +76,7 @@ function recordingScheduledNow() {
 if (!prefs.lib1) { prefs.segmentMin = 10; prefs.retentionDays = 30; prefs.lib1 = true; savePrefs(); }
 // Jednorazowo: nagrania w HD 720p. Gdy łącze nie nadąża (≥3 pliki w kolejce), archiwum samo
 // chwilowo nagrywa w 360p i wraca do HD po opróżnieniu kolejki — żadna godzina nie przepada.
-if (!prefs.q720) { prefs.recQuality = "hd"; prefs.q720 = true; savePrefs(); }
+if (!prefs.qBps) { prefs.recQuality = "high"; prefs.qBps = true; savePrefs(); } // nowe stopnie jakości: domyślnie wysoka
 
 
 // ---------- UI pomocnicze ----------
@@ -252,7 +251,7 @@ const REC_MIME = (() => {
     "video/webm;codecs=av01,opus", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"].find(t => MediaRecorder.isTypeSupported(t)) ?? "";
 })();
 const SLOW_FPS = 5, FAST_FPS = 30, FAST_HOLD_MS = 10000;
-const REC_VIDEO_BPS = 600000, REC_AUDIO_BPS = 64000;
+const REC_AUDIO_BPS = 64000;
 
 const archive = (() => {
   let source = null, recStream = null, running = false, rec = null, segTimer = null, clock = null;
@@ -430,7 +429,7 @@ const archive = (() => {
     if (!running || !recStream) return;
     const startedAt = new Date();
     segStart = startedAt.getTime();
-    const opts = { ...(REC_MIME ? { mimeType: REC_MIME } : {}), videoBitsPerSecond: REC_VIDEO_BPS, audioBitsPerSecond: REC_AUDIO_BPS };
+    const opts = { ...(REC_MIME ? { mimeType: REC_MIME } : {}), videoBitsPerSecond: recQuality().bps, audioBitsPerSecond: REC_AUDIO_BPS };
     let r;
     try { r = new MediaRecorder(recStream, opts); }
     catch { r = new MediaRecorder(recStream); } // kodek niedostępny — domyślny przeglądarki
@@ -495,7 +494,7 @@ const archive = (() => {
     text += " Na Google Drive tylko po kliknięciu.";
     if (local.count) text += ` W pamięci strony: ${local.count} nagrań (${gb(local.bytes)}).`;
     const set = source?.getVideoTracks()[0]?.getSettings?.() || {};
-    if (set.width) text += ` Obraz: ${set.width}×${set.height}, ${fast ? FAST_FPS : SLOW_FPS} kl./s${fast && adaptive() ? " (ruch)" : ""}, ${(REC_MIME || "").split(";")[0] || "domyślny kodek"}.`;
+    if (set.width) text += ` Obraz: ${set.width}×${set.height}, ${fast ? FAST_FPS : SLOW_FPS} kl./s${fast && adaptive() ? " (ruch)" : ""}, ${(REC_MIME || "").split(";")[0] || "domyślny kodek"}, jakość ${recQuality().short}.`;
     if (cloud.enabled) {
       if (queued) text += ` Wysyłam na Google Drive (na Twoje życzenie): ${queued}.`;
       if (sentToDrive) text += ` Wysłano: ${sentToDrive}.`;
@@ -750,6 +749,7 @@ const sender = (() => {
     if (sig.type === "zoom" && zoomer) { zoomer.set(sig); return sendZoomState(); }
     if (sig.type === "zoom-get") return sendZoomState();
     if (sig.type === "mode-set") return setMode(sig.mode);
+    if (sig.type === "quality-set") return setQuality(sig.q);
     if (sig.type === "viewer-leave") return closePeer(sig.viewerId);
     const peer = sig.viewerId ? peers.get(sig.viewerId) : null;
     if (!peer) return;
@@ -1004,7 +1004,15 @@ const sender = (() => {
     if (lastCameraError) return lastCameraError;
     return camWaitSince ? `Czekam na kamerę od ${Math.round((Date.now() - camWaitSince) / 1000)} s (okno zgody przeglądarki?).` : "";
   }
-  const beat = () => send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, camError: camProblem() });
+  const beat = () => send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, quality: prefs.recQuality, camError: camProblem() });
+  // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
+  function setQuality(q) {
+    if (!REC_QUALITY[q]) return;
+    prefs.recQuality = q; savePrefs();
+    $("quality").value = q;
+    archive.restart();
+    beat(); report();
+  }
 
   function report() {
     const r = archive.status();
@@ -1018,7 +1026,7 @@ const sender = (() => {
     }).catch(() => {});
   }
 
-  return { start, stop, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, get live() { return live; } };
+  return { start, stop, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, get live() { return live; } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -1048,6 +1056,7 @@ const viewer = (() => {
     if (sig.type === "heartbeat") {
       if (sig.rec) showRecStatus(sig.rec);
       if (sig.mode) applyMode(sig.mode);
+      if (REC_QUALITY[sig.quality] && document.activeElement !== $("viewQuality")) $("viewQuality").value = sig.quality;
       if (camOff) return;
       // Komputer działa, ale nie ma obrazu z kamery — pokaż przyczynę zamiast „Łączenie…”.
       if (sig.camError && pc?.connectionState !== "connected") { showPlaceholder(`Komputer działa, ale nie ma obrazu z kamery:\n${sig.camError}`); return; }
@@ -1173,7 +1182,13 @@ const viewer = (() => {
 
   function sendZoom(st) { send(chan.channel, { type: "zoom", ...st }); }
 
-  return { start, stop, sendZoom, setMode, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
+  function setQuality(q) {
+    send(chan.channel, { type: "quality-set", q });
+    setStatus("Zmieniam jakość nagrań — następny plik nagra się już w tej jakości.");
+    setTimeout(() => setStatus(""), 4000);
+  }
+
+  return { start, stop, sendZoom, setMode, setQuality, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
 })();
 
 // Zdarzenie na telefonie: wyskakujące powiadomienie, wibracja, lista ostatnich zdarzeń.
@@ -1353,8 +1368,13 @@ $("chooseArchiveDir").addEventListener("click", async () => {
   catch (e) { setStatus(`Folder archiwum nie został ustawiony: ${errText(e)}`); }
   finally { button.disabled = false; button.textContent = old; }
 });
-// Jakość nagrań jest stała (pełna rozdzielczość, 5/30 kl./s), a stare nagrania kasuje pętla zapisu — te ustawienia znikają.
-$("quality").closest("label").hidden = true;
+// Jakość nagrań: wybór na komputerze albo z telefonu (polecenie „quality-set”). Stare nagrania kasuje pętla zapisu.
+for (const id of ["quality", "viewQuality"]) {
+  $(id).replaceChildren(...Object.entries(REC_QUALITY).map(([k, q]) => new Option(q.label, k)));
+  $(id).value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high";
+}
+$("quality").addEventListener("change", e => sender.setQuality(e.target.value));
+$("viewQuality").addEventListener("change", e => viewer.setQuality(e.target.value));
 $("retentionDays").closest("label").hidden = true;
 for (const id of ["segmentMin", "retentionDays"]) {
   $(id).value = String(prefs[id]);

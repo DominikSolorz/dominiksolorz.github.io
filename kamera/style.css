@@ -299,3 +299,5 @@ main,.topbar{position:relative;z-index:1}
 .badge{top:18px!important;left:20px!important}.badge.rec{left:auto!important;right:20px!important}
 .monitorClock{bottom:20px!important;right:22px!important}
 @media(max-width:600px){.stage{aspect-ratio:4/3}.badge{top:13px!important;left:14px!important}.badge.rec{right:14px!important}.monitorClock{bottom:13px!important;right:14px!important}}
+.qualityPick{margin-top:12px;font-weight:700;font-size:13px}
+.qualityPick select{background:rgba(10,16,34,.8);border-color:rgba(148,163,255,.25);border-radius:12px}
