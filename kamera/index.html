@@ -9,11 +9,11 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=57">
+<link rel="stylesheet" href="style.css?v=64">
 </head>
 <body>
 <header class="topbar">
-  <div class="brand"><span class="dot"></span><span>Kamera na żywo</span></div>
+  <div class="brand"><span class="dot"></span><span class="brandText">Kamera <b>na żywo</b></span></div>
   <span id="topStatus" class="chip">offline</span>
   <nav class="nav">
     <a class="navLink active" href="./">Na żywo</a>
@@ -64,6 +64,16 @@
         </div>
       </div>
 
+      <div id="recStatus" class="recStatus" hidden></div>
+      <div id="modeCard" class="card modeCard" hidden>
+        <div class="modeHead"><span class="modeTitle">Sterowanie kamerą</span><span class="modeHint">wybierz tryb pracy</span></div>
+        <div class="modeRow">
+          <button class="tool" data-mode="record">⏺ Nagrywaj</button>
+          <button class="tool" data-mode="preview">👁 Tylko podgląd</button>
+          <button class="tool" data-mode="off">⏸ Wyłącz kamerę</button>
+        </div>
+      </div>
+
       <!-- Podgląd -->
       <div id="watchPanel" class="toolbar" hidden>
         <button class="tool" id="soundBtn" hidden>🔊 Włącz dźwięk</button>
@@ -72,6 +82,15 @@
         <button class="tool" id="watchRecBtn" disabled>⏺ Nagrywaj tutaj</button>
         <a class="tool primary" href="nagrania.html">📼 Nagrania</a>
         <a id="lastRec" class="tool" hidden>Pobierz nagranie</a>
+      </div>
+
+
+      <div id="dvrCard" class="card dvrCard" hidden></div>
+      <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+
+      <div id="viewEventsCard" class="card eventsCard">
+        <div class="cardHead"><h2>🔔 Zdarzenia</h2><span class="muted small">ruch i dźwięk (kroki, głosy)</span></div>
+        <ul id="viewEvents" class="events"></ul>
       </div>
 
       <section id="picturePanel" class="card picturePanel" aria-label="Układ obrazu">
@@ -92,22 +111,6 @@
         </div>
         <p class="muted small">Efekt i siatka pomagają ustawić kadr. Oryginalne nagranie pozostaje w kolorze i pełnej jakości.</p>
       </section>
-
-      <div id="recStatus" class="recStatus" hidden></div>
-      <div id="modeCard" class="card modeCard" hidden>
-        <div class="modeRow">
-          <button class="tool" data-mode="record">⏺ Nagrywaj</button>
-          <button class="tool" data-mode="preview">👁 Tylko podgląd</button>
-          <button class="tool" data-mode="off">⏸ Wyłącz kamerę</button>
-        </div>
-      </div>
-      <div id="dvrCard" class="card dvrCard" hidden></div>
-      <div id="status" class="status" role="status" aria-live="polite" hidden></div>
-
-      <div id="viewEventsCard" class="card eventsCard">
-        <div class="cardHead"><h2>🔔 Zdarzenia</h2><span class="muted small">ruch i dźwięk (kroki, głosy)</span></div>
-        <ul id="viewEvents" class="events"></ul>
-      </div>
     </section>
 
     <!-- Nadajnik (komputer z kamerą) -->
@@ -210,6 +213,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=63"></script>
+  <script type="module" src="app.js?v=64"></script>
 </body>
 </html>

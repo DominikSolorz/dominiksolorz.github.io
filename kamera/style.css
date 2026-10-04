@@ -212,3 +212,90 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 /* Uporządkowany ekran roboczy: jeden obraz po lewej, jedna konsola po prawej. */
 main{max-width:1540px;padding:18px 22px 44px}.mainCol{display:grid;gap:14px;align-content:start}.layout.sender{grid-template-columns:minmax(620px,1fr) 390px;align-items:start;gap:20px}.layout.sender .sideCol{gap:14px;padding:2px 4px 8px 0}.layout.sender .sideCol .picturePanel{order:-1;margin:0}.layout.sender .sideCol .picturePanel .cardHead{margin-bottom:8px}.layout.sender .sideCol .picturePanel p{display:none}.layout.sender #recStatus{margin:0}.layout.sender .stage{min-height:0;aspect-ratio:16/9}.layout.sender .toolbar{margin-top:0}.layout.sender .dvrCard,.layout.sender .eventsCard{display:none}.monitorClock{top:14px;right:14px;min-width:178px;padding:10px 13px;border-color:rgba(196,181,253,.9);background:rgba(4,10,28,.9)}.monitorClock span{font-size:11px}.monitorClock strong{font-size:21px}@media(max-width:1100px){main{padding:14px 14px 36px}.layout.sender{grid-template-columns:minmax(0,1fr) 350px;gap:14px}}@media(max-width:900px){.layout.sender{grid-template-columns:1fr}.layout.sender .sideCol{position:static;max-height:none;overflow:visible}.layout.sender .sideCol .picturePanel{order:initial}.layout.sender .dvrCard,.layout.sender .eventsCard{display:block}}
 @media(max-width:600px){.monitorClock{top:48px;right:8px;min-width:192px;padding:7px 9px}.monitorClock strong{font-size:17px}.monitorClock span{font-size:9px}.monitorClock .evidenceLabel{font-size:8px}.monitorClock .evidenceZone{font-size:8px}.badge{top:9px;left:9px}.badge.rec{right:9px;left:auto;top:9px}}
+
+/* ===================== WYGLĄD „EPIC” — warstwa końcowa ===================== */
+:root{--neon:#a78bfa;--neon2:#22d3ee;--glass:rgba(13,20,40,.62);--glassLine:rgba(148,163,255,.18)}
+html,body{background:radial-gradient(900px 520px at 0% -5%,rgba(124,58,237,.28),transparent 60%),radial-gradient(800px 480px at 105% 0%,rgba(34,211,238,.16),transparent 58%),radial-gradient(700px 600px at 50% 120%,rgba(190,24,93,.14),transparent 60%),#05070f;background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;
+  background-image:linear-gradient(rgba(148,163,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,255,.05) 1px,transparent 1px);background-size:44px 44px;
+  mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 75%)}
+main,.topbar{position:relative;z-index:1}
+.topbar{z-index:20;background:rgba(5,8,18,.72);border-bottom:1px solid var(--glassLine);box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.brandText{font-weight:600;letter-spacing:.02em}.brandText b{font-weight:900;background:linear-gradient(90deg,#c4b5fd,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .dot{animation:pulseDot 2s ease-in-out infinite}
+@keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.65),0 0 12px var(--red)}60%{box-shadow:0 0 0 7px rgba(239,68,68,0),0 0 16px var(--red)}}
+.chip.live{animation:livePulse 2.4s ease-in-out infinite}
+@keyframes livePulse{50%{box-shadow:0 0 26px rgba(239,68,68,.45)}}
+.navLink.active{background:linear-gradient(135deg,rgba(124,58,237,.55),rgba(34,211,238,.25));border-color:rgba(167,139,250,.55);box-shadow:0 0 18px rgba(124,58,237,.25)}
+
+/* Karty — szkło */
+.card{background:linear-gradient(145deg,rgba(22,30,58,.78),rgba(9,14,30,.86));border:1px solid var(--glassLine);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 18px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,rgba(167,139,250,.6),rgba(34,211,238,.5),transparent);pointer-events:none}
+.cardHead h2{letter-spacing:.01em}
+
+/* Obraz — monitor monitoringu */
+.stage{border:1px solid rgba(167,139,250,.35);border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px rgba(34,211,238,.08),0 0 60px rgba(124,58,237,.18)}
+.stage::before{content:"";position:absolute;inset:10px;z-index:3;pointer-events:none;
+  background:
+    linear-gradient(var(--neon2),var(--neon2)) top left/22px 2px no-repeat,linear-gradient(var(--neon2),var(--neon2)) top left/2px 22px no-repeat,
+    linear-gradient(var(--neon2),var(--neon2)) top right/22px 2px no-repeat,linear-gradient(var(--neon2),var(--neon2)) top right/2px 22px no-repeat,
+    linear-gradient(var(--neon2),var(--neon2)) bottom left/22px 2px no-repeat,linear-gradient(var(--neon2),var(--neon2)) bottom left/2px 22px no-repeat,
+    linear-gradient(var(--neon2),var(--neon2)) bottom right/22px 2px no-repeat,linear-gradient(var(--neon2),var(--neon2)) bottom right/2px 22px no-repeat;
+  opacity:.75;filter:drop-shadow(0 0 4px rgba(34,211,238,.7))}
+.stage video{position:relative;z-index:0}
+.stage .placeholder{z-index:1;background:radial-gradient(ellipse at center,rgba(124,58,237,.12),transparent 65%);color:#c7d2fe;font-weight:600;letter-spacing:.01em}
+.stage:has(video[src]),.stage{isolation:isolate}
+.stage .vignette{display:none}
+.badge{z-index:13;background:rgba(5,8,18,.7);border-color:rgba(239,68,68,.5);box-shadow:0 0 18px rgba(239,68,68,.25)}
+.badge i{animation:pulseDot 1.6s ease-in-out infinite}
+.badge.rec{z-index:13}
+
+/* Zegar — kompaktowy HUD na dole kadru */
+.monitorClock{top:auto!important;bottom:14px;right:14px;left:auto;min-width:0!important;align-items:flex-end;padding:7px 11px!important;border-radius:10px;
+  border:1px solid rgba(34,211,238,.45)!important;background:rgba(3,7,18,.72)!important;backdrop-filter:blur(6px);box-shadow:0 0 22px rgba(34,211,238,.15)}
+.monitorClock strong{font-size:20px!important;text-shadow:0 0 12px rgba(34,211,238,.45)}
+.monitorClock .evidenceLabel{color:#67e8f9!important}
+@media(max-width:600px){.monitorClock{bottom:8px;right:8px;padding:5px 8px!important}.monitorClock strong{font-size:15px!important}.monitorClock .evidenceZone,.monitorClock .evidenceLabel{display:none}.monitorClock span{font-size:9px!important}.stage::before{inset:7px}}
+
+/* Sterowanie kamerą — główny panel */
+.modeCard{margin-top:0;padding:14px}
+.modeHead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px}
+.modeTitle{font-weight:800;font-size:15px;letter-spacing:.02em}.modeHint{font-size:12px;color:var(--muted)}
+.modeRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.modeRow .tool{flex-direction:column;gap:4px;min-height:64px;font-weight:700;font-size:13px;border-radius:14px;background:rgba(10,16,34,.75);border-color:rgba(148,163,255,.2);transition:transform .12s,box-shadow .2s,border-color .2s,background .2s}
+.modeRow .tool:hover{transform:translateY(-2px);border-color:rgba(167,139,250,.5)}
+.modeRow .tool.on{color:#fff!important;font-weight:800}
+.modeRow .tool[data-mode="record"].on{background:linear-gradient(160deg,rgba(239,68,68,.55),rgba(127,29,29,.6))!important;border-color:rgba(252,165,165,.75)!important;box-shadow:0 0 26px rgba(239,68,68,.45);animation:livePulse 2.4s ease-in-out infinite}
+.modeRow .tool[data-mode="preview"].on{background:linear-gradient(160deg,rgba(34,211,238,.45),rgba(14,58,96,.6))!important;border-color:rgba(103,232,249,.75)!important;box-shadow:0 0 26px rgba(34,211,238,.4)}
+.modeRow .tool[data-mode="off"].on{background:linear-gradient(160deg,rgba(100,116,139,.5),rgba(30,41,59,.7))!important;border-color:rgba(148,163,184,.7)!important}
+
+/* Pasek stanu nagrywania */
+.recStatus{margin:0;border-radius:14px;padding:11px 14px 11px 16px;position:relative;backdrop-filter:blur(10px)}
+.recStatus::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:4px;border-radius:4px;background:currentColor;box-shadow:0 0 12px currentColor}
+.recStatus.ok{background:linear-gradient(90deg,rgba(34,197,94,.16),rgba(34,197,94,.04))}
+.recStatus.bad{background:linear-gradient(90deg,rgba(239,68,68,.18),rgba(239,68,68,.05))}
+
+/* Przyciski */
+.tool{background:rgba(14,22,44,.72);border-color:rgba(148,163,255,.2);border-radius:14px;transition:transform .12s,border-color .2s,box-shadow .2s,background .2s}
+.tool:hover:not(:disabled){border-color:rgba(167,139,250,.55);box-shadow:0 0 18px rgba(124,58,237,.22);transform:translateY(-1px)}
+.tool.primary,.btn.primary{background:linear-gradient(135deg,#8b5cf6,#6d28d9 55%,#0891b2);border-color:rgba(196,181,253,.6);box-shadow:0 8px 24px rgba(124,58,237,.35)}
+.toolbar{margin-top:0}
+
+/* Zdarzenia — oś czasu */
+.events{list-style:none;margin:8px 0 0;padding:0 0 0 14px;border-left:2px solid rgba(167,139,250,.3)}
+.events li{position:relative;padding:7px 10px;margin:0 0 6px;border-radius:10px;background:rgba(10,16,34,.55)}
+.events li::before{content:"";position:absolute;left:-21px;top:13px;width:10px;height:10px;border-radius:50%;background:var(--neon);box-shadow:0 0 10px var(--neon)}
+.events li.muted::before{background:#475569;box-shadow:none}
+
+/* Ekran PIN */
+.pinCard{background:linear-gradient(160deg,rgba(24,32,62,.82),rgba(8,12,26,.9));border:1px solid var(--glassLine);backdrop-filter:blur(16px);box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 80px rgba(124,58,237,.18)}
+.pinLogo{box-shadow:0 0 0 1px rgba(167,139,250,.4),0 0 40px rgba(124,58,237,.45)}
+.pinLogo .dot{animation:pulseDot 2s ease-in-out infinite}
+.keypad button{transition:transform .08s,background .15s,box-shadow .15s}
+.keypad button:active{transform:scale(.94);background:rgba(124,58,237,.35);box-shadow:0 0 20px rgba(124,58,237,.45)}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.badge{top:18px!important;left:20px!important}.badge.rec{left:auto!important;right:20px!important}
+.monitorClock{bottom:20px!important;right:22px!important}
+@media(max-width:600px){.stage{aspect-ratio:4/3}.badge{top:13px!important;left:14px!important}.badge.rec{right:14px!important}.monitorClock{bottom:13px!important;right:14px!important}}
