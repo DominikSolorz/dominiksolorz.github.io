@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "63"; // musi się zgadzać z version.json
+const VERSION = "64"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -1288,7 +1288,7 @@ let dvr = null;
 function showViewer() {
   $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("viewEventsCard").hidden = false; $("layout").classList.remove("sender");
   // Na telefonie/podglądzie ustawienia wracają pod obraz, aby nie powstawała pusta prawa kolumna.
-  if ($("picturePanel").parentElement !== $("layout").querySelector(".mainCol")) $("layout").querySelector(".mainCol").insertBefore($("picturePanel"), $("recStatus"));
+  if ($("picturePanel").parentElement !== $("layout").querySelector(".mainCol")) $("layout").querySelector(".mainCol").appendChild($("picturePanel"));
   // Oś czasu i biblioteka pokazują nagrania zapisane na stronie (nie z Google Drive).
   dvr ??= mountDvr({ client: recClient, drive: null, allowUpload: !RECEIVER_ONLY, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg });
   recClient.onopen = () => dvr.refresh();
