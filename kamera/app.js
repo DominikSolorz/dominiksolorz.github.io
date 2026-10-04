@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "70"; // musi się zgadzać z version.json
+const VERSION = "71"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -402,12 +402,15 @@ const archive = (() => {
       const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("brak obsługi znacznika obrazu");
-      let frame = 0, stopped = false;
+      // Rysujemy tylko tyle klatek, ile nagrywamy (5 kl./s w spokoju, 30 przy ruchu) — wcześniej ~60 kl./s
+      // w pełnej rozdzielczości mocno grzało procesor (głośne wentylatory). Napis liczony raz na sekundę.
+      let frame = 0, stopped = false, lastSec = -1, text = "";
       const draw = () => {
         if (stopped) return;
         if (input.readyState >= 2) {
           ctx.drawImage(input, 0, 0, width, height);
-          const text = `KAMERA DOMOWA · ${new Date().toLocaleString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}`;
+          const sec = Math.floor(Date.now() / 1000);
+          if (sec !== lastSec) { lastSec = sec; text = `KAMERA DOMOWA · ${new Date().toLocaleString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}`; }
           const size = Math.max(20, Math.round(width / 38));
           ctx.font = `700 ${size}px Arial, sans-serif`; ctx.textBaseline = "middle";
           const pad = Math.round(size * .6), boxW = Math.ceil(ctx.measureText(text).width + pad * 2), boxH = Math.round(size * 1.8);
@@ -416,11 +419,11 @@ const archive = (() => {
           ctx.strokeStyle = "rgba(196, 181, 253, .9)"; ctx.lineWidth = Math.max(2, Math.round(size / 13)); ctx.strokeRect(x, y, boxW, boxH);
           ctx.fillStyle = "#ffffff"; ctx.fillText(text, x + pad, y + boxH / 2);
         }
-        frame = requestAnimationFrame(draw);
+        frame = setTimeout(draw, 1000 / (fast ? FAST_FPS : SLOW_FPS));
       };
       draw();
       const marked = canvas.captureStream(fast ? FAST_FPS : SLOW_FPS).getVideoTracks()[0];
-      watermarkStop = () => { stopped = true; cancelAnimationFrame(frame); input.pause(); input.srcObject = null; v.stop(); marked.stop(); };
+      watermarkStop = () => { stopped = true; clearTimeout(frame); input.pause(); input.srcObject = null; v.stop(); marked.stop(); };
       return new MediaStream([marked, ...s.getAudioTracks()]);
     } catch {
       input.pause(); input.srcObject = null;
@@ -1346,6 +1349,7 @@ function showPcLibrary() {
   else pcLibrary.refresh();
 }
 function showSender() {
+  document.body.classList.add("cameraPc"); // bez animacji i rozmyć — mniej pracy dla procesora i karty graficznej
   $("sendPanel").hidden = false; $("watchPanel").hidden = true; $("viewEventsCard").hidden = true; $("layout").classList.add("sender");
   // Jedna kolumna: kamera, oś czasu, Start/Stop/Restart, sterowanie — ustawienia na dole.
   $("recStatus").after($("modeCard"));

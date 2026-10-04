@@ -362,3 +362,9 @@ main{max-width:1180px}
 .badge.rec{top:auto!important;bottom:10px!important;left:10px!important;right:auto!important}
 .stage .monitorClock .evidenceLabel{padding-left:105px}
 @media(max-width:600px){.badge.rec{bottom:8px!important;left:8px!important}}
+
+/* Komputer-kamera: cicha praca 24/7 — bez animacji, rozmyć i poświat (mniej obciążenia, cichsze wentylatory) */
+body.cameraPc *,body.cameraPc *::before,body.cameraPc *::after{animation:none!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.cameraPc::before{display:none}
+body.cameraPc .card,body.cameraPc .stage,body.cameraPc .ctrl,body.cameraPc .tool{box-shadow:none!important}
+body.cameraPc{background:#05070f!important}
