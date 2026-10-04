@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "72"; // musi się zgadzać z version.json
+const VERSION = "73"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -72,7 +72,7 @@ const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitiv
 const REC_QUALITY = {
   eco:  { bps: 600000,  label: "Oszczędna — ok. 45 MB / 10 min", short: "oszczędna" },
   high: { bps: 1500000, label: "Wysoka — ok. 110 MB / 10 min", short: "wysoka" },
-  max:  { bps: 4000000, label: "Maksymalna — ok. 300 MB / 10 min", short: "maksymalna" },
+  max:  { bps: 4000000, label: "Maksymalna (pełna rozdzielczość, głośniej) — ok. 300 MB / 10 min", short: "maksymalna" },
 };
 const recQuality = () => REC_QUALITY[prefs.recQuality] || REC_QUALITY.high;
 function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } }
@@ -400,8 +400,11 @@ const archive = (() => {
       await new Promise((resolve, reject) => { input.onloadedmetadata = resolve; input.onerror = reject; });
       await input.play();
       const settings = v.getSettings();
-      const width = settings.width || input.videoWidth || 1280;
-      const height = settings.height || input.videoHeight || 720;
+      // Jakość „Maksymalna” = pełna rozdzielczość kamery; pozostałe nagrywają do 1280 px szerokości
+      // (ok. 2× mniej pracy dla procesora — cichsze wentylatory, nadal wyraźny obraz).
+      const srcW = settings.width || input.videoWidth || 1280, srcH = settings.height || input.videoHeight || 720;
+      const scale = prefs.recQuality === "max" ? 1 : Math.min(1, 1280 / srcW);
+      const width = Math.round(srcW * scale / 2) * 2, height = Math.round(srcH * scale / 2) * 2;
       const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("brak obsługi znacznika obrazu");
@@ -808,6 +811,7 @@ const sender = (() => {
     if (sig.type === "mode-set") return setMode(sig.mode, sig.minutes);
     if (sig.type === "quality-set") return setQuality(sig.q);
     if (sig.type === "restart") return restart();
+    if (sig.type === "reload") return forceReload();
     if (sig.type === "viewer-leave") return closePeer(sig.viewerId);
     const peer = sig.viewerId ? peers.get(sig.viewerId) : null;
     if (!peer) return;
@@ -1045,6 +1049,14 @@ const sender = (() => {
   // Samoaktualizacja komputera-kamery: nowa wersja strony (version.json) = domknięcie bieżącego pliku
   // nagrania i przeładowanie — bez klikania przy komputerze. Najwyżej raz na 30 min (pamięć podręczna Pages).
   let updateTimer = null;
+  // Zdalne odświeżenie z telefonu: domknięcie nagrania i wczytanie najnowszej wersji strony (z pominięciem pamięci podręcznej).
+  function forceReload() {
+    setStatus("Odświeżam stronę kamery na życzenie z telefonu — nagrywanie wróci za chwilę…");
+    archive.stop();
+    const u = new URL(location.href); u.searchParams.set("v", String(Date.now()));
+    setTimeout(() => location.replace(u.href), 5000);
+  }
+
   async function checkUpdate() {
     try {
       const v = (await (await fetch(`version.json?t=${Date.now()}`, { cache: "no-store" })).json()).version;
@@ -1098,7 +1110,7 @@ const sender = (() => {
     }).catch(() => {});
   }
 
-  return { start, stop, restart, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; } };
+  return { start, stop, restart, forceReload, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -1260,13 +1272,18 @@ const viewer = (() => {
     setTimeout(() => setStatus(""), 4000);
   }
 
+  function reloadPc() {
+    send(chan.channel, { type: "reload" });
+    setStatus("Komputer-kamera odświeża stronę i pobiera najnowszą wersję — obraz wróci za ok. 15 s…");
+    setTimeout(() => setStatus(""), 8000);
+  }
   function restart() {
     send(chan.channel, { type: "restart" });
     setStatus("Restartuję kamerę na komputerze — obraz wróci za kilka sekund…");
     setTimeout(() => setStatus(""), 6000);
   }
 
-  return { start, stop, restart, sendZoom, setMode, setQuality, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
+  return { start, stop, restart, reloadPc, sendZoom, setMode, setQuality, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
 })();
 
 // Zdarzenie na telefonie: wyskakujące powiadomienie, wibracja, lista ostatnich zdarzeń.
@@ -1451,6 +1468,10 @@ $("ctrlStop").addEventListener("click", () => {
   if (RECEIVER_ONLY) return;
   if (prefs.role !== "send") return viewer.setMode("off");
   if (confirm("Zatrzymać kamerę? Nie będzie podglądu ani nagrywania, dopóki nie naciśniesz Start.")) sender.setMode("off");
+});
+$("reloadPcBtn").addEventListener("click", () => {
+  if (RECEIVER_ONLY || !confirm("Odświeżyć stronę na komputerze-kamerze i pobrać najnowszą wersję? Nagrywanie przerwie się na kilkanaście sekund.")) return;
+  if (prefs.role === "send") sender.forceReload(); else viewer.reloadPc();
 });
 $("ctrlRestart").addEventListener("click", () => {
   if (RECEIVER_ONLY) return;

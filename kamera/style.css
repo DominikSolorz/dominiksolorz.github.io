@@ -368,3 +368,4 @@ body.cameraPc *,body.cameraPc *::before,body.cameraPc *::after{animation:none!im
 body.cameraPc::before{display:none}
 body.cameraPc .card,body.cameraPc .stage,body.cameraPc .ctrl,body.cameraPc .tool{box-shadow:none!important}
 body.cameraPc{background:#05070f!important}
+.reloadPc{width:100%;margin-top:12px;font-size:13px}
