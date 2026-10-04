@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "62"; // musi się zgadzać z version.json
+const VERSION = "63"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -891,7 +891,7 @@ const sender = (() => {
       else if (live) scheduleCameraRetry();
     } else if (m === "record" && recordingScheduledNow()) archive.start(stream);
     else archive.stop();
-    send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode });
+    beat();
     report();
   }
 
@@ -935,7 +935,7 @@ const sender = (() => {
     }
     chan.start();
     clearInterval(heartbeat);
-    heartbeat = setInterval(() => send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode }), HEARTBEAT_MS);
+    heartbeat = setInterval(beat, HEARTBEAT_MS);
     clearInterval(scheduleTimer);
     scheduleTimer = setInterval(applyRecordingPlan, 30000);
     clearInterval(reportTimer);
@@ -998,11 +998,17 @@ const sender = (() => {
 
   // Co minutę zapis stanu nagrywania na serwerze — da się sprawdzić zdalnie, czy i dlaczego nie nagrywa.
   const INSTANCE = crypto.randomUUID().slice(0, 8);
+  // Dlaczego nie ma obrazu — widać zdalnie (raport i telefon): błąd kamery albo czekanie na zgodę przeglądarki.
+  function camProblem() {
+    if (!live || stream || prefs.mode === "off") return "";
+    if (lastCameraError) return lastCameraError;
+    return camWaitSince ? `Czekam na kamerę od ${Math.round((Date.now() - camWaitSince) / 1000)} s (okno zgody przeglądarki?).` : "";
+  }
+  const beat = () => send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, camError: camProblem() });
+
   function report() {
     const r = archive.status();
-    // Dlaczego nie ma obrazu — widać zdalnie w raporcie (błąd kamery albo czekanie na zgodę przeglądarki).
-    const cam = !live || stream ? "" : lastCameraError ? `KAMERA: ${lastCameraError} `
-      : camWaitSince ? `KAMERA: czekam na kamerę od ${Math.round((Date.now() - camWaitSince) / 1000)} s (okno zgody przeglądarki?). ` : "";
+    const cam = camProblem() ? `KAMERA: ${camProblem()} ` : "";
     const s = { id: CHANNEL, instance: INSTANCE, live: live && !!stream, recording: r.recording, reason: cam + r.reason, folder: r.folder,
       last_file: r.lastFile, saved: r.saved, viewers: peers.size, version: VERSION, user_agent: navigator.userAgent };
     fetch(`${SUPABASE_URL}/rest/v1/rpc/report_camera_status`, {
@@ -1043,6 +1049,8 @@ const viewer = (() => {
       if (sig.rec) showRecStatus(sig.rec);
       if (sig.mode) applyMode(sig.mode);
       if (camOff) return;
+      // Komputer działa, ale nie ma obrazu z kamery — pokaż przyczynę zamiast „Łączenie…”.
+      if (sig.camError && pc?.connectionState !== "connected") { showPlaceholder(`Komputer działa, ale nie ma obrazu z kamery:\n${sig.camError}`); return; }
       const st = pc?.connectionState;
       if ((!st || st === "failed" || st === "closed") && Date.now() - lastJoin > 10000) join();
       return;
