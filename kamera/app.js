@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "65"; // musi się zgadzać z version.json
+const VERSION = "66"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -67,6 +67,7 @@ function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.ge
 function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* tryb prywatny */ } }
 const prefs = loadPrefs();
 function recordingScheduledNow() {
+  if (prefs.recordUntil > Date.now()) return true; // nagranie jednorazowe — niezależnie od harmonogramu
   const hour = new Date().getHours();
   if (prefs.recordPlan === "day") return hour >= 7 && hour < 22;
   if (prefs.recordPlan === "night") return hour < 7 || hour >= 22;
@@ -488,6 +489,7 @@ const archive = (() => {
     if (REC_MIME === null) return "Ta przeglądarka nie obsługuje nagrywania.";
     let text = prefs.mode === "off" ? "Kamera wstrzymana z telefonu — nie nagrywa i nie nadaje."
       : prefs.mode === "preview" ? "Tylko podgląd — nagrywanie wyłączone z telefonu."
+      : running && prefs.recordUntil > Date.now() ? `Nagranie jednorazowe do ${new Date(prefs.recordUntil).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}, potem tylko podgląd.`
       : running ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
     if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; plików na dysku: ${diskFiles.count} (${gb(diskFiles.bytes)}).`;
     else text += " Nagrania zapisują się w pamięci strony (folder archiwum nie jest ustawiony).";
@@ -748,7 +750,7 @@ const sender = (() => {
     if (sig.type === "viewer-join") return connectViewer(sig.viewerId);
     if (sig.type === "zoom" && zoomer) { zoomer.set(sig); return sendZoomState(); }
     if (sig.type === "zoom-get") return sendZoomState();
-    if (sig.type === "mode-set") return setMode(sig.mode);
+    if (sig.type === "mode-set") return setMode(sig.mode, sig.minutes);
     if (sig.type === "quality-set") return setQuality(sig.q);
     if (sig.type === "viewer-leave") return closePeer(sig.viewerId);
     const peer = sig.viewerId ? peers.get(sig.viewerId) : null;
@@ -876,8 +878,11 @@ const sender = (() => {
 
   // Tryb ustawiany z telefonu: „record” = podgląd + nagrywanie, „preview” = tylko podgląd, „off” = kamera wyłączona.
   // Przy „off” strona dalej słucha poleceń, więc telefon może ją w każdej chwili włączyć z powrotem.
-  async function setMode(m) {
-    if (!live || !["record", "preview", "off"].includes(m)) return;
+  // „once” = nagranie jednorazowe na `minutes` minut, potem kamera sama wraca do samego podglądu.
+  async function setMode(m, minutes) {
+    if (!live || !["record", "once", "preview", "off"].includes(m)) return;
+    prefs.recordUntil = m === "once" ? Date.now() + Math.min(240, Math.max(1, Number(minutes) || 15)) * 60000 : 0;
+    if (m === "once") m = "record";
     prefs.mode = m; savePrefs();
     if (m === "off") {
       clearTimeout(camTimer);
@@ -904,6 +909,8 @@ const sender = (() => {
   }
 
   function applyRecordingPlan() {
+    // Koniec nagrania jednorazowego → sam podgląd.
+    if (prefs.recordUntil && prefs.recordUntil <= Date.now()) { prefs.recordUntil = 0; savePrefs(); if (prefs.mode === "record") return setMode("preview"); }
     if (!live || !stream) return;
     if (prefs.mode === "record" && recordingScheduledNow()) archive.start(stream);
     else archive.stop();
@@ -1004,7 +1011,7 @@ const sender = (() => {
     if (lastCameraError) return lastCameraError;
     return camWaitSince ? `Czekam na kamerę od ${Math.round((Date.now() - camWaitSince) / 1000)} s (okno zgody przeglądarki?).` : "";
   }
-  const beat = () => send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, quality: prefs.recQuality, camError: camProblem() });
+  const beat = () => send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, camError: camProblem() });
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
   function setQuality(q) {
     if (!REC_QUALITY[q]) return;
@@ -1055,7 +1062,7 @@ const viewer = (() => {
     if (!["viewer-join", "viewer-leave"].includes(sig.type) && !(sig.type === "ice" && sig.from === "viewer")) lastSeen = Date.now();
     if (sig.type === "heartbeat") {
       if (sig.rec) showRecStatus(sig.rec);
-      if (sig.mode) applyMode(sig.mode);
+      if (sig.mode) applyMode(sig.mode, sig.until);
       if (REC_QUALITY[sig.quality] && document.activeElement !== $("viewQuality")) $("viewQuality").value = sig.quality;
       if (camOff) return;
       // Komputer działa, ale nie ma obrazu z kamery — pokaż przyczynę zamiast „Łączenie…”.
@@ -1105,10 +1112,14 @@ const viewer = (() => {
   }
 
   // Przyciski trybu kamery na telefonie: podświetlony = bieżący tryb komputera.
-  function applyMode(m) {
+  function applyMode(m, until = 0) {
     if (RECEIVER_ONLY) return;
     $("modeCard").hidden = false;
-    document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode === m));
+    const once = m === "record" && until > Date.now();
+    const shown = once ? "once" : m;
+    document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode === shown));
+    const left = once ? Math.max(1, Math.ceil((until - Date.now()) / 60000)) : 0;
+    $("onceLeft").textContent = once ? `zostało ${left} min` : "";
     const off = m === "off";
     if (off && !camOff) { reset(); showPlaceholder("Kamera wstrzymana.\nNaciśnij „Nagrywaj” albo „Tylko podgląd”, aby ją włączyć."); }
     if (!off && camOff) { reset(); join(); }
@@ -1116,7 +1127,7 @@ const viewer = (() => {
   }
   function setMode(m) {
     if (m === "off" && !confirm("Wyłączyć kamerę? Nie będzie podglądu ani nagrywania, dopóki nie włączysz jej z powrotem.")) return;
-    send(chan.channel, { type: "mode-set", mode: m });
+    send(chan.channel, { type: "mode-set", mode: m, minutes: Number($("onceMin").value) });
     setStatus("Wysłano polecenie do kamery…");
     setTimeout(() => setStatus(""), 4000);
   }
