@@ -20,8 +20,17 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "69"; // musi się zgadzać z version.json
+const VERSION = "70"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
+// Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
+const localRecClient = {
+  connected: true,
+  set onopen(fn) { /* zawsze połączony */ },
+  days: () => archive.local.days(),
+  list: day => archive.local.list(day),
+  upload: name => archive.local.upload(name),
+  get: async name => { const f = await archive.local.file(name); if (!f) throw new Error("nie ma takiego nagrania"); return f; },
+};
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
@@ -512,7 +521,7 @@ const archive = (() => {
     return `${text}${disk.error ? ` ${disk.error}` : ""}${lastError ? ` ${lastError}` : ""}`;
   }
 
-  const status = () => ({ recording: running, reason: describe(), folder: disk.ready ? disk.name : "nieustawiony", lastFile: lastName, saved, queued, migrated: sentToDrive });
+  const status = () => ({ recording: running, since: running ? recSince : 0, reason: describe(), folder: disk.ready ? disk.name : "nieustawiony", lastFile: lastName, saved, queued, migrated: sentToDrive });
 
   function render() {
     $("recBadge").hidden = !running;
@@ -723,6 +732,22 @@ async function tuneVideoSender(pc, cropWidth = 0) {
   }
 }
 
+// Pasek pod osią czasu: licznik nagrywania (godz:min:s) i przyciski Start / Stop / Restart.
+const ctrlState = { recording: false, since: 0, mode: "", until: 0, skew: 0, hasCam: true };
+function setCtrlState(s) { Object.assign(ctrlState, s); paintCtrl(); }
+function paintCtrl() {
+  const now = Date.now() + ctrlState.skew;
+  const rec = ctrlState.recording && ctrlState.since > 0;
+  $("ctrlTime").textContent = fmtTime(rec ? Math.max(0, Math.floor((now - ctrlState.since) / 1000)) : 0);
+  $("ctrlLabel").textContent = !ctrlState.mode ? "łączenie z kamerą…"
+    : ctrlState.mode === "off" ? "kamera wyłączona"
+    : !ctrlState.hasCam ? "brak obrazu z kamery"
+    : rec ? (ctrlState.until > now ? `na żywo · nagrywa jednorazowo (do ${new Date(ctrlState.until).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })})` : "na żywo · nagrywa bez przerwy")
+    : ctrlState.mode === "preview" ? "na żywo · bez nagrywania" : "na żywo · nagrywanie zaraz ruszy";
+  $("ctrlBar").dataset.state = ctrlState.mode === "off" ? "off" : rec ? "rec" : ctrlState.mode ? "live" : "";
+}
+setInterval(paintCtrl, 1000);
+
 // Panel „Sterowanie kamerą” (telefon i komputer): podświetla bieżący tryb i pokazuje czas nagrania jednorazowego.
 function paintMode(m, until = 0) {
   $("modeCard").hidden = false;
@@ -776,6 +801,7 @@ const sender = (() => {
     if (sig.type === "zoom-get") return sendZoomState();
     if (sig.type === "mode-set") return setMode(sig.mode, sig.minutes);
     if (sig.type === "quality-set") return setQuality(sig.q);
+    if (sig.type === "restart") return restart();
     if (sig.type === "viewer-leave") return closePeer(sig.viewerId);
     const peer = sig.viewerId ? peers.get(sig.viewerId) : null;
     if (!peer) return;
@@ -942,6 +968,15 @@ const sender = (() => {
   }
 
   // Zmiana kamery z listy: przełącz obraz i daj znać oglądającym, żeby połączyli się ponownie.
+  // Restart: kamera i nagrywanie od nowa (bieżący plik zostaje zapisany), oglądający łączą się ponownie.
+  async function restart() {
+    if (!live) return start();
+    if (prefs.mode === "off") return setMode("record");
+    setStatus("Restartuję kamerę…");
+    await switchCamera();
+    beat(); report();
+  }
+
   async function switchCamera() {
     if (!live) return;
     archive.stop(); detector.stop(); closeAll();
@@ -1035,7 +1070,7 @@ const sender = (() => {
     if (lastCameraError) return lastCameraError;
     return camWaitSince ? `Czekam na kamerę od ${Math.round((Date.now() - camWaitSince) / 1000)} s (okno zgody przeglądarki?).` : "";
   }
-  const beat = () => (paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, camError: camProblem() }));
+  const beat = () => (paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, now: Date.now(), camError: camProblem() }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
   function setQuality(q) {
     if (!REC_QUALITY[q]) return;
@@ -1057,7 +1092,7 @@ const sender = (() => {
     }).catch(() => {});
   }
 
-  return { start, stop, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; } };
+  return { start, stop, restart, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -1087,6 +1122,7 @@ const viewer = (() => {
     if (sig.type === "heartbeat") {
       if (sig.rec) showRecStatus(sig.rec);
       if (sig.mode) applyMode(sig.mode, sig.until);
+      setCtrlState({ recording: !!sig.rec?.recording, since: sig.rec?.since || 0, mode: sig.mode || "", until: sig.until || 0, skew: sig.now ? sig.now - Date.now() : 0, hasCam: !sig.camError });
       if (REC_QUALITY[sig.quality] && document.activeElement !== $("viewQuality")) $("viewQuality").value = sig.quality;
       if (camOff) return;
       // Komputer działa, ale nie ma obrazu z kamery — pokaż przyczynę zamiast „Łączenie…”.
@@ -1218,7 +1254,13 @@ const viewer = (() => {
     setTimeout(() => setStatus(""), 4000);
   }
 
-  return { start, stop, sendZoom, setMode, setQuality, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
+  function restart() {
+    send(chan.channel, { type: "restart" });
+    setStatus("Restartuję kamerę na komputerze — obraz wróci za kilka sekund…");
+    setTimeout(() => setStatus(""), 6000);
+  }
+
+  return { start, stop, restart, sendZoom, setMode, setQuality, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
 })();
 
 // Zdarzenie na telefonie: wyskakujące powiadomienie, wibracja, lista ostatnich zdarzeń.
@@ -1304,11 +1346,12 @@ function showPcLibrary() {
   else pcLibrary.refresh();
 }
 function showSender() {
-  dvr?.stop(); $("dvrCard").hidden = true;
   $("sendPanel").hidden = false; $("watchPanel").hidden = true; $("viewEventsCard").hidden = true; $("layout").classList.add("sender");
-  // Jedna konsola po prawej: ustawienia kadru nie mieszają się pod obrazem kamery.
-  if ($("picturePanel").parentElement !== $("sendPanel")) $("sendPanel").prepend($("picturePanel"));
-  $("sendPanel").prepend($("modeCard")); // sterowanie trybem na samej górze prawego panelu
+  // Jedna kolumna: kamera, oś czasu, Start/Stop/Restart, sterowanie — ustawienia na dole.
+  $("recStatus").after($("modeCard"));
+  dvr ??= mountDvr({ client: localRecClient, drive: null, allowUpload: true, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg });
+  $("dvrCard").hidden = false;
+  dvr.start();
   $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
   archive.init().then(showPcLibrary);
   sender.start();
@@ -1347,6 +1390,7 @@ function showViewer() {
     $("picturePanel").hidden = true;
     $("modeCard").hidden = true;
     $("viewEventsCard").hidden = true;
+    document.querySelector("#ctrlBar .ctrlBtns").hidden = true;
     $("watchRecBtn").hidden = true;
     $("roleBtn").hidden = true;
     document.querySelectorAll('a[href="nagrania.html"]').forEach(a => a.hidden = true);
@@ -1358,7 +1402,7 @@ function showViewer() {
 function setRole(toSend) {
   sender.stop(); viewer.stop();
   prefs.role = toSend ? "send" : "watch"; savePrefs();
-  toSend ? showSender() : showViewer();
+  location.reload(); // czysty start w nowej roli (oś czasu czyta nagrania z innego źródła)
 }
 $("roleBtn").addEventListener("click", () => {
   const toSend = prefs.role !== "send";
@@ -1391,6 +1435,21 @@ $("gridBtn").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictur
 applyPictureLayout();
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
+$("ctrlStart").addEventListener("click", async () => {
+  if (RECEIVER_ONLY) return;
+  if (prefs.role === "send") { if (!sender.live) await sender.start(); return sender.setMode("record"); }
+  viewer.setMode("record");
+});
+$("ctrlStop").addEventListener("click", () => {
+  if (RECEIVER_ONLY) return;
+  if (prefs.role !== "send") return viewer.setMode("off");
+  if (confirm("Zatrzymać kamerę? Nie będzie podglądu ani nagrywania, dopóki nie naciśniesz Start.")) sender.setMode("off");
+});
+$("ctrlRestart").addEventListener("click", () => {
+  if (RECEIVER_ONLY) return;
+  if (prefs.role === "send") sender.restart(); else viewer.restart();
+});
+
 // Na komputerze z kamerą przyciski działają od razu, na telefonie wysyłają polecenie do komputera.
 document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.addEventListener("click", () => {
   if (RECEIVER_ONLY) return;
