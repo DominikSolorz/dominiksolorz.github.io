@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=65">
+<link rel="stylesheet" href="style.css?v=66">
 </head>
 <body>
 <header class="topbar">
@@ -68,10 +68,20 @@
       <div id="modeCard" class="card modeCard" hidden>
         <div class="modeHead"><span class="modeTitle">Sterowanie kamerą</span><span class="modeHint">wybierz tryb pracy</span></div>
         <div class="modeRow">
-          <button class="tool" data-mode="record">⏺ Nagrywaj</button>
+          <button class="tool" data-mode="record">⏺ Nagrywaj na stałe</button>
+          <button class="tool" data-mode="once">⏱ Nagraj jednorazowo<small id="onceLeft"></small></button>
           <button class="tool" data-mode="preview">👁 Tylko podgląd</button>
           <button class="tool" data-mode="off">⏸ Wyłącz kamerę</button>
         </div>
+        <label class="qualityPick">Czas nagrania jednorazowego
+          <select id="onceMin">
+            <option value="5">5 minut</option>
+            <option value="15" selected>15 minut</option>
+            <option value="30">30 minut</option>
+            <option value="60">1 godzina</option>
+            <option value="120">2 godziny</option>
+          </select>
+        </label>
         <label class="qualityPick">Jakość nagrań
           <select id="viewQuality"></select>
         </label>
@@ -216,6 +226,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=65"></script>
+  <script type="module" src="app.js?v=66"></script>
 </body>
 </html>

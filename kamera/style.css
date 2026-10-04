@@ -301,3 +301,7 @@ main,.topbar{position:relative;z-index:1}
 @media(max-width:600px){.stage{aspect-ratio:4/3}.badge{top:13px!important;left:14px!important}.badge.rec{right:14px!important}.monitorClock{bottom:13px!important;right:14px!important}}
 .qualityPick{margin-top:12px;font-weight:700;font-size:13px}
 .qualityPick select{background:rgba(10,16,34,.8);border-color:rgba(148,163,255,.25);border-radius:12px}
+.modeRow{grid-template-columns:repeat(2,1fr)}
+.modeRow .tool small{display:block;font-size:11px;font-weight:600;opacity:.9}
+.modeRow .tool[data-mode="once"].on{background:linear-gradient(160deg,rgba(245,158,11,.55),rgba(120,53,15,.65))!important;border-color:rgba(253,230,138,.8)!important;box-shadow:0 0 26px rgba(245,158,11,.45);animation:livePulse 2.4s ease-in-out infinite}
+@media(min-width:700px){.modeRow{grid-template-columns:repeat(4,1fr)}}
