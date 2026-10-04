@@ -20,7 +20,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "61"; // musi się zgadzać z version.json
+const VERSION = "62"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -214,7 +214,14 @@ const cloud = (() => {
   async function upload(blob, name, events = []) {
     // Typ bez kodeków („video/webm;codecs=vp9,opus” → „video/webm”) — przecinek psuł adres data: przy kodowaniu.
     const mime = (blob.type || "video/webm").split(";")[0];
-    if (blob.size && await version() >= 2) return uploadResumable(blob, name, events, mime);
+    if (blob.size && await version() >= 2) {
+      try { return await uploadResumable(blob, name, events, mime); }
+      catch (e) {
+        // Skrypt bez zgody na UrlFetchApp (brak uprawnienia „połączenia zewnętrzne”): pliki do ~30 MB
+        // wysyłamy starym sposobem, który tej zgody nie potrzebuje.
+        if (!/UrlFetchApp|uprawnie|permission/i.test(String(e?.message || e)) || blob.size > 30 * 1048576) throw e;
+      }
+    }
     const t0 = Date.now();
     token ??= [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`drive:${ACCESS_KEY}`)))].map(b => b.toString(16).padStart(2, "0")).join("");
     const body = JSON.stringify({ action: "upload", token, name, mime, events, data: await toBase64(new Blob([blob], { type: mime })) });
@@ -768,6 +775,12 @@ const sender = (() => {
       s.getVideoTracks().forEach(t => { t.contentHint = "motion"; });
       return s;
     } catch (e) {
+      // Brak mikrofonu (odłączony / wyłączony) = przeglądarka odrzuca też obraz. Próbujemy sam obraz.
+      if (e?.name === "NotFoundError" && prefs.audio) {
+        const s = await navigator.mediaDevices.getUserMedia({ video: mediaConstraints(deviceId).video, audio: false });
+        s.getVideoTracks().forEach(t => { t.contentHint = "motion"; });
+        return s;
+      }
       // Starsze/tańsze kamery czasem odrzucają 1080p/30 fps mimo że działają bez dodatkowych wymagań.
       if (e?.name !== "OverconstrainedError") throw e;
       const s = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId } } : true, audio: prefs.audio ? true : false });
