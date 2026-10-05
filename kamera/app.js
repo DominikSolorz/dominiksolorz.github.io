@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "79"; // musi się zgadzać z version.json
+const VERSION = "80"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -670,6 +670,20 @@ function reconnectingChannel({ onSignal, onSubscribed, label }) {
 }
 const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", payload });
 
+// Polecenia zmieniające pracę komputera-kamery muszą być podpisane kluczem z PIN-u.
+// Link odbiorcy zawiera tylko nazwę kanału, dlatego nie wystarcza jako uprawnienie do sterowania.
+const OWNER_CONTROL = new Set(["mode-set", "quality-set", "restart", "reload"]);
+const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}`;
+async function signedOwnerControl(payload) {
+  if (!ACCESS_KEY) return null;
+  const ts = Date.now();
+  return { ...payload, ts, mac: await sign(ACCESS_KEY, `${ts}|${controlText(payload)}`) };
+}
+async function validOwnerControl(sig) {
+  if (!OWNER_CONTROL.has(sig.type) || !ACCESS_KEY || !Number.isFinite(sig.ts) || Math.abs(Date.now() - sig.ts) > 60000 || typeof sig.mac !== "string") return false;
+  return sig.mac === await sign(ACCESS_KEY, `${sig.ts}|${controlText(sig)}`);
+}
+
 // ---------- Biblioteka nagrań: polecenia z telefonu (lista / usuwanie podpisane kluczem z PIN-u) ----------
 const library = (() => {
   const nonces = new Map(); // jednorazowe numery do podpisywania poleceń usunięcia (ważne 5 min)
@@ -832,10 +846,13 @@ const sender = (() => {
     if (sig.type === "viewer-join") return connectViewer(sig.viewerId);
     if (sig.type === "zoom" && zoomer) { zoomer.set(sig); return sendZoomState(); }
     if (sig.type === "zoom-get") return sendZoomState();
-    if (sig.type === "mode-set") return setMode(sig.mode, sig.minutes);
-    if (sig.type === "quality-set") return setQuality(sig.q);
-    if (sig.type === "restart") return restart();
-    if (sig.type === "reload") return forceReload();
+    if (OWNER_CONTROL.has(sig.type)) {
+      if (!(await validOwnerControl(sig))) return;
+      if (sig.type === "mode-set") return setMode(sig.mode, sig.minutes);
+      if (sig.type === "quality-set") return setQuality(sig.q);
+      if (sig.type === "restart") return restart();
+      if (sig.type === "reload") return forceReload();
+    }
     if (sig.type === "viewer-leave") return closePeer(sig.viewerId);
     const peer = sig.viewerId ? peers.get(sig.viewerId) : null;
     if (!peer) return;
@@ -1222,9 +1239,11 @@ const viewer = (() => {
     if (!off && camOff) { reset(); join(); }
     camOff = off;
   }
-  function setMode(m) {
+  async function setMode(m) {
     if (m === "off" && !confirm("Wyłączyć kamerę? Nie będzie podglądu ani nagrywania, dopóki nie włączysz jej z powrotem.")) return;
-    send(chan.channel, { type: "mode-set", mode: m, minutes: Number($("onceMin").value) });
+    const command = await signedOwnerControl({ type: "mode-set", mode: m, minutes: Number($("onceMin").value) });
+    if (!command) return;
+    send(chan.channel, command);
     setStatus("Wysłano polecenie do kamery…");
     setTimeout(() => setStatus(""), 4000);
   }
@@ -1290,19 +1309,25 @@ const viewer = (() => {
 
   function sendZoom(st) { send(chan.channel, { type: "zoom", ...st }); }
 
-  function setQuality(q) {
-    send(chan.channel, { type: "quality-set", q });
+  async function setQuality(q) {
+    const command = await signedOwnerControl({ type: "quality-set", q });
+    if (!command) return;
+    send(chan.channel, command);
     setStatus("Zmieniam jakość nagrań — następny plik nagra się już w tej jakości.");
     setTimeout(() => setStatus(""), 4000);
   }
 
-  function reloadPc() {
-    send(chan.channel, { type: "reload" });
+  async function reloadPc() {
+    const command = await signedOwnerControl({ type: "reload" });
+    if (!command) return;
+    send(chan.channel, command);
     setStatus("Komputer-kamera odświeża stronę i pobiera najnowszą wersję — obraz wróci za ok. 15 s…");
     setTimeout(() => setStatus(""), 8000);
   }
-  function restart() {
-    send(chan.channel, { type: "restart" });
+  async function restart() {
+    const command = await signedOwnerControl({ type: "restart" });
+    if (!command) return;
+    send(chan.channel, command);
     setStatus("Restartuję kamerę na komputerze — obraz wróci za kilka sekund…");
     setTimeout(() => setStatus(""), 6000);
   }
