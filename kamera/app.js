@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "85"; // musi się zgadzać z version.json
+const VERSION = "86"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -789,6 +789,24 @@ async function tuneVideoSender(pc, cropWidth = 0) {
   }
 }
 
+// Karta „Kontrola kamery” (komputer i telefon): czy kamera i mikrofon są podłączone, czy obraz dociera,
+// czy trwa zapis i jaki był ostatni plik. Dane z komputera-kamery (heartbeat co 15 s).
+function renderDiag(d, extra = []) {
+  if (!$("diagList") || !d) return;
+  const ok = (good, text) => Object.assign(document.createElement("li"), { className: good ? "ok" : "bad", textContent: `${good ? "✅" : "❌"} ${text}` });
+  const rows = [
+    ok(!!d.cam && d.camLive, d.cam ? `Kamera podłączona: ${d.cam}${d.w ? ` · ${d.w}×${d.h}` : ""}${d.fps ? ` · ${d.fps} kl./s` : ""}` : `Kamera nie daje obrazu${d.camError ? ` — ${d.camError}` : ""}`),
+    ok(!!d.mic && d.micOn, d.mic ? `Mikrofon podłączony: ${d.mic}` : "Mikrofon nie jest używany (brak dźwięku w nagraniach)"),
+    ok(d.recording, d.recording ? `Nagrywanie trwa · ${d.quality || ""}` : d.mode === "preview" ? "Nie nagrywa — tryb „Sam podgląd”" : d.mode === "off" ? "Nie nagrywa — kamera wyłączona" : "Nie nagrywa"),
+    ok(!!d.lastFile, d.lastFile ? `Ostatni zapisany plik: ${d.lastFile}` : "Jeszcze żaden plik nie został zapisany w tej sesji (pierwszy po ok. 10 min)"),
+    ...extra,
+  ];
+  $("diagList").replaceChildren(...rows);
+  $("diagTime").textContent = `sprawdzono ${new Date().toLocaleTimeString("pl-PL")} · wersja ${d.version || "?"}`;
+  $("diagCard").hidden = false;
+}
+const diagRow = (good, text) => Object.assign(document.createElement("li"), { className: good ? "ok" : "bad", textContent: `${good ? "✅" : "❌"} ${text}` });
+
 // Pasek pod osią czasu: licznik nagrywania (godz:min:s) i przyciski Start / Stop / Restart.
 const ctrlState = { recording: false, since: 0, mode: "", until: 0, skew: 0, hasCam: true };
 let viewingArchive = false;
@@ -1201,7 +1219,13 @@ const sender = (() => {
     if (lastCameraError) return lastCameraError;
     return camWaitSince ? `Czekam na kamerę od ${Math.round((Date.now() - camWaitSince) / 1000)} s (okno zgody przeglądarki?).` : "";
   }
-  const beat = () => (paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream }));
+  function diag() {
+    const v = stream?.getVideoTracks()[0], a = stream?.getAudioTracks()[0], st = v?.getSettings?.() || {}, r = archive.status();
+    return { cam: v ? (v.label || "kamera") : "", camLive: v?.readyState === "live", w: st.width, h: st.height, fps: Math.round(st.frameRate || 0),
+      mic: a ? (a.label || "mikrofon") : "", micOn: !!a && a.enabled && a.readyState === "live", recording: r.recording, lastFile: r.lastFile,
+      quality: recQuality().short, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem() };
+  }
+  const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, diag: diag() }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
   function setQuality(q) {
     if (!REC_QUALITY[q]) return;
@@ -1262,6 +1286,10 @@ const viewer = (() => {
     if (sig.type === "heartbeat") {
       if (sig.rec) showRecStatus(sig.rec);
       if (sig.mode) applyMode(sig.mode, sig.until);
+      if (sig.diag) renderDiag(sig.diag, [
+        diagRow(pc?.connectionState === "connected", pc?.connectionState === "connected" ? "Telefon połączony z kamerą" : "Telefon nie jest jeszcze połączony z kamerą"),
+        diagRow(video.videoWidth > 0, video.videoWidth > 0 ? `Obraz dociera na ten ekran (${video.videoWidth}×${video.videoHeight})` : "Obraz jeszcze nie dotarł na ten ekran"),
+      ]);
       setCtrlState({ recording: !!sig.rec?.recording, since: sig.rec?.since || 0, mode: sig.mode || "", until: sig.until || 0, skew: sig.now ? sig.now - Date.now() : 0, hasCam: !sig.camError });
       if (REC_QUALITY[sig.quality] && document.activeElement !== $("viewQuality")) $("viewQuality").value = sig.quality;
       if (camOff) return;
