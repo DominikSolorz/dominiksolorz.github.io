@@ -12,7 +12,7 @@ import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=4";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=84";
+import { mountDvr } from "./dvr-ui.js?v=85";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "84"; // musi się zgadzać z version.json
+const VERSION = "85"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -92,6 +92,10 @@ if (!prefs.lib1) { prefs.segmentMin = 10; prefs.retentionDays = 30; prefs.lib1 =
 // Ustawienie domyślne właściciela: faktyczne 360p, czyli mniejszy obraz w zapisywanym pliku.
 // Zmiana na inną jakość w panelu wyłącza ten tryb bez utraty pozostałych ustawień.
 if (!prefs.q360) { prefs.recQuality = "p360"; prefs.q360 = true; savePrefs(); }
+// Jednoznaczne przejście ze starych, niejasnych trybów: po aktualizacji właściciela
+// komputer-kamera zawsze wraca do zapisu 24/7. Późniejsze świadome wybory w panelu
+// są zachowane, bo znacznik migracji wykonuje się tylko raz.
+if (!prefs.mode85) { prefs.mode = "record"; prefs.recordPlan = "always"; prefs.recordUntil = 0; prefs.mode85 = true; savePrefs(); }
 // Jednorazowo (życzenie właściciela): nagrywanie bez przerwy — dzień i noc, bez harmonogramu i bez trybu „tylko podgląd”.
 // Później tryb można dowolnie zmieniać z telefonu.
 if (!prefs.rec247) { prefs.mode = "record"; prefs.recordPlan = "always"; prefs.recordUntil = 0; prefs.rec247 = true; savePrefs(); }
