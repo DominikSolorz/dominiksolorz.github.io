@@ -375,3 +375,4 @@ body.cameraPc{background:#05070f!important}
 .btn.fan.quiet{background:linear-gradient(160deg,#0e7490,#164e63);border-color:rgba(103,232,249,.55)}
 .btn.fan.normal{background:linear-gradient(160deg,#4338ca,#1e1b4b);border-color:rgba(165,180,252,.55)}
 .btn.fan.max{background:linear-gradient(160deg,#c2410c,#7c2d12);border-color:rgba(253,186,116,.55)}
+.stage.zoomable:not(.zoomed){touch-action:pan-y}
