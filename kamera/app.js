@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "88"; // musi się zgadzać z version.json
+const VERSION = "89"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -933,6 +933,7 @@ const sender = (() => {
       if (sig.from && sig.from !== INSTANCE && sig.hasCam && live && !stream) yieldToOther();
       return;
     }
+    if (sig.type === "takeover") { if (sig.from && sig.from !== INSTANCE && live) yieldToOther(); return; }
     if (OWNER_CONTROL.has(sig.type)) {
       if (!(await validOwnerControl(sig))) return;
       if (sig.type === "mode-set") return setMode(sig.mode, sig.minutes);
@@ -1263,8 +1264,17 @@ const sender = (() => {
   function yieldToOther() {
     yielded = true;
     stop();
-    showPlaceholder("Kamera działa już w innym oknie lub innej przeglądarce na tym komputerze.\nTo okno niczego nie nagrywa — możesz je zamknąć.");
+    showPlaceholder("Kamera działa i nagrywa w innym oknie na tym komputerze\n(często zminimalizowane okno „Kamera na żywo” z autostartu — sprawdź pasek zadań).\nTo okno niczego nie nagrywa. Możesz je zamknąć albo przejąć kamerę tutaj.");
+    $("takeoverBtn").hidden = false;
     setStatus("");
+  }
+  // „Przejmij kamerę w tym oknie”: tamto okno oddaje kamerę (zapisuje bieżący plik), to ją przejmuje.
+  function takeover() {
+    $("takeoverBtn").hidden = true;
+    showPlaceholder("Przejmuję kamerę od drugiego okna…");
+    chan.start();
+    setTimeout(() => send(chan.channel, { type: "takeover", from: INSTANCE }), 3000);
+    setTimeout(() => { yielded = false; start(); }, 7000);
   }
 
   function report() {
@@ -1280,7 +1290,7 @@ const sender = (() => {
     }).catch(() => {});
   }
 
-  return { start, stop, restart, forceReload, setMedia, applyMedia, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; } };
+  return { start, stop, restart, forceReload, takeover, setMedia, applyMedia, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -1631,6 +1641,7 @@ $("roleBtn").addEventListener("click", () => {
     : "Wyłączyć nadawanie? To urządzenie będzie tylko oglądać.")) return;
   setRole(toSend);
 });
+$("takeoverBtn").addEventListener("click", () => sender.takeover());
 $("startHere").addEventListener("click", () => {
   if (!confirm("Włączyć kamerę i mikrofon tego komputera? Obraz zobaczą osoby z PIN-em.")) return;
   setRole(true);
