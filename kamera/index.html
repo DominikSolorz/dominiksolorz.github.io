@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=86">
+<link rel="stylesheet" href="style.css?v=88">
 </head>
 <body>
 <header class="topbar">
@@ -94,6 +94,7 @@
         <div class="modeRow">
           <button class="tool" data-mode="record">⏺ Na żywo + zapis<small>kamera i pliki co 10 min</small></button>
           <button class="tool" data-mode="once">⏱ Zapis jednorazowy<small id="onceLeft">po czasie wraca do podglądu</small></button>
+          <button class="tool" data-mode="rec-only">🎞 Tylko zapis<small>pliki bez transmisji na żywo</small></button>
           <button class="tool" data-mode="preview">👁 Sam podgląd<small>kamera bez zapisu pliku</small></button>
           <button class="tool" data-mode="off">⏸ Kamera wyłączona<small>bez obrazu i bez zapisu</small></button>
         </div>
@@ -104,6 +105,13 @@
             <option value="30">30 minut</option>
             <option value="60">1 godzina</option>
             <option value="120">2 godziny</option>
+          </select>
+        </label>
+        <label class="qualityPick">Źródło (transmisja i zapis)
+          <select id="mediaPick">
+            <option value="av">🎥🎙 Obraz + dźwięk</option>
+            <option value="v">🎥 Tylko obraz</option>
+            <option value="a">🎙 Tylko dźwięk</option>
           </select>
         </label>
         <label class="qualityPick">Jakość nagrań
@@ -263,6 +271,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=87"></script>
+  <script type="module" src="app.js?v=88"></script>
 </body>
 </html>
