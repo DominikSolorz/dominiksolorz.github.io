@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "87"; // musi się zgadzać z version.json
+const VERSION = "88"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -66,7 +66,11 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, pano360: false };
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, pano360: false, media: "av" };
+// Źródło transmisji i zapisu: "av" = obraz + dźwięk, "v" = tylko obraz, "a" = tylko dźwięk.
+const MEDIA_LABEL = { av: "obraz + dźwięk", v: "tylko obraz", a: "tylko dźwięk" };
+// Tryby, w których powstają pliki ("rec-only" = zapis bez transmisji na żywo).
+const RECORDING_MODES = new Set(["record", "rec-only"]);
 
 // 360p tworzy mały plik, pozostałe ustawienia zachowują pełny kadr. Wysoka i maksymalna
 // jakość używają stałej przepływności, aby obraz nie stawał się rozmyty.
@@ -444,7 +448,8 @@ const archive = (() => {
       const draw = () => {
         if (stopped) return;
         if (input.readyState >= 2) {
-          ctx.drawImage(input, 0, 0, width, height);
+          if (prefs.media === "a") { ctx.fillStyle = "#000"; ctx.fillRect(0, 0, width, height); } // tylko dźwięk
+          else ctx.drawImage(input, 0, 0, width, height);
           const sec = Math.floor(Date.now() / 1000);
           if (sec !== lastSec) { lastSec = sec; text = `KAMERA DOMOWA · ${new Date().toLocaleString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}`; }
           const size = Math.max(20, Math.round(width / 38));
@@ -543,7 +548,8 @@ const archive = (() => {
   function describe() {
     if (REC_MIME === null) return "Ta przeglądarka nie obsługuje nagrywania.";
     let text = prefs.mode === "off" ? "Kamera wstrzymana z telefonu — nie nagrywa i nie nadaje."
-      : prefs.mode === "preview" ? "Tylko podgląd — nagrywanie wyłączone z telefonu."
+      : prefs.mode === "preview" ? "Tylko na żywo — bez zapisu plików."
+      : prefs.mode === "rec-only" && running ? `Tylko zapis (bez transmisji na żywo), pliki co ${prefs.segmentMin} min.`
       : running && prefs.recordUntil > Date.now() ? `Nagranie jednorazowe do ${new Date(prefs.recordUntil).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}, potem tylko podgląd.`
       : running ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
     if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; plików na dysku: ${diskFiles.count} (${gb(diskFiles.bytes)}).`;
@@ -682,8 +688,8 @@ const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", pay
 
 // Polecenia zmieniające pracę komputera-kamery muszą być podpisane kluczem z PIN-u.
 // Link odbiorcy zawiera tylko nazwę kanału, dlatego nie wystarcza jako uprawnienie do sterowania.
-const OWNER_CONTROL = new Set(["mode-set", "quality-set", "restart", "reload"]);
-const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}`;
+const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "restart", "reload"]);
+const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}`;
 async function signedOwnerControl(payload) {
   if (!ACCESS_KEY) return null;
   const ts = Date.now();
@@ -813,9 +819,9 @@ let viewingArchive = false;
 function paintSystemPanel() {
   if (!$("systemPanel")) return;
   const now = Date.now() + ctrlState.skew;
-  const active = ctrlState.mode === "record" && ctrlState.recording;
+  const active = RECORDING_MODES.has(ctrlState.mode) && ctrlState.recording;
   $("systemView").textContent = viewingArchive ? "Nagranie z archiwum" : "Obraz na żywo";
-  $("systemMode").textContent = ctrlState.mode === "off" ? "Kamera wyłączona" : ctrlState.mode === "preview" ? "Podgląd bez zapisu" : active ? "Nagrywanie 24/7" : "Uruchamianie kamery";
+  $("systemMode").textContent = ctrlState.mode === "off" ? "Kamera wyłączona" : ctrlState.mode === "preview" ? "Na żywo bez zapisu" : ctrlState.mode === "rec-only" ? "Zapis bez transmisji" : active ? "Na żywo + zapis 24/7" : "Uruchamianie kamery";
   $("systemArchive").textContent = active ? `Plik co ${prefs.segmentMin} min · ${recQuality().short}` : "Brak zapisu w tym trybie";
   const badge = $("systemStateBadge");
   badge.textContent = viewingArchive ? "ARCHIWUM" : active ? "● NAGRYWA" : ctrlState.mode === "preview" ? "PODGLĄD" : ctrlState.mode === "off" ? "WYŁĄCZONA" : "ŁĄCZENIE";
@@ -835,7 +841,7 @@ function paintCtrl() {
     : ctrlState.mode === "off" ? "kamera wyłączona"
     : !ctrlState.hasCam ? "brak obrazu z kamery"
     : rec ? (ctrlState.until > now ? `na żywo · nagrywa jednorazowo (do ${new Date(ctrlState.until).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })})` : "na żywo · nagrywa bez przerwy")
-    : ctrlState.mode === "preview" ? "na żywo · bez nagrywania" : "na żywo · nagrywanie zaraz ruszy";
+    : ctrlState.mode === "preview" ? "na żywo · bez nagrywania" : ctrlState.mode === "rec-only" ? "tylko zapis · bez transmisji na żywo" : "na żywo · nagrywanie zaraz ruszy";
   $("ctrlBar").dataset.state = ctrlState.mode === "off" ? "off" : rec ? "rec" : ctrlState.mode ? "live" : "";
 }
 setInterval(paintCtrl, 1000);
@@ -901,8 +907,9 @@ const sender = (() => {
     const pc = new RTCPeerConnection({ iceServers: iceServers() });
     const peer = { pc, pending: [] };
     peers.set(viewerId, peer); renderViewers();
+    // „Tylko zapis”: bez obrazu i dźwięku na żywo — zostaje kanał danych (telefon nadal przegląda nagrania).
     const out = zoomer?.stream || stream;
-    out.getTracks().forEach(t => pc.addTrack(t, out));
+    if (prefs.mode !== "rec-only") out.getTracks().forEach(t => pc.addTrack(t, out));
     // Kanał danych: telefon ogląda i pobiera nagrania z pamięci tego komputera.
     serveRecordings(pc.createDataChannel("nagrania", { ordered: true }), archive.local);
     preferH264(pc);
@@ -930,6 +937,7 @@ const sender = (() => {
       if (!(await validOwnerControl(sig))) return;
       if (sig.type === "mode-set") return setMode(sig.mode, sig.minutes);
       if (sig.type === "quality-set") return setQuality(sig.q);
+      if (sig.type === "media-set") return setMedia(sig.media);
       if (sig.type === "restart") return restart();
       if (sig.type === "reload") return forceReload();
     }
@@ -1026,6 +1034,7 @@ const sender = (() => {
       showPlaceholder("");
       s.getVideoTracks()[0]?.addEventListener("ended", () => { if (live && stream === s) cameraLost(); });
       camAttempt = 0;
+      applyMedia();
       if (prefs.mode !== "preview" && recordingScheduledNow()) archive.start(s);
       else archive.stop();
       if (prefs.detect) detector.start(s, video);
@@ -1060,11 +1069,26 @@ const sender = (() => {
   // Tryb ustawiany z telefonu: „record” = podgląd + nagrywanie, „preview” = tylko podgląd, „off” = kamera wyłączona.
   // Przy „off” strona dalej słucha poleceń, więc telefon może ją w każdej chwili włączyć z powrotem.
   // „once” = nagranie jednorazowe na `minutes` minut, potem kamera sama wraca do samego podglądu.
+  // Źródło (obraz/dźwięk) dla transmisji i zapisu: wyłączona ścieżka daje czarny obraz albo ciszę.
+  function applyMedia() {
+    stream?.getVideoTracks().forEach(t => { t.enabled = prefs.media !== "a"; });
+    stream?.getAudioTracks().forEach(t => { t.enabled = prefs.media !== "v"; });
+  }
+  function setMedia(m) {
+    if (!MEDIA_LABEL[m]) return;
+    prefs.media = m; savePrefs(); applyMedia();
+    if ($("mediaPick")) $("mediaPick").value = m;
+    beat(); report();
+  }
+
   async function setMode(m, minutes) {
-    if (!live || !["record", "once", "preview", "off"].includes(m)) return;
+    if (!live || !["record", "rec-only", "once", "preview", "off"].includes(m)) return;
     prefs.recordUntil = m === "once" ? Date.now() + Math.min(240, Math.max(1, Number(minutes) || 15)) * 60000 : 0;
     if (m === "once") m = "record";
+    const liveChanged = (prefs.mode === "rec-only") !== (m === "rec-only");
     prefs.mode = m; savePrefs();
+    // Włączenie/wyłączenie transmisji: oglądający łączą się ponownie (z obrazem albo tylko z nagraniami).
+    if (liveChanged && stream && m !== "off") { closeAll(); send(chan.channel, { type: "broadcaster-ready" }); }
     if (m === "off") {
       clearTimeout(camTimer);
       archive.stop(); detector.stop(); closeAll();
@@ -1075,7 +1099,7 @@ const sender = (() => {
       camAttempt = 0; setStatus("Uruchamiam kamerę i mikrofon…");
       if (await acquireCamera()) { setStatus(""); send(chan.channel, { type: "broadcaster-ready" }); }
       else if (live) scheduleCameraRetry();
-    } else if (m === "record" && recordingScheduledNow()) archive.start(stream);
+    } else if (RECORDING_MODES.has(m) && recordingScheduledNow()) archive.start(stream);
     else archive.stop();
     beat();
     report();
@@ -1093,7 +1117,7 @@ const sender = (() => {
     // Koniec nagrania jednorazowego → sam podgląd.
     if (prefs.recordUntil && prefs.recordUntil <= Date.now()) { prefs.recordUntil = 0; savePrefs(); if (prefs.mode === "record") return setMode("preview"); }
     if (!live || !stream) return;
-    if (prefs.mode === "record" && recordingScheduledNow()) archive.start(stream);
+    if (RECORDING_MODES.has(prefs.mode) && recordingScheduledNow()) archive.start(stream);
     else archive.stop();
     report();
   }
@@ -1225,7 +1249,7 @@ const sender = (() => {
       mic: a ? (a.label || "mikrofon") : "", micOn: !!a && a.enabled && a.readyState === "live", recording: r.recording, lastFile: r.lastFile,
       quality: recQuality().short, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem() };
   }
-  const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, diag: diag() }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream }));
+  const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, diag: diag() }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
   function setQuality(q) {
     if (!REC_QUALITY[q]) return;
@@ -1256,14 +1280,14 @@ const sender = (() => {
     }).catch(() => {});
   }
 
-  return { start, stop, restart, forceReload, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; } };
+  return { start, stop, restart, forceReload, setMedia, applyMedia, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
 const viewer = (() => {
   const viewerId = crypto.randomUUID();
   let pc = null, pending = [], lastSeen = 0, lastJoin = 0, brokenSince = 0, watchdog = null, active = false;
-  let rec = null, recClock = null, camOff = false;
+  let rec = null, recClock = null, camOff = false, liveNote = false;
   const chan = reconnectingChannel({
     label: "Podgląd",
     onSignal,
@@ -1292,6 +1316,10 @@ const viewer = (() => {
       ]);
       setCtrlState({ recording: !!sig.rec?.recording, since: sig.rec?.since || 0, mode: sig.mode || "", until: sig.until || 0, skew: sig.now ? sig.now - Date.now() : 0, hasCam: !sig.camError });
       if (REC_QUALITY[sig.quality] && document.activeElement !== $("viewQuality")) $("viewQuality").value = sig.quality;
+      if (MEDIA_LABEL[sig.media] && document.activeElement !== $("mediaPick")) $("mediaPick").value = sig.media;
+      // Bez obrazu na żywo — powiedz dlaczego (tryb „Tylko zapis” albo transmisja samego dźwięku).
+      const note = sig.mode === "rec-only" ? "Kamera tylko nagrywa — transmisja na żywo jest wyłączona.\nNagrania są dostępne na osi czasu." : sig.media === "a" ? "🎙 Transmisja tylko dźwięku (obraz wyłączony)" : "";
+      if (note) { showPlaceholder(note); liveNote = true; } else if (liveNote) { liveNote = false; if (pc?.connectionState === "connected") showPlaceholder(""); }
       if (camOff) return;
       // Komputer działa, ale nie ma obrazu z kamery — pokaż przyczynę zamiast „Łączenie…”.
       if (sig.camError && pc?.connectionState !== "connected") { showPlaceholder(`Komputer działa, ale nie ma obrazu z kamery:\n${sig.camError}`); return; }
@@ -1418,6 +1446,14 @@ const viewer = (() => {
 
   function sendZoom(st) { send(chan.channel, { type: "zoom", ...st }); }
 
+  async function setMedia(m) {
+    const command = await signedOwnerControl({ type: "media-set", media: m });
+    if (!command) return;
+    send(chan.channel, command);
+    setStatus(`Zmieniam źródło na: ${MEDIA_LABEL[m]}.`);
+    setTimeout(() => setStatus(""), 4000);
+  }
+
   async function setQuality(q) {
     const command = await signedOwnerControl({ type: "quality-set", q });
     if (!command) return;
@@ -1441,7 +1477,7 @@ const viewer = (() => {
     setTimeout(() => setStatus(""), 6000);
   }
 
-  return { start, stop, restart, reloadPc, sendZoom, setMode, setQuality, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
+  return { start, stop, restart, reloadPc, sendZoom, setMode, setQuality, setMedia, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
 })();
 
 // Zdarzenie na telefonie: wyskakujące powiadomienie, wibracja, lista ostatnich zdarzeń.
@@ -1674,6 +1710,8 @@ for (const id of ["quality", "viewQuality"]) {
   $(id).value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high";
 }
 $("quality").addEventListener("change", e => sender.setQuality(e.target.value));
+$("mediaPick").value = MEDIA_LABEL[prefs.media] ? prefs.media : "av";
+$("mediaPick").addEventListener("change", e => { if (RECEIVER_ONLY) return; prefs.role === "send" ? sender.setMedia(e.target.value) : viewer.setMedia(e.target.value); });
 $("viewQuality").addEventListener("change", e => sender.live ? sender.setQuality(e.target.value) : viewer.setQuality(e.target.value));
 $("retentionDays").closest("label").hidden = true;
 for (const id of ["segmentMin", "retentionDays"]) {
