@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "82"; // musi się zgadzać z version.json
+const VERSION = "83"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -70,10 +70,13 @@ const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitiv
 
 // Jakość NAGRAŃ (osobno od obrazu na żywo). Zawsze pełna rozdzielczość kamery i 5/30 kl./s (spokój/ruch);
 // wybór zmienia przepływność, czyli ostrość szczegółów i wielkość plików. Rozmiary to przybliżenie dla 10 minut.
+// „360p” = mały obraz 480×360 (włączany i wyłączany z listy jakości). Wysoka i Maksymalna nagrywają ze stałą
+// przepływnością — przeglądarka przy zmiennej potrafiła zejść do 0,1 Mb/s i obraz był rozmyty.
 const REC_QUALITY = {
-  eco:  { bps: 600000,  label: "Oszczędna — ok. 45 MB / 10 min", short: "oszczędna" },
-  high: { bps: 1500000, label: "Wysoka — ok. 110 MB / 10 min", short: "wysoka" },
-  max:  { bps: 4000000, label: "Maksymalna — ok. 300 MB / 10 min", short: "maksymalna" },
+  p360: { bps: 400000,  height: 360, label: "360p — mały obraz (ok. 30 MB / 10 min)", short: "360p" },
+  eco:  { bps: 600000,  label: "Oszczędna — pełna rozdzielczość (ok. 45 MB / 10 min)", short: "oszczędna" },
+  high: { bps: 1500000, cbr: true, label: "Wysoka — wyraźny obraz (ok. 110 MB / 10 min)", short: "wysoka" },
+  max:  { bps: 4000000, cbr: true, label: "Maksymalna — najostrzej (ok. 300 MB / 10 min)", short: "maksymalna" },
 };
 const recQuality = () => REC_QUALITY[prefs.recQuality] || REC_QUALITY.high;
 function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } }
@@ -427,8 +430,10 @@ const archive = (() => {
       await input.play();
       const settings = v.getSettings();
       // Nagrania zawsze w pełnej rozdzielczości kamery.
-      const width = settings.width || input.videoWidth || 1280;
-      const height = settings.height || input.videoHeight || 720;
+      const srcW = settings.width || input.videoWidth || 1280, srcH = settings.height || input.videoHeight || 720;
+      // 360p: mały obraz; pozostałe jakości — pełna rozdzielczość kamery.
+      const scale = recQuality().height ? Math.min(1, recQuality().height / srcH) : 1;
+      const width = Math.round(srcW * scale / 2) * 2, height = Math.round(srcH * scale / 2) * 2;
       const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("brak obsługi znacznika obrazu");
@@ -475,10 +480,14 @@ const archive = (() => {
     if (!running || !recStream) return;
     const startedAt = new Date();
     segStart = startedAt.getTime();
-    const opts = { ...(REC_MIME ? { mimeType: REC_MIME } : {}), videoBitsPerSecond: recQuality().bps, audioBitsPerSecond: REC_AUDIO_BPS };
+    const opts = { ...(REC_MIME ? { mimeType: REC_MIME } : {}), videoBitsPerSecond: recQuality().bps, audioBitsPerSecond: REC_AUDIO_BPS, ...(recQuality().cbr ? { videoBitrateMode: "constant" } : {}) };
     let r;
     try { r = new MediaRecorder(recStream, opts); }
-    catch { r = new MediaRecorder(recStream); } // kodek niedostępny — domyślny przeglądarki
+    catch {
+      const { videoBitrateMode, ...plain } = opts; // starsza przeglądarka bez stałej przepływności
+      try { r = new MediaRecorder(recStream, plain); }
+      catch { r = new MediaRecorder(recStream); } // kodek niedostępny — domyślny przeglądarki
+    }
     const chunks = [], events = [];
     segEvents = events;
     r.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
