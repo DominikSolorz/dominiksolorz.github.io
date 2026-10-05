@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "89"; // musi się zgadzać z version.json
+const VERSION = "90"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -930,7 +930,14 @@ const sender = (() => {
     // Drugi nadajnik (inna przeglądarka lub profil na tym samym komputerze) ma już obraz z kamery,
     // a to okno nie (kamera zajęta) — wycofujemy się, żeby nie walczyć o kamerę i nie mylić stanu.
     if (sig.type === "heartbeat") {
-      if (sig.from && sig.from !== INSTANCE && sig.hasCam && live && !stream) yieldToOther();
+      if (sig.from && sig.from !== INSTANCE && sig.hasCam && live && !stream) {
+        // Okno, na które ktoś patrzy, wygrywa z ukrytym/zminimalizowanym — przejmuje kamerę samo.
+        // Starsze okno (bez pola „visible”) nie zna przejęcia — najpierw zdalnie je odświeżamy do nowej wersji.
+        const hidden = sig.visible === false || sig.visible === undefined;
+        if (Date.now() - lastAutoTakeover > 5 * 60000) autoTries = 0;
+        if (document.visibilityState === "visible" && hidden && autoTries < 3) { autoTries++; lastAutoTakeover = Date.now(); yielded = true; stop(); takeover(sig.visible === undefined); }
+        else yieldToOther();
+      }
       return;
     }
     if (sig.type === "takeover") { if (sig.from && sig.from !== INSTANCE && live) yieldToOther(); return; }
@@ -1250,7 +1257,7 @@ const sender = (() => {
       mic: a ? (a.label || "mikrofon") : "", micOn: !!a && a.enabled && a.readyState === "live", recording: r.recording, lastFile: r.lastFile,
       quality: recQuality().short, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem() };
   }
-  const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, diag: diag() }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream }));
+  const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, visible: document.visibilityState === "visible", diag: diag() }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
   function setQuality(q) {
     if (!REC_QUALITY[q]) return;
@@ -1260,7 +1267,11 @@ const sender = (() => {
     beat(); report();
   }
 
-  let yielded = false;
+  let yielded = false, lastAutoTakeover = 0, autoTries = 0;
+  // Ustąpione okno, które ktoś otworzy/przywróci na ekran, samo przejmuje kamerę od ukrytego.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && yielded && Date.now() - lastAutoTakeover > 60000) { lastAutoTakeover = Date.now(); takeover(); }
+  });
   function yieldToOther() {
     yielded = true;
     stop();
@@ -1269,11 +1280,15 @@ const sender = (() => {
     setStatus("");
   }
   // „Przejmij kamerę w tym oknie”: tamto okno oddaje kamerę (zapisuje bieżący plik), to ją przejmuje.
-  function takeover() {
+  function takeover(reloadOld = false) {
     $("takeoverBtn").hidden = true;
     showPlaceholder("Przejmuję kamerę od drugiego okna…");
     chan.start();
-    setTimeout(() => send(chan.channel, { type: "takeover", from: INSTANCE }), 3000);
+    setTimeout(async () => {
+      send(chan.channel, { type: "takeover", from: INSTANCE });
+      // Stare okno nie zna „takeover” — odświeżamy je (podpisane PIN-em), po odświeżeniu już ustąpi.
+      if (reloadOld) { const cmd = await signedOwnerControl({ type: "reload" }); if (cmd) send(chan.channel, cmd); }
+    }, 3000);
     setTimeout(() => { yielded = false; start(); }, 7000);
   }
 
@@ -1641,7 +1656,7 @@ $("roleBtn").addEventListener("click", () => {
     : "Wyłączyć nadawanie? To urządzenie będzie tylko oglądać.")) return;
   setRole(toSend);
 });
-$("takeoverBtn").addEventListener("click", () => sender.takeover());
+$("takeoverBtn").addEventListener("click", () => sender.takeover(true));
 $("startHere").addEventListener("click", () => {
   if (!confirm("Włączyć kamerę i mikrofon tego komputera? Obraz zobaczą osoby z PIN-em.")) return;
   setRole(true);
