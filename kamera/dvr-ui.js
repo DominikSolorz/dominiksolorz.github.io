@@ -12,7 +12,7 @@ const mb = n => `${(n / 1048576).toFixed(1)} MB`;
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids.filter(k => k !== null && k !== undefined && k !== "")); return e; };
 const DAY_MS = 86400000;
 
-const nameTime = n => { const m = /kamera-(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})/.exec(n || ""); return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : 0; };
+const nameTime = n => { const m = /(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})/.exec(n || ""); return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : 0; };
 const SEG_MS = 600000;
 
 export function mountDvr({ client, drive, allowUpload = true, root, stage, liveVideo, toast }) {

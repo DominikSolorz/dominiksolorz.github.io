@@ -10,9 +10,9 @@ import { createDetector, EVENT_LABEL } from "./detect.js?v=32";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
-import * as diskstore from "./diskstore.js?v=3";
+import * as diskstore from "./diskstore.js?v=4";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=77";
+import { mountDvr } from "./dvr-ui.js?v=78";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "77"; // musi się zgadzać z version.json
+const VERSION = "78"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -56,7 +56,7 @@ const $ = id => document.getElementById(id);
 const errText = e => (e instanceof Error ? e.message : String(e));
 const pad = n => String(n).padStart(2, "0");
 const fmtTime = s => `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
-const nameTime = n => { const m = /kamera-(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})/.exec(n || ""); return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : 0; };
+const nameTime = n => { const m = /(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})/.exec(n || ""); return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : 0; };
 const stamp = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
 
 const iceServers = () => {
