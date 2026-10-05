@@ -157,8 +157,8 @@ export function mountDvr({ client, drive, allowUpload = true, root, stage, liveV
   playback.addEventListener("timeupdate", () => { if (playing && !dragging) { cursor = playing.start + playback.currentTime * 1000; draw(); } });
   // Po końcu pliku od razu następny — ciągłe oglądanie.
   playback.addEventListener("ended", () => {
-    const i = files.indexOf(playing);
-    const next = files[i + 1];
+    // Lista odświeża się co minutę (nowe obiekty) — następny plik szukamy po czasie, nie po pozycji obiektu.
+    const next = files.find(f => f.start > playing.start && f.name !== playing.name);
     if (next && !next.recording && next.start - playing.end < 60000) play(next); else goLive();
   });
 
