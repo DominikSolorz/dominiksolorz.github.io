@@ -8,10 +8,11 @@ import { requireAccess } from "./lock.js?v=14";
 import { channelFor, lock } from "./access.js?v=14";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=32";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
-import * as recstore from "./recstore.js?v=34";
+import * as recstore from "./recstore.js?v=77";
+import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=3";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=76";
+import { mountDvr } from "./dvr-ui.js?v=77";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
@@ -20,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "76"; // musi się zgadzać z version.json
+const VERSION = "77"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -290,7 +291,30 @@ const archive = (() => {
     render();
   }
 
+  // Jednorazowa naprawa starszych nagrań (zapisanych bez długości): po kolei, z przerwami, żeby nie obciążać komputera.
+  async function repairOld() {
+    if (prefs.durFix1) return;
+    let fixed = 0;
+    const pause = () => new Promise(r => setTimeout(r, 1500));
+    try {
+      for (const m of await recstore.list()) {
+        const b = await recstore.blob(m.name); if (!b) continue;
+        const out = await fixMp4Duration(b).catch(() => b);
+        if (out !== b) { await recstore.replaceBlob(m.name, out); fixed++; }
+        await pause();
+      }
+      for (const f of await diskstore.list()) {
+        const out = await fixMp4Duration(f).catch(() => f);
+        if (out !== f && await diskstore.save(f.name, out)) fixed++;
+        await pause();
+      }
+      prefs.durFix1 = true; savePrefs();
+      if (fixed) toastMsg(`Naprawiono ${fixed} starszych nagrań — można je przewijać.`);
+    } catch { /* spróbujemy przy następnym uruchomieniu */ }
+  }
+
   async function init() {
+    setTimeout(repairOld, 60000);
     persisted = !!(await recstore.persist());
     try { disk = { ...disk, ...(await diskstore.status()) }; } catch (e) { disk.error = errText(e); }
     // Jednorazowo: automatyczna kolejka z poprzednich wersji znika — nic nie idzie na Drive bez kliknięcia.
@@ -368,6 +392,8 @@ const archive = (() => {
   function markEvent(ev) { segEvents?.push(ev); }
 
   async function save(data, name, events, start, end) {
+    // Długość nagrania wpisana od razu do pliku — przewijanie działa w każdym odtwarzaczu (telefon, WhatsApp, Windows).
+    data = await fixMp4Duration(data).catch(() => data);
     let savedToDisk = false;
     try {
       savedToDisk = await diskstore.save(name, data);

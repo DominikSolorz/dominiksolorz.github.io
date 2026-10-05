@@ -3,7 +3,7 @@
 // znaczniki ruchu 🏃 i dźwięku 🔊, szare przerwy (kamera nie nagrywała), przewijanie, „● NA ŻYWO”
 // i biblioteka z przyciskami Udostępnij / Pobierz / ☁️ Wyślij na Google Drive.
 // Pliki pobierane są z komputera przez kanał danych WebRTC (recproto.js) — działa też na internecie komórkowym.
-import { fixMp4Duration } from "./mp4fix.js?v=1";
+import { fixMp4Duration } from "./mp4fix.js?v=2";
 const pad = n => String(n).padStart(2, "0");
 const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const hm = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };

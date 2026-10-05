@@ -54,6 +54,16 @@ export async function remove(name) {
   return done(t);
 }
 
+// Podmiana samego pliku (np. po dopisaniu długości nagrania) — bez kasowania innych nagrań.
+export async function replaceBlob(name, data) {
+  const db = await open();
+  const t = db.transaction(["meta", "blobs"], "readwrite"), s = t.objectStore("meta");
+  const m = await req(s.get(name));
+  if (!m) return done(t);
+  t.objectStore("blobs").put(data, name); s.put({ ...m, size: data.size });
+  return done(t);
+}
+
 // Kasuje najstarsze nagrania, aż zostanie co najmniej 1 GB (+ miejsce na nowy plik). Zwraca liczbę skasowanych.
 export async function makeRoom(need = 0) {
   let removed = 0;
