@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "80"; // musi się zgadzać z version.json
+const VERSION = "81"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -809,6 +809,35 @@ const sender = (() => {
   const peers = new Map();
   let zoomer = null, cropWidth = 0; // zbliżenie: wycinany kadr z pełnej rozdzielczości kamery
   let stream = null, live = false, heartbeat = null, reportTimer = null, keepAlive = null, camTimer = null, scheduleTimer = null, camAttempt = 0, wakeLock = null, lastCameraError = "";
+  // Dwa skróty Windows lub dwie przypadkowo otwarte karty nie mogą nagrywać tą samą kamerą równocześnie.
+  // Dzierżawa jest odnawiana co 10 s i po 35 s sama wygasa, np. po awarii przeglądarki.
+  const senderLockKey = "prywatna-kamera-sender-lock-v1";
+  const senderLockId = crypto.randomUUID();
+  let senderLockTimer = null;
+  const readSenderLock = () => { try { return JSON.parse(localStorage.getItem(senderLockKey) || "null"); } catch { return null; } };
+  const lockFresh = lock => lock && Number.isFinite(lock.at) && Date.now() - lock.at < 35000;
+  function renewSenderLock() {
+    try { localStorage.setItem(senderLockKey, JSON.stringify({ id: senderLockId, at: Date.now() })); } catch { /* tryb prywatny — kamera pozostaje uruchamialna */ }
+  }
+  function claimSenderLock() {
+    const other = readSenderLock();
+    if (lockFresh(other) && other.id !== senderLockId) return false;
+    renewSenderLock();
+    const check = readSenderLock();
+    return !check || check.id === senderLockId;
+  }
+  function releaseSenderLock() {
+    clearInterval(senderLockTimer); senderLockTimer = null;
+    try { if (readSenderLock()?.id === senderLockId) localStorage.removeItem(senderLockKey); } catch { /* brak localStorage */ }
+  }
+  window.addEventListener("storage", e => {
+    if (e.key !== senderLockKey || !live) return;
+    let lock = null; try { lock = e.newValue && JSON.parse(e.newValue); } catch { /* zły wpis ignorujemy */ }
+    if (lockFresh(lock) && lock.id !== senderLockId) {
+      setStatus("Druga karta kamery jest już uruchomiona na tym komputerze — nie tworzę podwójnego nagrania.");
+      stop();
+    }
+  });
   const chan = reconnectingChannel({
     label: "Nadajnik",
     onSignal,
@@ -1042,7 +1071,14 @@ const sender = (() => {
 
   async function start() {
     if (live) return;
+    if (!claimSenderLock()) {
+      $("startBtn").hidden = false; $("stopBtn").hidden = true;
+      showLive(""); showPlaceholder("Kamera działa już w innym oknie na tym komputerze.");
+      setStatus("Nie uruchomiono drugiej kamery, aby nie powstały podwójne nagrania.");
+      return false;
+    }
     live = true;
+    clearInterval(senderLockTimer); senderLockTimer = setInterval(renewSenderLock, 10000);
     $("startBtn").hidden = true; $("stopBtn").hidden = false;
     showLive("NA ŻYWO · oglądający: 0");
     if (prefs.mode === "off") { setStatus(""); showPlaceholder("Kamera wstrzymana — włącz ją z telefonu."); }
@@ -1069,6 +1105,7 @@ const sender = (() => {
   function stop() {
     if (!live) return;
     live = false;
+    releaseSenderLock();
     archive.stop(); detector.stop();
     clearInterval(heartbeat); clearInterval(reportTimer); clearInterval(keepAlive); clearInterval(updateTimer); clearInterval(scheduleTimer); clearTimeout(camTimer);
     send(chan.channel, { type: "broadcaster-stop" });
@@ -1085,7 +1122,7 @@ const sender = (() => {
 
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && live) requestWakeLock(); });
   window.addEventListener("online", () => { if (live) chan.reconnect(); });
-  window.addEventListener("beforeunload", () => { if (live) send(chan.channel, { type: "broadcaster-stop" }); });
+  window.addEventListener("beforeunload", () => { if (live) send(chan.channel, { type: "broadcaster-stop" }); releaseSenderLock(); });
 
   // Samoaktualizacja komputera-kamery: nowa wersja strony (version.json) = domknięcie bieżącego pliku
   // nagrania i przeładowanie — bez klikania przy komputerze. Najwyżej raz na 30 min (pamięć podręczna Pages).
@@ -1094,6 +1131,7 @@ const sender = (() => {
   function forceReload() {
     setStatus("Odświeżam stronę kamery na życzenie z telefonu — nagrywanie wróci za chwilę…");
     archive.stop();
+    releaseSenderLock();
     const u = new URL(location.href); u.searchParams.set("v", String(Date.now()));
     setTimeout(() => location.replace(u.href), 5000);
   }
@@ -1107,6 +1145,7 @@ const sender = (() => {
       sessionStorage.setItem("kamera-update", String(Date.now()));
       setStatus("Nowa wersja strony kamery — zapisuję nagranie i odświeżam…");
       archive.stop();
+      releaseSenderLock();
       // Adres z numerem wersji: przeglądarka pobiera świeżą stronę zamiast starej z pamięci podręcznej.
       const u = new URL(location.href); u.searchParams.set("v", String(v));
       setTimeout(() => location.replace(u.href), 8000);
