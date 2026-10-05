@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "81"; // musi się zgadzać z version.json
+const VERSION = "82"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -875,6 +875,12 @@ const sender = (() => {
     if (sig.type === "viewer-join") return connectViewer(sig.viewerId);
     if (sig.type === "zoom" && zoomer) { zoomer.set(sig); return sendZoomState(); }
     if (sig.type === "zoom-get") return sendZoomState();
+    // Drugi nadajnik (inna przeglądarka lub profil na tym samym komputerze) ma już obraz z kamery,
+    // a to okno nie (kamera zajęta) — wycofujemy się, żeby nie walczyć o kamerę i nie mylić stanu.
+    if (sig.type === "heartbeat") {
+      if (sig.from && sig.from !== INSTANCE && sig.hasCam && live && !stream) yieldToOther();
+      return;
+    }
     if (OWNER_CONTROL.has(sig.type)) {
       if (!(await validOwnerControl(sig))) return;
       if (sig.type === "mode-set") return setMode(sig.mode, sig.minutes);
@@ -1108,7 +1114,7 @@ const sender = (() => {
     releaseSenderLock();
     archive.stop(); detector.stop();
     clearInterval(heartbeat); clearInterval(reportTimer); clearInterval(keepAlive); clearInterval(updateTimer); clearInterval(scheduleTimer); clearTimeout(camTimer);
-    send(chan.channel, { type: "broadcaster-stop" });
+    if (!yielded) send(chan.channel, { type: "broadcaster-stop" }); // drugie okno nie wyłącza obrazu u oglądających
     report();
     chan.stop();
     closeAll();
@@ -1168,7 +1174,7 @@ const sender = (() => {
     if (lastCameraError) return lastCameraError;
     return camWaitSince ? `Czekam na kamerę od ${Math.round((Date.now() - camWaitSince) / 1000)} s (okno zgody przeglądarki?).` : "";
   }
-  const beat = () => (paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, now: Date.now(), camError: camProblem() }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream }));
+  const beat = () => (paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
   function setQuality(q) {
     if (!REC_QUALITY[q]) return;
@@ -1178,7 +1184,16 @@ const sender = (() => {
     beat(); report();
   }
 
+  let yielded = false;
+  function yieldToOther() {
+    yielded = true;
+    stop();
+    showPlaceholder("Kamera działa już w innym oknie lub innej przeglądarce na tym komputerze.\nTo okno niczego nie nagrywa — możesz je zamknąć.");
+    setStatus("");
+  }
+
   function report() {
+    if (yielded) return; // stan raportuje okno, które ma kamerę
     const r = archive.status();
     const cam = camProblem() ? `KAMERA: ${camProblem()} ` : "";
     const s = { id: CHANNEL, instance: INSTANCE, live: live && !!stream, recording: r.recording, reason: cam + r.reason, folder: r.folder,
