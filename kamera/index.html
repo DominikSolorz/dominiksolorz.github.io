@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=91">
+<link rel="stylesheet" href="style.css?v=92">
 </head>
 <body>
 <header class="topbar">
@@ -53,6 +53,7 @@
           <small id="zoomHint"></small>
         </div>
         <button id="exitFull" class="exitFull" type="button" aria-label="Zamknij pełny ekran" hidden>✕</button>
+        <button id="fitFull" class="fitFull" type="button" hidden>▣ Cały kadr</button>
         <div id="placeholder" class="placeholder">Łączenie…</div>
         <button id="startHere" class="btn primary startHere" hidden>Włącz kamerę tego komputera</button>
         <button id="takeoverBtn" class="btn primary startHere" hidden>Przejmij kamerę w tym oknie</button>
@@ -126,6 +127,7 @@
       <div id="watchPanel" class="toolbar" hidden>
         <button class="tool" id="soundBtn" hidden>🔊 Włącz dźwięk</button>
         <button class="tool" id="fullBtn">⛶ Pełny ekran</button>
+        <button class="tool" id="fitBtn" type="button">▣ Cały kadr</button>
         <button class="tool" id="reconnectBtn">↻ Połącz ponownie</button>
         <button class="tool" id="watchRecBtn" disabled>⏺ Nagrywaj tutaj</button>
         <a class="tool primary" href="nagrania.html">📼 Nagrania</a>
@@ -273,6 +275,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=91"></script>
+  <script type="module" src="app.js?v=92"></script>
 </body>
 </html>

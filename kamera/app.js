@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "91"; // musi się zgadzać z version.json
+const VERSION = "92"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1785,8 +1785,29 @@ function setFakeFull(on) {
   $("stage").classList.toggle("fakeFull", on);
   document.body.classList.toggle("noScroll", on);
   $("exitFull").hidden = !on;
+  $("fitFull").hidden = !on && !(document.fullscreenElement || document.webkitFullscreenElement);
 }
+// Przycisk dopasowania widoczny także w prawdziwym pełnym ekranie.
+["fullscreenchange", "webkitfullscreenchange"].forEach(ev => document.addEventListener(ev, () => {
+  $("fitFull").hidden = !(document.fullscreenElement || document.webkitFullscreenElement || $("stage").classList.contains("fakeFull"));
+}));
 $("fullBtn").addEventListener("click", toggleFullscreen);
+// Dopasowanie obrazu do ekranu (np. telefon obrócony w lewo/prawo): cały kadr / wypełnij / rozciągnij.
+const FIT_MODES = [["contain", "▣ Cały kadr"], ["cover", "⛶ Wypełnij"], ["fill", "↔ Rozciągnij"]];
+function applyFit() {
+  const i = Math.max(0, FIT_MODES.findIndex(([k]) => k === prefs.fit));
+  const [mode, label] = FIT_MODES[i];
+  ["contain", "cover", "fill"].forEach(k => $("stage").classList.toggle(`fit-${k}`, k === mode));
+  $("fitBtn").textContent = label; $("fitFull").textContent = label;
+}
+function nextFit() {
+  const i = Math.max(0, FIT_MODES.findIndex(([k]) => k === prefs.fit));
+  prefs.fit = FIT_MODES[(i + 1) % FIT_MODES.length][0]; savePrefs(); applyFit();
+  toastMsg(`Obraz: ${FIT_MODES.find(([k]) => k === prefs.fit)[1].slice(2)}`);
+}
+$("fitBtn").addEventListener("click", nextFit);
+$("fitFull").addEventListener("click", e => { e.stopPropagation(); nextFit(); });
+applyFit();
 $("exitFull").addEventListener("click", e => { e.stopPropagation(); setFakeFull(false); });
 // Dwukrotne stuknięcie w obraz = pełny ekran / powrót.
 let lastTap = 0;
