@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=76">
+<link rel="stylesheet" href="style.css?v=79">
 </head>
 <body>
 <header class="topbar">
@@ -123,6 +123,8 @@
           <label>Efekt obrazu
             <select id="pictureStyle">
               <option value="color">Kolor naturalny</option>
+              <option value="bright">Rozjaśnienie nocne (lepiej widać w ciemności)</option>
+              <option value="brightsharp">Rozjaśnienie + ostrość</option>
               <option value="mono">Czarno-biały</option>
               <option value="contrast">Wysoki kontrast</option>
               <option value="night">Tryb nocny</option>
@@ -247,6 +249,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=78"></script>
+  <script type="module" src="app.js?v=79"></script>
 </body>
 </html>

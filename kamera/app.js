@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "78"; // musi się zgadzać z version.json
+const VERSION = "79"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1476,6 +1476,8 @@ function applyPictureLayout() {
   $("stage").classList.toggle("visual-cool", style === "cool");
   $("stage").classList.toggle("visual-warm", style === "warm");
   $("stage").classList.toggle("visual-negative", style === "negative");
+  $("stage").classList.toggle("visual-bright", style === "bright");
+  $("stage").classList.toggle("visual-brightsharp", style === "brightsharp");
   $("stage").classList.toggle("frame-grid", !!prefs.pictureGrid);
   $("gridBtn").textContent = `▦ Siatka kadru: ${prefs.pictureGrid ? "wł." : "wył."}`;
   $("gridBtn").setAttribute("aria-pressed", prefs.pictureGrid ? "true" : "false");
