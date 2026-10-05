@@ -3,6 +3,7 @@
 // znaczniki ruchu 🏃 i dźwięku 🔊, szare przerwy (kamera nie nagrywała), przewijanie, „● NA ŻYWO”
 // i biblioteka z przyciskami Udostępnij / Pobierz / ☁️ Wyślij na Google Drive.
 // Pliki pobierane są z komputera przez kanał danych WebRTC (recproto.js) — działa też na internecie komórkowym.
+import { fixMp4Duration } from "./mp4fix.js?v=1";
 const pad = n => String(n).padStart(2, "0");
 const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const hm = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
@@ -98,7 +99,9 @@ export function mountDvr({ client, drive, allowUpload = true, root, stage, liveV
     if (cache.has(f.name)) return cache.get(f.name);
     progressBadge.hidden = false; progressBadge.textContent = `Pobieram ${hm(f.start)}… 0%`;
     try {
-      const { blob } = await client.get(f.name, (got, size) => { progressBadge.textContent = `Pobieram ${hm(f.start)}… ${Math.round((100 * got) / size)}%`; });
+      const { blob: raw } = await client.get(f.name, (got, size) => { progressBadge.textContent = `Pobieram ${hm(f.start)}… ${Math.round((100 * got) / size)}%`; });
+      // Dopisanie długości nagrania — bez tego iPhone nie pozwala przewijać (traktuje plik jak transmisję na żywo).
+      const blob = await fixMp4Duration(raw).catch(() => raw);
       cache.set(f.name, blob);
       while (cache.size > 3) cache.delete(cache.keys().next().value);
       return blob;
