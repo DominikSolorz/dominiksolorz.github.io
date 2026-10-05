@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=85">
+<link rel="stylesheet" href="style.css?v=86">
 </head>
 <body>
 <header class="topbar">
@@ -73,6 +73,10 @@
         <p id="systemHint" class="muted small">Odtworzenie nagrania nie zatrzymuje kamery ani zapisu 24/7.</p>
       </section>
       <div id="dvrCard" class="card dvrCard" hidden></div>
+      <section id="diagCard" class="card diagCard" hidden aria-label="Kontrola kamery">
+        <div class="cardHead"><h2>✅ Kontrola kamery</h2><span id="diagTime" class="muted small"></span></div>
+        <ul id="diagList" class="diagList"></ul>
+      </section>
       <div id="ctrlBar" class="card ctrlBar">
         <div class="recClock" id="recClock">
           <span class="recDot" id="ctrlDot"></span>
@@ -259,6 +263,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=85"></script>
+  <script type="module" src="app.js?v=86"></script>
 </body>
 </html>
