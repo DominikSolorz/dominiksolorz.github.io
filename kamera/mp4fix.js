@@ -37,6 +37,8 @@ export async function fixMp4Duration(blob) {
   const mvhd = child(d, moov, "mvhd");
   if (!mvhd) return blob;
   const movieScale = u32(d, mvhd.body + (d.getUint8(mvhd.body) === 1 ? 20 : 12));
+  const known = d.getUint8(mvhd.body) === 1 ? Number(d.getBigUint64(mvhd.body + 24)) : u32(d, mvhd.body + 16);
+  if (known > 0) return blob; // długość już wpisana — plik bez zmian
 
   // Ścieżki: identyfikator → skala czasu i domyślna długość próbki (z trex).
   const tracks = new Map();
