@@ -12,7 +12,7 @@ import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=4";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=78";
+import { mountDvr } from "./dvr-ui.js?v=84";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "83"; // musi się zgadzać z version.json
+const VERSION = "84"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -66,15 +66,13 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "high", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false };
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, pano360: false };
 
-// Jakość NAGRAŃ (osobno od obrazu na żywo). Zawsze pełna rozdzielczość kamery i 5/30 kl./s (spokój/ruch);
-// wybór zmienia przepływność, czyli ostrość szczegółów i wielkość plików. Rozmiary to przybliżenie dla 10 minut.
-// „360p” = mały obraz 480×360 (włączany i wyłączany z listy jakości). Wysoka i Maksymalna nagrywają ze stałą
-// przepływnością — przeglądarka przy zmiennej potrafiła zejść do 0,1 Mb/s i obraz był rozmyty.
+// 360p tworzy mały plik, pozostałe ustawienia zachowują pełny kadr. Wysoka i maksymalna
+// jakość używają stałej przepływności, aby obraz nie stawał się rozmyty.
 const REC_QUALITY = {
-  p360: { bps: 400000,  height: 360, label: "360p — mały obraz (ok. 30 MB / 10 min)", short: "360p" },
-  eco:  { bps: 600000,  label: "Oszczędna — pełna rozdzielczość (ok. 45 MB / 10 min)", short: "oszczędna" },
+  p360: { bps: 400000, height: 360, label: "Niska — 360p (ok. 30 MB / 10 min)", short: "niska 360p" },
+  eco:  { bps: 600000, label: "Oszczędna — pełna rozdzielczość (ok. 45 MB / 10 min)", short: "oszczędna" },
   high: { bps: 1500000, cbr: true, label: "Wysoka — wyraźny obraz (ok. 110 MB / 10 min)", short: "wysoka" },
   max:  { bps: 4000000, cbr: true, label: "Maksymalna — najostrzej (ok. 300 MB / 10 min)", short: "maksymalna" },
 };
@@ -91,9 +89,9 @@ function recordingScheduledNow() {
 }
 // Jednorazowo: nowy plik co 10 minut i przechowywanie 30 dni (biblioteka nagrań na Google Drive).
 if (!prefs.lib1) { prefs.segmentMin = 10; prefs.retentionDays = 30; prefs.lib1 = true; savePrefs(); }
-// Jednorazowo: nagrania w HD 720p. Gdy łącze nie nadąża (≥3 pliki w kolejce), archiwum samo
-// chwilowo nagrywa w 360p i wraca do HD po opróżnieniu kolejki — żadna godzina nie przepada.
-if (!prefs.qBps) { prefs.recQuality = "high"; prefs.qBps = true; savePrefs(); } // nowe stopnie jakości: domyślnie wysoka
+// Ustawienie domyślne właściciela: faktyczne 360p, czyli mniejszy obraz w zapisywanym pliku.
+// Zmiana na inną jakość w panelu wyłącza ten tryb bez utraty pozostałych ustawień.
+if (!prefs.q360) { prefs.recQuality = "p360"; prefs.q360 = true; savePrefs(); }
 // Jednorazowo (życzenie właściciela): nagrywanie bez przerwy — dzień i noc, bez harmonogramu i bez trybu „tylko podgląd”.
 // Później tryb można dowolnie zmieniać z telefonu.
 if (!prefs.rec247) { prefs.mode = "record"; prefs.recordPlan = "always"; prefs.recordUntil = 0; prefs.rec247 = true; savePrefs(); }
@@ -429,7 +427,6 @@ const archive = (() => {
       await new Promise((resolve, reject) => { input.onloadedmetadata = resolve; input.onerror = reject; });
       await input.play();
       const settings = v.getSettings();
-      // Nagrania zawsze w pełnej rozdzielczości kamery.
       const srcW = settings.width || input.videoWidth || 1280, srcH = settings.height || input.videoHeight || 720;
       // 360p: mały obraz; pozostałe jakości — pełna rozdzielczość kamery.
       const scale = recQuality().height ? Math.min(1, recQuality().height / srcH) : 1;
@@ -790,7 +787,24 @@ async function tuneVideoSender(pc, cropWidth = 0) {
 
 // Pasek pod osią czasu: licznik nagrywania (godz:min:s) i przyciski Start / Stop / Restart.
 const ctrlState = { recording: false, since: 0, mode: "", until: 0, skew: 0, hasCam: true };
-function setCtrlState(s) { Object.assign(ctrlState, s); paintCtrl(); }
+let viewingArchive = false;
+function paintSystemPanel() {
+  if (!$("systemPanel")) return;
+  const now = Date.now() + ctrlState.skew;
+  const active = ctrlState.mode === "record" && ctrlState.recording;
+  $("systemView").textContent = viewingArchive ? "Nagranie z archiwum" : "Obraz na żywo";
+  $("systemMode").textContent = ctrlState.mode === "off" ? "Kamera wyłączona" : ctrlState.mode === "preview" ? "Podgląd bez zapisu" : active ? "Nagrywanie 24/7" : "Uruchamianie kamery";
+  $("systemArchive").textContent = active ? `Plik co ${prefs.segmentMin} min · ${recQuality().short}` : "Brak zapisu w tym trybie";
+  const badge = $("systemStateBadge");
+  badge.textContent = viewingArchive ? "ARCHIWUM" : active ? "● NAGRYWA" : ctrlState.mode === "preview" ? "PODGLĄD" : ctrlState.mode === "off" ? "WYŁĄCZONA" : "ŁĄCZENIE";
+  badge.dataset.state = viewingArchive ? "archive" : active ? "record" : ctrlState.mode || "waiting";
+  $("systemHint").textContent = viewingArchive
+    ? "Odtwarzasz zapisane wydarzenie. Przycisk „● NA ŻYWO” pod osią czasu wraca do bieżącego obrazu."
+    : ctrlState.mode === "preview" ? "Kamera pokazuje bieżący obraz, ale nie zapisuje plików."
+    : ctrlState.mode === "off" ? "Kamera i zapis są zatrzymane — użyj Start albo trybu „Na żywo + zapis”."
+    : active ? `Bieżący obraz jest zapisywany w osobnych plikach co ${prefs.segmentMin} minut.` : "Łączę się z kamerą i sprawdzam stan zapisu.";
+}
+function setCtrlState(s) { Object.assign(ctrlState, s); paintCtrl(); paintSystemPanel(); }
 function paintCtrl() {
   const now = Date.now() + ctrlState.skew;
   const rec = ctrlState.recording && ctrlState.since > 0;
@@ -1487,7 +1501,7 @@ function showSender() {
   $("sendPanel").hidden = false; $("watchPanel").hidden = true; $("viewEventsCard").hidden = true; $("layout").classList.add("sender");
   // Jedna kolumna: kamera, oś czasu, Start/Stop/Restart, sterowanie — ustawienia na dole.
   $("recStatus").after($("modeCard"));
-  dvr ??= mountDvr({ client: localRecClient, drive: null, allowUpload: true, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg });
+  dvr ??= mountDvr({ client: localRecClient, drive: null, allowUpload: true, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
   $("dvrCard").hidden = false;
   dvr.start();
   $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
@@ -1519,7 +1533,7 @@ function showViewer() {
   if ($("picturePanel").parentElement !== $("layout").querySelector(".mainCol")) $("layout").querySelector(".mainCol").appendChild($("picturePanel"));
   $("recStatus").after($("modeCard"));
   // Oś czasu i biblioteka pokazują nagrania zapisane na stronie (nie z Google Drive).
-  dvr ??= mountDvr({ client: recClient, drive: null, allowUpload: !RECEIVER_ONLY, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg });
+  dvr ??= mountDvr({ client: recClient, drive: null, allowUpload: !RECEIVER_ONLY, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
   recClient.onopen = () => dvr.refresh();
   $("dvrCard").hidden = false;
   dvr.start();
@@ -1558,6 +1572,7 @@ $("copyViewerLink").addEventListener("click", copyReceiverLink);
 function applyPictureLayout() {
   const style = prefs.pictureStyle || "color";
   $("pictureStyle").value = style;
+  $("pano360").checked = !!prefs.pano360;
   $("stage").classList.toggle("visual-mono", style === "mono");
   $("stage").classList.toggle("visual-contrast", style === "contrast");
   $("stage").classList.toggle("visual-night", style === "night");
@@ -1567,11 +1582,13 @@ function applyPictureLayout() {
   $("stage").classList.toggle("visual-bright", style === "bright");
   $("stage").classList.toggle("visual-brightsharp", style === "brightsharp");
   $("stage").classList.toggle("frame-grid", !!prefs.pictureGrid);
+  $("stage").classList.toggle("pano360", !!prefs.pano360);
   $("gridBtn").textContent = `▦ Siatka kadru: ${prefs.pictureGrid ? "wł." : "wył."}`;
   $("gridBtn").setAttribute("aria-pressed", prefs.pictureGrid ? "true" : "false");
 }
 $("pictureStyle").addEventListener("change", e => { prefs.pictureStyle = e.target.value; savePrefs(); applyPictureLayout(); toastMsg("Zmieniono efekt podglądu."); });
 $("gridBtn").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictureGrid; savePrefs(); applyPictureLayout(); toastMsg(prefs.pictureGrid ? "Włączono siatkę kadru." : "Wyłączono siatkę kadru."); });
+$("pano360").addEventListener("change", e => { prefs.pano360 = e.target.checked; savePrefs(); applyPictureLayout(); toastMsg(prefs.pano360 ? "Włączono podgląd panoramy 360°. Działa prawidłowo tylko z kamerą 360°." : "Wyłączono podgląd panoramy 360°."); });
 applyPictureLayout();
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());

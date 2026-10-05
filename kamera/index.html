@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=79">
+<link rel="stylesheet" href="style.css?v=84">
 </head>
 <body>
 <header class="topbar">
@@ -63,6 +63,15 @@
         </div>
       </div>
 
+      <section id="systemPanel" class="card systemPanel" aria-label="Stan systemu monitoringu">
+        <div class="cardHead"><h2>◉ System monitoringu</h2><span id="systemStateBadge" class="systemStateBadge">ŁĄCZENIE</span></div>
+        <div class="systemTiles">
+          <div><span>Teraz oglądasz</span><b id="systemView">Podgląd na żywo</b></div>
+          <div><span>Praca kamery</span><b id="systemMode">Sprawdzam…</b></div>
+          <div><span>Zapis</span><b id="systemArchive">Segmenty co 10 min</b></div>
+        </div>
+        <p id="systemHint" class="muted small">Odtworzenie nagrania nie zatrzymuje kamery ani zapisu 24/7.</p>
+      </section>
       <div id="dvrCard" class="card dvrCard" hidden></div>
       <div id="ctrlBar" class="card ctrlBar">
         <div class="recClock" id="recClock">
@@ -77,12 +86,12 @@
       </div>
       <div id="recStatus" class="recStatus" hidden></div>
       <div id="modeCard" class="card modeCard" hidden>
-        <div class="modeHead"><span class="modeTitle">Sterowanie kamerą</span><span class="modeHint">wybierz tryb pracy</span></div>
+        <div class="modeHead"><span class="modeTitle">Tryb pracy kamery</span><span class="modeHint">wybierz dokładnie jedno działanie</span></div>
         <div class="modeRow">
-          <button class="tool" data-mode="record">⏺ Nagrywaj na stałe</button>
-          <button class="tool" data-mode="once">⏱ Nagraj jednorazowo<small id="onceLeft"></small></button>
-          <button class="tool" data-mode="preview">👁 Tylko podgląd</button>
-          <button class="tool" data-mode="off">⏸ Wyłącz kamerę</button>
+          <button class="tool" data-mode="record">⏺ Na żywo + zapis<small>kamera i pliki co 10 min</small></button>
+          <button class="tool" data-mode="once">⏱ Zapis jednorazowy<small id="onceLeft">po czasie wraca do podglądu</small></button>
+          <button class="tool" data-mode="preview">👁 Sam podgląd<small>kamera bez zapisu pliku</small></button>
+          <button class="tool" data-mode="off">⏸ Kamera wyłączona<small>bez obrazu i bez zapisu</small></button>
         </div>
         <label class="qualityPick">Czas nagrania jednorazowego
           <select id="onceMin">
@@ -134,8 +143,9 @@
             </select>
           </label>
           <button class="tool" id="gridBtn" type="button" aria-pressed="false">▦ Siatka kadru: wył.</button>
+          <label class="check panoToggle"><input type="checkbox" id="pano360"> ◌ Panorama 360°</label>
         </div>
-        <p class="muted small">Efekt i siatka pomagają ustawić kadr. Oryginalne nagranie pozostaje w kolorze i pełnej jakości.</p>
+        <p class="muted small">Niska jakość 360p zmniejsza rozmiar plików. Panorama 360° działa z kamerą 360°; zwykła kamera nie może stworzyć prawdziwego obrazu dookoła.</p>
       </section>
     </section>
 
@@ -203,7 +213,7 @@
             </select>
           </label>
           <label>Jakość nagrań
-            <select id="quality"><option value="small">Mała — 360p (~4 MB / 5 min)</option></select>
+            <select id="quality"><option value="low360">Niska — 360p (~35 MB / 10 min)</option></select>
           </label>
           <label>Nowy plik co
             <select id="segmentMin">
@@ -249,6 +259,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=83"></script>
+  <script type="module" src="app.js?v=84"></script>
 </body>
 </html>

@@ -15,7 +15,7 @@ const DAY_MS = 86400000;
 const nameTime = n => { const m = /(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})/.exec(n || ""); return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : 0; };
 const SEG_MS = 600000;
 
-export function mountDvr({ client, drive, allowUpload = true, root, stage, liveVideo, toast }) {
+export function mountDvr({ client, drive, allowUpload = true, root, stage, liveVideo, toast, onState = () => {} }) {
   const playback = el("video", { className: "playback", playsInline: true, controls: true, hidden: true });
   playback.setAttribute("playsinline", "");
   // Nagrania z Google Drive odtwarza odtwarzacz Google (zalogowane konto właściciela).
@@ -110,6 +110,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, stage, liveV
 
   function showPlayback(on, viaFrame = false) {
     playback.hidden = !on || viaFrame; frame.hidden = !on || !viaFrame; liveVideo.style.visibility = on ? "hidden" : "";
+    onState(on);
     if (!on || !viaFrame) frame.removeAttribute("src");
     liveBtn.classList.toggle("off", !on);
   }

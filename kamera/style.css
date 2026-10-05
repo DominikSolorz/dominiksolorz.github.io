@@ -379,3 +379,15 @@ body.cameraPc{background:#05070f!important}
 /* Poprawa obrazu przy oglądaniu (na żywo i nagrań) — oryginalne pliki bez zmian */
 .stage.visual-bright video{filter:brightness(1.55) contrast(1.15) saturate(1.05)}
 .stage.visual-brightsharp video{filter:brightness(1.5) contrast(1.35) saturate(1.1)}
+
+/* Czytelny podział: co oglądam teraz, co robi kamera i czy plik jest zapisywany. */
+.systemPanel{padding:14px 16px;border-color:rgba(103,232,249,.24);background:linear-gradient(135deg,rgba(8,47,73,.38),rgba(15,23,42,.8))}
+.systemTiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.systemTiles>div{padding:10px 11px;border-radius:12px;background:rgba(2,6,23,.45);border:1px solid rgba(148,163,184,.18)}
+.systemTiles span{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}.systemTiles b{display:block;font-size:13px;line-height:1.2}
+.systemStateBadge{padding:5px 8px;border-radius:999px;background:rgba(71,85,105,.5);font-size:10px;font-weight:900;letter-spacing:.08em}
+.systemStateBadge[data-state="record"]{background:rgba(127,29,29,.85);color:#fecaca}.systemStateBadge[data-state="archive"]{background:rgba(30,64,175,.8);color:#dbeafe}.systemStateBadge[data-state="preview"]{background:rgba(8,145,178,.72);color:#cffafe}.systemStateBadge[data-state="off"]{background:rgba(71,85,105,.7);color:#e2e8f0}
+.panoToggle{align-self:center;min-height:42px;padding:0 10px;border:1px solid rgba(148,163,184,.22);border-radius:11px;background:rgba(15,23,42,.45);font-weight:800;font-size:13px}
+.stage.pano360 video{object-fit:cover;transform:scale(1.08);filter:saturate(1.08) contrast(1.06)}
+.stage.pano360::after{content:"PANORAMA 360° · wymaga kamery 360";position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:5;padding:5px 9px;border-radius:999px;background:rgba(2,6,23,.78);border:1px solid rgba(125,211,252,.5);color:#e0f2fe;font-size:10px;font-weight:900;letter-spacing:.06em;pointer-events:none}
+@media(max-width:600px){.systemTiles{grid-template-columns:1fr}.systemTiles>div{display:flex;justify-content:space-between;align-items:center;gap:10px}.systemTiles span{margin:0}.stage.pano360::after{bottom:8px;font-size:9px;white-space:nowrap}}
