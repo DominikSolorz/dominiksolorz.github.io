@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "90"; // musi się zgadzać z version.json
+const VERSION = "91"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1326,7 +1326,7 @@ const viewer = (() => {
     pc?.close(); pc = null; pending = [];
     video.srcObject = null;
     showLive(""); showPlaceholder("Łączenie…"); $("startHere").hidden = true;
-    $("soundBtn").hidden = true; $("fullBtn").disabled = true; $("watchRecBtn").disabled = true;
+    $("soundBtn").hidden = true; $("watchRecBtn").disabled = true;
   }
 
   async function onSignal(sig) {
@@ -1770,7 +1770,32 @@ $("reconnectBtn").addEventListener("click", () => {
   setTimeout(() => { b.disabled = false; b.textContent = "↻ Połącz ponownie"; }, 2000);
 });
 $("watchRecBtn").addEventListener("click", () => viewer.toggleRec());
-$("fullBtn").addEventListener("click", () => (video.requestFullscreen?.() ?? video.webkitEnterFullscreen?.())?.catch?.(() => {}));
+// Pełny ekran: cały kadr (obraz na żywo albo odtwarzane nagranie, z zegarem i przyciskami).
+// iPhone nie pozwala stronie na pełny ekran elementu — tam kadr rozciąga się na cały ekran (z przyciskiem ✕).
+function toggleFullscreen() {
+  const stage = $("stage");
+  if (document.fullscreenElement || document.webkitFullscreenElement) return (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  if (stage.classList.contains("fakeFull")) return setFakeFull(false);
+  const req = stage.requestFullscreen || stage.webkitRequestFullscreen;
+  if (req) {
+    Promise.resolve(req.call(stage)).then(() => screen.orientation?.lock?.("landscape").catch(() => {})).catch(() => setFakeFull(true));
+  } else setFakeFull(true);
+}
+function setFakeFull(on) {
+  $("stage").classList.toggle("fakeFull", on);
+  document.body.classList.toggle("noScroll", on);
+  $("exitFull").hidden = !on;
+}
+$("fullBtn").addEventListener("click", toggleFullscreen);
+$("exitFull").addEventListener("click", e => { e.stopPropagation(); setFakeFull(false); });
+// Dwukrotne stuknięcie w obraz = pełny ekran / powrót.
+let lastTap = 0;
+$("stage").addEventListener("pointerup", e => {
+  if (e.target.closest("button, a, input, select, .zoomBar") || e.pointerType === "mouse" && e.button !== 0) return;
+  const now = Date.now();
+  if (now - lastTap < 350) { lastTap = 0; toggleFullscreen(); } else lastTap = now;
+});
+$("stage").addEventListener("dblclick", e => { if (!e.target.closest("button, a, input, select")) toggleFullscreen(); });
 $("soundBtn").addEventListener("click", () => { video.muted = !video.muted; video.volume = 1; $("soundBtn").textContent = video.muted ? "🔊 Włącz dźwięk" : "🔇 Wycisz"; });
 
 // ---------- Start: PIN, potem od razu podgląd (albo nadawanie na komputerze-kamerze) ----------
