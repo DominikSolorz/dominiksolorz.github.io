@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "98"; // musi się zgadzać z version.json
+const VERSION = "99"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -258,6 +258,18 @@ const cloud = (() => {
     if (!out.duplicate) mbps = (blob.size * 8 * 4 / 3) / Math.max(1, Date.now() - t0) / 1000;
     return out;
   }
+  // Druga, niezależna kontrola po wysłaniu. Samo HTTP 200 nie wystarcza do
+  // skasowania kopii tymczasowej: Drive musi jeszcze zwrócić ten sam plik z
+  // właściwego dnia, o identycznym rozmiarze i (gdy jest dostępny) identyfikatorze.
+  async function verifyUploaded(name, expectedSize, uploadResult = {}) {
+    const m = /^kamera-(\d{4}-\d{2}-\d{2})_/.exec(name || "");
+    if (!m) throw new Error("kontrola Drive: nieprawidłowa nazwa pliku");
+    const listing = await call("day", { day: m[1] }, 60000);
+    const candidates = (listing?.hours || []).flatMap(h => h.files || []).filter(f => f.name === name && Number(f.size) === Number(expectedSize));
+    const found = uploadResult?.id ? candidates.find(f => f.id === uploadResult.id) : candidates[0];
+    if (!found) throw new Error("kontrola Drive: plik nie jest jeszcze widoczny lub ma inny rozmiar");
+    return found;
+  }
   // Opis bieżącego wysyłania: „Wysyłam kamera-…webm (62 MB): 45%, 1.8 Mb/s” albo „… od 3 min”.
   function sending() {
     if (!progress) return "";
@@ -266,7 +278,7 @@ const cloud = (() => {
     if (progress.sent !== undefined) return `Wysyłam ${progress.name} (${mb} MB): ${Math.round(100 * progress.sent / progress.size)}%, ${(progress.sent * 8 / sec / 1e6).toFixed(1)} Mb/s.`;
     return `Wysyłam ${progress.name} (${mb} MB) od ${Math.floor(sec / 60)} min.`;
   }
-  return { enabled, call, upload, sending, version, get big() { return scriptVersion >= 2; }, get mbps() { return mbps; } };
+  return { enabled, call, upload, verifyUploaded, sending, version, get big() { return scriptVersion >= 2; }, get mbps() { return mbps; } };
 })();
 
 // ---------- Nagrywanie ciągłe 24/7 → trwałe pliki na dysku komputera-kamery ----------
@@ -286,7 +298,7 @@ const REC_AUDIO_BPS = 64000;
 
 const archive = (() => {
   let source = null, recStream = null, running = false, rec = null, segTimer = null, clock = null;
-  let recSince = 0, saved = 0, lastName = "", lastError = "", queued = 0, sentToDrive = 0, pumping = false, retryTimer = null, looped = 0;
+  let recSince = 0, saved = 0, lastName = "", lastError = "", queued = 0, sentToDrive = 0, verifiedToDrive = 0, lastVerified = "", pumping = false, retryTimer = null, looped = 0;
   let local = { count: 0, bytes: 0, oldest: 0 }, free = Infinity, persisted = false;
   let diskFiles = { count: 0, bytes: 0, oldest: 0 };
   let disk = { selected: false, name: "", ready: false, saved: 0, error: "" };
@@ -377,15 +389,16 @@ const archive = (() => {
         }
         if (!key) break;
         try {
-          await cloud.upload(data, key, item.events || []);
+          const uploaded = await cloud.upload(data, key, item.events || []);
+          const verified = await cloud.verifyUploaded(key, data.size, uploaded);
           if (item.cleanupLocal) {
-            // Punkt bezpieczeństwa: lokalny plik wolno usunąć tylko po sukcesie
-            // uploadu; odpowiedź "duplicate" też potwierdza istniejący plik Drive.
+            // Punkt bezpieczeństwa: lokalny plik wolno usunąć dopiero po dwóch
+            // potwierdzeniach — ukończonym uploadzie i niezależnym odczycie z Drive.
             if (item.ref) await recstore.remove(item.ref).catch(() => {});
             if (item.diskRef) await diskstore.remove(item.diskRef).catch(() => {});
           } else if (item.ref) await recstore.update(item.ref, { uploaded: true }).catch(() => {});
           await idb.qDel(key);
-          sentToDrive++; lastError = "";
+          sentToDrive++; verifiedToDrive++; lastVerified = `${verified.name} · ID ${verified.id}`; lastError = "";
           // Retencja działa tylko w wyznaczonym folderze nagrań Drive. Błąd
           // sprzątania nie wpływa na bezpiecznie wysłany bieżący fragment.
           cloud.call("cleanup", { days: prefs.retentionDays }).catch(() => {});
@@ -585,6 +598,7 @@ const archive = (() => {
     if (cloud.enabled) {
       if (queued) text += ` Kolejka Google Drive: ${queued}.`;
       if (sentToDrive) text += ` Wysłano: ${sentToDrive}.`;
+      if (verifiedToDrive) text += ` Kontrola Google Drive potwierdziła: ${verifiedToDrive}${lastVerified ? ` (${lastVerified})` : ""}.`;
       if (oversize.size) text += ` Za duże na starą wersję skryptu: ${oversize.size}.`;
       const now = cloud.sending();
       if (now) text += ` ${now}`;
@@ -592,7 +606,7 @@ const archive = (() => {
     return `${text}${disk.error ? ` ${disk.error}` : ""}${lastError ? ` ${lastError}` : ""}`;
   }
 
-  const status = () => ({ recording: running, since: running ? recSince : 0, reason: describe(), folder: disk.ready ? disk.name : "nieustawiony", lastFile: lastName, saved, queued, migrated: sentToDrive });
+  const status = () => ({ recording: running, since: running ? recSince : 0, reason: describe(), folder: disk.ready ? disk.name : "nieustawiony", lastFile: lastName, saved, queued, migrated: sentToDrive, verifiedToDrive, lastVerified });
 
   function render() {
     $("recBadge").hidden = !running;
