@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=93">
+<link rel="stylesheet" href="style.css?v=94">
 </head>
 <body>
 <header class="topbar">
@@ -43,6 +43,17 @@
 <main id="app" hidden>
   <div class="layout" id="layout">
     <section class="mainCol">
+      <section id="modeCard" class="card panel modeCard" hidden aria-label="Sterowanie kamerą">
+        <div class="panelHead"><div><h2>Sterowanie kamerą</h2><p>Wybierz tryb pracy kamery</p></div><span id="modeNow" class="modeNow"></span></div>
+        <div class="modeList">
+          <button class="modeBtn" type="button" data-mode="record"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="2.5"/><path d="M16 10.5l6-3.5v10l-6-3.5z"/></svg><span><b>Na żywo + zapis</b><small>Podgląd na żywo i ciągłe nagrywanie 24/7</small></span></button>
+          <button class="modeBtn" type="button" data-mode="once"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5" class="fill"/></svg><span><b>Zapis jednorazowy</b><small id="onceLeft">Nagraj obraz przez wybrany czas</small></span></button>
+          <button class="modeBtn" type="button" data-mode="rec-only"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></svg><span><b>Tylko zapis</b><small>Nagrywa bez transmisji na żywo</small></span></button>
+          <button class="modeBtn" type="button" data-mode="preview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span><b>Sam podgląd</b><small>Tylko podgląd na żywo, bez zapisu</small></span></button>
+          <button class="modeBtn" type="button" data-mode="off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 7.3a8 8 0 1 0 11.4 0"/></svg><span><b>Kamera wyłączona</b><small>Wyłącz kamerę i zatrzymaj nagrywanie</small></span></button>
+        </div>
+      </section>
+
       <div class="stage" id="stage">
         <video id="video" autoplay playsinline muted></video>
         <div id="zoomBar" class="zoomBar" hidden>
@@ -66,11 +77,47 @@
         </div>
       </div>
 
-      <div id="dvrCard" class="card dvrCard" hidden></div>
-      <details id="diagCard" class="card diagCard fold" hidden>
-        <summary><span id="diagSum">Kontrola kamery</span><span id="diagTime" class="muted small"></span></summary>
-        <ul id="diagList" class="diagList"></ul>
-      </details>
+
+      <div class="rightCol">
+        <section id="systemPanel" class="card panel systemPanel" aria-label="System monitoringu">
+          <div class="panelHead"><div><h2>System monitoringu</h2><p>Aktualny stan i ustawienia kamery</p></div><span id="systemStateBadge" class="systemStateBadge">ŁĄCZENIE</span></div>
+          <ul class="sysList">
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><span><small>Teraz oglądasz</small><b id="systemView">Obraz na żywo</b></span></li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span><small>Praca kamery</small><b id="systemMode">Sprawdzam…</b></span></li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span><small>Zapis</small><b id="systemArchive">—</b></span></li>
+          </ul>
+        </section>
+        <section id="setCard" class="card panel setCard" aria-label="Ustawienia obrazu">
+          <div class="panelHead"><div><h2>Ustawienia obrazu</h2></div></div>
+          <div class="setRow" id="ownerQuality"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M6 9v6M6 12h4M10 9v6M14 9v6h1.5a3 3 0 0 0 0-6z"/></svg><label>Jakość nagrywania<select id="viewQuality"></select></label></div>
+          <div class="setRow" id="ownerMedia"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><label>Źródło (transmisja i zapis)<select id="mediaPick">
+            <option value="av">Obraz + dźwięk</option>
+            <option value="v">Tylko obraz</option>
+            <option value="a">Tylko dźwięk</option>
+          </select></label></div>
+          <div class="setRow" id="ownerOnce"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><label>Czas zapisu jednorazowego<select id="onceMin">
+            <option value="5">5 minut</option>
+            <option value="15" selected>15 minut</option>
+            <option value="30">30 minut</option>
+            <option value="60">1 godzina</option>
+            <option value="120">2 godziny</option>
+          </select></label></div>
+          <div class="setRow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0 0 18c1.2 0 1.8-.8 1.8-1.7 0-1.2-1-1.6-1-2.6 0-.9.7-1.6 1.6-1.6H17a4 4 0 0 0 4-4c0-4.4-4-8.1-9-8.1z"/><circle cx="7.5" cy="11" r="1" class="fill"/><circle cx="10" cy="7" r="1" class="fill"/><circle cx="15" cy="7" r="1" class="fill"/></svg><label>Filtr kolorów<select id="pictureStyle">
+            <option value="color">Naturalne kolory</option>
+            <option value="bright">Rozjaśnienie nocne</option>
+            <option value="brightsharp">Rozjaśnienie + ostrość</option>
+            <option value="mono">Czarno-biały</option>
+            <option value="contrast">Wysoki kontrast</option>
+          </select></label></div>
+          <label class="setRow switchRow"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Siatka na obrazie</span><input type="checkbox" id="gridToggle" class="switch"></label>
+          <label class="setRow switchRow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-14.3 5"/><path d="M4 12a8 8 0 0 1 14.3-5"/><path d="M18.5 3v4h-4M5.5 21v-4h4"/></svg><span>Panorama 360°</span><input type="checkbox" id="pano360" class="switch"></label>
+          <button class="tool reloadPc" id="reloadPcBtn" type="button">⟳ Odśwież komputer-kamerę</button>
+        </section>
+      </div>
+
+      <div id="dvrCard" class="card panel dvrCard" hidden></div>
+      <section id="dvrListCard" class="card panel dvrListCard" hidden aria-label="Lista nagrań"></section>
+
       <div id="ctrlBar" class="card ctrlBar">
         <div class="recClock" id="recClock">
           <span class="recDot" id="ctrlDot"></span>
@@ -91,57 +138,16 @@
         <a class="tool primary" href="nagrania.html">📼 Nagrania</a>
       </div>
       <div id="recStatus" class="recStatus" hidden></div>
-      <details id="modeCard" class="card modeCard fold" hidden>
-        <summary><span>⚙ Tryb i ustawienia</span><span id="modeNow" class="modeNow"></span></summary>
-        <div class="modeRow">
-          <button class="tool" data-mode="record">⏺ Na żywo + zapis<small>kamera i pliki co 10 min</small></button>
-          <button class="tool" data-mode="once">⏱ Zapis jednorazowy<small id="onceLeft">po czasie wraca do podglądu</small></button>
-          <button class="tool" data-mode="rec-only">🎞 Tylko zapis<small>pliki bez transmisji na żywo</small></button>
-          <button class="tool" data-mode="preview">👁 Sam podgląd<small>kamera bez zapisu pliku</small></button>
-          <button class="tool" data-mode="off">⏸ Kamera wyłączona<small>bez obrazu i bez zapisu</small></button>
-        </div>
-        <div class="setGrid">
-        <label class="qualityPick">Czas nagrania jednorazowego
-          <select id="onceMin">
-            <option value="5">5 minut</option>
-            <option value="15" selected>15 minut</option>
-            <option value="30">30 minut</option>
-            <option value="60">1 godzina</option>
-            <option value="120">2 godziny</option>
-          </select>
-        </label>
-        <label class="qualityPick">Źródło (transmisja i zapis)
-          <select id="mediaPick">
-            <option value="av">🎥🎙 Obraz + dźwięk</option>
-            <option value="v">🎥 Tylko obraz</option>
-            <option value="a">🎙 Tylko dźwięk</option>
-          </select>
-        </label>
-        <label class="qualityPick">Jakość nagrań
-          <select id="viewQuality"></select>
-        </label>
-        <label class="qualityPick">Obraz na tym urządzeniu
-          <select id="pictureStyle">
-            <option value="color">Kolor naturalny</option>
-            <option value="bright">Rozjaśnienie nocne</option>
-            <option value="brightsharp">Rozjaśnienie + ostrość</option>
-            <option value="mono">Czarno-biały</option>
-            <option value="contrast">Wysoki kontrast</option>
-          </select>
-        </label>
-        </div>
-        <button class="tool reloadPc" id="reloadPcBtn" type="button">⟳ Odśwież komputer-kamerę (najnowsza wersja)</button>
-      </details>
-
-
-
       <div id="status" class="status" role="status" aria-live="polite" hidden></div>
 
+      <details id="diagCard" class="card diagCard fold" hidden>
+        <summary><span id="diagSum">Kontrola kamery</span><span id="diagTime" class="muted small"></span></summary>
+        <ul id="diagList" class="diagList"></ul>
+      </details>
       <details id="viewEventsCard" class="card eventsCard fold">
         <summary><span>🔔 Zdarzenia</span><span class="muted small">ruch i dźwięk</span></summary>
         <ul id="viewEvents" class="events"></ul>
       </details>
-
     </section>
 
     <!-- Nadajnik (komputer z kamerą) -->
@@ -244,6 +250,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=93"></script>
+  <script type="module" src="app.js?v=94"></script>
 </body>
 </html>

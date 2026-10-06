@@ -12,7 +12,7 @@ import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=4";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=87";
+import { mountDvr } from "./dvr-ui.js?v=94";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "93"; // musi się zgadzać z version.json
+const VERSION = "94"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -66,7 +66,7 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", media: "av" };
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, pano360: false, media: "av" };
 // Źródło transmisji i zapisu: "av" = obraz + dźwięk, "v" = tylko obraz, "a" = tylko dźwięk.
 const MEDIA_LABEL = { av: "obraz + dźwięk", v: "tylko obraz", a: "tylko dźwięk" };
 // Tryby, w których powstają pliki ("rec-only" = zapis bez transmisji na żywo).
@@ -818,7 +818,17 @@ const diagRow = (good, text) => Object.assign(document.createElement("li"), { cl
 // Pasek pod osią czasu: licznik nagrywania (godz:min:s) i przyciski Start / Stop / Restart.
 const ctrlState = { recording: false, since: 0, mode: "", until: 0, skew: 0, hasCam: true };
 let viewingArchive = false;
-function setCtrlState(s) { Object.assign(ctrlState, s); paintCtrl(); }
+function paintSystemPanel() {
+  if (!$("systemPanel")) return;
+  const active = RECORDING_MODES.has(ctrlState.mode) && ctrlState.recording;
+  $("systemView").textContent = viewingArchive ? "Nagranie z archiwum" : ctrlState.mode === "off" ? "Brak obrazu" : "Obraz na żywo";
+  $("systemMode").textContent = ctrlState.mode === "off" ? "Kamera wyłączona" : ctrlState.mode === "preview" ? "Na żywo bez zapisu" : ctrlState.mode === "rec-only" ? "Zapis bez transmisji" : active && ctrlState.until > Date.now() + ctrlState.skew ? "Zapis jednorazowy" : active ? "Nagrywanie 24/7" : "Uruchamianie kamery";
+  $("systemArchive").textContent = active ? `Plik co ${prefs.segmentMin} min · ${recQuality().short.toLowerCase()}` : "Brak zapisu w tym trybie";
+  const badge = $("systemStateBadge");
+  badge.textContent = viewingArchive ? "ARCHIWUM" : active ? "● NAGRYWA" : ctrlState.mode === "preview" ? "PODGLĄD" : ctrlState.mode === "off" ? "WYŁĄCZONA" : "ŁĄCZENIE";
+  badge.dataset.state = viewingArchive ? "archive" : active ? "record" : ctrlState.mode || "waiting";
+}
+function setCtrlState(s) { Object.assign(ctrlState, s); paintCtrl(); paintSystemPanel(); }
 function paintCtrl() {
   const now = Date.now() + ctrlState.skew;
   const rec = ctrlState.recording && ctrlState.since > 0;
@@ -838,7 +848,7 @@ function paintMode(m, until = 0) {
   const once = m === "record" && until > Date.now();
   const shown = once ? "once" : m;
   document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode === shown));
-  $("onceLeft").textContent = once ? `zostało ${Math.max(1, Math.ceil((until - Date.now()) / 60000))} min` : "";
+  $("onceLeft").textContent = once ? `zostało ${Math.max(1, Math.ceil((until - Date.now()) / 60000))} min` : "Nagraj obraz przez wybrany czas";
   $("modeNow").textContent = { record: "● Na żywo + zapis", once: "⏱ Zapis jednorazowy", "rec-only": "🎞 Tylko zapis", preview: "👁 Sam podgląd", off: "⏸ Wyłączona" }[shown] || "";
   $("modeNow").dataset.mode = shown;
 }
@@ -1552,8 +1562,7 @@ function showSender() {
   document.body.classList.add("cameraPc"); // bez animacji i rozmyć — mniej pracy dla procesora i karty graficznej
   $("sendPanel").hidden = false; $("watchPanel").hidden = true; $("viewEventsCard").hidden = true; $("layout").classList.add("sender");
   // Jedna kolumna: kamera, oś czasu, Start/Stop/Restart, sterowanie — ustawienia na dole.
-  $("recStatus").after($("modeCard"));
-  dvr ??= mountDvr({ client: localRecClient, drive: null, allowUpload: true, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; } });
+  dvr ??= mountDvr({ client: localRecClient, drive: null, allowUpload: true, root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
   $("dvrCard").hidden = false;
   dvr.start();
   $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
@@ -1581,15 +1590,15 @@ function toastMsg(text) {
 let dvr = null;
 function showViewer() {
   $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("viewEventsCard").hidden = false; $("layout").classList.remove("sender");
-  $("recStatus").after($("modeCard"));
   // Oś czasu i biblioteka pokazują nagrania zapisane na stronie (nie z Google Drive).
-  dvr ??= mountDvr({ client: recClient, drive: null, allowUpload: !RECEIVER_ONLY, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; } });
+  dvr ??= mountDvr({ client: recClient, drive: null, allowUpload: !RECEIVER_ONLY, root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
   recClient.onopen = () => dvr.refresh();
   $("dvrCard").hidden = false;
   dvr.start();
   $("roleBtn").textContent = "To jest komputer z kamerą — nadawaj z niego";
   if (RECEIVER_ONLY) {
     $("modeCard").hidden = true;
+    ["ownerQuality", "ownerMedia", "ownerOnce", "reloadPcBtn"].forEach(id => { $(id).hidden = true; });
     $("viewEventsCard").hidden = true;
     document.querySelector("#ctrlBar .ctrlBtns").hidden = true;
     $("roleBtn").hidden = true;
@@ -1629,8 +1638,14 @@ function applyPictureLayout() {
   $("stage").classList.toggle("visual-negative", style === "negative");
   $("stage").classList.toggle("visual-bright", style === "bright");
   $("stage").classList.toggle("visual-brightsharp", style === "brightsharp");
+  $("stage").classList.toggle("frame-grid", !!prefs.pictureGrid);
+  $("stage").classList.toggle("pano360", !!prefs.pano360);
+  $("gridToggle").checked = !!prefs.pictureGrid;
+  $("pano360").checked = !!prefs.pano360;
 }
 $("pictureStyle").addEventListener("change", e => { prefs.pictureStyle = e.target.value; savePrefs(); applyPictureLayout(); toastMsg("Zmieniono efekt podglądu."); });
+$("gridToggle").addEventListener("change", e => { prefs.pictureGrid = e.target.checked; savePrefs(); applyPictureLayout(); });
+$("pano360").addEventListener("change", e => { prefs.pano360 = e.target.checked; savePrefs(); applyPictureLayout(); if (prefs.pano360) toastMsg("Panorama 360° działa prawidłowo tylko z kamerą 360°."); });
 applyPictureLayout();
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
