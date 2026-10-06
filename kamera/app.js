@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "92"; // musi się zgadzać z version.json
+const VERSION = "93"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -66,7 +66,7 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, pano360: false, media: "av" };
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", media: "av" };
 // Źródło transmisji i zapisu: "av" = obraz + dźwięk, "v" = tylko obraz, "a" = tylko dźwięk.
 const MEDIA_LABEL = { av: "obraz + dźwięk", v: "tylko obraz", a: "tylko dźwięk" };
 // Tryby, w których powstają pliki ("rec-only" = zapis bez transmisji na żywo).
@@ -121,10 +121,6 @@ function showLive(text) {
   const operational = $("opLive"); if (operational) operational.textContent = text ? "Działa" : "Offline";
 }
 
-const MIME = (() => {
-  if (typeof MediaRecorder === "undefined") return null;
-  return ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"].find(t => MediaRecorder.isTypeSupported(t)) ?? "";
-})();
 const extFor = type => (type.startsWith("video/mp4") ? "mp4" : "webm");
 
 function download(blob, name) {
@@ -797,6 +793,7 @@ async function tuneVideoSender(pc, cropWidth = 0) {
 
 // Karta „Kontrola kamery” (komputer i telefon): czy kamera i mikrofon są podłączone, czy obraz dociera,
 // czy trwa zapis i jaki był ostatni plik. Dane z komputera-kamery (heartbeat co 15 s).
+let diagShownBad = false;
 function renderDiag(d, extra = []) {
   if (!$("diagList") || !d) return;
   const ok = (good, text) => Object.assign(document.createElement("li"), { className: good ? "ok" : "bad", textContent: `${good ? "✅" : "❌"} ${text}` });
@@ -808,7 +805,12 @@ function renderDiag(d, extra = []) {
     ...extra,
   ];
   $("diagList").replaceChildren(...rows);
-  $("diagTime").textContent = `sprawdzono ${new Date().toLocaleTimeString("pl-PL")} · wersja ${d.version || "?"}`;
+  const bad = rows.filter(r => r.className === "bad").length;
+  $("diagSum").textContent = bad ? `⚠ Kontrola kamery: ${bad} do sprawdzenia` : "✅ Kamera sprawdzona — wszystko działa";
+  $("diagCard").classList.toggle("warn", !!bad);
+  if (bad && !diagShownBad) $("diagCard").open = true;
+  diagShownBad = !!bad;
+  $("diagTime").textContent = new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
   $("diagCard").hidden = false;
 }
 const diagRow = (good, text) => Object.assign(document.createElement("li"), { className: good ? "ok" : "bad", textContent: `${good ? "✅" : "❌"} ${text}` });
@@ -816,23 +818,7 @@ const diagRow = (good, text) => Object.assign(document.createElement("li"), { cl
 // Pasek pod osią czasu: licznik nagrywania (godz:min:s) i przyciski Start / Stop / Restart.
 const ctrlState = { recording: false, since: 0, mode: "", until: 0, skew: 0, hasCam: true };
 let viewingArchive = false;
-function paintSystemPanel() {
-  if (!$("systemPanel")) return;
-  const now = Date.now() + ctrlState.skew;
-  const active = RECORDING_MODES.has(ctrlState.mode) && ctrlState.recording;
-  $("systemView").textContent = viewingArchive ? "Nagranie z archiwum" : "Obraz na żywo";
-  $("systemMode").textContent = ctrlState.mode === "off" ? "Kamera wyłączona" : ctrlState.mode === "preview" ? "Na żywo bez zapisu" : ctrlState.mode === "rec-only" ? "Zapis bez transmisji" : active ? "Na żywo + zapis 24/7" : "Uruchamianie kamery";
-  $("systemArchive").textContent = active ? `Plik co ${prefs.segmentMin} min · ${recQuality().short}` : "Brak zapisu w tym trybie";
-  const badge = $("systemStateBadge");
-  badge.textContent = viewingArchive ? "ARCHIWUM" : active ? "● NAGRYWA" : ctrlState.mode === "preview" ? "PODGLĄD" : ctrlState.mode === "off" ? "WYŁĄCZONA" : "ŁĄCZENIE";
-  badge.dataset.state = viewingArchive ? "archive" : active ? "record" : ctrlState.mode || "waiting";
-  $("systemHint").textContent = viewingArchive
-    ? "Odtwarzasz zapisane wydarzenie. Przycisk „● NA ŻYWO” pod osią czasu wraca do bieżącego obrazu."
-    : ctrlState.mode === "preview" ? "Kamera pokazuje bieżący obraz, ale nie zapisuje plików."
-    : ctrlState.mode === "off" ? "Kamera i zapis są zatrzymane — użyj Start albo trybu „Na żywo + zapis”."
-    : active ? `Bieżący obraz jest zapisywany w osobnych plikach co ${prefs.segmentMin} minut.` : "Łączę się z kamerą i sprawdzam stan zapisu.";
-}
-function setCtrlState(s) { Object.assign(ctrlState, s); paintCtrl(); paintSystemPanel(); }
+function setCtrlState(s) { Object.assign(ctrlState, s); paintCtrl(); }
 function paintCtrl() {
   const now = Date.now() + ctrlState.skew;
   const rec = ctrlState.recording && ctrlState.since > 0;
@@ -853,6 +839,8 @@ function paintMode(m, until = 0) {
   const shown = once ? "once" : m;
   document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode === shown));
   $("onceLeft").textContent = once ? `zostało ${Math.max(1, Math.ceil((until - Date.now()) / 60000))} min` : "";
+  $("modeNow").textContent = { record: "● Na żywo + zapis", once: "⏱ Zapis jednorazowy", "rec-only": "🎞 Tylko zapis", preview: "👁 Sam podgląd", off: "⏸ Wyłączona" }[shown] || "";
+  $("modeNow").dataset.mode = shown;
 }
 
 // ---------- NADAJNIK (komputer z kamerą) ----------
@@ -1312,7 +1300,7 @@ const sender = (() => {
 const viewer = (() => {
   const viewerId = crypto.randomUUID();
   let pc = null, pending = [], lastSeen = 0, lastJoin = 0, brokenSince = 0, watchdog = null, active = false;
-  let rec = null, recClock = null, camOff = false, liveNote = false;
+  let camOff = false, liveNote = false;
   const chan = reconnectingChannel({
     label: "Podgląd",
     onSignal,
@@ -1322,11 +1310,10 @@ const viewer = (() => {
   function join() { lastJoin = Date.now(); send(chan.channel, { type: "viewer-join", viewerId }); }
 
   function reset() {
-    stopRec();
     pc?.close(); pc = null; pending = [];
     video.srcObject = null;
     showLive(""); showPlaceholder("Łączenie…"); $("startHere").hidden = true;
-    $("soundBtn").hidden = true; $("watchRecBtn").disabled = true;
+    $("soundBtn").hidden = true;
   }
 
   async function onSignal(sig) {
@@ -1378,7 +1365,7 @@ const viewer = (() => {
         if (st === "connected") {
           brokenSince = 0; showPlaceholder(""); showLive("NA ŻYWO"); setStatus("");
           send(chan.channel, { type: "zoom-get" });
-          $("fullBtn").disabled = false; $("watchRecBtn").disabled = MIME === null;
+          $("fullBtn").disabled = false;
         } else if (st === "failed") { showLive(""); setStatus("Nie udało się zestawić połączenia. Przy sieci komórkowej może być potrzebny serwer TURN."); }
         else if (st === "disconnected") { showLive(""); setStatus("Połączenie przerwane — wznawiam…"); }
       };
@@ -1410,34 +1397,6 @@ const viewer = (() => {
     setTimeout(() => setStatus(""), 4000);
   }
 
-  // Ręczne nagranie na telefonie (niezależne od nagrywania 24/7 na komputerze).
-  function startRec() {
-    const s = video.srcObject;
-    if (!s || MIME === null) return;
-    const r = new MediaRecorder(s, MIME ? { mimeType: MIME } : undefined);
-    const chunks = [], t0 = new Date();
-    r.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-    r.onstop = () => {
-      if (!chunks.length) return;
-      const type = r.mimeType || MIME || "video/webm";
-      const blob = new Blob(chunks, { type }), name = `kamera-telefon-${stamp(t0)}.${extFor(type)}`;
-      const a = $("lastRec"); a.hidden = false; a.href = URL.createObjectURL(blob); a.download = name;
-      a.textContent = `Pobierz nagranie (${(blob.size / 1048576).toFixed(1)} MB)`;
-      download(blob, name);
-    };
-    r.start(1000); rec = r;
-    $("recBadge").hidden = false;
-    recClock = setInterval(() => {
-      const sec = Math.floor((Date.now() - t0) / 1000);
-      $("recTime").textContent = fmtTime(sec); $("watchRecBtn").textContent = `Zatrzymaj nagrywanie (${fmtTime(sec)})`;
-    }, 500);
-    $("watchRecBtn").classList.add("rec-on");
-  }
-  function stopRec() {
-    if (rec && rec.state !== "inactive") rec.stop();
-    rec = null; clearInterval(recClock);
-    $("recBadge").hidden = true; $("watchRecBtn").textContent = "Nagrywaj tutaj"; $("watchRecBtn").classList.remove("rec-on");
-  }
 
   function start() {
     if (active) return;
@@ -1502,7 +1461,7 @@ const viewer = (() => {
     setTimeout(() => setStatus(""), 6000);
   }
 
-  return { start, stop, restart, reloadPc, sendZoom, setMode, setQuality, setMedia, toggleRec() { rec ? stopRec() : startRec(); }, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
+  return { start, stop, restart, reloadPc, sendZoom, setMode, setQuality, setMedia, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
 })();
 
 // Zdarzenie na telefonie: wyskakujące powiadomienie, wibracja, lista ostatnich zdarzeń.
@@ -1594,7 +1553,7 @@ function showSender() {
   $("sendPanel").hidden = false; $("watchPanel").hidden = true; $("viewEventsCard").hidden = true; $("layout").classList.add("sender");
   // Jedna kolumna: kamera, oś czasu, Start/Stop/Restart, sterowanie — ustawienia na dole.
   $("recStatus").after($("modeCard"));
-  dvr ??= mountDvr({ client: localRecClient, drive: null, allowUpload: true, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
+  dvr ??= mountDvr({ client: localRecClient, drive: null, allowUpload: true, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; } });
   $("dvrCard").hidden = false;
   dvr.start();
   $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
@@ -1622,21 +1581,17 @@ function toastMsg(text) {
 let dvr = null;
 function showViewer() {
   $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("viewEventsCard").hidden = false; $("layout").classList.remove("sender");
-  // Na telefonie/podglądzie ustawienia wracają pod obraz, aby nie powstawała pusta prawa kolumna.
-  if ($("picturePanel").parentElement !== $("layout").querySelector(".mainCol")) $("layout").querySelector(".mainCol").appendChild($("picturePanel"));
   $("recStatus").after($("modeCard"));
   // Oś czasu i biblioteka pokazują nagrania zapisane na stronie (nie z Google Drive).
-  dvr ??= mountDvr({ client: recClient, drive: null, allowUpload: !RECEIVER_ONLY, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
+  dvr ??= mountDvr({ client: recClient, drive: null, allowUpload: !RECEIVER_ONLY, root: $("dvrCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; } });
   recClient.onopen = () => dvr.refresh();
   $("dvrCard").hidden = false;
   dvr.start();
   $("roleBtn").textContent = "To jest komputer z kamerą — nadawaj z niego";
   if (RECEIVER_ONLY) {
-    $("picturePanel").hidden = true;
     $("modeCard").hidden = true;
     $("viewEventsCard").hidden = true;
     document.querySelector("#ctrlBar .ctrlBtns").hidden = true;
-    $("watchRecBtn").hidden = true;
     $("roleBtn").hidden = true;
     document.querySelectorAll('a[href="nagrania.html"]').forEach(a => a.hidden = true);
   }
@@ -1666,7 +1621,6 @@ $("copyViewerLink").addEventListener("click", copyReceiverLink);
 function applyPictureLayout() {
   const style = prefs.pictureStyle || "color";
   $("pictureStyle").value = style;
-  $("pano360").checked = !!prefs.pano360;
   $("stage").classList.toggle("visual-mono", style === "mono");
   $("stage").classList.toggle("visual-contrast", style === "contrast");
   $("stage").classList.toggle("visual-night", style === "night");
@@ -1675,14 +1629,8 @@ function applyPictureLayout() {
   $("stage").classList.toggle("visual-negative", style === "negative");
   $("stage").classList.toggle("visual-bright", style === "bright");
   $("stage").classList.toggle("visual-brightsharp", style === "brightsharp");
-  $("stage").classList.toggle("frame-grid", !!prefs.pictureGrid);
-  $("stage").classList.toggle("pano360", !!prefs.pano360);
-  $("gridBtn").textContent = `▦ Siatka kadru: ${prefs.pictureGrid ? "wł." : "wył."}`;
-  $("gridBtn").setAttribute("aria-pressed", prefs.pictureGrid ? "true" : "false");
 }
 $("pictureStyle").addEventListener("change", e => { prefs.pictureStyle = e.target.value; savePrefs(); applyPictureLayout(); toastMsg("Zmieniono efekt podglądu."); });
-$("gridBtn").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictureGrid; savePrefs(); applyPictureLayout(); toastMsg(prefs.pictureGrid ? "Włączono siatkę kadru." : "Wyłączono siatkę kadru."); });
-$("pano360").addEventListener("change", e => { prefs.pano360 = e.target.checked; savePrefs(); applyPictureLayout(); toastMsg(prefs.pano360 ? "Włączono podgląd panoramy 360°. Działa prawidłowo tylko z kamerą 360°." : "Wyłączono podgląd panoramy 360°."); });
 applyPictureLayout();
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
@@ -1769,7 +1717,6 @@ $("reconnectBtn").addEventListener("click", () => {
   viewer.rejoin();
   setTimeout(() => { b.disabled = false; b.textContent = "↻ Połącz ponownie"; }, 2000);
 });
-$("watchRecBtn").addEventListener("click", () => viewer.toggleRec());
 // Pełny ekran: cały kadr (obraz na żywo albo odtwarzane nagranie, z zegarem i przyciskami).
 // iPhone nie pozwala stronie na pełny ekran elementu — tam kadr rozciąga się na cały ekran (z przyciskiem ✕).
 function toggleFullscreen() {
