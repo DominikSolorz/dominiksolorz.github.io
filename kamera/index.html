@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=92">
+<link rel="stylesheet" href="style.css?v=93">
 </head>
 <body>
 <header class="topbar">
@@ -66,20 +66,11 @@
         </div>
       </div>
 
-      <section id="systemPanel" class="card systemPanel" aria-label="Stan systemu monitoringu">
-        <div class="cardHead"><h2>◉ System monitoringu</h2><span id="systemStateBadge" class="systemStateBadge">ŁĄCZENIE</span></div>
-        <div class="systemTiles">
-          <div><span>Teraz oglądasz</span><b id="systemView">Podgląd na żywo</b></div>
-          <div><span>Praca kamery</span><b id="systemMode">Sprawdzam…</b></div>
-          <div><span>Zapis</span><b id="systemArchive">Segmenty co 10 min</b></div>
-        </div>
-        <p id="systemHint" class="muted small">Odtworzenie nagrania nie zatrzymuje kamery ani zapisu 24/7.</p>
-      </section>
       <div id="dvrCard" class="card dvrCard" hidden></div>
-      <section id="diagCard" class="card diagCard" hidden aria-label="Kontrola kamery">
-        <div class="cardHead"><h2>✅ Kontrola kamery</h2><span id="diagTime" class="muted small"></span></div>
+      <details id="diagCard" class="card diagCard fold" hidden>
+        <summary><span id="diagSum">Kontrola kamery</span><span id="diagTime" class="muted small"></span></summary>
         <ul id="diagList" class="diagList"></ul>
-      </section>
+      </details>
       <div id="ctrlBar" class="card ctrlBar">
         <div class="recClock" id="recClock">
           <span class="recDot" id="ctrlDot"></span>
@@ -91,9 +82,17 @@
           <button class="ctrl restart" id="ctrlRestart" type="button">↻ Restart<small>uruchom ponownie</small></button>
         </div>
       </div>
+      <!-- Podgląd -->
+      <div id="watchPanel" class="toolbar" hidden>
+        <button class="tool" id="soundBtn" hidden>🔊 Dźwięk</button>
+        <button class="tool" id="fullBtn">⛶ Pełny ekran</button>
+        <button class="tool" id="fitBtn" type="button">▣ Cały kadr</button>
+        <button class="tool" id="reconnectBtn">↻ Połącz</button>
+        <a class="tool primary" href="nagrania.html">📼 Nagrania</a>
+      </div>
       <div id="recStatus" class="recStatus" hidden></div>
-      <div id="modeCard" class="card modeCard" hidden>
-        <div class="modeHead"><span class="modeTitle">Tryb pracy kamery</span><span class="modeHint">wybierz dokładnie jedno działanie</span></div>
+      <details id="modeCard" class="card modeCard fold" hidden>
+        <summary><span>⚙ Tryb i ustawienia</span><span id="modeNow" class="modeNow"></span></summary>
         <div class="modeRow">
           <button class="tool" data-mode="record">⏺ Na żywo + zapis<small>kamera i pliki co 10 min</small></button>
           <button class="tool" data-mode="once">⏱ Zapis jednorazowy<small id="onceLeft">po czasie wraca do podglądu</small></button>
@@ -101,6 +100,7 @@
           <button class="tool" data-mode="preview">👁 Sam podgląd<small>kamera bez zapisu pliku</small></button>
           <button class="tool" data-mode="off">⏸ Kamera wyłączona<small>bez obrazu i bez zapisu</small></button>
         </div>
+        <div class="setGrid">
         <label class="qualityPick">Czas nagrania jednorazowego
           <select id="onceMin">
             <option value="5">5 minut</option>
@@ -120,49 +120,28 @@
         <label class="qualityPick">Jakość nagrań
           <select id="viewQuality"></select>
         </label>
-        <button class="tool reloadPc" id="reloadPcBtn" type="button">⟳ Odśwież komputer-kamerę (pobierz najnowszą wersję)</button>
-      </div>
+        <label class="qualityPick">Obraz na tym urządzeniu
+          <select id="pictureStyle">
+            <option value="color">Kolor naturalny</option>
+            <option value="bright">Rozjaśnienie nocne</option>
+            <option value="brightsharp">Rozjaśnienie + ostrość</option>
+            <option value="mono">Czarno-biały</option>
+            <option value="contrast">Wysoki kontrast</option>
+          </select>
+        </label>
+        </div>
+        <button class="tool reloadPc" id="reloadPcBtn" type="button">⟳ Odśwież komputer-kamerę (najnowsza wersja)</button>
+      </details>
 
-      <!-- Podgląd -->
-      <div id="watchPanel" class="toolbar" hidden>
-        <button class="tool" id="soundBtn" hidden>🔊 Włącz dźwięk</button>
-        <button class="tool" id="fullBtn">⛶ Pełny ekran</button>
-        <button class="tool" id="fitBtn" type="button">▣ Cały kadr</button>
-        <button class="tool" id="reconnectBtn">↻ Połącz ponownie</button>
-        <button class="tool" id="watchRecBtn" disabled>⏺ Nagrywaj tutaj</button>
-        <a class="tool primary" href="nagrania.html">📼 Nagrania</a>
-        <a id="lastRec" class="tool" hidden>Pobierz nagranie</a>
-      </div>
 
 
       <div id="status" class="status" role="status" aria-live="polite" hidden></div>
 
-      <div id="viewEventsCard" class="card eventsCard">
-        <div class="cardHead"><h2>🔔 Zdarzenia</h2><span class="muted small">ruch i dźwięk (kroki, głosy)</span></div>
+      <details id="viewEventsCard" class="card eventsCard fold">
+        <summary><span>🔔 Zdarzenia</span><span class="muted small">ruch i dźwięk</span></summary>
         <ul id="viewEvents" class="events"></ul>
-      </div>
+      </details>
 
-      <section id="picturePanel" class="card picturePanel" aria-label="Układ obrazu">
-        <div class="cardHead"><h2>◫ Układ obrazu</h2><span class="muted small">podgląd na tym urządzeniu</span></div>
-        <div class="pictureControls">
-          <label>Efekt obrazu
-            <select id="pictureStyle">
-              <option value="color">Kolor naturalny</option>
-              <option value="bright">Rozjaśnienie nocne (lepiej widać w ciemności)</option>
-              <option value="brightsharp">Rozjaśnienie + ostrość</option>
-              <option value="mono">Czarno-biały</option>
-              <option value="contrast">Wysoki kontrast</option>
-              <option value="night">Tryb nocny</option>
-              <option value="cool">Chłodny obraz</option>
-              <option value="warm">Ciepły obraz</option>
-              <option value="negative">Negatyw</option>
-            </select>
-          </label>
-          <button class="tool" id="gridBtn" type="button" aria-pressed="false">▦ Siatka kadru: wył.</button>
-          <label class="check panoToggle"><input type="checkbox" id="pano360"> ◌ Panorama 360°</label>
-        </div>
-        <p class="muted small">Niska jakość 360p zmniejsza rozmiar plików. Panorama 360° działa z kamerą 360°; zwykła kamera nie może stworzyć prawdziwego obrazu dookoła.</p>
-      </section>
     </section>
 
     <!-- Nadajnik (komputer z kamerą) -->
@@ -190,16 +169,6 @@
         <div class="row"><a class="btn ghost" href="kamera-instaluj.bat" download>⬇ Program 24/7 + skrót na pulpicie (Windows)</a></div>
       </div>
 
-      <div class="card fanCard">
-        <div class="cardHead"><h2>🌀 Wentylatory</h2><span class="muted small">tryb pracy procesora (Windows)</span></div>
-        <p class="muted small">Strona nie steruje wentylatorem bezpośrednio — zmienia to Windows. Pobierz plik trybu i uruchom go raz (dwuklik). Kamera i nagrywanie działają dalej bez zmian; tryb możesz zmienić w każdej chwili.</p>
-        <div class="fanRow">
-          <a class="btn fan quiet" href="wentylator-cichy.bat" download>🤫 Cichy<small>procesor max 70%, bez turbo</small></a>
-          <a class="btn fan normal" href="wentylator-normalny.bat" download>🙂 Normalny<small>max 90%, bez turbo</small></a>
-          <a class="btn fan max" href="wentylator-pelna-moc.bat" download>🔥 Pełna moc<small>100% z turbo — głośniej</small></a>
-        </div>
-        <p class="muted small">Ręczne sterowanie obrotami (krzywa temperatury): darmowy program <a href="https://getfancontrol.com/" target="_blank" rel="noopener">FanControl</a>, a w laptopie tryb „Cichy” w programie producenta.</p>
-      </div>
       <div class="card">
         <div class="cardHead"><h2>🔔 Wykrywanie</h2><span class="muted small">ruch i dźwięk</span></div>
         <div class="grid">
@@ -275,6 +244,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=92"></script>
+  <script type="module" src="app.js?v=93"></script>
 </body>
 </html>

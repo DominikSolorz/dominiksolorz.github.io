@@ -60,7 +60,6 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 /* Obraz */
 .stage{position:relative;aspect-ratio:16/9;background:#03060d;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
 .stage video{width:100%;height:100%;object-fit:contain;display:block}
-.stage.frame-grid::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(to right,transparent 33.1%,rgba(255,255,255,.38) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.38) 66.7%,transparent 66.9%),linear-gradient(to bottom,transparent 33.1%,rgba(255,255,255,.38) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.38) 66.7%,transparent 66.9%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
 .stage.visual-mono video{filter:grayscale(1) contrast(1.08)}
 .stage.visual-contrast video{filter:contrast(1.45) saturate(1.15)}
 .stage.visual-night video{filter:brightness(.72) contrast(1.2) saturate(.72) hue-rotate(65deg)}
@@ -175,9 +174,6 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 .dvrLibBox{margin-top:8px}
 .dvrLibBox .libList{padding:0 12px 12px}
 .modeCard{margin-top:10px;padding:10px}
-.picturePanel{margin-top:12px}
-.pictureControls{display:grid;grid-template-columns:minmax(180px,1fr) minmax(150px,.8fr);align-items:end;gap:10px}
-.pictureControls .tool{min-height:42px}
 @media(max-width:600px){.pictureControls{grid-template-columns:1fr}}
 .modeRow{display:flex;gap:8px;flex-wrap:wrap}
 .modeRow .tool.on{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.6);color:#86efac;font-weight:700}
@@ -198,19 +194,17 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 .tool.primary{background:linear-gradient(135deg,#9b5cf6,#6d28d9 58%,#4c1d95);border-color:#a78bfa;box-shadow:0 8px 20px rgba(109,40,217,.24)}
 .status{position:relative;border-color:rgba(63,91,142,.7);background:linear-gradient(90deg,rgba(14,35,64,.92),rgba(11,21,47,.92));padding-left:34px}
 .status::before{content:"";position:absolute;left:14px;top:50%;width:8px;height:8px;transform:translateY(-50%);border-radius:50%;background:#60a5fa;box-shadow:0 0 12px #60a5fa}
-.picturePanel{border-color:rgba(99,102,241,.45);background:linear-gradient(115deg,rgba(29,31,72,.96),rgba(12,24,47,.98))}
-.pictureControls{position:relative;grid-template-columns:minmax(220px,1fr) minmax(190px,.55fr);gap:12px}.picturePanel p{position:relative;margin:10px 0 0;padding-top:9px;border-top:1px solid rgba(110,124,169,.22)}
 .dvrCard{border-color:rgba(124,58,237,.4);background:linear-gradient(145deg,rgba(20,28,61,.98),rgba(11,22,44,.98))}.eventsCard{border-color:rgba(64,151,116,.38)}
-@media(max-width:600px){.pictureControls{grid-template-columns:1fr}.toolbar{display:grid;grid-template-columns:1fr 1fr}.toolbar .tool,.toolbar a{min-height:48px}.card{padding:14px}.dvrJumps{gap:5px}.dvrJumps .tool{padding:8px 9px}}
+@media(max-width:600px){.toolbar{display:grid;grid-template-columns:1fr 1fr}.toolbar .tool,.toolbar a{min-height:48px}.card{padding:14px}.dvrJumps{gap:5px}.dvrJumps .tool{padding:8px 9px}}
 
 /* Pełny układ stanowiska: obraz po lewej, sterowanie po prawej. */
 .layout.sender{grid-template-columns:minmax(0,1fr) minmax(340px,400px);gap:18px}.layout.sender .mainCol{min-width:0}.layout.sender .sideCol{position:sticky;top:76px;max-height:calc(100vh - 92px);overflow:auto;padding-right:3px}
 .layout.sender .sideCol::-webkit-scrollbar{width:7px}.layout.sender .sideCol::-webkit-scrollbar-thumb{background:#34436d;border-radius:999px}
-.layout.sender .stage{min-height:420px}.layout.sender .picturePanel{margin-top:14px}
+.layout.sender .stage{min-height:420px}
 @media(max-width:1000px){.layout.sender{grid-template-columns:1fr}.layout.sender .sideCol{position:static;max-height:none;overflow:visible}.layout.sender .stage{min-height:0}}
 
 /* Uporządkowany ekran roboczy: jeden obraz po lewej, jedna konsola po prawej. */
-main{max-width:1540px;padding:18px 22px 44px}.mainCol{display:grid;gap:14px;align-content:start}.layout.sender{grid-template-columns:minmax(620px,1fr) 390px;align-items:start;gap:20px}.layout.sender .sideCol{gap:14px;padding:2px 4px 8px 0}.layout.sender .sideCol .picturePanel{order:-1;margin:0}.layout.sender .sideCol .picturePanel .cardHead{margin-bottom:8px}.layout.sender .sideCol .picturePanel p{display:none}.layout.sender #recStatus{margin:0}.layout.sender .stage{min-height:0;aspect-ratio:16/9}.layout.sender .toolbar{margin-top:0}.layout.sender .dvrCard,.layout.sender .eventsCard{display:none}.monitorClock{top:14px;right:14px;min-width:178px;padding:10px 13px;border-color:rgba(196,181,253,.9);background:rgba(4,10,28,.9)}.monitorClock span{font-size:11px}.monitorClock strong{font-size:21px}@media(max-width:1100px){main{padding:14px 14px 36px}.layout.sender{grid-template-columns:minmax(0,1fr) 350px;gap:14px}}@media(max-width:900px){.layout.sender{grid-template-columns:1fr}.layout.sender .sideCol{position:static;max-height:none;overflow:visible}.layout.sender .sideCol .picturePanel{order:initial}.layout.sender .dvrCard,.layout.sender .eventsCard{display:block}}
+main{max-width:1540px;padding:18px 22px 44px}.mainCol{display:grid;gap:14px;align-content:start}.layout.sender{grid-template-columns:minmax(620px,1fr) 390px;align-items:start;gap:20px}.layout.sender .sideCol{gap:14px;padding:2px 4px 8px 0}.layout.sender #recStatus{margin:0}.layout.sender .stage{min-height:0;aspect-ratio:16/9}.layout.sender .toolbar{margin-top:0}.layout.sender .dvrCard,.layout.sender .eventsCard{display:none}.monitorClock{top:14px;right:14px;min-width:178px;padding:10px 13px;border-color:rgba(196,181,253,.9);background:rgba(4,10,28,.9)}.monitorClock span{font-size:11px}.monitorClock strong{font-size:21px}@media(max-width:1100px){main{padding:14px 14px 36px}.layout.sender{grid-template-columns:minmax(0,1fr) 350px;gap:14px}}@media(max-width:900px){.layout.sender{grid-template-columns:1fr}.layout.sender .sideCol{position:static;max-height:none;overflow:visible}.layout.sender .dvrCard,.layout.sender .eventsCard{display:block}}
 @media(max-width:600px){.monitorClock{top:48px;right:8px;min-width:192px;padding:7px 9px}.monitorClock strong{font-size:17px}.monitorClock span{font-size:9px}.monitorClock .evidenceLabel{font-size:8px}.monitorClock .evidenceZone{font-size:8px}.badge{top:9px;left:9px}.badge.rec{right:9px;left:auto;top:9px}}
 
 /* ===================== WYGLĄD „EPIC” — warstwa końcowa ===================== */
@@ -307,7 +301,6 @@ main,.topbar{position:relative;z-index:1}
 @media(min-width:700px){.modeRow{grid-template-columns:repeat(4,1fr)}}
 .layout.sender .sideCol .modeRow{grid-template-columns:repeat(2,1fr)}
 .layout.sender .sideCol .modeCard{order:-2}
-.pictureControls{grid-template-columns:minmax(0,1fr) minmax(0,auto)!important}.pictureControls .tool{white-space:nowrap;min-width:0}
 
 /* ===================== UKŁAD JEDNOKOLUMNOWY (v70) ===================== */
 main{max-width:1180px}
@@ -369,28 +362,13 @@ body.cameraPc::before{display:none}
 body.cameraPc .card,body.cameraPc .stage,body.cameraPc .ctrl,body.cameraPc .tool{box-shadow:none!important}
 body.cameraPc{background:#05070f!important}
 .reloadPc{width:100%;margin-top:12px;font-size:13px}
-.fanRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
-.btn.fan{flex-direction:column;justify-content:center;text-align:center;gap:2px;font-weight:800;min-height:62px;color:#fff}
-.btn.fan small{font-size:10px;font-weight:600;opacity:.85}
-.btn.fan.quiet{background:linear-gradient(160deg,#0e7490,#164e63);border-color:rgba(103,232,249,.55)}
-.btn.fan.normal{background:linear-gradient(160deg,#4338ca,#1e1b4b);border-color:rgba(165,180,252,.55)}
-.btn.fan.max{background:linear-gradient(160deg,#c2410c,#7c2d12);border-color:rgba(253,186,116,.55)}
 .stage.zoomable:not(.zoomed){touch-action:pan-y}
 /* Poprawa obrazu przy oglądaniu (na żywo i nagrań) — oryginalne pliki bez zmian */
 .stage.visual-bright video{filter:brightness(1.55) contrast(1.15) saturate(1.05)}
 .stage.visual-brightsharp video{filter:brightness(1.5) contrast(1.35) saturate(1.1)}
 
 /* Czytelny podział: co oglądam teraz, co robi kamera i czy plik jest zapisywany. */
-.systemPanel{padding:14px 16px;border-color:rgba(103,232,249,.24);background:linear-gradient(135deg,rgba(8,47,73,.38),rgba(15,23,42,.8))}
-.systemTiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
-.systemTiles>div{padding:10px 11px;border-radius:12px;background:rgba(2,6,23,.45);border:1px solid rgba(148,163,184,.18)}
-.systemTiles span{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}.systemTiles b{display:block;font-size:13px;line-height:1.2}
-.systemStateBadge{padding:5px 8px;border-radius:999px;background:rgba(71,85,105,.5);font-size:10px;font-weight:900;letter-spacing:.08em}
-.systemStateBadge[data-state="record"]{background:rgba(127,29,29,.85);color:#fecaca}.systemStateBadge[data-state="archive"]{background:rgba(30,64,175,.8);color:#dbeafe}.systemStateBadge[data-state="preview"]{background:rgba(8,145,178,.72);color:#cffafe}.systemStateBadge[data-state="off"]{background:rgba(71,85,105,.7);color:#e2e8f0}
-.panoToggle{align-self:center;min-height:42px;padding:0 10px;border:1px solid rgba(148,163,184,.22);border-radius:11px;background:rgba(15,23,42,.45);font-weight:800;font-size:13px}
-.stage.pano360 video{object-fit:cover;transform:scale(1.08);filter:saturate(1.08) contrast(1.06)}
-.stage.pano360::after{content:"PANORAMA 360° · wymaga kamery 360";position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:5;padding:5px 9px;border-radius:999px;background:rgba(2,6,23,.78);border:1px solid rgba(125,211,252,.5);color:#e0f2fe;font-size:10px;font-weight:900;letter-spacing:.06em;pointer-events:none}
-@media(max-width:600px){.systemTiles{grid-template-columns:1fr}.systemTiles>div{display:flex;justify-content:space-between;align-items:center;gap:10px}.systemTiles span{margin:0}.stage.pano360::after{bottom:8px;font-size:9px;white-space:nowrap}}
+
 .diagList{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}
 .diagList li{padding:8px 11px;border-radius:10px;font-size:13px;line-height:1.35;background:rgba(2,6,23,.45);border:1px solid rgba(148,163,184,.18)}
 .diagList li.ok{border-color:rgba(34,197,94,.35)}
@@ -407,3 +385,30 @@ body.noScroll .topbar{display:none!important}
 .stage.fit-cover video{object-fit:cover!important}
 .stage.fit-fill video{object-fit:fill!important}
 .fitFull{position:absolute;top:calc(env(safe-area-inset-top,0px) + 40px);right:66px;z-index:20;height:44px;padding:0 14px;border-radius:22px;border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.6);color:#fff;font-size:13px;font-weight:800;cursor:pointer}
+
+/* v93 — porządek: zwijane sekcje, równy pasek narzędzi */
+.fold{padding:0;overflow:hidden}
+.fold>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;cursor:pointer;font-weight:800;font-size:14px;user-select:none}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::after{content:"▾";margin-left:6px;opacity:.6;transition:transform .2s}
+.fold[open]>summary::after{transform:rotate(180deg)}
+.fold>summary>span:first-child{flex:1;min-width:0}
+.fold>:not(summary){margin-left:14px;margin-right:14px}
+.fold[open]{padding-bottom:14px}
+.diagCard.warn{border-color:rgba(239,68,68,.55)}
+.diagCard.warn>summary{color:#fecaca}
+.modeNow{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;background:rgba(71,85,105,.5);white-space:nowrap}
+.modeNow[data-mode="record"],.modeNow[data-mode="once"]{background:rgba(127,29,29,.85);color:#fecaca}
+.modeNow[data-mode="rec-only"]{background:rgba(120,53,15,.8);color:#fde68a}
+.modeNow[data-mode="preview"]{background:rgba(8,145,178,.7);color:#cffafe}
+.setGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+.setGrid .qualityPick{display:flex;flex-direction:column;gap:6px}
+.toolbar{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.toolbar .tool{min-height:46px;padding:10px 8px;font-weight:700;white-space:nowrap}
+.toolbar .tool[hidden]{display:none}
+.mainCol>.card,.mainCol>.toolbar,.mainCol>.recStatus{margin-top:0}
+@media(max-width:600px){.setGrid{grid-template-columns:1fr}.toolbar{grid-template-columns:repeat(2,1fr)}.toolbar .tool.primary{grid-column:1/-1}}
+.modeNow:empty{display:none}
+.fold .reloadPc{width:auto;display:flex}
+@media(max-width:600px){.toolbar{grid-template-columns:repeat(auto-fit,minmax(96px,1fr))}.toolbar .tool{font-size:13px}}
+@media(max-width:600px){.dvrTicks span:nth-child(even):not(:last-child){display:none}}
