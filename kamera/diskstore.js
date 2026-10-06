@@ -37,12 +37,34 @@ export async function save(name, blob) {
   const file = handles.get(name) || await h.getFileHandle(name, { create: true });
   const out = await file.createWritable();
   await out.write(blob); await out.close();
+  handles.set(name, file);
   return true;
 }
 export async function load(name) {
   const h = await get("folder");
   if (!(await usable(h))) return null;
   try { return await (handles.get(name) || await h.getFileHandle(name)).getFile(); } catch { return null; }
+}
+
+// Usuwa wyłącznie plik nagrania wskazany przez system kamery. Wywoływane dopiero
+// po potwierdzonym zapisie tego samego pliku na Google Drive; nigdy nie czyści
+// całego folderu ani cudzych dokumentów.
+export async function remove(name) {
+  if (!REC_RE.test(name || "")) throw new Error("odmowa usunięcia pliku spoza archiwum kamery");
+  const h = await get("folder");
+  if (!(await usable(h))) return false;
+  try {
+    const entry = handles.get(name);
+    // Nagrania utworzone przez aktualny zapis są w katalogu głównym. Dla plików
+    // odnalezionych w podfolderach nie zgadujemy ścieżki i niczego nie kasujemy.
+    if (!entry) return false;
+    await h.removeEntry(name);
+    handles.delete(name);
+    return true;
+  } catch {
+    // Po ręcznej zmianie lub pliku z podfolderu kopia zostaje lokalnie.
+    return false;
+  }
 }
 
 // Nagrania kamery: „kamera-RRRR-MM-DD_GG-MM-SS.mp4”, także z telefonu („kamera-telefon-…”) i kopie („… (1).mp4”).

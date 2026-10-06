@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "95"; // musi się zgadzać z version.json
+const VERSION = "96"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -103,6 +103,10 @@ if (!prefs.mode85) { prefs.mode = "record"; prefs.recordPlan = "always"; prefs.r
 // Jednorazowo (życzenie właściciela): nagrywanie bez przerwy — dzień i noc, bez harmonogramu i bez trybu „tylko podgląd”.
 // Później tryb można dowolnie zmieniać z telefonu.
 if (!prefs.rec247) { prefs.mode = "record"; prefs.recordPlan = "always"; prefs.recordUntil = 0; prefs.rec247 = true; savePrefs(); }
+// Komputer jest tylko buforem: każdy nowy, kompletny plik trafia automatycznie
+// na Google Drive, a jego lokalna kopia znika wyłącznie po potwierdzeniu wysyłki.
+// Starszych nagrań nie dodajemy automatycznie do kolejki.
+if (!prefs.driveAuto1) { prefs.driveAuto = true; prefs.driveAuto1 = true; savePrefs(); }
 
 
 // ---------- UI pomocnicze ----------
@@ -263,7 +267,8 @@ const cloud = (() => {
 
 // ---------- Nagrywanie ciągłe 24/7 → trwałe pliki na dysku komputera-kamery ----------
 // Każdy 10-minutowy plik najpierw trafia do wybranego folderu na dysku. IndexedDB jest tylko podręczną
-// kopią do szybkiego odtwarzania na telefonie przez WebRTC. Na Google Drive NIC nie idzie samo — tylko po kliknięciu.
+// kopią do szybkiego odtwarzania na telefonie przez WebRTC. Nowe pliki są
+// automatycznie przenoszone do prywatnego Google Drive po potwierdzonym zapisie.
 // Obraz w pełnej rozdzielczości kamery: 5 kl./s gdy spokojnie, 30 kl./s przy ruchu/dźwięku (+10 s po ustaniu).
 const REC_MIME = (() => {
   if (typeof MediaRecorder === "undefined") return null;
@@ -322,8 +327,8 @@ const archive = (() => {
     setTimeout(repairOld, 60000);
     persisted = !!(await recstore.persist());
     try { disk = { ...disk, ...(await diskstore.status()) }; } catch (e) { disk.error = errText(e); }
-    // Jednorazowo: automatyczna kolejka z poprzednich wersji znika — nic nie idzie na Drive bez kliknięcia.
-    // Stare pliki czekające w kolejce trafiają na stronę (do biblioteki nagrań), skąd można je wysłać ręcznie.
+    // Stara kolejka z ręcznego przesyłania nie może niejawnie wysłać archiwalnych
+    // plików. Automatycznie dodawane są tylko nowe fragmenty po tej aktualizacji.
     if (!prefs.siteOnly) {
       try {
         for (const k of await idb.qKeys()) {
@@ -344,8 +349,8 @@ const archive = (() => {
     init.timer = setInterval(refreshLocal, 60000);
   }
 
-  // Wysyła na Google Drive kolejkę: pliki ze zdarzeniami, pliki wysłane ręcznie i stare oczekujące nagrania.
-  // Element kolejki: { blob } (stare) albo { ref: nazwa } (plik z pamięci nagrań).
+  // Wysyła na Google Drive kolejkę. Element może wskazywać plik w IndexedDB
+  // (ref), w tymczasowym folderze Pulpitu (diskRef), albo zawierać starą kopię blob.
   async function pump() {
     if (!cloud.enabled || pumping) return;
     pumping = true; clearTimeout(retryTimer);
@@ -361,7 +366,7 @@ const archive = (() => {
         for (const k of keys) {
           if (skip.has(k)) continue;
           const it = await idb.qGet(k);
-          const b = it?.blob || (it?.ref ? await recstore.blob(it.ref) : null);
+          const b = it?.blob || (it?.ref ? await recstore.blob(it.ref) : null) || (it?.diskRef ? await diskstore.load(it.diskRef) : null);
           if (!b) { await idb.qDel(k); continue; } // nagranie zniknęło w pętli zapisu
           if (!cloud.big && b.size > MAX_UPLOAD) { skip.add(k); oversize.add(k); continue; }
           if (!data || b.size < data.size) { key = k; item = it; data = b; }
@@ -369,9 +374,17 @@ const archive = (() => {
         if (!key) break;
         try {
           await cloud.upload(data, key, item.events || []);
-          if (item.ref) await recstore.update(item.ref, { uploaded: true }).catch(() => {}); // zostaje też na stronie
+          if (item.cleanupLocal) {
+            // Punkt bezpieczeństwa: lokalny plik wolno usunąć tylko po sukcesie
+            // uploadu; odpowiedź "duplicate" też potwierdza istniejący plik Drive.
+            if (item.ref) await recstore.remove(item.ref).catch(() => {});
+            if (item.diskRef) await diskstore.remove(item.diskRef).catch(() => {});
+          } else if (item.ref) await recstore.update(item.ref, { uploaded: true }).catch(() => {});
           await idb.qDel(key);
           sentToDrive++; lastError = "";
+          // Retencja działa tylko w wyznaczonym folderze nagrań Drive. Błąd
+          // sprzątania nie wpływa na bezpiecznie wysłany bieżący fragment.
+          cloud.call("cleanup", { days: prefs.retentionDays }).catch(() => {});
         } catch (e) { failed(key, e); }
       }
     } catch (e) {
@@ -388,7 +401,7 @@ const archive = (() => {
     const diskFile = !m ? await diskstore.load(name) : null;
     if (!m && !diskFile) throw new Error("tego nagrania nie ma już na komputerze");
     if (m?.uploaded) return { uploaded: true };
-    await idb.qPut(name, m ? { ref: name, events: m.events || [] } : { blob: diskFile, events: [] });
+    await idb.qPut(name, m ? { ref: name, events: m.events || [] } : { diskRef: name, events: [] });
     pump();
     return { queued: true };
   }
@@ -413,7 +426,14 @@ const archive = (() => {
         saved++; lastName = name; lastError = "";
       } catch (e) { lastError = `Nie udało się zapisać ${name}: ${errText(e)}`; }
     }
-    // Na Google Drive tylko po kliknięciu „☁️ Prześlij do Google Drive” (requestUpload).
+    // Kolejka powstaje dopiero po pełnym lokalnym zapisie. Gdy nie ma internetu,
+    // plik pozostaje na Pulpicie i wysyłka zostanie ponowiona automatycznie.
+    if (prefs.driveAuto && cloud.enabled && (savedToDisk || await recstore.meta(name))) {
+      await idb.qPut(name, savedToDisk
+        ? { diskRef: name, events: events || [], cleanupLocal: true }
+        : { ref: name, events: events || [], cleanupLocal: true });
+      queued++;
+    }
     refreshLocal();
     pump();
   }
@@ -551,13 +571,15 @@ const archive = (() => {
     if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; plików na dysku: ${diskFiles.count} (${gb(diskFiles.bytes)}).`;
     else if (disk.selected) text += ` ⚠ Folder „${disk.name}” czeka na ponowną zgodę Chrome (po odświeżeniu strony) — na komputerze kliknij „Przywróć dostęp do folderu”. Pliki w folderze są bezpieczne; do tego czasu nagrania zapisują się w pamięci strony.`;
     else text += " Nagrania zapisują się w pamięci strony (folder archiwum nie jest ustawiony).";
-    text += " Na Google Drive tylko po kliknięciu.";
+    text += prefs.driveAuto
+      ? " Nowe pliki: Pulpit → Google Drive → strona. Lokalna kopia znika dopiero po potwierdzeniu Drive."
+      : " Na Google Drive tylko po kliknięciu.";
     if (local.count) text += ` W pamięci strony: ${local.count} nagrań (${gb(local.bytes)}).`;
     if (Number.isFinite(free)) text += ` Wolne miejsce dla strony: ${gb(free)}${free < 2 * 1073741824 ? " ⚠ mało miejsca — najstarsze nagrania w pamięci strony są kasowane, żeby nagrywanie nie stanęło" : ""}.${persisted ? "" : " Pamięć nietrwała."}`;
     const set = source?.getVideoTracks()[0]?.getSettings?.() || {};
     if (set.width) text += ` Obraz: ${set.width}×${set.height}, ${fast ? FAST_FPS : SLOW_FPS} kl./s${fast && adaptive() ? " (ruch)" : ""}, ${(REC_MIME || "").split(";")[0] || "domyślny kodek"}, jakość ${recQuality().short}.`;
     if (cloud.enabled) {
-      if (queued) text += ` Wysyłam na Google Drive (na Twoje życzenie): ${queued}.`;
+      if (queued) text += ` Kolejka Google Drive: ${queued}.`;
       if (sentToDrive) text += ` Wysłano: ${sentToDrive}.`;
       if (oversize.size) text += ` Za duże na starą wersję skryptu: ${oversize.size}.`;
       const now = cloud.sending();
@@ -1562,7 +1584,7 @@ function showSender() {
   document.body.classList.add("cameraPc"); // bez animacji i rozmyć — mniej pracy dla procesora i karty graficznej
   $("sendPanel").hidden = false; $("watchPanel").hidden = true; $("viewEventsCard").hidden = true; $("layout").classList.add("sender");
   // Jedna kolumna: kamera, oś czasu, Start/Stop/Restart, sterowanie — ustawienia na dole.
-  dvr ??= mountDvr({ client: localRecClient, drive: null, allowUpload: true, root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
+  dvr ??= mountDvr({ client: localRecClient, drive: cloud.enabled ? { day: archive.listDay } : null, allowUpload: true, root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
   $("dvrCard").hidden = false;
   dvr.start();
   $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
@@ -1591,7 +1613,7 @@ let dvr = null;
 function showViewer() {
   $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("viewEventsCard").hidden = false; $("layout").classList.remove("sender");
   // Oś czasu i biblioteka pokazują nagrania zapisane na stronie (nie z Google Drive).
-  dvr ??= mountDvr({ client: recClient, drive: null, allowUpload: !RECEIVER_ONLY, root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
+  dvr ??= mountDvr({ client: recClient, drive: !RECEIVER_ONLY && cloud.enabled ? { day: archive.listDay } : null, allowUpload: !RECEIVER_ONLY, root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
   recClient.onopen = () => dvr.refresh();
   $("dvrCard").hidden = false;
   dvr.start();
