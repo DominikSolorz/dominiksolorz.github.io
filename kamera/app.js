@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "99"; // musi się zgadzać z version.json
+const VERSION = "100"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1602,7 +1602,9 @@ function showSender() {
   document.body.classList.add("cameraPc"); // bez animacji i rozmyć — mniej pracy dla procesora i karty graficznej
   $("sendPanel").hidden = false; $("watchPanel").hidden = true; $("viewEventsCard").hidden = true; $("layout").classList.add("sender");
   // Jedna kolumna: kamera, oś czasu, Start/Stop/Restart, sterowanie — ustawienia na dole.
-  dvr ??= mountDvr({ client: localRecClient, drive: cloud.enabled ? { day: archive.listDay } : null, allowUpload: true, root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
+  // Nowe pliki wysyłają się same i mają kolejkę ponawiania, więc ręczny przycisk
+  // uploadu nie jest potrzebny ani nie może tworzyć mylącego drugiego obiegu.
+  dvr ??= mountDvr({ client: localRecClient, drive: cloud.enabled ? { day: archive.listDay } : null, allowUpload: false, root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
   $("dvrCard").hidden = false;
   dvr.start();
   $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
@@ -1631,7 +1633,7 @@ let dvr = null;
 function showViewer() {
   $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("viewEventsCard").hidden = false; $("layout").classList.remove("sender");
   // Oś czasu i biblioteka pokazują nagrania zapisane na stronie (nie z Google Drive).
-  dvr ??= mountDvr({ client: recClient, drive: !RECEIVER_ONLY && cloud.enabled ? { day: archive.listDay } : null, allowUpload: !RECEIVER_ONLY, root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
+  dvr ??= mountDvr({ client: recClient, drive: !RECEIVER_ONLY && cloud.enabled ? { day: archive.listDay } : null, allowUpload: false, root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
   recClient.onopen = () => dvr.refresh();
   $("dvrCard").hidden = false;
   dvr.start();
