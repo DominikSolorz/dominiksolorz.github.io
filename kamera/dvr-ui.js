@@ -26,6 +26,37 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
 
   let day = dayKey(new Date()), files = [], now = Date.now(), zoom = "day", cursor = null, playing = null, refreshTimer = null;
   const cache = new Map(); // nazwa → Blob (ostatnie 3 pliki)
+  let archiveModal = null, restoreStage = null, restoreDvr = null, restoreList = null;
+
+  // Prawy klik na obrazie otwiera pełne archiwum. To te same działające elementy,
+  // więc w oknie jest prawdziwy obraz kamery/odtwarzacz i prawdziwy pasek doby.
+  function openArchive() {
+    if (archiveModal) return;
+    restoreStage = document.createComment("kamera-stage");
+    restoreDvr = document.createComment("kamera-dvr");
+    stage.before(restoreStage); root.before(restoreDvr);
+    if (listRoot) { restoreList = document.createComment("kamera-dvr-list"); listRoot.before(restoreList); }
+    const closeBtn = el("button", { className: "archiveClose", type: "button", textContent: "× Zamknij archiwum", onclick: () => closeArchive() });
+    const hint = el("p", { className: "archiveHint", textContent: "Przeciągnij wskaźnik po osi doby. Niebieskie odcinki to dostępne nagrania; ● NA ŻYWO wraca do bieżącej kamery." });
+    const body = el("div", { className: "archiveModalBody" });
+    body.append(stage, root);
+    if (listRoot) body.append(listRoot);
+    archiveModal = el("section", { className: "archiveModal", role: "dialog", ariaModal: "true", ariaLabel: "Archiwum nagrań kamery" },
+      el("header", { className: "archiveModalHead" }, el("div", {}, el("h2", { textContent: "Sprawdź nagrania" }), hint), closeBtn), body);
+    document.body.append(archiveModal); document.body.classList.add("archiveOpen"); closeBtn.focus(); refresh();
+  }
+  function closeArchive() {
+    if (!archiveModal) return;
+    restoreStage.replaceWith(stage); restoreDvr.replaceWith(root);
+    if (listRoot && restoreList) restoreList.replaceWith(listRoot);
+    archiveModal.remove(); archiveModal = null; restoreStage = restoreDvr = restoreList = null;
+    document.body.classList.remove("archiveOpen");
+  }
+  stage.addEventListener("contextmenu", e => {
+    if (e.target.closest("#zoomBar, #startHere")) return;
+    e.preventDefault(); openArchive();
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && archiveModal) closeArchive(); });
 
   // ----- układ -----
   const dateInput = el("input", { type: "date", className: "dvrDate", value: day, onchange: () => setDay(dateInput.value) });
@@ -271,5 +302,5 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
   function start() { clearInterval(refreshTimer); refresh(); refreshTimer = setInterval(() => { now = Date.now(); refresh(); }, 60000); }
   function stop() { clearInterval(refreshTimer); goLive(); }
   draw();
-  return { start, stop, refresh, goLive };
+  return { start, stop, refresh, goLive, openArchive, closeArchive };
 }

@@ -562,3 +562,14 @@ svg .fill{fill:currentColor;stroke:none}
   .dvrLive{justify-content:center;gap:5px}
   .dvrFoot{gap:8px}.dvrLegend{flex-basis:100%;font-size:12px}
 }
+
+/* Archiwum nad bieżącym ekranem: otwierane prawym kliknięciem w obraz kamery. */
+body.archiveOpen{overflow:hidden}
+.archiveModal{position:fixed;z-index:1000;inset:0;display:grid;place-items:center;padding:20px;background:rgba(2,6,18,.88);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+.archiveModal>*{width:min(1480px,100%)}
+.archiveModalHead{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:13px 16px;border:1px solid rgba(96,165,250,.4);border-bottom:0;border-radius:18px 18px 0 0;background:linear-gradient(110deg,#12224a,#0b142c)}
+.archiveModalHead h2{margin:0;font-size:20px}.archiveHint{margin:4px 0 0;color:#aebbd4;font-size:12px}.archiveClose{border:1px solid rgba(191,219,254,.5);border-radius:10px;padding:9px 12px;background:#162852;color:#fff;font:700 13px inherit;white-space:nowrap;cursor:pointer}.archiveClose:hover{background:#224078}
+.archiveModalBody{display:grid;grid-template-columns:minmax(0,1fr) 310px;grid-template-areas:"camera list" "dvr list";gap:14px;align-items:start;max-height:calc(100vh - 118px);overflow:auto;padding:14px;border:1px solid rgba(96,165,250,.4);border-radius:0 0 18px 18px;background:#071126}
+.archiveModalBody>.stage{grid-area:camera;margin:0;min-height:0;aspect-ratio:16/9;background:#02050c}.archiveModalBody>#dvrCard{grid-area:dvr;margin:0;display:block!important}.archiveModalBody>#dvrListCard{grid-area:list;margin:0;display:block!important;max-height:100%;overflow:auto}.archiveModalBody>.stage video{background:#02050c}
+.archiveModal .dvrBar{cursor:ew-resize}.archiveModal .dvrInfo{margin-bottom:0}
+@media(max-width:850px){.archiveModal{padding:8px}.archiveModalHead{align-items:flex-start;border-radius:13px 13px 0 0}.archiveModalHead h2{font-size:17px}.archiveHint{font-size:11px}.archiveClose{padding:8px;font-size:12px}.archiveModalBody{grid-template-columns:1fr;grid-template-areas:"camera" "dvr" "list";max-height:calc(100vh - 105px);padding:9px;border-radius:0 0 13px 13px}.archiveModalBody>#dvrListCard{max-height:none}.archiveModal .dvrCtrls{gap:5px}.archiveModal .dvrBtn{padding:7px 8px;font-size:12px}}
