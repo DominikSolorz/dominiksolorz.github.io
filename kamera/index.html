@@ -159,7 +159,7 @@
         <div class="opsGrid" aria-label="Stan systemu monitoringu">
           <div class="opsTile"><span>● Transmisja</span><b id="opLive">Uruchamianie</b></div>
           <div class="opsTile"><span>◉ Archiwum</span><b id="opArchive">Sprawdzam dysk</b></div>
-          <div class="opsTile"><span>☁ Chmura</span><b>Ręcznie na Google Drive</b></div>
+          <div class="opsTile"><span>☁ Chmura</span><b>Automatycznie: Google Drive</b></div>
         </div>
         <div class="grid one">
           <label>Kamera
@@ -222,7 +222,7 @@
             </select>
           </label>
         </div>
-        <p class="muted small">Nagrania są trwale zapisywane w wybranym folderze tego komputera. Jakość nagrań nie wpływa na obraz na żywo. Wybrany plik możesz później wysłać do Google Drive z widoku Nagrania.</p>
+        <p class="muted small">Każdy nowy plik trafia najpierw do wybranego folderu, potem automatycznie do Google Drive i pojawia się na stronie. Lokalna kopia znika dopiero po potwierdzeniu wysyłki; przy braku internetu zostaje i ponawia wysłanie.</p>
       </div>
 
       <div class="card">
@@ -250,6 +250,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=95"></script>
+  <script type="module" src="app.js?v=96"></script>
 </body>
 </html>
