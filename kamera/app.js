@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "97"; // musi się zgadzać z version.json
+const VERSION = "98"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -107,6 +107,10 @@ if (!prefs.rec247) { prefs.mode = "record"; prefs.recordPlan = "always"; prefs.r
 // na Google Drive, a jego lokalna kopia znika wyłącznie po potwierdzeniu wysyłki.
 // Starszych nagrań nie dodajemy automatycznie do kolejki.
 if (!prefs.driveAuto1) { prefs.driveAuto = true; prefs.driveAuto1 = true; savePrefs(); }
+// Właściciel wybrał krótkie, automatyczne fragmenty. Naprawia starsze profile,
+// w których pozostało 30 minut z poprzednich ustawień; później wybór w panelu
+// nadal może świadomie zmienić długość kolejnego segmentu.
+if (!prefs.autoSegment10) { prefs.segmentMin = 10; prefs.autoSegment10 = true; savePrefs(); }
 
 
 // ---------- UI pomocnicze ----------
