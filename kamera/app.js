@@ -21,7 +21,7 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "100"; // musi się zgadzać z version.json
+const VERSION = "101"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1637,7 +1637,10 @@ function showViewer() {
   recClient.onopen = () => dvr.refresh();
   $("dvrCard").hidden = false;
   dvr.start();
+  // Telefon właściciela to zawsze panel oglądania i sterowania. Nie może przez
+  // przypadek zmienić się w drugi nadajnik i odebrać kamery komputerowi 24/7.
   $("roleBtn").textContent = "To jest komputer z kamerą — nadawaj z niego";
+  $("roleBtn").hidden = !IS_DESKTOP;
   if (RECEIVER_ONLY) {
     $("modeCard").hidden = true;
     ["ownerQuality", "ownerMedia", "ownerOnce", "reloadPcBtn"].forEach(id => { $(id).hidden = true; });
@@ -1824,8 +1827,14 @@ $("stage").addEventListener("dblclick", e => { if (!e.target.closest("button, a,
 $("soundBtn").addEventListener("click", () => { video.muted = !video.muted; video.volume = 1; $("soundBtn").textContent = video.muted ? "🔊 Włącz dźwięk" : "🔇 Wycisz"; });
 
 // ---------- Start: PIN, potem od razu podgląd (albo nadawanie na komputerze-kamerze) ----------
-// Adres dominiksolorz.github.io/#nadaj ustawia to urządzenie jako kamerę (bez klikania na stronie).
-if (location.hash === "#nadaj") { prefs.role = "send"; savePrefs(); history.replaceState(null, "", location.pathname); }
+// Tylko komputer może być nadajnikiem. Telefon właściciela ma pozostać panelem
+// oglądania i zdalnego sterowania, nawet jeśli wcześniej przypadkiem zapamiętał
+// rolę "send" albo dostał adres z #nadaj.
+if (location.hash === "#nadaj" && IS_DESKTOP) { prefs.role = "send"; savePrefs(); history.replaceState(null, "", location.pathname); }
+else if (!IS_DESKTOP && !RECEIVER_ONLY) {
+  if (prefs.role === "send") { prefs.role = "watch"; savePrefs(); }
+  if (location.hash === "#nadaj") history.replaceState(null, "", location.pathname);
+}
 window.__kameraReady = true;
 $("bootError").hidden = true;
 if (RECEIVER_ONLY) {
