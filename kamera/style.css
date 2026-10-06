@@ -412,3 +412,153 @@ body.noScroll .topbar{display:none!important}
 .fold .reloadPc{width:auto;display:flex}
 @media(max-width:600px){.toolbar{grid-template-columns:repeat(auto-fit,minmax(96px,1fr))}.toolbar .tool{font-size:13px}}
 @media(max-width:600px){.dvrTicks span:nth-child(even):not(:last-child){display:none}}
+
+/* v94 — układ jak w projekcie: sterowanie | obraz | system, pod spodem DVR | lista nagrań */
+.stage.frame-grid::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(to right,transparent 33.1%,rgba(255,255,255,.38) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.38) 66.7%,transparent 66.9%),linear-gradient(to bottom,transparent 33.1%,rgba(255,255,255,.38) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.38) 66.7%,transparent 66.9%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.stage.pano360 video{object-fit:cover;transform:scale(1.08);filter:saturate(1.08) contrast(1.06)}
+.stage.pano360::after{content:"PANORAMA 360° · wymaga kamery 360";position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:5;padding:5px 9px;border-radius:999px;background:rgba(2,6,23,.78);border:1px solid rgba(125,211,252,.5);color:#e0f2fe;font-size:10px;font-weight:900;letter-spacing:.06em;pointer-events:none}
+:root{--panel:linear-gradient(180deg,rgba(15,24,46,.96),rgba(9,16,33,.96));--panelLine:rgba(99,125,190,.22);--blue:#3b82f6;--blue2:#60a5fa}
+main{max-width:1680px}
+.layout.sender{grid-template-columns:1fr!important}
+.panel{background:var(--panel)!important;border:1px solid var(--panelLine)!important;border-radius:16px!important;padding:18px!important;box-shadow:0 12px 30px rgba(0,0,0,.28)!important}
+.panelHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
+.panelHead h2{margin:0;font-size:19px;font-weight:800;letter-spacing:.01em}
+.panelHead p{margin:4px 0 0;color:var(--muted);font-size:13px}
+svg{width:26px;height:26px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+svg .fill{fill:currentColor;stroke:none}
+
+/* Sterowanie kamerą */
+.modeList{display:grid;gap:10px}
+.modeBtn{display:flex;align-items:center;gap:16px;width:100%;text-align:left;padding:14px 16px;border-radius:14px;border:1px solid rgba(99,125,190,.18);background:rgba(17,27,51,.75);color:var(--text);font:inherit;cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
+.modeBtn:hover{border-color:rgba(96,165,250,.55)}
+.modeBtn:active{transform:scale(.99)}
+.modeBtn svg{width:34px;height:34px;color:#60a5fa}
+.modeBtn[data-mode="once"] svg{color:#ef4444}
+.modeBtn[data-mode="rec-only"] svg{color:#f59e0b}
+.modeBtn[data-mode="off"] svg{color:#94a3b8}
+.modeBtn b{display:block;font-size:16px;font-weight:800}
+.modeBtn small{display:block;margin-top:4px;color:var(--muted);font-size:12.5px;line-height:1.35}
+.modeBtn.on{background:linear-gradient(135deg,rgba(37,99,235,.42),rgba(30,58,138,.5));border:2px solid #3b82f6;box-shadow:0 0 22px rgba(59,130,246,.35)}
+.modeBtn.on small{color:#cbd5e1}
+.modeBtn[data-mode="off"].on{background:rgba(51,65,85,.6);border-color:#94a3b8;box-shadow:none}
+.modeCard .modeNow{display:none}
+
+/* System monitoringu i ustawienia */
+.rightCol{display:grid;gap:14px;align-content:start}
+.sysList{list-style:none;margin:0;padding:0;border:1px solid var(--panelLine);border-radius:12px;background:rgba(6,12,26,.5)}
+.sysList li{display:flex;align-items:center;gap:16px;padding:12px 16px}
+.sysList li+li{border-top:1px solid var(--panelLine)}
+.sysList svg{color:#93c5fd}
+.sysList small{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sysList b{display:block;font-size:15px;margin-top:2px}
+.systemPanel[data-state="record"] #systemMode,.systemPanel #systemView{color:#4ade80}
+.systemStateBadge{padding:5px 9px;border-radius:999px;background:rgba(71,85,105,.5);font-size:10px;font-weight:900;letter-spacing:.08em;white-space:nowrap}
+.systemStateBadge[data-state="record"]{background:rgba(127,29,29,.85);color:#fecaca}.systemStateBadge[data-state="archive"]{background:rgba(30,64,175,.8);color:#dbeafe}.systemStateBadge[data-state="preview"]{background:rgba(8,145,178,.72);color:#cffafe}.systemStateBadge[data-state="off"]{background:rgba(71,85,105,.7);color:#e2e8f0}
+.setCard{display:grid;gap:12px}
+.setCard .panelHead{margin-bottom:2px}
+.setRow{display:flex;align-items:center;gap:14px}
+.setRow[hidden]{display:none}
+.setRow svg{color:#60a5fa}
+.setRow label{flex:1;display:flex;flex-direction:column;gap:6px;font-size:13px;color:#cbd5e1;margin:0}
+.setRow select{width:100%;height:42px;border-radius:10px;border:1px solid rgba(99,125,190,.35);background:#0b1430;color:var(--text);padding:0 12px;font:inherit;font-size:14px}
+.switchRow{cursor:pointer;font-size:14px}
+.switchRow span{flex:1}
+.switch{appearance:none;-webkit-appearance:none;width:48px;height:26px;border-radius:999px;background:#334155;position:relative;cursor:pointer;transition:background .2s;margin:0;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#e2e8f0;transition:transform .2s}
+.switch:checked{background:#2563eb}
+.switch:checked::after{transform:translateX(22px)}
+.setCard .reloadPc{margin:4px 0 0;width:100%;font-size:13px}
+
+/* DVR */
+.dvrCard{display:block}
+.dvrTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.dvrTop .panelHead{margin:0}
+.dvrCtrls{display:flex;flex-wrap:wrap;gap:10px}
+.dvrGroup{display:flex;flex-wrap:wrap;gap:8px}
+.dvrBtn{height:40px;padding:0 14px;border-radius:10px;border:1px solid rgba(99,125,190,.3);background:rgba(17,27,51,.8);color:var(--text);font:inherit;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.dvrBtn:hover{border-color:#60a5fa}
+.dvrBtn.on{border-color:#3b82f6;background:rgba(37,99,235,.25);color:#bfdbfe;font-weight:700}
+.dvrLive{display:inline-flex;align-items:center;gap:8px;font-weight:800}
+.dvrLive::before{content:"";width:10px;height:10px;border-radius:50%;background:#ef4444}
+.dvrLive.on{background:rgba(127,29,29,.55);border-color:rgba(239,68,68,.7);color:#fff}
+.dvrDate{height:40px!important;border-radius:10px!important}
+.dvrBar{height:52px!important;border-radius:8px!important;background:#16213d!important;border:1px solid rgba(99,125,190,.3)!important}
+.dvrSeg{background:linear-gradient(180deg,#3b82f6,#2563eb)!important;border-right:1px solid rgba(15,23,42,.55)!important}
+.dvrSeg.rec{background:linear-gradient(180deg,#60a5fa,#3b82f6)!important;opacity:.75}
+.dvrNow,.dvrCursor{width:2px!important;background:#ef4444!important;box-shadow:0 0 8px rgba(239,68,68,.8)!important}
+.dvrNow::before,.dvrCursor::before{content:"";position:absolute;top:-1px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#ef4444}
+.dvrCursor{background:#facc15!important;box-shadow:0 0 8px #facc15!important}.dvrCursor::before{background:#facc15}
+.dvrTickWrap{position:relative;padding-top:2px}
+.dvrTicks{height:22px!important;font-size:12px!important}
+.dvrPos{position:absolute;top:2px;transform:translateX(-50%);padding:2px 7px;border-radius:6px;background:#dc2626;color:#fff;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;pointer-events:none;white-space:nowrap}
+.dvrPos.play{background:#ca8a04}
+.dvrPos[hidden]{display:none}
+.dvrFoot{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:#cbd5e1}
+.dvrLegend{display:flex;align-items:center;gap:8px;flex:1}
+.dvrLegend i{display:inline-block;width:16px;height:16px;border-radius:4px}
+.dvrLegend i+*{margin-right:12px}
+.lgRec{background:#3b82f6}.lgGap{background:#16213d;border:1px solid rgba(99,125,190,.4);margin-left:12px}
+.dvrTime{font-weight:700}
+.dvrInfo{margin:8px 0 0!important}
+
+/* Lista nagrań */
+.dvrListCard{display:flex;flex-direction:column;min-height:0}
+.dvrListCard .panelHead h2{font-size:16px}
+.dvrListCard>.libList{margin:0;overflow:auto;max-height:340px}
+.recList{list-style:none;margin:0;padding:0}
+.recList li{display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid rgba(99,125,190,.16)}
+.recList li:first-child{border-top:0}
+.recList li.on{background:rgba(37,99,235,.18);border-radius:8px}
+.recPlay{flex:none;width:30px;height:30px;border-radius:50%;border:1.5px solid #cbd5e1;background:none;color:#e2e8f0;font-size:11px;cursor:pointer;padding-left:2px}
+.recPlay:hover{border-color:#60a5fa;color:#60a5fa}
+.recTimes{flex:1;min-width:0;text-align:left;background:none;border:0;color:var(--text);font:inherit;cursor:pointer;padding:0}
+.recTimes b{display:block;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.recTimes small{display:block;color:var(--muted);font-size:12px}
+.recActs{display:flex;gap:2px}
+.recIcon{width:32px;height:32px;border-radius:8px;border:0;background:none;color:#cbd5e1;font-size:15px;cursor:pointer}
+.recIcon:hover{background:rgba(59,130,246,.18)}
+
+/* Siatka układu: telefon — jedna kolumna; komputer — trzy kolumny jak w projekcie */
+.mainCol{display:grid;gap:14px}
+.mainCol>*{margin:0!important;min-width:0}
+@media(min-width:1180px){
+  .mainCol{grid-template-columns:300px minmax(0,1fr) 330px;grid-template-areas:"modes stage side" "dvr dvr list" "ctrl ctrl tools" "rec rec rec" "status status status" "diag diag events";align-items:stretch}
+  #modeCard{grid-area:modes}.mainCol>.stage{grid-area:stage;align-self:start}.rightCol{grid-area:side}
+  #dvrCard{grid-area:dvr}#dvrListCard{grid-area:list}
+  #ctrlBar{grid-area:ctrl}#watchPanel{grid-area:tools;align-content:center}
+  #recStatus{grid-area:rec}#status{grid-area:status}#diagCard{grid-area:diag}#viewEventsCard{grid-area:events}
+  .dvrListCard>.libList{max-height:none;flex:1 1 0}
+  .layout.sender .mainCol{grid-template-areas:"modes stage side" "dvr dvr list" "ctrl ctrl tools" "rec rec rec" "status status status" "diag diag diag"}
+}
+/* Komputer-kamera: karty nadajnika pod spodem, w kolumnach */
+.layout.sender .sideCol{position:static!important;max-height:none!important;overflow:visible!important;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;align-items:start}
+@media(max-width:600px){
+  .panel{padding:14px!important}
+  .modeList{grid-template-columns:1fr 1fr;gap:8px}
+  .modeBtn{flex-direction:column;align-items:flex-start;gap:8px;padding:12px}
+  .modeBtn svg{width:26px;height:26px}
+  .modeBtn b{font-size:14px}.modeBtn small{font-size:11.5px}
+  .dvrCtrls,.dvrGroup{width:100%}
+  .dvrGroup .dvrBtn{flex:1;padding:0 8px}
+  .dvrGroup:last-child .dvrBtn{padding:0 4px;font-size:12.5px}
+  .dvrDate{flex:1.4}
+  .dvrTicks span:nth-child(even):not(:last-child){display:none}
+  .dvrListCard>.libList{max-height:420px}
+}
+.monitorClock .evidenceLabel{display:none}
+@media(min-width:1180px){
+  .mainCol{grid-template-columns:300px minmax(0,1fr) 360px}
+  .mainCol>.stage{align-self:stretch!important;aspect-ratio:auto!important;min-height:520px}
+  .systemPanel .panelHead h2{white-space:nowrap}
+}
+.monitorClock .evidenceLabel{display:none!important}
+@media(min-width:1180px){#watchPanel{grid-template-columns:1fr 1fr!important}#watchPanel .tool.primary{grid-column:auto}}
+@media(max-width:1179px){
+  .mainCol>.stage{order:1}#watchPanel{order:2}#ctrlBar{order:3}#recStatus{order:4}#status{order:5}#dvrCard{order:6}#dvrListCard{order:7}#modeCard{order:8}.rightCol{order:9}#diagCard{order:10}#viewEventsCard{order:11}
+}
+@media(max-width:600px){
+  .dvrGroup:last-child{display:grid;grid-template-columns:1fr 1fr 1.6fr 1fr 1fr;gap:5px}
+  .dvrGroup:last-child .dvrBtn{padding:0 2px;font-size:12px}
+  .dvrLive{justify-content:center;gap:5px}
+  .dvrFoot{gap:8px}.dvrLegend{flex-basis:100%;font-size:12px}
+}

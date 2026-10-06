@@ -15,7 +15,7 @@ const DAY_MS = 86400000;
 const nameTime = n => { const m = /(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})/.exec(n || ""); return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : 0; };
 const SEG_MS = 600000;
 
-export function mountDvr({ client, drive, allowUpload = true, root, stage, liveVideo, toast, onState = () => {} }) {
+export function mountDvr({ client, drive, allowUpload = true, root, listRoot = null, stage, liveVideo, toast, onState = () => {} }) {
   const playback = el("video", { className: "playback", playsInline: true, controls: true, hidden: true });
   playback.setAttribute("playsinline", "");
   // Nagrania z Google Drive odtwarza odtwarzacz Google (zalogowane konto właściciela).
@@ -29,8 +29,8 @@ export function mountDvr({ client, drive, allowUpload = true, root, stage, liveV
 
   // ----- układ -----
   const dateInput = el("input", { type: "date", className: "dvrDate", value: day, onchange: () => setDay(dateInput.value) });
-  const liveBtn = el("button", { className: "btn primary small dvrLive", textContent: "● NA ŻYWO", onclick: () => goLive() });
-  const zoomBtn = el("button", { className: "btn ghost small", textContent: "🔍 1 h", onclick: () => { zoom = zoom === "day" ? "hour" : "day"; zoomBtn.textContent = zoom === "day" ? "🔍 1 h" : "🔍 24 h"; draw(); } });
+  const liveBtn = el("button", { className: "dvrBtn dvrLive", textContent: "NA ŻYWO", onclick: () => goLive() });
+  const zoomBtn = el("button", { className: "dvrBtn", textContent: "🔍 1 h", onclick: () => { zoom = zoom === "day" ? "hour" : "day"; zoomBtn.textContent = zoom === "day" ? "🔍 1 h" : "🔍 24 h"; draw(); } });
   const bar = el("div", { className: "dvrBar" });
   const segsLayer = el("div", { className: "dvrSegs" });
   const evLayer = el("div", { className: "dvrEvents" });
@@ -38,22 +38,32 @@ export function mountDvr({ client, drive, allowUpload = true, root, stage, liveV
   const nowEl = el("div", { className: "dvrNow" });
   bar.append(segsLayer, evLayer, nowEl, cursorEl);
   const ticks = el("div", { className: "dvrTicks" });
+  const posLabel = el("span", { className: "dvrPos" });
   const timeLabel = el("span", { className: "dvrTime muted small" });
   const info = el("p", { className: "muted small dvrInfo" });
   const lib = el("div", { className: "libList" });
-  const jump = sec => el("button", { className: "btn ghost small", textContent: sec < 0 ? `−${-sec / 60} min` : `+${sec / 60} min`, onclick: () => seekTo((cursor ?? now) + sec * 1000) });
+  const jump = sec => el("button", { className: "dvrBtn", textContent: sec < 0 ? `− ${-sec / 60} min` : `+ ${sec / 60} min`, onclick: () => seekTo((cursor ?? now) + sec * 1000) });
+  const todayBtn = el("button", { className: "dvrBtn", textContent: "Dziś", onclick: () => setDay(dayKey(new Date())) });
+  const yestBtn = el("button", { className: "dvrBtn", textContent: "Wczoraj", onclick: () => setDay(dayKey(new Date(Date.now() - DAY_MS))) });
 
   root.replaceChildren(
-    el("div", { className: "cardHead" }, el("h2", { textContent: "⏪ Nagrania z kamery" }), liveBtn),
-    el("div", { className: "dvrDays" },
-      el("button", { className: "btn ghost small", textContent: "Dziś", onclick: () => setDay(dayKey(new Date())) }),
-      el("button", { className: "btn ghost small", textContent: "Wczoraj", onclick: () => setDay(dayKey(new Date(Date.now() - DAY_MS))) }),
-      dateInput, zoomBtn),
-    bar, ticks,
-    el("div", { className: "dvrJumps" }, jump(-300), jump(-60), timeLabel, jump(60), jump(300)),
+    el("div", { className: "dvrTop" },
+      el("div", { className: "panelHead" }, el("div", {}, el("h2", { textContent: "Odtwarzacz nagrań (DVR)" }), el("p", { textContent: "Przeglądaj zapisane nagrania z kamery" }))),
+      el("div", { className: "dvrCtrls" },
+        el("div", { className: "dvrGroup" }, todayBtn, yestBtn, dateInput),
+        el("div", { className: "dvrGroup" }, jump(-300), jump(-60), liveBtn, jump(60), jump(300)))),
+    bar, el("div", { className: "dvrTickWrap" }, ticks, posLabel),
+    el("div", { className: "dvrFoot" },
+      el("span", { className: "dvrLegend" }, el("i", { className: "lgRec" }), "Dostępne nagranie", el("i", { className: "lgGap" }), "Brak nagrania"),
+      timeLabel, zoomBtn),
     info,
-    el("details", { className: "libDay dvrLibBox", open: false }, el("summary", {}, el("b", { textContent: "📼 Lista nagrań dnia" })), lib),
   );
+  // Lista nagrań: osobna karta obok osi czasu (albo zwijana pod nią, gdy brak miejsca na kartę).
+  const listCount = el("span", { className: "muted small" });
+  if (listRoot) {
+    listRoot.hidden = false;
+    listRoot.replaceChildren(el("div", { className: "panelHead" }, el("div", {}, el("h2", { textContent: "Lista nagrań (archiwum)" }), el("p", { textContent: "Kliknij, aby odtworzyć wybrany plik" })), listCount), lib);
+  } else root.append(el("details", { className: "libDay dvrLibBox" }, el("summary", {}, el("b", { textContent: "📼 Lista nagrań dnia" })), lib));
 
   // ----- zakres paska -----
   const dayStart = () => { const [y, m, d] = day.split("-").map(Number); return new Date(y, m - 1, d).getTime(); };
@@ -81,9 +91,15 @@ export function mountDvr({ client, drive, allowUpload = true, root, stage, liveV
     })));
     nowEl.hidden = !(now >= r[0] && now <= r[1]); nowEl.style.left = pct(now, r);
     cursorEl.hidden = cursor === null; if (cursor !== null) cursorEl.style.left = pct(cursor, r);
-    const n = zoom === "day" ? 8 : 6, step = (r[1] - r[0]) / n;
+    const n = zoom === "day" ? 12 : 6, step = (r[1] - r[0]) / n;
     ticks.replaceChildren(...Array.from({ length: n + 1 }, (_, i) => el("span", { textContent: hm(r[0] + i * step), style: `left:${(100 * i) / n}%` })));
-    timeLabel.textContent = cursor === null ? "na żywo" : hms(cursor);
+    timeLabel.textContent = cursor === null ? "● na żywo" : `▶ ${hms(cursor)}`;
+    const at = cursor ?? now, show = at >= r[0] && at <= r[1];
+    posLabel.hidden = !show; posLabel.style.left = pct(at, r); posLabel.textContent = cursor === null ? hm(now) : hms(cursor);
+    posLabel.classList.toggle("play", cursor !== null);
+    const today = dayKey(new Date());
+    todayBtn.classList.toggle("on", day === today); yestBtn.classList.toggle("on", day === dayKey(new Date(Date.now() - DAY_MS)));
+    liveBtn.classList.toggle("on", cursor === null && day === today);
   }
 
   // ----- przeciąganie po pasku -----
@@ -128,7 +144,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, stage, liveV
     }
     try {
       const blob = await fetchFile(f);
-      playing = f;
+      playing = f; drawLib();
       if (playback.src) URL.revokeObjectURL(playback.src);
       playback.src = URL.createObjectURL(blob);
       showPlayback(true);
@@ -163,7 +179,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, stage, liveV
   });
 
   function goLive() {
-    playback.pause(); showPlayback(false); playing = null; cursor = null;
+    playback.pause(); showPlayback(false); playing = null; cursor = null; drawLib();
     if (day !== dayKey(new Date())) setDay(dayKey(new Date())); else draw();
   }
 
@@ -199,23 +215,25 @@ export function mountDvr({ client, drive, allowUpload = true, root, stage, liveV
   }
 
   function drawLib() {
-    const real = files.filter(f => !f.recording);
+    const real = files.filter(f => !f.recording).slice().reverse();
+    listCount.textContent = real.length ? `${real.length} plików` : "";
     if (!real.length) return lib.replaceChildren(el("p", { className: "muted small", textContent: "Brak nagrań w tym dniu." }));
-    const byHour = new Map();
-    for (const f of real) { const h = new Date(f.start).getHours(); if (!byHour.has(h)) byHour.set(h, []); byHour.get(h).push(f); }
-    lib.replaceChildren(...[...byHour].map(([h, list]) => el("div", { className: "libHour" },
-      el("b", { textContent: `🕐 ${pad(h)}:00–${pad(h)}:59 (${list.length})` }),
-      el("ul", { className: "libFiles" }, ...list.map(f => {
-        const ruch = (f.events || []).filter(e => e.kind === "ruch").length, dzwiek = (f.events || []).filter(e => e.kind === "dzwiek").length;
-        return el("li", {},
-          el("span", { textContent: `${hm(f.start)}–${hm(f.end)} · ${mb(f.size || 0)}` }, ruch ? el("span", { className: "evBadge", textContent: ` 🏃${ruch}` }) : null, dzwiek ? el("span", { className: "evBadge", textContent: ` 🔊${dzwiek}` }) : null, f.uploaded || !f.local ? el("span", { className: "evBadge", textContent: " ☁️ na Drive" }) : null),
-          el("span", { className: "libActions" },
-            el("button", { className: "btn ghost small", textContent: "▶", title: "Odtwórz", onclick: () => { cursor = f.start; play(f); window.scrollTo({ top: 0, behavior: "smooth" }); } }),
-            el("button", { className: "btn ghost small", textContent: "📤 Udostępnij", onclick: () => share(f) }),
-            el("button", { className: "btn ghost small", textContent: "⬇ Pobierz", onclick: () => save(f) }),
-            allowUpload && f.local && !f.uploaded ? el("button", { className: "btn ghost small", textContent: "☁️ Prześlij do Google Drive", onclick: () => toDrive(f) }) : null));
-      })))));
+    lib.replaceChildren(el("ul", { className: "recList" }, ...real.map(f => {
+      const ruch = (f.events || []).filter(e => e.kind === "ruch").length, dzwiek = (f.events || []).filter(e => e.kind === "dzwiek").length;
+      const min = Math.max(1, Math.round((f.end - f.start) / 60000));
+      const playIt = () => { cursor = f.start; play(f); if (window.innerWidth < 1100) window.scrollTo({ top: 0, behavior: "smooth" }); };
+      return el("li", { className: playing && playing.name === f.name ? "on" : "" },
+        el("button", { className: "recPlay", title: "Odtwórz", textContent: "▶", onclick: playIt }),
+        el("button", { className: "recTimes", onclick: playIt },
+          el("b", { textContent: `${hms(f.start)} – ${hms(f.end)}` }),
+          el("small", { textContent: [`${min} min`, f.size ? mb(f.size) : "", ruch ? `🏃${ruch}` : "", dzwiek ? `🔊${dzwiek}` : "", f.uploaded || !f.local ? "☁️" : ""].filter(Boolean).join(" · ") })),
+        el("span", { className: "recActs" },
+          el("button", { className: "recIcon", title: "Pobierz", textContent: "⬇", onclick: () => save(f) }),
+          el("button", { className: "recIcon", title: "Udostępnij", textContent: "📤", onclick: () => share(f) }),
+          allowUpload && f.local && !f.uploaded ? el("button", { className: "recIcon", title: "Prześlij do Google Drive", textContent: "☁️", onclick: () => toDrive(f) }) : null));
+    })));
   }
+
 
   // Nagrania dnia: z Google Drive (przechowywanie) + jeszcze niewysłane z komputera-kamery.
   async function refresh() {
@@ -242,7 +260,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, stage, liveV
     now = lr?.now || Date.now();
     const total = files.filter(f => !f.recording);
     info.textContent = (total.length
-      ? `${total.length} nagr. z tego dnia (od ${hm(total[0].start)}). Szare = brak nagrania. Przeciągnij po pasku albo dotknij 🏃/🔊.`
+      ? `${total.length} nagrań z tego dnia (od ${hm(total[0].start)}). Przeciągnij po pasku, aby przewinąć, albo dotknij 🏃/🔊.`
       : "Brak nagrań z tego dnia.") + (driveErr ? ` (Google Drive: ${driveErr.message || driveErr})` : "");
     draw(); drawLib();
   }
