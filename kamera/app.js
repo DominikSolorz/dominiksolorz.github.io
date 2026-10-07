@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "103"; // musi się zgadzać z version.json
+const VERSION = "104"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -42,14 +42,15 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
 
 // Komputer (nie telefon) z kamerą dostaje duży przycisk „Włącz kamerę”, gdy nikt nie nadaje.
 const IS_DESKTOP = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && !!navigator.mediaDevices?.getUserMedia;
-// 12 odbiorców przy 2,5 Mb/s wymaga do ok. 30 Mb/s uploadu; przy słabszym łączu obraz sam obniży jakość zamiast zrywać połączenie.
+// Pełna jakość dla telefonu właściciela. Przy słabszym łączu WebRTC obniża obraz
+// automatycznie zamiast zrywać połączenie.
 const MAX_VIEWERS = 12;
-// Jakość przesyłu na żywo: HD 720p, 30 kl./s, do 2,5 Mb/s na oglądającego; H.264 = sprzętowe dekodowanie na iPhonie.
-const LIVE_MAX_BITRATE = 1500000;
+// Podgląd: pełny kadr kamery, 30 kl./s, do 4 Mb/s na oglądającego.
+// H.264 zachowuje sprzętowe dekodowanie na iPhonie.
+const LIVE_MAX_BITRATE = 4000000;
 const LIVE_FPS = 30;
-// Wysyłka na żywo lżejsza dla procesora (cichsze wentylatory): 1280 px szerokości i 20 kl./s.
-// Nagrania nadal w pełnej rozdzielczości kamery.
-const LIVE_SEND_WIDTH = 1280, LIVE_SEND_FPS = 20;
+// Nie skalujemy już podglądu do 720p: komputer wysyła pełny kadr kamery.
+const LIVE_SEND_WIDTH = 1920, LIVE_SEND_FPS = 30;
 // Wirtualne kamery (OBS, Snap, ManyCam…) pokazują zastępczy obrazek, gdy ich program nie działa — pomijamy je.
 const VIRTUAL_CAM = /obs|virtual|snap camera|manycam|xsplit|ndi|splitcam|vcam|droidcam|epoccam|camo|iriun/i; // wirtualne kamery — nigdy nieużywane
 const HEARTBEAT_MS = 15000;
