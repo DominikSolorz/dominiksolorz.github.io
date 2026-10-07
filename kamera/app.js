@@ -6,7 +6,7 @@ import { b64, sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=22";
 import { requireAccess } from "./lock.js?v=14";
 import { channelFor, lock } from "./access.js?v=14";
-import { createDetector, EVENT_LABEL } from "./detect.js?v=32";
+import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "102"; // musi się zgadzać z version.json
+const VERSION = "103"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -70,7 +70,7 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, pano360: false, media: "av" };
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, detectSound: false, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, pano360: false, media: "av" };
 // Źródło transmisji i zapisu: "av" = obraz + dźwięk, "v" = tylko obraz, "a" = tylko dźwięk.
 const MEDIA_LABEL = { av: "obraz + dźwięk", v: "tylko obraz", a: "tylko dźwięk" };
 // Tryby, w których powstają pliki ("rec-only" = zapis bez transmisji na żywo).
@@ -780,6 +780,7 @@ function renderEvents(listId, items) {
 }
 const detector = createDetector({
   getSensitivity: () => prefs.sensitivity,
+  getSoundEnabled: () => !!prefs.detectSound,
   onActivity: () => archive.activity(),
   onEvent: ev => {
     archive.markEvent(ev);
@@ -1776,6 +1777,8 @@ $("recordPlan").addEventListener("change", e => {
 $("cameraSelect").addEventListener("change", e => { prefs.cameraId = e.target.value; savePrefs(); sender.switchCamera(); });
 $("detectToggle").checked = prefs.detect;
 $("detectToggle").addEventListener("change", e => { prefs.detect = e.target.checked; savePrefs(); sender.switchCamera(); });
+$("detectSound").checked = !!prefs.detectSound;
+$("detectSound").addEventListener("change", e => { prefs.detectSound = e.target.checked; savePrefs(); sender.switchCamera(); });
 $("sensitivity").value = prefs.sensitivity;
 $("sensitivity").addEventListener("change", e => { prefs.sensitivity = e.target.value; savePrefs(); });
 renderEvents("pcEvents", recentEvents); renderEvents("viewEvents", viewEvents);

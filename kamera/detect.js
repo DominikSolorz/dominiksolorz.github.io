@@ -4,14 +4,16 @@
 // Dźwięk: poziom głośności (RMS) z mikrofonu ponad tło szumu.
 
 const SENS = {
-  low:    { pixels: 0.08, over: 3.0 },
-  medium: { pixels: 0.035, over: 2.2 },
-  high:   { pixels: 0.015, over: 1.6 },
+  // Ruch musi zajmować zauważalną część obrazu i utrzymać się przez kilka
+  // kolejnych próbek. To celowo odrzuca szum matrycy oraz drobne migotanie.
+  low:    { pixels: 0.12, delta: 38, frames: 3, over: 3.0 },
+  medium: { pixels: 0.065, delta: 34, frames: 2, over: 2.4 },
+  high:   { pixels: 0.035, delta: 30, frames: 2, over: 2.8 },
 };
 const W = 64, H = 36, COOLDOWN_MS = 10000;
 
-export function createDetector({ onEvent, onActivity, getSensitivity }) {
-  let track = null, capture = null, timer = null, prev = null, audioCtx = null, analyser = null, buf = null, noise = 0.004;
+export function createDetector({ onEvent, onActivity, getSensitivity, getSoundEnabled }) {
+  let track = null, capture = null, timer = null, prev = null, audioCtx = null, analyser = null, buf = null, noise = 0.004, settleFrames = 0, motionFrames = 0;
   const last = { ruch: 0, dzwiek: 0 };
   const canvas = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(W, H) : Object.assign(document.createElement("canvas"), { width: W, height: H });
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -41,13 +43,21 @@ export function createDetector({ onEvent, onActivity, getSensitivity }) {
       const g = new Uint8Array(W * H);
       for (let i = 0; i < g.length; i++) g[i] = (d[i * 4] * 3 + d[i * 4 + 1] * 6 + d[i * 4 + 2]) / 10;
       if (prev) {
+        // Autoekspozycja rozjaśnia lub przyciemnia prawie cały obraz naraz.
+        // Odejmujemy taki wspólny skok jasności, żeby nie zgłaszać go jako ruch.
+        let shift = 0;
+        for (let i = 0; i < g.length; i++) shift += g[i] - prev[i];
+        shift /= g.length;
         let changed = 0;
-        for (let i = 0; i < g.length; i++) if (Math.abs(g[i] - prev[i]) > 28) changed++;
-        if (changed / g.length > s.pixels) fire("ruch");
+        for (let i = 0; i < g.length; i++) if (Math.abs((g[i] - prev[i]) - shift) > s.delta) changed++;
+        const moving = settleFrames >= 3 && changed / g.length > s.pixels;
+        motionFrames = moving ? motionFrames + 1 : 0;
+        if (motionFrames >= s.frames) fire("ruch");
       }
       prev = g;
+      settleFrames++;
     }
-    if (analyser) {
+    if (analyser && getSoundEnabled?.()) {
       if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
       analyser.getFloatTimeDomainData(buf);
       let sum = 0;
@@ -67,7 +77,9 @@ export function createDetector({ onEvent, onActivity, getSensitivity }) {
       if ("ImageCapture" in window) capture = new ImageCapture(track);
     }
     const a = stream.getAudioTracks()[0];
-    if (a) {
+    // Dźwięk nie jest ruchem. Domyślnie go nie analizujemy, aby szum USB,
+    // wentylator albo trzaski nie tworzyły fałszywych zdarzeń.
+    if (a && getSoundEnabled?.()) {
       try {
         audioCtx = new AudioContext();
         analyser = audioCtx.createAnalyser();
@@ -80,7 +92,7 @@ export function createDetector({ onEvent, onActivity, getSensitivity }) {
   }
 
   function stop() {
-    clearInterval(timer); timer = null; prev = null;
+    clearInterval(timer); timer = null; prev = null; settleFrames = 0; motionFrames = 0;
     capture = null;
     track?.stop(); track = null;
     audioCtx?.close().catch(() => {}); audioCtx = null; analyser = null;

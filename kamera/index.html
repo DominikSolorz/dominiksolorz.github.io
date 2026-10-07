@@ -179,7 +179,8 @@
       <div class="card">
         <div class="cardHead"><h2>🔔 Wykrywanie</h2><span class="muted small">ruch i dźwięk</span></div>
         <div class="grid">
-          <label class="check"><input type="checkbox" id="detectToggle"> Wykrywaj ruch i kroki</label>
+          <label class="check"><input type="checkbox" id="detectToggle"> Wykrywaj potwierdzony ruch obrazu</label>
+          <label class="check"><input type="checkbox" id="detectSound"> Wykrywaj głośne dźwięki (opcjonalnie)</label>
           <label>Czułość
             <select id="sensitivity">
               <option value="low">Niska</option>
@@ -188,7 +189,7 @@
             </select>
           </label>
         </div>
-        <p class="muted small">Zdarzenie od razu pokazuje się na telefonie i jest zaznaczane przy nagraniu w bibliotece.</p>
+        <p class="muted small">Ruch musi wystąpić na kolejnych klatkach. Zmiana jasności, szum obrazu i dźwięk nie są ruchem.</p>
         <ul id="pcEvents" class="events"></ul>
       </div>
 
@@ -251,6 +252,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=102"></script>
+  <script type="module" src="app.js?v=103"></script>
 </body>
 </html>
