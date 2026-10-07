@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "106"; // musi się zgadzać z version.json
+const VERSION = "107"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -850,6 +850,7 @@ function renderDiag(d, extra = []) {
     ok(!!d.cam && d.camLive, d.cam ? `Kamera podłączona: ${d.cam}${d.w ? ` · ${d.w}×${d.h}` : ""}${d.fps ? ` · ${d.fps} kl./s` : ""}` : `Kamera nie daje obrazu${d.camError ? ` — ${d.camError}` : ""}`),
     ok(!!d.mic && d.micOn, d.mic ? `Mikrofon podłączony: ${d.mic}` : "Mikrofon nie jest używany (brak dźwięku w nagraniach)"),
     ok(d.recording, d.recording ? `Nagrywanie trwa · ${d.quality || ""}` : d.mode === "preview" ? "Nie nagrywa — tryb „Sam podgląd”" : d.mode === "off" ? "Nie nagrywa — kamera wyłączona" : "Nie nagrywa"),
+    ...(d.light ? [ok(true, d.light)] : []),
     ok(!!d.lastFile, d.lastFile ? `Ostatni zapisany plik: ${d.lastFile}` : "Jeszcze żaden plik nie został zapisany w tej sesji (pierwszy po ok. 10 min)"),
     ...extra,
   ];
@@ -1018,23 +1019,47 @@ const sender = (() => {
     // Mikrofon: tłumienie szumów, usuwanie echa i automatyczne wzmocnienie włączone (czysty, wyrównany dźwięk).
     audio: prefs.audio ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true } : false,
   });
+  let cameraLight = "Automatyka światła kamery: sprawdzam…";
+  async function optimizeCameraLight(track) {
+    const caps = track?.getCapabilities?.() || {};
+    const advanced = {};
+    // Używamy wyłącznie możliwości, które sam sterownik zgłasza. Nie każda
+    // kamera obsługuje regulację ekspozycji, dlatego błąd nie zatrzymuje obrazu.
+    if (Array.isArray(caps.exposureMode) && caps.exposureMode.includes("continuous")) advanced.exposureMode = "continuous";
+    if (Array.isArray(caps.whiteBalanceMode) && caps.whiteBalanceMode.includes("continuous")) advanced.whiteBalanceMode = "continuous";
+    for (const [name, level] of [["exposureCompensation", 0.72], ["brightness", 0.70], ["contrast", 0.58]]) {
+      const range = caps[name];
+      if (range && Number.isFinite(range.min) && Number.isFinite(range.max) && range.max > range.min) {
+        advanced[name] = range.min + (range.max - range.min) * level;
+      }
+    }
+    if (!Object.keys(advanced).length) { cameraLight = "Światło kamery: automatyka sterownika"; return; }
+    try {
+      await track.applyConstraints({ advanced: [advanced] });
+      cameraLight = "Światło kamery: autoekspozycja + rozjaśnienie aktywne";
+    } catch {
+      cameraLight = "Światło kamery: automatyka sterownika";
+    }
+  }
+  async function prepareCameraStream(s) {
+    const track = s.getVideoTracks()[0];
+    if (track) { track.contentHint = "motion"; await optimizeCameraLight(track); }
+    return s;
+  }
   const getMedia = async deviceId => {
     try {
       const s = await navigator.mediaDevices.getUserMedia(mediaConstraints(deviceId));
-      s.getVideoTracks().forEach(t => { t.contentHint = "motion"; });
-      return s;
+      return prepareCameraStream(s);
     } catch (e) {
       // Brak mikrofonu (odłączony / wyłączony) = przeglądarka odrzuca też obraz. Próbujemy sam obraz.
       if (e?.name === "NotFoundError" && prefs.audio) {
         const s = await navigator.mediaDevices.getUserMedia({ video: mediaConstraints(deviceId).video, audio: false });
-        s.getVideoTracks().forEach(t => { t.contentHint = "motion"; });
-        return s;
+        return prepareCameraStream(s);
       }
       // Starsze/tańsze kamery czasem odrzucają 1080p/30 fps mimo że działają bez dodatkowych wymagań.
       if (e?.name !== "OverconstrainedError") throw e;
       const s = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId } } : true, audio: prefs.audio ? true : false });
-      s.getVideoTracks().forEach(t => { t.contentHint = "motion"; });
-      return s;
+      return prepareCameraStream(s);
     }
   };
 
@@ -1305,7 +1330,7 @@ const sender = (() => {
     const v = stream?.getVideoTracks()[0], a = stream?.getAudioTracks()[0], st = v?.getSettings?.() || {}, r = archive.status();
     return { cam: v ? (v.label || "kamera") : "", camLive: v?.readyState === "live", w: st.width, h: st.height, fps: Math.round(st.frameRate || 0),
       mic: a ? (a.label || "mikrofon") : "", micOn: !!a && a.enabled && a.readyState === "live", recording: r.recording, lastFile: r.lastFile,
-      quality: recQuality().short, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem() };
+      quality: recQuality().short, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem(), light: cameraLight };
   }
   const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, visible: document.visibilityState === "visible", diag: diag() }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream, quality: prefs.recQuality }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
@@ -1708,8 +1733,6 @@ function applyPictureLayout() {
   $("stage").classList.toggle("visual-cool", style === "cool");
   $("stage").classList.toggle("visual-warm", style === "warm");
   $("stage").classList.toggle("visual-negative", style === "negative");
-  $("stage").classList.toggle("visual-bright", style === "bright");
-  $("stage").classList.toggle("visual-brightsharp", style === "brightsharp");
   $("stage").classList.toggle("frame-grid", !!prefs.pictureGrid);
   $("stage").classList.toggle("pano360", !!prefs.pano360);
   $("gridToggle").checked = !!prefs.pictureGrid;

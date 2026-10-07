@@ -364,8 +364,8 @@ body.cameraPc{background:#05070f!important}
 .reloadPc{width:100%;margin-top:12px;font-size:13px}
 .stage.zoomable:not(.zoomed){touch-action:pan-y}
 /* Poprawa obrazu przy oglądaniu (na żywo i nagrań) — oryginalne pliki bez zmian */
-.stage.visual-bright video{filter:brightness(1.55) contrast(1.15) saturate(1.05)}
-.stage.visual-brightsharp video{filter:brightness(1.5) contrast(1.35) saturate(1.1)}
+.stage.visual-bright video{filter:brightness(1.7) contrast(1.08) saturate(1.08)}
+.stage.visual-brightsharp video{filter:brightness(1.75) contrast(1.16) saturate(1.12)}
 
 /* Czytelny podział: co oglądam teraz, co robi kamera i czy plik jest zapisywany. */
 
