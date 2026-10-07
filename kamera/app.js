@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "105"; // musi się zgadzać z version.json
+const VERSION = "106"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -89,6 +89,9 @@ const recQuality = () => REC_QUALITY[prefs.recQuality] || REC_QUALITY.high;
 function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } }
 function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* tryb prywatny */ } }
 const prefs = loadPrefs();
+// Właściciel poprosił o jaśniejszy obraz. Dotyczy to wyłącznie podglądu —
+// surowe nagranie zachowuje naturalne piksele jako materiał archiwalny.
+if (!prefs.brightPreview1) { prefs.pictureStyle = "brightsharp"; prefs.brightPreview1 = true; savePrefs(); }
 function recordingScheduledNow() {
   if (prefs.recordUntil > Date.now()) return true; // nagranie jednorazowe — niezależnie od harmonogramu
   const hour = new Date().getHours();
@@ -1697,7 +1700,11 @@ function applyPictureLayout() {
   $("pictureStyle").value = style;
   $("stage").classList.toggle("visual-mono", style === "mono");
   $("stage").classList.toggle("visual-contrast", style === "contrast");
+  // Nazwy wartości w panelu to "bright" i "brightsharp". Wcześniej kod
+  // oczekiwał "night", przez co opcja rozjaśnienia nie robiła nic.
   $("stage").classList.toggle("visual-night", style === "night");
+  $("stage").classList.toggle("visual-bright", style === "bright");
+  $("stage").classList.toggle("visual-brightsharp", style === "brightsharp");
   $("stage").classList.toggle("visual-cool", style === "cool");
   $("stage").classList.toggle("visual-warm", style === "warm");
   $("stage").classList.toggle("visual-negative", style === "negative");
