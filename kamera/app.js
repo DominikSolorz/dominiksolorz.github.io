@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "111"; // musi się zgadzać z version.json
+const VERSION = "112"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -71,7 +71,7 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, detectSound: false, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, pano360: false, media: "av", light: 0 };
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, detectSound: false, sensitivity: "medium", recQuality: "max", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, media: "av", light: 0 };
 // Jasność kamery: −3 … +3 (0 = pierwotny, automatyczny obraz kamery). Ustawiana w samej
 // kamerze, więc działa na podgląd i nagrania. Gdy sterownik nie ma regulacji — rozjaśnienie programowe (lightSw).
 const LIGHT_LABEL = { "-3": "−3 (najciemniej)", "-2": "−2", "-1": "−1", 0: "0 (neutralnie)", 1: "+1", 2: "+2", 3: "+3 (najjaśniej)" };
@@ -1765,14 +1765,28 @@ function applyPictureLayout() {
   $("stage").classList.toggle("visual-warm", style === "warm");
   $("stage").classList.toggle("visual-negative", style === "negative");
   $("stage").classList.toggle("frame-grid", !!prefs.pictureGrid);
-  $("stage").classList.toggle("pano360", !!prefs.pano360);
   $("gridToggle").checked = !!prefs.pictureGrid;
-  $("pano360").checked = !!prefs.pano360;
 }
 $("pictureStyle").addEventListener("change", e => { prefs.pictureStyle = e.target.value; savePrefs(); applyPictureLayout(); toastMsg("Zmieniono efekt podglądu."); });
 $("gridToggle").addEventListener("change", e => { prefs.pictureGrid = e.target.checked; savePrefs(); applyPictureLayout(); });
-$("pano360").addEventListener("change", e => { prefs.pano360 = e.target.checked; savePrefs(); applyPictureLayout(); if (prefs.pano360) toastMsg("Panorama 360° działa prawidłowo tylko z kamerą 360°."); });
 applyPictureLayout();
+
+// Szybkie menu nie zmienia strony ani trybu kamery: tylko prowadzi po aktualnym panelu.
+const quickMenu = $("quickMenu"), quickMenuBtn = $("quickMenuBtn"), quickMenuShade = $("quickMenuShade");
+function setQuickMenu(open) {
+  quickMenu.classList.toggle("open", open); quickMenuShade.hidden = !open;
+  quickMenuBtn.setAttribute("aria-expanded", String(open)); quickMenu.setAttribute("aria-hidden", String(!open));
+}
+function updateMenuGrid() { $("menuGridState").textContent = prefs.pictureGrid ? "siatka jest widoczna na obrazie" : "pokaż na obrazie"; }
+quickMenuBtn.addEventListener("click", () => setQuickMenu(!quickMenu.classList.contains("open")));
+$("quickMenuClose").addEventListener("click", () => setQuickMenu(false)); quickMenuShade.addEventListener("click", () => setQuickMenu(false));
+document.querySelectorAll("[data-menu-target]").forEach(btn => btn.addEventListener("click", () => {
+  const target = $(btn.dataset.menuTarget); if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  setQuickMenu(false); toastMsg(`${btn.querySelector("b")?.textContent || "Panel"} — transmisja działa dalej.`);
+}));
+$("menuGrid").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictureGrid; savePrefs(); applyPictureLayout(); updateMenuGrid(); setQuickMenu(false); toastMsg(prefs.pictureGrid ? "Siatka kadru jest widoczna na obrazie." : "Siatka kadru została ukryta."); });
+$("menuFullscreen").addEventListener("click", () => { setQuickMenu(false); toggleFullscreen(); });
+updateMenuGrid();
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
 $("ctrlStart").addEventListener("click", async () => {

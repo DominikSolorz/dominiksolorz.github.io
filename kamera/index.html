@@ -9,10 +9,11 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=108">
+<link rel="stylesheet" href="style.css?v=112">
 </head>
 <body>
 <header class="topbar">
+  <button id="quickMenuBtn" class="quickMenuBtn" type="button" aria-label="Otwórz menu kamery" aria-controls="quickMenu" aria-expanded="false"><i></i><i></i><i></i></button>
   <div class="brand"><span class="dot"></span><span class="brandText">Kamera <b>na żywo</b></span></div>
   <span id="topStatus" class="chip">offline</span>
   <nav class="nav">
@@ -21,6 +22,20 @@
     <button id="lockBtn" class="navLink" title="Zablokuj stronę na tym urządzeniu" hidden>🔒</button>
   </nav>
 </header>
+<div id="quickMenuShade" class="quickMenuShade" hidden></div>
+<aside id="quickMenu" class="quickMenu" aria-label="Szybkie menu kamery" aria-hidden="true">
+  <div class="quickMenuHead"><div><b>Menu kamery</b><small>Działa bez przerywania transmisji</small></div><button id="quickMenuClose" type="button" aria-label="Zamknij menu">✕</button></div>
+  <div class="quickMenuList">
+    <button type="button" data-menu-target="stage"><span>●</span><b>Podgląd na żywo</b><small>wróć do obrazu kamery</small></button>
+    <button type="button" data-menu-target="ctrlBar"><span>⏺</span><b>Sterowanie i zapis</b><small>sprawdź pracę nagrywania</small></button>
+    <button type="button" data-menu-target="setCard"><span>⚙</span><b>Ustawienia obrazu</b><small>jasność, jakość i dźwięk</small></button>
+    <button type="button" data-menu-target="dvrCard"><span>⏪</span><b>Nagrania DVR</b><small>przewiń i odtwórz archiwum</small></button>
+  </div>
+  <div class="quickMenuActions">
+    <button id="menuGrid" type="button"><span>▦</span><span><b>Siatka kadru</b><small id="menuGridState">pokaż na obrazie</small></span></button>
+    <button id="menuFullscreen" type="button"><span>⛶</span><span><b>Pełny ekran</b><small>powiększ bieżący obraz</small></span></button>
+  </div>
+</aside>
 
 <!-- Wejście PIN-em -->
 <section id="lock" class="lockScreen" hidden>
@@ -111,7 +126,6 @@
             <option value="contrast">Wysoki kontrast</option>
           </select></label></div>
           <label class="setRow switchRow"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Siatka na obrazie</span><input type="checkbox" id="gridToggle" class="switch"></label>
-          <label class="setRow switchRow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-14.3 5"/><path d="M4 12a8 8 0 0 1 14.3-5"/><path d="M18.5 3v4h-4M5.5 21v-4h4"/></svg><span>Panorama 360°</span><input type="checkbox" id="pano360" class="switch"></label>
           <button class="tool reloadPc" id="reloadPcBtn" type="button">⟳ Odśwież komputer-kamerę</button>
         </section>
       </div>
@@ -253,6 +267,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=111"></script>
+  <script type="module" src="app.js?v=112"></script>
 </body>
 </html>
