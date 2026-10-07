@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "104"; // musi się zgadzać z version.json
+const VERSION = "105"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -862,14 +862,17 @@ function renderDiag(d, extra = []) {
 const diagRow = (good, text) => Object.assign(document.createElement("li"), { className: good ? "ok" : "bad", textContent: `${good ? "✅" : "❌"} ${text}` });
 
 // Pasek pod osią czasu: licznik nagrywania (godz:min:s) i przyciski Start / Stop / Restart.
-const ctrlState = { recording: false, since: 0, mode: "", until: 0, skew: 0, hasCam: true };
+const ctrlState = { recording: false, since: 0, mode: "", until: 0, skew: 0, hasCam: true, quality: "" };
 let viewingArchive = false;
 function paintSystemPanel() {
   if (!$("systemPanel")) return;
   const active = RECORDING_MODES.has(ctrlState.mode) && ctrlState.recording;
   $("systemView").textContent = viewingArchive ? "Nagranie z archiwum" : ctrlState.mode === "off" ? "Brak obrazu" : "Obraz na żywo";
   $("systemMode").textContent = ctrlState.mode === "off" ? "Kamera wyłączona" : ctrlState.mode === "preview" ? "Na żywo bez zapisu" : ctrlState.mode === "rec-only" ? "Zapis bez transmisji" : active && ctrlState.until > Date.now() + ctrlState.skew ? "Zapis jednorazowy" : active ? "Nagrywanie 24/7" : "Uruchamianie kamery";
-  $("systemArchive").textContent = active ? `Plik co ${prefs.segmentMin} min · ${recQuality().short.toLowerCase()}` : "Brak zapisu w tym trybie";
+  // Na telefonie ustawienia lokalne nie są ustawieniami komputera-kamery.
+  // Pokazujemy jakość z ostatniego heartbeat nadajnika, a lokalną tylko jako zapas.
+  const activeQuality = REC_QUALITY[ctrlState.quality]?.short || recQuality().short;
+  $("systemArchive").textContent = active ? `Plik co ${prefs.segmentMin} min · ${activeQuality.toLowerCase()}` : "Brak zapisu w tym trybie";
   const badge = $("systemStateBadge");
   badge.textContent = viewingArchive ? "ARCHIWUM" : active ? "● NAGRYWA" : ctrlState.mode === "preview" ? "PODGLĄD" : ctrlState.mode === "off" ? "WYŁĄCZONA" : "ŁĄCZENIE";
   badge.dataset.state = viewingArchive ? "archive" : active ? "record" : ctrlState.mode || "waiting";
@@ -1301,7 +1304,7 @@ const sender = (() => {
       mic: a ? (a.label || "mikrofon") : "", micOn: !!a && a.enabled && a.readyState === "live", recording: r.recording, lastFile: r.lastFile,
       quality: recQuality().short, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem() };
   }
-  const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, visible: document.visibilityState === "visible", diag: diag() }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream }));
+  const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, visible: document.visibilityState === "visible", diag: diag() }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream, quality: prefs.recQuality }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
   function setQuality(q) {
     if (!REC_QUALITY[q]) return;
@@ -1382,7 +1385,7 @@ const viewer = (() => {
         diagRow(pc?.connectionState === "connected", pc?.connectionState === "connected" ? "Telefon połączony z kamerą" : "Telefon nie jest jeszcze połączony z kamerą"),
         diagRow(video.videoWidth > 0, video.videoWidth > 0 ? `Obraz dociera na ten ekran (${video.videoWidth}×${video.videoHeight})` : "Obraz jeszcze nie dotarł na ten ekran"),
       ]);
-      setCtrlState({ recording: !!sig.rec?.recording, since: sig.rec?.since || 0, mode: sig.mode || "", until: sig.until || 0, skew: sig.now ? sig.now - Date.now() : 0, hasCam: !sig.camError });
+      setCtrlState({ recording: !!sig.rec?.recording, since: sig.rec?.since || 0, mode: sig.mode || "", until: sig.until || 0, skew: sig.now ? sig.now - Date.now() : 0, hasCam: !sig.camError, quality: sig.quality || "" });
       if (REC_QUALITY[sig.quality] && document.activeElement !== $("viewQuality")) $("viewQuality").value = sig.quality;
       if (MEDIA_LABEL[sig.media] && document.activeElement !== $("mediaPick")) $("mediaPick").value = sig.media;
       // Bez obrazu na żywo — powiedz dlaczego (tryb „Tylko zapis” albo transmisja samego dźwięku).
