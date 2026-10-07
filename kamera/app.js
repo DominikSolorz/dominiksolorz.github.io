@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "109"; // musi się zgadzać z version.json
+const VERSION = "110"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -71,8 +71,8 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, detectSound: false, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, pano360: false, media: "av", light: 2 };
-// Jasność kamery: −3 … +3 (0 = środek zakresu sterownika, domyślnie +2 — wyraźnie jaśniej bez zmiany barw). Ustawiana w samej
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, detectSound: false, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, pano360: false, media: "av", light: 0 };
+// Jasność kamery: −3 … +3 (0 = pierwotny, automatyczny obraz kamery). Ustawiana w samej
 // kamerze, więc działa na podgląd i nagrania. Gdy sterownik nie ma regulacji — rozjaśnienie programowe (lightSw).
 const LIGHT_LABEL = { "-3": "−3 (najciemniej)", "-2": "−2", "-1": "−1", 0: "0 (neutralnie)", 1: "+1", 2: "+2", 3: "+3 (najjaśniej)" };
 const clampLight = n => Math.max(-3, Math.min(3, Math.round(Number(n) || 0)));
@@ -100,9 +100,8 @@ const prefs = loadPrefs();
 // Wymuszony filtr „Rozjaśnienie + ostrość” nakładał się na rozjaśnienie w samej kamerze (obraz prześwietlony).
 // Jasność ustawia teraz suwak „Jasność kamery”; podgląd wraca do naturalnych kolorów.
 if (!prefs.lightFix1) { if (prefs.brightPreview1 && prefs.pictureStyle === "brightsharp") prefs.pictureStyle = "color"; prefs.lightFix1 = true; savePrefs(); }
-// Po wyłączeniu starego filtra użytkownik nadal ma otrzymać jaśniejszy, ale neutralny obraz.
-// To zwiększa wyłącznie jasność ekspozycji; nie nakłada ocieplenia, czerwieni ani filtra kolorów.
-if (!prefs.neutralLight2) { if (clampLight(prefs.light) < 2) prefs.light = 2; prefs.neutralLight2 = true; savePrefs(); }
+// Pełny powrót do obrazu początkowego na każdym urządzeniu po aktualizacji.
+if (!prefs.restoreCameraOriginal3) { prefs.light = 0; prefs.pictureStyle = "color"; prefs.restoreCameraOriginal3 = true; savePrefs(); }
 function recordingScheduledNow() {
   if (prefs.recordUntil > Date.now()) return true; // nagranie jednorazowe — niezależnie od harmonogramu
   const hour = new Date().getHours();
@@ -1040,7 +1039,9 @@ const sender = (() => {
     if (Array.isArray(caps.exposureMode) && caps.exposureMode.includes("continuous")) advanced.exposureMode = "continuous";
     if (Array.isArray(caps.whiteBalanceMode) && caps.whiteBalanceMode.includes("continuous")) advanced.whiteBalanceMode = "continuous";
     let hw = false;
-    for (const name of ["exposureCompensation", "brightness", "contrast"]) {
+    // Pozycja 0 oznacza stan pierwotny: sterownik sam dobiera ekspozycję i balans bieli.
+    // Nie narzucamy wtedy jasności, kontrastu ani programowego filtra.
+    for (const name of (step === 0 ? [] : ["exposureCompensation", "brightness"])) {
       const r = caps[name];
       if (!r || !Number.isFinite(r.min) || !Number.isFinite(r.max) || r.max <= r.min) continue;
       const mid = (r.min + r.max) / 2;
