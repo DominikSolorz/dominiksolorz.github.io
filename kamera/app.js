@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "110"; // musi się zgadzać z version.json
+const VERSION = "111"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -101,7 +101,7 @@ const prefs = loadPrefs();
 // Jasność ustawia teraz suwak „Jasność kamery”; podgląd wraca do naturalnych kolorów.
 if (!prefs.lightFix1) { if (prefs.brightPreview1 && prefs.pictureStyle === "brightsharp") prefs.pictureStyle = "color"; prefs.lightFix1 = true; savePrefs(); }
 // Pełny powrót do obrazu początkowego na każdym urządzeniu po aktualizacji.
-if (!prefs.restoreCameraOriginal3) { prefs.light = 0; prefs.pictureStyle = "color"; prefs.restoreCameraOriginal3 = true; savePrefs(); }
+if (!prefs.restoreCameraOriginal4) { prefs.light = 0; prefs.pictureStyle = "color"; prefs.restoreCameraOriginal4 = true; savePrefs(); }
 function recordingScheduledNow() {
   if (prefs.recordUntil > Date.now()) return true; // nagranie jednorazowe — niezależnie od harmonogramu
   const hour = new Date().getHours();
@@ -1039,9 +1039,10 @@ const sender = (() => {
     if (Array.isArray(caps.exposureMode) && caps.exposureMode.includes("continuous")) advanced.exposureMode = "continuous";
     if (Array.isArray(caps.whiteBalanceMode) && caps.whiteBalanceMode.includes("continuous")) advanced.whiteBalanceMode = "continuous";
     let hw = false;
-    // Pozycja 0 oznacza stan pierwotny: sterownik sam dobiera ekspozycję i balans bieli.
-    // Nie narzucamy wtedy jasności, kontrastu ani programowego filtra.
-    for (const name of (step === 0 ? [] : ["exposureCompensation", "brightness"])) {
+    // Pozycja 0 resetuje wcześniej narzucone wartości sterownika do środka jego zakresu.
+    // Bez tego panel mógł pokazywać 0, podczas gdy kamera nadal pozostawała na dawnym +3.
+    // Kontrast nie jest wymuszany; ekspozycja i balans bieli nadal pracują automatycznie.
+    for (const name of ["exposureCompensation", "brightness"]) {
       const r = caps[name];
       if (!r || !Number.isFinite(r.min) || !Number.isFinite(r.max) || r.max <= r.min) continue;
       const mid = (r.min + r.max) / 2;
