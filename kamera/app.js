@@ -21,7 +21,11 @@ let ACCESS_KEY = null, CHANNEL = null;
 // Każdy, komu właściciel przekaże ten adres, może oglądać kamerę i archiwum przez ten link.
 const receiverChannel = new URLSearchParams(location.search).get("odbiorca") || "";
 const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
-const VERSION = "101"; // musi się zgadzać z version.json
+// Ten adres jest dla właściciela na telefonie/tablecie: PIN + zdalne sterowanie,
+// ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
+const ownerPanel = new URLSearchParams(location.search).get("panel");
+const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
+const VERSION = "102"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1623,6 +1627,16 @@ function copyReceiverLink() {
     .catch(() => prompt("Skopiuj ten link i przekaż go zaufanej osobie:", url.href));
 }
 
+function copyOwnerLink() {
+  const url = new URL(location.href);
+  url.hash = "";
+  url.search = "";
+  url.searchParams.set("panel", "owner");
+  navigator.clipboard.writeText(url.href)
+    .then(() => toastMsg("Skopiowano link właściciela. Na telefonie wpisz PIN: sterujesz komputerem, ale telefon nie stanie się kamerą."))
+    .catch(() => prompt("Skopiuj ten prywatny link właściciela (po otwarciu wymaga PIN-u):", url.href));
+}
+
 // Krótki komunikat na dole ekranu (ten sam element co powiadomienia o ruchu).
 function toastMsg(text) {
   const t = $("toast");
@@ -1672,6 +1686,7 @@ $("startHere").addEventListener("click", () => {
 });
 $("pcLibRefresh").addEventListener("click", () => showPcLibrary());
 $("copyViewerLink").addEventListener("click", copyReceiverLink);
+$("copyOwnerLink").addEventListener("click", copyOwnerLink);
 function applyPictureLayout() {
   const style = prefs.pictureStyle || "color";
   $("pictureStyle").value = style;
@@ -1830,10 +1845,10 @@ $("soundBtn").addEventListener("click", () => { video.muted = !video.muted; vide
 // Tylko komputer może być nadajnikiem. Telefon właściciela ma pozostać panelem
 // oglądania i zdalnego sterowania, nawet jeśli wcześniej przypadkiem zapamiętał
 // rolę "send" albo dostał adres z #nadaj.
-if (location.hash === "#nadaj" && IS_DESKTOP) { prefs.role = "send"; savePrefs(); history.replaceState(null, "", location.pathname); }
-else if (!IS_DESKTOP && !RECEIVER_ONLY) {
+if (location.hash === "#nadaj" && IS_DESKTOP && !OWNER_PANEL) { prefs.role = "send"; savePrefs(); history.replaceState(null, "", location.pathname); }
+else if ((!IS_DESKTOP || OWNER_PANEL) && !RECEIVER_ONLY) {
   if (prefs.role === "send") { prefs.role = "watch"; savePrefs(); }
-  if (location.hash === "#nadaj") history.replaceState(null, "", location.pathname);
+  if (location.hash === "#nadaj") history.replaceState(null, "", `${location.pathname}${location.search}`);
 }
 window.__kameraReady = true;
 $("bootError").hidden = true;
@@ -1847,5 +1862,8 @@ if (RECEIVER_ONLY) {
   if (new URLSearchParams(location.search).get("wroc") === "nagrania") location.replace("nagrania.html");
   $("app").hidden = false; $("lockBtn").hidden = false;
   if (prefs.role === "send") showSender();
-  else showViewer();
+  else {
+    showViewer();
+    if (OWNER_PANEL) toastMsg("Panel właściciela: oglądasz obraz z komputera i możesz nim sterować. Telefon nie przejmie kamery.");
+  }
 }
