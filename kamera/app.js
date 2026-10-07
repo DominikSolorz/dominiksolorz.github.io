@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "112"; // musi się zgadzać z version.json
+const VERSION = "113"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1771,7 +1771,7 @@ $("pictureStyle").addEventListener("change", e => { prefs.pictureStyle = e.targe
 $("gridToggle").addEventListener("change", e => { prefs.pictureGrid = e.target.checked; savePrefs(); applyPictureLayout(); });
 applyPictureLayout();
 
-// Szybkie menu nie zmienia strony ani trybu kamery: tylko prowadzi po aktualnym panelu.
+// Szybkie menu nie zmienia strony ani trybu kamery: przełącza tylko układ roboczy.
 const quickMenu = $("quickMenu"), quickMenuBtn = $("quickMenuBtn"), quickMenuShade = $("quickMenuShade");
 function setQuickMenu(open) {
   quickMenu.classList.toggle("open", open); quickMenuShade.hidden = !open;
@@ -1780,9 +1780,15 @@ function setQuickMenu(open) {
 function updateMenuGrid() { $("menuGridState").textContent = prefs.pictureGrid ? "siatka jest widoczna na obrazie" : "pokaż na obrazie"; }
 quickMenuBtn.addEventListener("click", () => setQuickMenu(!quickMenu.classList.contains("open")));
 $("quickMenuClose").addEventListener("click", () => setQuickMenu(false)); quickMenuShade.addEventListener("click", () => setQuickMenu(false));
-document.querySelectorAll("[data-menu-target]").forEach(btn => btn.addEventListener("click", () => {
-  const target = $(btn.dataset.menuTarget); if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-  setQuickMenu(false); toastMsg(`${btn.querySelector("b")?.textContent || "Panel"} — transmisja działa dalej.`);
+function setWorkspace(view) {
+  const main = document.querySelector(".mainCol");
+  ["live", "controls", "settings", "archive"].forEach(name => main.classList.toggle(`focus-${name}`, name === view));
+  document.querySelectorAll("[data-menu-view]").forEach(btn => btn.classList.toggle("selected", btn.dataset.menuView === view));
+  if (view === "archive") dvr?.refresh();
+}
+document.querySelectorAll("[data-menu-view]").forEach(btn => btn.addEventListener("click", () => {
+  const view = btn.dataset.menuView; setWorkspace(view); setQuickMenu(false);
+  toastMsg(`${btn.querySelector("b")?.textContent || "Panel"} — transmisja działa dalej.`);
 }));
 $("menuGrid").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictureGrid; savePrefs(); applyPictureLayout(); updateMenuGrid(); setQuickMenu(false); toastMsg(prefs.pictureGrid ? "Siatka kadru jest widoczna na obrazie." : "Siatka kadru została ukryta."); });
 $("menuFullscreen").addEventListener("click", () => { setQuickMenu(false); toggleFullscreen(); });

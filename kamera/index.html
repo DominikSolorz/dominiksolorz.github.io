@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=112">
+<link rel="stylesheet" href="style.css?v=113">
 </head>
 <body>
 <header class="topbar">
@@ -26,10 +26,10 @@
 <aside id="quickMenu" class="quickMenu" aria-label="Szybkie menu kamery" aria-hidden="true">
   <div class="quickMenuHead"><div><b>Menu kamery</b><small>Działa bez przerywania transmisji</small></div><button id="quickMenuClose" type="button" aria-label="Zamknij menu">✕</button></div>
   <div class="quickMenuList">
-    <button type="button" data-menu-target="stage"><span>●</span><b>Podgląd na żywo</b><small>wróć do obrazu kamery</small></button>
-    <button type="button" data-menu-target="ctrlBar"><span>⏺</span><b>Sterowanie i zapis</b><small>sprawdź pracę nagrywania</small></button>
-    <button type="button" data-menu-target="setCard"><span>⚙</span><b>Ustawienia obrazu</b><small>jasność, jakość i dźwięk</small></button>
-    <button type="button" data-menu-target="dvrCard"><span>⏪</span><b>Nagrania DVR</b><small>przewiń i odtwórz archiwum</small></button>
+    <button type="button" data-menu-view="live"><span>●</span><b>Podgląd na żywo</b><small>kamera i bieżący stan systemu</small></button>
+    <button type="button" data-menu-view="controls"><span>⏺</span><b>Sterowanie i zapis</b><small>wyłącznie tryb pracy oraz zapis</small></button>
+    <button type="button" data-menu-view="settings"><span>⚙</span><b>Ustawienia kamery</b><small>wyłącznie jasność, jakość i dźwięk</small></button>
+    <button type="button" data-menu-view="archive"><span>⏪</span><b>Nagrania DVR</b><small>wyłącznie oś czasu i archiwum</small></button>
   </div>
   <div class="quickMenuActions">
     <button id="menuGrid" type="button"><span>▦</span><span><b>Siatka kadru</b><small id="menuGridState">pokaż na obrazie</small></span></button>
@@ -267,6 +267,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=112"></script>
+  <script type="module" src="app.js?v=113"></script>
 </body>
 </html>

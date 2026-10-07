@@ -30,6 +30,7 @@ h3{margin:16px 0 4px;font-size:15px}
 .quickMenu{position:fixed;z-index:50;top:0;left:0;width:min(350px,calc(100vw - 34px));height:100dvh;padding:max(14px,env(safe-area-inset-top)) 14px 18px;box-sizing:border-box;overflow:auto;transform:translateX(-105%);transition:transform .22s ease;background:linear-gradient(145deg,#101b39,#060b19 72%);border-right:1px solid rgba(96,165,250,.48);box-shadow:18px 0 45px rgba(0,0,0,.48)}
 .quickMenu.open{transform:translateX(0)}.quickMenuHead{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 3px 16px;border-bottom:1px solid rgba(148,163,255,.24)}.quickMenuHead b{display:block;font-size:20px}.quickMenuHead small{display:block;margin-top:4px;color:#9fb1d3;font-size:12px}.quickMenuHead button{width:38px;height:38px;border:1px solid rgba(148,163,255,.36);border-radius:10px;background:#132142;color:#fff;font:700 17px inherit;cursor:pointer}
 .quickMenuList,.quickMenuActions{display:grid;gap:8px;margin-top:14px}.quickMenuList button,.quickMenuActions button{display:grid;grid-template-columns:28px 1fr;align-items:center;column-gap:10px;width:100%;padding:12px;border:1px solid rgba(148,163,255,.24);border-radius:13px;background:rgba(15,25,53,.78);color:#eef2ff;text-align:left;font:inherit;cursor:pointer}.quickMenuList button:hover,.quickMenuActions button:hover{border-color:#67e8f9;background:#172b59}.quickMenuList button>span,.quickMenuActions button>span:first-child{font-size:19px;color:#67e8f9;text-align:center}.quickMenuList b,.quickMenuActions b{display:block;font-size:14px}.quickMenuList small,.quickMenuActions small{display:block;margin-top:3px;color:#aebbd4;font-size:11px}.quickMenuActions{padding-top:14px;border-top:1px solid rgba(148,163,255,.24)}
+.quickMenuList button.selected{border-color:#67e8f9;background:linear-gradient(135deg,rgba(30,64,175,.6),rgba(8,145,178,.28));box-shadow:0 0 18px rgba(34,211,238,.13)}
 
 /* Układ */
 main{max-width:1320px;margin:0 auto;padding:16px 16px 40px}
@@ -421,8 +422,6 @@ body.noScroll .topbar{display:none!important}
 
 /* v94 — układ jak w projekcie: sterowanie | obraz | system, pod spodem DVR | lista nagrań */
 .stage.frame-grid::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(to right,transparent 33.1%,rgba(255,255,255,.38) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.38) 66.7%,transparent 66.9%),linear-gradient(to bottom,transparent 33.1%,rgba(255,255,255,.38) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.38) 66.7%,transparent 66.9%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
-.stage.pano360 video{object-fit:cover;transform:scale(1.08);filter:saturate(1.08) contrast(1.06)}
-.stage.pano360::after{content:"PANORAMA 360° · wymaga kamery 360";position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:5;padding:5px 9px;border-radius:999px;background:rgba(2,6,23,.78);border:1px solid rgba(125,211,252,.5);color:#e0f2fe;font-size:10px;font-weight:900;letter-spacing:.06em;pointer-events:none}
 :root{--panel:linear-gradient(180deg,rgba(15,24,46,.96),rgba(9,16,33,.96));--panelLine:rgba(99,125,190,.22);--blue:#3b82f6;--blue2:#60a5fa}
 main{max-width:1680px}
 .layout.sender{grid-template-columns:1fr!important}
@@ -561,6 +560,13 @@ svg .fill{fill:currentColor;stroke:none}
 @media(min-width:1180px){#watchPanel{grid-template-columns:1fr 1fr!important}#watchPanel .tool.primary{grid-column:auto}}
 @media(max-width:1179px){
   .mainCol>.stage{order:1}#watchPanel{order:2}#ctrlBar{order:3}#recStatus{order:4}#status{order:5}#dvrCard{order:6}#dvrListCard{order:7}#modeCard{order:8}.rightCol{order:9}#diagCard{order:10}#viewEventsCard{order:11}
+}
+/* Widoki z menu ☰: tylko kamera i wybrany panel. Transmisja pozostaje uruchomiona. */
+.mainCol[class*="focus-"]>*{display:none!important}.mainCol[class*="focus-"]>.stage{display:block!important;order:initial!important}.mainCol[class*="focus-"]>.rightCol{display:none!important;order:initial!important}.mainCol.focus-live>.rightCol,.mainCol.focus-settings>.rightCol{display:grid!important}.mainCol.focus-live>.rightCol>#setCard,.mainCol.focus-settings>.rightCol>#systemPanel{display:none!important}.mainCol.focus-controls>#modeCard{display:block!important;order:initial!important}.mainCol.focus-controls>#ctrlBar{display:flex!important;order:initial!important}.mainCol.focus-archive>#dvrCard,.mainCol.focus-archive>#dvrListCard{display:block!important;order:initial!important}
+@media(min-width:1180px){
+  .mainCol.focus-live,.mainCol.focus-settings{grid-template-columns:minmax(0,1.55fr) minmax(330px,.85fr)!important;grid-template-areas:"stage side"!important;align-items:start}.mainCol.focus-live>.stage,.mainCol.focus-settings>.stage{grid-area:stage!important;min-height:520px}.mainCol.focus-live>.rightCol,.mainCol.focus-settings>.rightCol{grid-area:side!important}
+  .mainCol.focus-controls{grid-template-columns:minmax(0,1.55fr) minmax(330px,.85fr)!important;grid-template-areas:"stage modes" "stage controls"!important;align-items:start}.mainCol.focus-controls>.stage{grid-area:stage!important;min-height:520px}.mainCol.focus-controls>#modeCard{grid-area:modes!important}.mainCol.focus-controls>#ctrlBar{grid-area:controls!important}
+  .mainCol.focus-archive{grid-template-columns:minmax(0,1.45fr) minmax(350px,.95fr)!important;grid-template-areas:"stage dvr" "stage list"!important;align-items:start}.mainCol.focus-archive>.stage{grid-area:stage!important;min-height:520px}.mainCol.focus-archive>#dvrCard{grid-area:dvr!important;margin:0!important}.mainCol.focus-archive>#dvrListCard{grid-area:list!important;margin:0!important;max-height:430px;overflow:auto}
 }
 @media(max-width:600px){
   .dvrGroup:last-child{display:grid;grid-template-columns:1fr 1fr 1.6fr 1fr 1fr;gap:5px}
