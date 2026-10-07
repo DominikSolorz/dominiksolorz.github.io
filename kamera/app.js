@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "107"; // musi się zgadzać z version.json
+const VERSION = "108"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -71,7 +71,13 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, detectSound: false, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, pano360: false, media: "av" };
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, detectSound: false, sensitivity: "medium", recQuality: "p360", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, pano360: false, media: "av", light: 1 };
+// Jasność kamery: −3 … +3 (0 = środek zakresu sterownika, domyślnie +1 — lekko rozjaśniony). Ustawiana w samej
+// kamerze, więc działa na podgląd i nagrania. Gdy sterownik nie ma regulacji — rozjaśnienie programowe (lightSw).
+const LIGHT_LABEL = { "-3": "−3 (najciemniej)", "-2": "−2", "-1": "−1", 0: "0 (neutralnie)", 1: "+1", 2: "+2", 3: "+3 (najjaśniej)" };
+const clampLight = n => Math.max(-3, Math.min(3, Math.round(Number(n) || 0)));
+const swFilter = n => (n ? `brightness(${(1 + n * 0.18).toFixed(2)}) contrast(${(1 + Math.abs(n) * 0.03).toFixed(2)})` : "none");
+let lightSw = 0;
 // Źródło transmisji i zapisu: "av" = obraz + dźwięk, "v" = tylko obraz, "a" = tylko dźwięk.
 const MEDIA_LABEL = { av: "obraz + dźwięk", v: "tylko obraz", a: "tylko dźwięk" };
 // Tryby, w których powstają pliki ("rec-only" = zapis bez transmisji na żywo).
@@ -91,7 +97,9 @@ function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(pref
 const prefs = loadPrefs();
 // Właściciel poprosił o jaśniejszy obraz. Dotyczy to wyłącznie podglądu —
 // surowe nagranie zachowuje naturalne piksele jako materiał archiwalny.
-if (!prefs.brightPreview1) { prefs.pictureStyle = "brightsharp"; prefs.brightPreview1 = true; savePrefs(); }
+// Wymuszony filtr „Rozjaśnienie + ostrość” nakładał się na rozjaśnienie w samej kamerze (obraz prześwietlony).
+// Jasność ustawia teraz suwak „Jasność kamery”; podgląd wraca do naturalnych kolorów.
+if (!prefs.lightFix1) { if (prefs.brightPreview1 && prefs.pictureStyle === "brightsharp") prefs.pictureStyle = "color"; prefs.lightFix1 = true; savePrefs(); }
 function recordingScheduledNow() {
   if (prefs.recordUntil > Date.now()) return true; // nagranie jednorazowe — niezależnie od harmonogramu
   const hour = new Date().getHours();
@@ -490,7 +498,7 @@ const archive = (() => {
         if (stopped) return;
         if (input.readyState >= 2) {
           if (prefs.media === "a") { ctx.fillStyle = "#000"; ctx.fillRect(0, 0, width, height); } // tylko dźwięk
-          else ctx.drawImage(input, 0, 0, width, height);
+          else { if (lightSw) ctx.filter = swFilter(lightSw); ctx.drawImage(input, 0, 0, width, height); ctx.filter = "none"; }
           const sec = Math.floor(Date.now() / 1000);
           if (sec !== lastSec) { lastSec = sec; text = `KAMERA DOMOWA · ${new Date().toLocaleString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}`; }
           const size = Math.max(20, Math.round(width / 38));
@@ -732,8 +740,8 @@ const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", pay
 
 // Polecenia zmieniające pracę komputera-kamery muszą być podpisane kluczem z PIN-u.
 // Link odbiorcy zawiera tylko nazwę kanału, dlatego nie wystarcza jako uprawnienie do sterowania.
-const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "restart", "reload"]);
-const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}`;
+const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "light-set", "restart", "reload"]);
+const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}${sig.type === "light-set" ? `|L${clampLight(sig.light)}` : ""}`;
 async function signedOwnerControl(payload) {
   if (!ACCESS_KEY) return null;
   const ts = Date.now();
@@ -997,6 +1005,7 @@ const sender = (() => {
       if (sig.type === "mode-set") return setMode(sig.mode, sig.minutes);
       if (sig.type === "quality-set") return setQuality(sig.q);
       if (sig.type === "media-set") return setMedia(sig.media);
+      if (sig.type === "light-set") return setLight(sig.light);
       if (sig.type === "restart") return restart();
       if (sig.type === "reload") return forceReload();
     }
@@ -1019,27 +1028,34 @@ const sender = (() => {
     // Mikrofon: tłumienie szumów, usuwanie echa i automatyczne wzmocnienie włączone (czysty, wyrównany dźwięk).
     audio: prefs.audio ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true } : false,
   });
-  let cameraLight = "Automatyka światła kamery: sprawdzam…";
+  let cameraLight = "Jasność kamery: sprawdzam…";
+  // Punkt wyjścia to środek zakresu sterownika; krok ±1 przesuwa o ok. 25% drogi do minimum/maksimum.
+  // Autoekspozycja i balans bieli zostają automatyczne (kamera sama dopasowuje się do dnia i nocy).
   async function optimizeCameraLight(track) {
-    const caps = track?.getCapabilities?.() || {};
-    const advanced = {};
-    // Używamy wyłącznie możliwości, które sam sterownik zgłasza. Nie każda
-    // kamera obsługuje regulację ekspozycji, dlatego błąd nie zatrzymuje obrazu.
+    if (!track) return;
+    const caps = track.getCapabilities?.() || {}, step = clampLight(prefs.light), advanced = {};
     if (Array.isArray(caps.exposureMode) && caps.exposureMode.includes("continuous")) advanced.exposureMode = "continuous";
     if (Array.isArray(caps.whiteBalanceMode) && caps.whiteBalanceMode.includes("continuous")) advanced.whiteBalanceMode = "continuous";
-    for (const [name, level] of [["exposureCompensation", 0.72], ["brightness", 0.70], ["contrast", 0.58]]) {
-      const range = caps[name];
-      if (range && Number.isFinite(range.min) && Number.isFinite(range.max) && range.max > range.min) {
-        advanced[name] = range.min + (range.max - range.min) * level;
-      }
+    let hw = false;
+    for (const name of ["exposureCompensation", "brightness", "contrast"]) {
+      const r = caps[name];
+      if (!r || !Number.isFinite(r.min) || !Number.isFinite(r.max) || r.max <= r.min) continue;
+      const mid = (r.min + r.max) / 2;
+      let v = name === "contrast" ? mid + (r.max - mid) * 0.1 : mid + (step >= 0 ? r.max - mid : mid - r.min) * step * 0.25;
+      if (r.step > 0) v = r.min + Math.round((v - r.min) / r.step) * r.step;
+      advanced[name] = Math.max(r.min, Math.min(r.max, v));
+      if (name !== "contrast") hw = true;
     }
-    if (!Object.keys(advanced).length) { cameraLight = "Światło kamery: automatyka sterownika"; return; }
-    try {
-      await track.applyConstraints({ advanced: [advanced] });
-      cameraLight = "Światło kamery: autoekspozycja + rozjaśnienie aktywne";
-    } catch {
-      cameraLight = "Światło kamery: automatyka sterownika";
-    }
+    try { if (Object.keys(advanced).length) await track.applyConstraints({ advanced: [advanced] }); }
+    catch { hw = false; }
+    lightSw = hw ? 0 : step;
+    cameraLight = `Jasność kamery: ${LIGHT_LABEL[step]}${!hw && step ? " · rozjaśnianie programowe (kamera nie ma regulacji)" : ""}`;
+    video.style.filter = lightSw ? swFilter(lightSw) : "";
+  }
+  function setLight(n) {
+    prefs.light = clampLight(n); savePrefs();
+    $("lightPick").value = prefs.light; $("lightVal").textContent = LIGHT_LABEL[prefs.light];
+    optimizeCameraLight(stream?.getVideoTracks()[0]).then(() => { beat(); report(); });
   }
   async function prepareCameraStream(s) {
     const track = s.getVideoTracks()[0];
@@ -1332,7 +1348,7 @@ const sender = (() => {
       mic: a ? (a.label || "mikrofon") : "", micOn: !!a && a.enabled && a.readyState === "live", recording: r.recording, lastFile: r.lastFile,
       quality: recQuality().short, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem(), light: cameraLight };
   }
-  const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, visible: document.visibilityState === "visible", diag: diag() }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream, quality: prefs.recQuality }));
+  const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, light: clampLight(prefs.light), lightSw, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, visible: document.visibilityState === "visible", diag: diag() }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream, quality: prefs.recQuality }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
   function setQuality(q) {
     if (!REC_QUALITY[q]) return;
@@ -1380,7 +1396,7 @@ const sender = (() => {
     }).catch(() => {});
   }
 
-  return { start, stop, restart, forceReload, takeover, setMedia, applyMedia, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; } };
+  return { start, stop, restart, forceReload, takeover, setMedia, setLight, applyMedia, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -1416,6 +1432,8 @@ const viewer = (() => {
       setCtrlState({ recording: !!sig.rec?.recording, since: sig.rec?.since || 0, mode: sig.mode || "", until: sig.until || 0, skew: sig.now ? sig.now - Date.now() : 0, hasCam: !sig.camError, quality: sig.quality || "" });
       if (REC_QUALITY[sig.quality] && document.activeElement !== $("viewQuality")) $("viewQuality").value = sig.quality;
       if (MEDIA_LABEL[sig.media] && document.activeElement !== $("mediaPick")) $("mediaPick").value = sig.media;
+      if (sig.light !== undefined && document.activeElement !== $("lightPick")) { $("lightPick").value = clampLight(sig.light); $("lightVal").textContent = LIGHT_LABEL[clampLight(sig.light)]; }
+      video.style.filter = sig.lightSw ? swFilter(clampLight(sig.lightSw)) : "";
       // Bez obrazu na żywo — powiedz dlaczego (tryb „Tylko zapis” albo transmisja samego dźwięku).
       const note = sig.mode === "rec-only" ? "Kamera tylko nagrywa — transmisja na żywo jest wyłączona.\nNagrania są dostępne na osi czasu." : sig.media === "a" ? "🎙 Transmisja tylko dźwięku (obraz wyłączony)" : "";
       if (note) { showPlaceholder(note); liveNote = true; } else if (liveNote) { liveNote = false; if (pc?.connectionState === "connected") showPlaceholder(""); }
@@ -1525,6 +1543,14 @@ const viewer = (() => {
     setTimeout(() => setStatus(""), 4000);
   }
 
+  async function setLight(n) {
+    const command = await signedOwnerControl({ type: "light-set", light: clampLight(n) });
+    if (!command) return;
+    send(chan.channel, command);
+    setStatus(`Zmieniam jasność kamery: ${LIGHT_LABEL[clampLight(n)]}.`);
+    setTimeout(() => setStatus(""), 4000);
+  }
+
   async function setQuality(q) {
     const command = await signedOwnerControl({ type: "quality-set", q });
     if (!command) return;
@@ -1548,7 +1574,7 @@ const viewer = (() => {
     setTimeout(() => setStatus(""), 6000);
   }
 
-  return { start, stop, restart, reloadPc, sendZoom, setMode, setQuality, setMedia, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
+  return { start, stop, restart, reloadPc, sendZoom, setMode, setQuality, setMedia, setLight, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
 })();
 
 // Zdarzenie na telefonie: wyskakujące powiadomienie, wibracja, lista ostatnich zdarzeń.
@@ -1690,7 +1716,7 @@ function showViewer() {
   $("roleBtn").hidden = !IS_DESKTOP;
   if (RECEIVER_ONLY) {
     $("modeCard").hidden = true;
-    ["ownerQuality", "ownerMedia", "ownerOnce", "reloadPcBtn"].forEach(id => { $(id).hidden = true; });
+    ["ownerQuality", "ownerMedia", "ownerOnce", "ownerLight", "reloadPcBtn"].forEach(id => { $(id).hidden = true; });
     $("viewEventsCard").hidden = true;
     document.querySelector("#ctrlBar .ctrlBtns").hidden = true;
     $("roleBtn").hidden = true;
@@ -1795,6 +1821,10 @@ for (const id of ["quality", "viewQuality"]) {
 }
 $("quality").addEventListener("change", e => sender.setQuality(e.target.value));
 $("mediaPick").value = MEDIA_LABEL[prefs.media] ? prefs.media : "av";
+$("lightPick").value = clampLight(prefs.light); $("lightVal").textContent = LIGHT_LABEL[clampLight(prefs.light)];
+$("lightPick").addEventListener("input", e => { $("lightVal").textContent = LIGHT_LABEL[clampLight(e.target.value)]; });
+$("lightPick").addEventListener("change", e => { if (RECEIVER_ONLY) return; prefs.role === "send" ? sender.setLight(e.target.value) : viewer.setLight(e.target.value); });
+for (const [id, d] of [["lightDown", -1], ["lightUp", 1]]) $(id).addEventListener("click", () => { $("lightPick").value = clampLight(Number($("lightPick").value) + d); $("lightPick").dispatchEvent(new Event("input")); $("lightPick").dispatchEvent(new Event("change")); });
 $("mediaPick").addEventListener("change", e => { if (RECEIVER_ONLY) return; prefs.role === "send" ? sender.setMedia(e.target.value) : viewer.setMedia(e.target.value); });
 $("viewQuality").addEventListener("change", e => sender.live ? sender.setQuality(e.target.value) : viewer.setQuality(e.target.value));
 $("retentionDays").closest("label").hidden = true;
