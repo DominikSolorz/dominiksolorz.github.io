@@ -421,7 +421,6 @@ body.noScroll .topbar{display:none!important}
 @media(max-width:600px){.dvrTicks span:nth-child(even):not(:last-child){display:none}}
 
 /* v94 — układ jak w projekcie: sterowanie | obraz | system, pod spodem DVR | lista nagrań */
-.stage.frame-grid::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(to right,transparent 33.1%,rgba(255,255,255,.38) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.38) 66.7%,transparent 66.9%),linear-gradient(to bottom,transparent 33.1%,rgba(255,255,255,.38) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.38) 66.7%,transparent 66.9%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
 :root{--panel:linear-gradient(180deg,rgba(15,24,46,.96),rgba(9,16,33,.96));--panelLine:rgba(99,125,190,.22);--blue:#3b82f6;--blue2:#60a5fa}
 main{max-width:1680px}
 .layout.sender{grid-template-columns:1fr!important}
@@ -568,6 +567,9 @@ svg .fill{fill:currentColor;stroke:none}
   .mainCol.focus-controls{grid-template-columns:minmax(0,1.55fr) minmax(330px,.85fr)!important;grid-template-areas:"stage modes" "stage controls"!important;align-items:start}.mainCol.focus-controls>.stage{grid-area:stage!important;min-height:520px}.mainCol.focus-controls>#modeCard{grid-area:modes!important}.mainCol.focus-controls>#ctrlBar{grid-area:controls!important}
   .mainCol.focus-archive{grid-template-columns:minmax(0,1.45fr) minmax(350px,.95fr)!important;grid-template-areas:"stage dvr" "stage list"!important;align-items:start}.mainCol.focus-archive>.stage{grid-area:stage!important;min-height:520px}.mainCol.focus-archive>#dvrCard{grid-area:dvr!important;margin:0!important}.mainCol.focus-archive>#dvrListCard{grid-area:list!important;margin:0!important;max-height:430px;overflow:auto}
 }
+
+/* Czysty podgląd: elementy dowodowe są zapisane w pliku nagrania, ale nie zasłaniają obrazu na ekranie. */
+.stage .monitorClock,.stage .badge{display:none!important}
 @media(max-width:600px){
   .dvrGroup:last-child{display:grid;grid-template-columns:1fr 1fr 1.6fr 1fr 1fr;gap:5px}
   .dvrGroup:last-child .dvrBtn{padding:0 2px;font-size:12px}

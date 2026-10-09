@@ -9,7 +9,7 @@
 <title>Kamera na żywo</title>
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=113">
+<link rel="stylesheet" href="style.css?v=114">
 </head>
 <body>
 <header class="topbar">
@@ -32,7 +32,6 @@
     <button type="button" data-menu-view="archive"><span>⏪</span><b>Nagrania DVR</b><small>wyłącznie oś czasu i archiwum</small></button>
   </div>
   <div class="quickMenuActions">
-    <button id="menuGrid" type="button"><span>▦</span><span><b>Siatka kadru</b><small id="menuGridState">pokaż na obrazie</small></span></button>
     <button id="menuFullscreen" type="button"><span>⛶</span><span><b>Pełny ekran</b><small>powiększ bieżący obraz</small></span></button>
   </div>
 </aside>
@@ -125,7 +124,6 @@
             <option value="mono">Czarno-biały</option>
             <option value="contrast">Wysoki kontrast</option>
           </select></label></div>
-          <label class="setRow switchRow"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Siatka na obrazie</span><input type="checkbox" id="gridToggle" class="switch"></label>
           <button class="tool reloadPc" id="reloadPcBtn" type="button">⟳ Odśwież komputer-kamerę</button>
         </section>
       </div>
@@ -267,6 +265,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=113"></script>
+  <script type="module" src="app.js?v=114"></script>
 </body>
 </html>

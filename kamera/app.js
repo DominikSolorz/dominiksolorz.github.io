@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "113"; // musi się zgadzać z version.json
+const VERSION = "114"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -71,7 +71,7 @@ const iceServers = () => {
 };
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
-const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, detectSound: false, sensitivity: "medium", recQuality: "max", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, media: "av", light: 0 };
+const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, detectSound: false, sensitivity: "medium", recQuality: "max", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", media: "av", light: 0 };
 // Jasność kamery: −3 … +3 (0 = pierwotny, automatyczny obraz kamery). Ustawiana w samej
 // kamerze, więc działa na podgląd i nagrania. Gdy sterownik nie ma regulacji — rozjaśnienie programowe (lightSw).
 const LIGHT_LABEL = { "-3": "−3 (najciemniej)", "-2": "−2", "-1": "−1", 0: "0 (neutralnie)", 1: "+1", 2: "+2", 3: "+3 (najjaśniej)" };
@@ -1764,11 +1764,8 @@ function applyPictureLayout() {
   $("stage").classList.toggle("visual-cool", style === "cool");
   $("stage").classList.toggle("visual-warm", style === "warm");
   $("stage").classList.toggle("visual-negative", style === "negative");
-  $("stage").classList.toggle("frame-grid", !!prefs.pictureGrid);
-  $("gridToggle").checked = !!prefs.pictureGrid;
 }
 $("pictureStyle").addEventListener("change", e => { prefs.pictureStyle = e.target.value; savePrefs(); applyPictureLayout(); toastMsg("Zmieniono efekt podglądu."); });
-$("gridToggle").addEventListener("change", e => { prefs.pictureGrid = e.target.checked; savePrefs(); applyPictureLayout(); });
 applyPictureLayout();
 
 // Szybkie menu nie zmienia strony ani trybu kamery: przełącza tylko układ roboczy.
@@ -1777,7 +1774,6 @@ function setQuickMenu(open) {
   quickMenu.classList.toggle("open", open); quickMenuShade.hidden = !open;
   quickMenuBtn.setAttribute("aria-expanded", String(open)); quickMenu.setAttribute("aria-hidden", String(!open));
 }
-function updateMenuGrid() { $("menuGridState").textContent = prefs.pictureGrid ? "siatka jest widoczna na obrazie" : "pokaż na obrazie"; }
 quickMenuBtn.addEventListener("click", () => setQuickMenu(!quickMenu.classList.contains("open")));
 $("quickMenuClose").addEventListener("click", () => setQuickMenu(false)); quickMenuShade.addEventListener("click", () => setQuickMenu(false));
 function setWorkspace(view) {
@@ -1790,9 +1786,7 @@ document.querySelectorAll("[data-menu-view]").forEach(btn => btn.addEventListene
   const view = btn.dataset.menuView; setWorkspace(view); setQuickMenu(false);
   toastMsg(`${btn.querySelector("b")?.textContent || "Panel"} — transmisja działa dalej.`);
 }));
-$("menuGrid").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictureGrid; savePrefs(); applyPictureLayout(); updateMenuGrid(); setQuickMenu(false); toastMsg(prefs.pictureGrid ? "Siatka kadru jest widoczna na obrazie." : "Siatka kadru została ukryta."); });
 $("menuFullscreen").addEventListener("click", () => { setQuickMenu(false); toggleFullscreen(); });
-updateMenuGrid();
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
 $("ctrlStart").addEventListener("click", async () => {
