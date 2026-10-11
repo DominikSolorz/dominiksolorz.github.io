@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "115"; // musi się zgadzać z version.json
+const VERSION = "116"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -45,12 +45,12 @@ const IS_DESKTOP = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
 // Pełna jakość dla telefonu właściciela. Przy słabszym łączu WebRTC obniża obraz
 // automatycznie zamiast zrywać połączenie.
 const MAX_VIEWERS = 12;
-// Podgląd: pełny kadr kamery, 30 kl./s, do 4 Mb/s na oglądającego.
-// H.264 zachowuje sprzętowe dekodowanie na iPhonie.
-const LIVE_MAX_BITRATE = 4000000;
-const LIVE_FPS = 30;
-// Nie skalujemy już podglądu do 720p: komputer wysyła pełny kadr kamery.
-const LIVE_SEND_WIDTH = 1920, LIVE_SEND_FPS = 30;
+// Podgląd: Full HD, do 60 kl./s i do 6 Mb/s na oglądającego.
+// Odbiornik (telefon/tablet) dostaje dokładnie ten sam strumień; WebRTC obniży
+// bitrate przy słabszym łączu zamiast zrywać połączenie.
+const LIVE_MAX_BITRATE = 6000000;
+const LIVE_FPS = 60;
+const LIVE_SEND_WIDTH = 1920, LIVE_SEND_FPS = 60;
 // Wirtualne kamery (OBS, Snap, ManyCam…) pokazują zastępczy obrazek, gdy ich program nie działa — pomijamy je.
 const VIRTUAL_CAM = /obs|virtual|snap camera|manycam|xsplit|ndi|splitcam|vcam|droidcam|epoccam|camo|iriun/i; // wirtualne kamery — nigdy nieużywane
 const HEARTBEAT_MS = 15000;
@@ -89,7 +89,7 @@ const REC_QUALITY = {
   p360: { bps: 400000, height: 360, label: "Niska — 360p (ok. 30 MB / 10 min)", short: "niska 360p" },
   eco:  { bps: 600000, label: "Oszczędna — pełna rozdzielczość (ok. 45 MB / 10 min)", short: "oszczędna" },
   high: { bps: 1500000, cbr: true, label: "Wysoka — wyraźny obraz (ok. 110 MB / 10 min)", short: "wysoka" },
-  max:  { bps: 4000000, cbr: true, label: "Maksymalna — najostrzej (ok. 300 MB / 10 min)", short: "maksymalna" },
+  max:  { bps: 8000000, cbr: true, label: "Full HD 60 — najwyższa jakość (ok. 600 MB / 10 min)", short: "Full HD 60" },
 };
 const recQuality = () => REC_QUALITY[prefs.recQuality] || REC_QUALITY.high;
 function loadPrefs() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } }
@@ -111,9 +111,10 @@ function recordingScheduledNow() {
 }
 // Jednorazowo: nowy plik co 10 minut i przechowywanie 30 dni (biblioteka nagrań na Google Drive).
 if (!prefs.lib1) { prefs.segmentMin = 10; prefs.retentionDays = 30; prefs.lib1 = true; savePrefs(); }
-// Ustawienie domyślne właściciela: faktyczne 360p, czyli mniejszy obraz w zapisywanym pliku.
-// Zmiana na inną jakość w panelu wyłącza ten tryb bez utraty pozostałych ustawień.
-if (!prefs.q360) { prefs.recQuality = "p360"; prefs.q360 = true; savePrefs(); }
+// Stare wydanie ustawiało 360p przy pierwszym starcie. Ta migracja przywraca
+// jakość maksymalną tylko urządzeniom, które nie dostały jeszcze poprawki;
+// późniejszy świadomy wybór właściciela pozostaje bez zmian.
+if (!prefs.fullHd60Default1) { prefs.recQuality = "max"; prefs.fullHd60Default1 = true; savePrefs(); }
 // Jednoznaczne przejście ze starych, niejasnych trybów: po aktualizacji właściciela
 // komputer-kamera zawsze wraca do zapisu 24/7. Późniejsze świadome wybory w panelu
 // są zachowane, bo znacznik migracji wykonuje się tylko raz.
@@ -303,7 +304,7 @@ const cloud = (() => {
 // Każdy 10-minutowy plik najpierw trafia do wybranego folderu na dysku. IndexedDB jest tylko podręczną
 // kopią do szybkiego odtwarzania na telefonie przez WebRTC. Nowe pliki są
 // automatycznie przenoszone do prywatnego Google Drive po potwierdzonym zapisie.
-// Obraz w pełnej rozdzielczości kamery: 5 kl./s gdy spokojnie, 30 kl./s przy ruchu/dźwięku (+10 s po ustaniu).
+// Nagranie Full HD z celem 60 kl./s bez obniżania płynności podczas bezruchu.
 const REC_MIME = (() => {
   if (typeof MediaRecorder === "undefined") return null;
   // MP4/H.264: odtwarza go iPhone i przyjmuje WhatsApp/Messenger; zapasowo WebM (AV1/VP9).
@@ -311,7 +312,7 @@ const REC_MIME = (() => {
   return ["video/mp4;codecs=avc1,mp4a", "video/mp4;codecs=avc1.640028,mp4a.40.2", "video/mp4;codecs=avc1.4d0028,mp4a.40.2", "video/mp4;codecs=avc1,opus", "video/mp4;codecs=avc1",
     "video/webm;codecs=av01,opus", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"].find(t => MediaRecorder.isTypeSupported(t)) ?? "";
 })();
-const SLOW_FPS = 5, FAST_FPS = 30, FAST_HOLD_MS = 10000;
+const SLOW_FPS = 60, FAST_FPS = 60, FAST_HOLD_MS = 10000;
 const REC_AUDIO_BPS = 64000;
 
 const archive = (() => {
@@ -324,7 +325,8 @@ const archive = (() => {
   // Limit skryptu Google w starej wersji (bez wysyłania w kawałkach): ok. 35 MB pliku.
   const MAX_UPLOAD = 34 * 1024 * 1024;
   const oversize = new Set();
-  const adaptive = () => !!prefs.detect; // bez wykrywania ruchu — stale 30 kl./s
+  // Wykrywanie ruchu oznacza zdarzenia na osi czasu, ale nie obniża jakości pliku.
+  const adaptive = () => false;
 
   async function refreshLocal() {
     try { local = await recstore.stats(); free = (await recstore.space()).free; } catch { /* brak IndexedDB */ }
@@ -478,7 +480,7 @@ const archive = (() => {
   async function makeRecStream(s) {
     const v = s.getVideoTracks()[0]?.clone();
     fast = !adaptive();
-    if (v) { try { await v.applyConstraints({ frameRate: { ideal: fast ? FAST_FPS : SLOW_FPS, max: fast ? FAST_FPS : SLOW_FPS } }); } catch { /* zostaje 30 kl./s */ } }
+    if (v) { try { await v.applyConstraints({ frameRate: { ideal: fast ? FAST_FPS : SLOW_FPS } }); } catch { /* zostaje bieżąca płynność kamery */ } }
     if (!v || !HTMLCanvasElement.prototype.captureStream) return new MediaStream([...(v ? [v] : []), ...s.getAudioTracks()]);
     const input = document.createElement("video");
     input.muted = true; input.playsInline = true; input.srcObject = new MediaStream([v]);
@@ -1025,8 +1027,9 @@ const sender = (() => {
   async function requestWakeLock() { try { wakeLock = await navigator.wakeLock?.request("screen") ?? null; } catch { /* brak wsparcia */ } }
 
   const mediaConstraints = deviceId => ({
-    // Ok. 1920 px szerokości przy 30 kl./s — płynny obraz. Pełne 5 MP kamery dają tylko kilka klatek na sekundę.
-    video: { width: { ideal: 1920 }, frameRate: { ideal: LIVE_FPS, max: LIVE_FPS }, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) },
+    // Full HD 16:9, z preferencją 60 kl./s. "Ideal" oznacza, że słabsza
+    // kamera może bezpiecznie wybrać niższą obsługiwaną płynność zamiast błędu.
+    video: { width: { ideal: 1920 }, height: { ideal: 1080 }, aspectRatio: { ideal: 16 / 9 }, frameRate: { ideal: LIVE_FPS }, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) },
     // Mikrofon: tłumienie szumów, usuwanie echa i automatyczne wzmocnienie włączone (czysty, wyrównany dźwięk).
     audio: prefs.audio ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true } : false,
   });
