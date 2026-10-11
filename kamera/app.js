@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "118"; // musi się zgadzać z version.json
+const VERSION = "119"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -324,7 +324,7 @@ const archive = (() => {
   let local = { count: 0, bytes: 0, oldest: 0 }, free = Infinity, persisted = false;
   let diskFiles = { count: 0, bytes: 0, oldest: 0 };
   let disk = { selected: false, name: "", ready: false, saved: 0, error: "" };
-  let fast = false, slowTimer = null, segStart = 0, watermarkStop = null;
+  let fast = false, slowTimer = null, segStart = 0, watermarkStop = null, recordingFps = 0;
   // Limit skryptu Google w starej wersji (bez wysyłania w kawałkach): ok. 35 MB pliku.
   const MAX_UPLOAD = 34 * 1024 * 1024;
   const oversize = new Set();
@@ -491,6 +491,10 @@ const archive = (() => {
       await new Promise((resolve, reject) => { input.onloadedmetadata = resolve; input.onerror = reject; });
       await input.play();
       const settings = v.getSettings();
+      // Nie twórz sztucznie dodatkowych klatek, kiedy kamera fizycznie daje
+      // mniej niż 60 FPS. Zapis zachowuje Full HD i każdą prawdziwą klatkę,
+      // ale nie obciąża komputera kopiami tych samych obrazów.
+      recordingFps = Math.max(1, Math.min(FAST_FPS, Math.round(settings.frameRate || FAST_FPS)));
       const srcW = settings.width || input.videoWidth || 1280, srcH = settings.height || input.videoHeight || 720;
       // 360p: mały obraz; pozostałe jakości — pełna rozdzielczość kamery.
       const scale = recQuality().height ? Math.min(1, recQuality().height / srcH) : 1;
@@ -516,10 +520,10 @@ const archive = (() => {
           ctx.strokeStyle = "rgba(196, 181, 253, .9)"; ctx.lineWidth = Math.max(2, Math.round(size / 13)); ctx.strokeRect(x, y, boxW, boxH);
           ctx.fillStyle = "#ffffff"; ctx.fillText(text, x + pad, y + boxH / 2);
         }
-        frame = setTimeout(draw, 1000 / (fast ? FAST_FPS : SLOW_FPS));
+        frame = setTimeout(draw, 1000 / (fast ? recordingFps : Math.min(recordingFps, SLOW_FPS)));
       };
       draw();
-      const marked = canvas.captureStream(fast ? FAST_FPS : SLOW_FPS).getVideoTracks()[0];
+      const marked = canvas.captureStream(fast ? recordingFps : Math.min(recordingFps, SLOW_FPS)).getVideoTracks()[0];
       watermarkStop = () => { stopped = true; clearTimeout(frame); input.pause(); input.srcObject = null; v.stop(); marked.stop(); };
       return new MediaStream([marked, ...s.getAudioTracks()]);
     } catch {
@@ -617,7 +621,11 @@ const archive = (() => {
     if (local.count) text += ` W pamięci strony: ${local.count} nagrań (${gb(local.bytes)}).`;
     if (Number.isFinite(free)) text += ` Wolne miejsce dla strony: ${gb(free)}${free < 2 * 1073741824 ? " ⚠ mało miejsca — najstarsze nagrania w pamięci strony są kasowane, żeby nagrywanie nie stanęło" : ""}.${persisted ? "" : " Pamięć nietrwała."}`;
     const set = source?.getVideoTracks()[0]?.getSettings?.() || {};
-    if (set.width) text += ` Obraz: ${set.width}×${set.height}, ${fast ? FAST_FPS : SLOW_FPS} kl./s${fast && adaptive() ? " (ruch)" : ""}, ${(REC_MIME || "").split(";")[0] || "domyślny kodek"}, jakość ${recQuality().short}.`;
+    if (set.width) {
+      const actualFps = Math.max(1, Math.round(set.frameRate || recordingFps || FAST_FPS));
+      const outputFps = recordingFps || actualFps;
+      text += ` Obraz: ${set.width}×${set.height}, kamera ${actualFps} kl./s · zapis ${outputFps} kl./s, ${(REC_MIME || "").split(";")[0] || "domyślny kodek"}, jakość ${recQuality().short}.`;
+    }
     if (cloud.enabled) {
       if (queued) text += ` Kolejka Google Drive: ${queued}.`;
       if (sentToDrive) text += ` Wysłano: ${sentToDrive}.`;
