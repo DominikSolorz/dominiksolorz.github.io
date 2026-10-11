@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "117"; // musi się zgadzać z version.json
+const VERSION = "118"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -102,6 +102,9 @@ const prefs = loadPrefs();
 if (!prefs.lightFix1) { if (prefs.brightPreview1 && prefs.pictureStyle === "brightsharp") prefs.pictureStyle = "color"; prefs.lightFix1 = true; savePrefs(); }
 // Pełny powrót do obrazu początkowego na każdym urządzeniu po aktualizacji.
 if (!prefs.restoreCameraOriginal4) { prefs.light = 0; prefs.pictureStyle = "color"; prefs.restoreCameraOriginal4 = true; savePrefs(); }
+// Profil naturalny: na komputerze-kamerze nie zachowujemy dawnych sztucznych
+// korekt jasności. Kamera ma sama dobrać ekspozycję i balans bieli do pokoju.
+if (!prefs.naturalAutoLight2) { prefs.light = 0; prefs.pictureStyle = "color"; prefs.naturalAutoLight2 = true; savePrefs(); }
 function recordingScheduledNow() {
   if (prefs.recordUntil > Date.now()) return true; // nagranie jednorazowe — niezależnie od harmonogramu
   const hour = new Date().getHours();
@@ -1034,30 +1037,32 @@ const sender = (() => {
     audio: prefs.audio ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true } : false,
   });
   let cameraLight = "Jasność kamery: sprawdzam…";
-  // Punkt wyjścia to środek zakresu sterownika; krok ±1 przesuwa o ok. 25% drogi do minimum/maksimum.
-  // Autoekspozycja i balans bieli zostają automatyczne (kamera sama dopasowuje się do dnia i nocy).
+  // Ustawienie 0 to prawdziwy automatyczny obraz kamery: bez ręcznego
+  // ustawiania jasności, bez kontrastu i bez programowego filtra.
+  // Krok ±1…±3 jest wyłącznie świadomą, ręczną korektą właściciela.
   async function optimizeCameraLight(track) {
     if (!track) return;
     const caps = track.getCapabilities?.() || {}, step = clampLight(prefs.light), advanced = {};
     if (Array.isArray(caps.exposureMode) && caps.exposureMode.includes("continuous")) advanced.exposureMode = "continuous";
     if (Array.isArray(caps.whiteBalanceMode) && caps.whiteBalanceMode.includes("continuous")) advanced.whiteBalanceMode = "continuous";
     let hw = false;
-    // Pozycja 0 resetuje wcześniej narzucone wartości sterownika do środka jego zakresu.
-    // Bez tego panel mógł pokazywać 0, podczas gdy kamera nadal pozostawała na dawnym +3.
-    // Kontrast nie jest wymuszany; ekspozycja i balans bieli nadal pracują automatycznie.
-    for (const name of ["exposureCompensation", "brightness"]) {
-      const r = caps[name];
-      if (!r || !Number.isFinite(r.min) || !Number.isFinite(r.max) || r.max <= r.min) continue;
-      const mid = (r.min + r.max) / 2;
-      let v = name === "contrast" ? mid + (r.max - mid) * 0.1 : mid + (step >= 0 ? r.max - mid : mid - r.min) * step * 0.25;
-      if (r.step > 0) v = r.min + Math.round((v - r.min) / r.step) * r.step;
-      advanced[name] = Math.max(r.min, Math.min(r.max, v));
-      if (name !== "contrast") hw = true;
+    // Na „0” nie dotykamy brightness/exposureCompensation — sterownik kamery
+    // zachowuje swój naturalny, automatyczny algorytm. Ręczny krok koryguje
+    // wyłącznie ekspozycję, nigdy nie zmienia balansu kolorów ani kontrastu.
+    if (step) {
+      const r = caps.exposureCompensation;
+      if (r && Number.isFinite(r.min) && Number.isFinite(r.max) && r.max > r.min) {
+        const mid = (r.min + r.max) / 2;
+        let v = mid + (step >= 0 ? r.max - mid : mid - r.min) * step * 0.25;
+        if (r.step > 0) v = r.min + Math.round((v - r.min) / r.step) * r.step;
+        advanced.exposureCompensation = Math.max(r.min, Math.min(r.max, v));
+        hw = true;
+      }
     }
     try { if (Object.keys(advanced).length) await track.applyConstraints({ advanced: [advanced] }); }
     catch { hw = false; }
-    lightSw = hw ? 0 : step;
-    cameraLight = `Jasność kamery: ${LIGHT_LABEL[step]}${!hw && step ? " · rozjaśnianie programowe (kamera nie ma regulacji)" : ""}`;
+    lightSw = step && !hw ? step : 0;
+    cameraLight = step ? `Jasność kamery: ${LIGHT_LABEL[step]}${!hw ? " · korekta programowa (kamera nie ma regulacji ekspozycji)" : ""}` : "Obraz naturalny · automatyczna ekspozycja i balans bieli";
     video.style.filter = lightSw ? swFilter(lightSw) : "";
   }
   function setLight(n) {
