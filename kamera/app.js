@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "119"; // musi się zgadzać z version.json
+const VERSION = "120"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -325,6 +325,9 @@ const archive = (() => {
   let diskFiles = { count: 0, bytes: 0, oldest: 0 };
   let disk = { selected: false, name: "", ready: false, saved: 0, error: "" };
   let fast = false, slowTimer = null, segStart = 0, watermarkStop = null, recordingFps = 0;
+  // Segment może mieć setki MB. Przy aktualizacji strony nie wolno przeładować
+  // karty zanim MediaRecorder, zapis na dysku i kolejka Drive zakończą pracę.
+  const stopped = new WeakMap(), pendingSaves = new Set();
   // Limit skryptu Google w starej wersji (bez wysyłania w kawałkach): ok. 35 MB pliku.
   const MAX_UPLOAD = 34 * 1024 * 1024;
   const oversize = new Set();
@@ -557,12 +560,23 @@ const archive = (() => {
     const chunks = [], events = [];
     segEvents = events;
     r.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-    r.onstop = () => {
-      if (!chunks.length) return;
-      const type = r.mimeType || REC_MIME || "video/webm";
-      const file = new Blob(chunks, { type });
-      if (!file.size) return; // przerwane przełączenie nigdy nie tworzy pustego „nagrania”
-      save(file, `kamera-${stamp(startedAt)}.${extFor(type)}`, events, startedAt.getTime(), Date.now());
+    let resolveStopped;
+    const finished = new Promise(resolve => { resolveStopped = resolve; });
+    stopped.set(r, finished);
+    r.onstop = async () => {
+      try {
+        if (!chunks.length) return;
+        const type = r.mimeType || REC_MIME || "video/webm";
+        const file = new Blob(chunks, { type });
+        if (!file.size) return; // przerwane przełączenie nigdy nie tworzy pustego „nagrania”
+        const saving = save(file, `kamera-${stamp(startedAt)}.${extFor(type)}`, events, startedAt.getTime(), Date.now());
+        pendingSaves.add(saving);
+        try { await saving; }
+        finally { pendingSaves.delete(saving); }
+      } catch (e) {
+        lastError = `Nie udało się domknąć nagrania: ${errText(e)}`;
+        render();
+      } finally { resolveStopped(); }
     };
     r.onerror = e => { lastError = `Błąd nagrywania: ${errText(e.error || e)}`; render(); };
     r.start(5000);
@@ -593,16 +607,24 @@ const archive = (() => {
   function halt() {
     running = false;
     clearTimeout(segTimer); clearInterval(clock); clearTimeout(slowTimer);
-    if (rec && rec.state !== "inactive") rec.stop();
+    const active = rec, done = active ? stopped.get(active) : null;
+    if (active && active.state !== "inactive") active.stop();
     rec = null;
     const stopWatermark = watermarkStop; watermarkStop = null;
     const rs = recStream; recStream = null;
     setTimeout(() => { stopWatermark?.(); rs?.getVideoTracks().forEach(t => t.stop()); }, 1000);
+    return done || Promise.resolve();
   }
 
   function start(s) { source = s; resume(); }
-  function stop() { halt(); source = null; render(); }
+  function stop() { const done = halt(); source = null; render(); return done; }
   function restart() { if (running) { halt(); resume(); } else render(); }
+  async function flush(done = Promise.resolve()) {
+    await done;
+    // Obrót segmentu może domykać poprzedni plik równolegle — poczekaj także
+    // na niego, aby aktualizacja nie urwała prawidłowo rozpoczętego zapisu.
+    while (pendingSaves.size) await Promise.allSettled([...pendingSaves]);
+  }
 
   const gb = n => `${(n / 1073741824).toFixed(1)} GB`;
   function describe() {
@@ -720,7 +742,7 @@ const archive = (() => {
     return name;
   }
 
-  return { init, chooseDisk, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
+  return { init, chooseDisk, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, flush, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
 })();
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
@@ -1323,12 +1345,13 @@ const sender = (() => {
   // nagrania i przeładowanie — bez klikania przy komputerze. Najwyżej raz na 30 min (pamięć podręczna Pages).
   let updateTimer = null;
   // Zdalne odświeżenie z telefonu: domknięcie nagrania i wczytanie najnowszej wersji strony (z pominięciem pamięci podręcznej).
-  function forceReload() {
-    setStatus("Odświeżam stronę kamery na życzenie z telefonu — nagrywanie wróci za chwilę…");
-    archive.stop();
+  async function forceReload() {
+    setStatus("Domykam bieżące nagranie przed odświeżeniem — nie wyłączaj komputera…");
+    const saved = archive.stop();
     releaseSenderLock();
     const u = new URL(location.href); u.searchParams.set("v", String(Date.now()));
-    setTimeout(() => location.replace(u.href), 5000);
+    await archive.flush(saved);
+    location.replace(u.href);
   }
 
   async function checkUpdate() {
@@ -1338,12 +1361,13 @@ const sender = (() => {
       const last = Number(sessionStorage.getItem("kamera-update") || 0);
       if (Date.now() - last < 30 * 60000) return;
       sessionStorage.setItem("kamera-update", String(Date.now()));
-      setStatus("Nowa wersja strony kamery — zapisuję nagranie i odświeżam…");
-      archive.stop();
+      setStatus("Nowa wersja strony kamery — domykam bieżące nagranie przed odświeżeniem…");
+      const saved = archive.stop();
       releaseSenderLock();
       // Adres z numerem wersji: przeglądarka pobiera świeżą stronę zamiast starej z pamięci podręcznej.
       const u = new URL(location.href); u.searchParams.set("v", String(v));
-      setTimeout(() => location.replace(u.href), 8000);
+      await archive.flush(saved);
+      location.replace(u.href);
     } catch { /* brak internetu — sprawdzimy później */ }
   }
 
