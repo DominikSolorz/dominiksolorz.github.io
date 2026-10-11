@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "121"; // musi się zgadzać z version.json
+const VERSION = "122"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -879,7 +879,10 @@ async function tuneVideoSender(pc, cropWidth = 0) {
       p.encodings[0].scaleResolutionDownBy = Math.max(1, (cropWidth || sender.track.getSettings?.().width || 1920) / LIVE_SEND_WIDTH);
       p.encodings[0].maxBitrate = LIVE_MAX_BITRATE;
       p.encodings[0].maxFramerate = LIVE_SEND_FPS;
-      p.degradationPreference = "balanced";
+      // Priorytetem dla monitoringu jest czytelny, pełny kadr: przy chwilowo
+      // słabszym łączu WebRTC ma najpierw zmniejszyć płynność, zamiast
+      // niepostrzeżenie zrzucać obraz z Full HD do 720p.
+      p.degradationPreference = "maintain-resolution";
       await sender.setParameters(p);
     } catch { /* starsza przeglądarka — zostają ustawienia domyślne */ }
   }
