@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "122"; // musi się zgadzać z version.json
+const VERSION = "123"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1861,6 +1861,46 @@ $("menuGrid").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictu
 $("menuFullscreen").addEventListener("click", () => { setQuickMenu(false); toggleFullscreen(); });
 $("menuPip").addEventListener("click", () => { setQuickMenu(false); togglePictureInPicture(); });
 updateMenuGrid();
+
+// Android: Chrome instaluje tę stronę jako osobną aplikację PWA. Manifest otwiera
+// panel właściciela (PIN + sterowanie), nigdy tryb nadajnika komputera.
+let deferredInstall = null;
+const installAppBtn = $("installAppBtn"), installAppHint = $("installAppHint");
+const standaloneApp = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+if (standaloneApp) {
+  document.documentElement.classList.add("standaloneApp");
+  installAppBtn.hidden = false;
+  installAppBtn.disabled = true;
+  installAppBtn.querySelector("b").textContent = "Aplikacja jest zainstalowana";
+  installAppHint.textContent = "działa w osobnym oknie na tym telefonie";
+}
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredInstall = event;
+  installAppBtn.hidden = false;
+});
+window.addEventListener("appinstalled", () => {
+  deferredInstall = null;
+  installAppBtn.hidden = false;
+  installAppBtn.disabled = true;
+  installAppBtn.querySelector("b").textContent = "Aplikacja zainstalowana";
+  installAppHint.textContent = "uruchom ją z ekranu telefonu";
+  toastMsg("Aplikacja Kamera domowa została dodana do telefonu.");
+});
+installAppBtn.addEventListener("click", async () => {
+  if (!deferredInstall) {
+    toastMsg("W Chrome wybierz ⋮ → „Zainstaluj aplikację”.");
+    return;
+  }
+  deferredInstall.prompt();
+  const choice = await deferredInstall.userChoice.catch(() => null);
+  if (choice?.outcome === "accepted") installAppHint.textContent = "instalowanie aplikacji…";
+  else installAppHint.textContent = "instalację można wykonać później z menu Chrome";
+  deferredInstall = null;
+});
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=1", { scope: "./" }).catch(() => {}));
+}
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
 $("ctrlStart").addEventListener("click", async () => {

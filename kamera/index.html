@@ -6,7 +6,13 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#070b16">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kamera domowa">
 <title>Kamera na żywo</title>
+<link rel="manifest" href="manifest.webmanifest?v=1">
+<link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
 <link rel="stylesheet" href="style.css?v=115">
@@ -32,6 +38,7 @@
     <button type="button" data-menu-view="archive"><span>⏪</span><b>Nagrania DVR</b><small>wyłącznie oś czasu i archiwum</small></button>
   </div>
   <div class="quickMenuActions">
+    <button id="installAppBtn" type="button" hidden><span>📲</span><span><b>Zainstaluj aplikację Android</b><small id="installAppHint">otwiera się osobno, jak prawdziwa aplikacja</small></span></button>
     <button id="menuGrid" type="button"><span>▦</span><span><b>Siatka kadru</b><small id="menuGridState">pokaż na obrazie</small></span></button>
     <button id="menuFullscreen" type="button"><span>⛶</span><span><b>Pełny ekran</b><small>powiększ bieżący obraz</small></span></button>
     <button id="menuPip" type="button"><span>▣</span><span><b>Mini-okno</b><small>obraz nad innymi aplikacjami</small></span></button>
@@ -269,6 +276,6 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-  <script type="module" src="app.js?v=122"></script>
+  <script type="module" src="app.js?v=123"></script>
 </body>
 </html>

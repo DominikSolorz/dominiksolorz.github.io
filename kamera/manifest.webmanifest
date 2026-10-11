@@ -1,0 +1,23 @@
+{
+  "id": "/kamera/owner-panel",
+  "name": "Kamera domowa — panel właściciela",
+  "short_name": "Kamera domowa",
+  "description": "Prywatny podgląd domu, nagrania i sterowanie komputerem-kamerą.",
+  "lang": "pl",
+  "dir": "ltr",
+  "start_url": "./?panel=owner&app=android",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#070b16",
+  "theme_color": "#070b16",
+  "orientation": "any",
+  "icons": [
+    {"src":"icons/kamera-192.svg","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},
+    {"src":"icons/kamera-512.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}
+  ],
+  "shortcuts": [
+    {"name":"Podgląd na żywo","short_name":"Na żywo","url":"./?panel=owner&app=android","icons":[{"src":"icons/kamera-192.svg","sizes":"192x192"}]},
+    {"name":"Nagrania DVR","short_name":"Nagrania","url":"./nagrania.html?wroc=nagrania","icons":[{"src":"icons/kamera-192.svg","sizes":"192x192"}]}
+  ]
+}
