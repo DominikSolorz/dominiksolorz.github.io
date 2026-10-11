@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "116"; // musi się zgadzać z version.json
+const VERSION = "117"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1795,6 +1795,7 @@ document.querySelectorAll("[data-menu-view]").forEach(btn => btn.addEventListene
 }));
 $("menuGrid").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictureGrid; savePrefs(); applyPictureLayout(); updateMenuGrid(); setQuickMenu(false); toastMsg(prefs.pictureGrid ? "Siatka kadru jest widoczna na obrazie." : "Siatka kadru została ukryta."); });
 $("menuFullscreen").addEventListener("click", () => { setQuickMenu(false); toggleFullscreen(); });
+$("menuPip").addEventListener("click", () => { setQuickMenu(false); togglePictureInPicture(); });
 updateMenuGrid();
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
@@ -1909,6 +1910,34 @@ function setFakeFull(on) {
   $("fitFull").hidden = !(document.fullscreenElement || document.webkitFullscreenElement || $("stage").classList.contains("fakeFull"));
 }));
 $("fullBtn").addEventListener("click", toggleFullscreen);
+// Mini-okno (Picture-in-Picture): użytkownik uruchamia je dotknięciem, więc
+// przeglądarka może bezpiecznie pokazać obraz nad innymi aplikacjami. To nie
+// zatrzymuje transmisji ani nagrywania na komputerze-kamerze.
+async function togglePictureInPicture() {
+  if (!video.srcObject && !video.currentSrc) return toastMsg("Mini-okno będzie dostępne, gdy dotrze obraz z kamery.");
+  try {
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture();
+      return;
+    }
+    await video.play().catch(() => {});
+    if (typeof video.requestPictureInPicture === "function") {
+      await video.requestPictureInPicture();
+      return;
+    }
+    // Safari/iPhone używa własnego trybu prezentacji wideo.
+    if (typeof video.webkitSetPresentationMode === "function") {
+      video.webkitSetPresentationMode(video.webkitPresentationMode === "picture-in-picture" ? "inline" : "picture-in-picture");
+      return;
+    }
+    toastMsg("Ta przeglądarka nie pozwala stronie otworzyć mini-okna. Otwórz monitoring w Safari/Chrome z obsługą obrazu w obrazie albo użyj pełnego ekranu.");
+  } catch (e) {
+    toastMsg(`Nie udało się otworzyć mini-okna: ${errText(e)}.`);
+  }
+}
+$("pipBtn").addEventListener("click", togglePictureInPicture);
+video.addEventListener("enterpictureinpicture", () => { $("pipBtn").textContent = "▣ Zamknij mini-okno"; });
+video.addEventListener("leavepictureinpicture", () => { $("pipBtn").textContent = "▣ Mini-okno"; });
 // Dopasowanie obrazu do ekranu (np. telefon obrócony w lewo/prawo): cały kadr / wypełnij / rozciągnij.
 const FIT_MODES = [["contain", "▣ Cały kadr"], ["cover", "⛶ Wypełnij"], ["fill", "↔ Rozciągnij"]];
 function applyFit() {
