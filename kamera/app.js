@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "120"; // musi się zgadzać z version.json
+const VERSION = "121"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1646,23 +1646,47 @@ function showAlert(ev) {
 
 // ---------- Zbliżenie na telefonie: szczypanie, przesuwanie, kółko myszy, przyciski ----------
 const zoomUi = (() => {
-  let state = { z: 1, cx: 0.5, cy: 0.5 }, lossless = 1, max = MAX_ZOOM, enabled = false, timer = null;
+  let state = { z: 1, cx: 0.5, cy: 0.5 }, lossless = 1, max = MAX_ZOOM, enabled = false, hardware = false, timer = null;
   const pointers = new Map();
   let pinch = null;
+
+  function paintDigitalZoom() {
+    // Zapas dla zwykłych kamer/Chrome bez MediaStreamTrackProcessor: zbliża
+    // tylko obraz oglądającego. Nadajnik, nagranie i pełny kadr pozostają bez zmian.
+    if (hardware || !enabled || state.z <= 1.01) {
+      video.style.transform = "";
+      video.style.transformOrigin = "";
+      return;
+    }
+    video.style.transformOrigin = `${(state.cx * 100).toFixed(2)}% ${(state.cy * 100).toFixed(2)}%`;
+    video.style.transform = `scale(${state.z.toFixed(3)})`;
+  }
 
   function label() {
     // Bez przybliżenia palec na obrazie przewija stronę; przy przybliżeniu — przesuwa kadr.
     $("stage").classList.toggle("zoomed", state.z > 1.01);
     $("zoomLabel").textContent = `${state.z.toFixed(1)}×`;
-    $("zoomHint").textContent = state.z <= 1.01 ? "" : state.z <= lossless + 0.05 ? "pełna jakość" : `pełna jakość do ${lossless.toFixed(1)}×`;
+    $("zoomHint").textContent = state.z <= 1.01 ? "" : hardware ? (state.z <= lossless + 0.05 ? "pełna jakość" : `pełna jakość do ${lossless.toFixed(1)}×`) : "zbliżenie podglądu";
+    paintDigitalZoom();
   }
-  function push() { clearTimeout(timer); timer = setTimeout(() => viewer.sendZoom(state), 60); label(); }
+  function push() {
+    clearTimeout(timer);
+    // Jeżeli kamera nie umie kadrować strumienia sprzętowo, sterowanie jest
+    // lokalne — przyciski nadal działają na telefonie i nie obciążają PC.
+    if (hardware) timer = setTimeout(() => viewer.sendZoom(state), 60);
+    label();
+  }
   function set(next) { state = normalize(next); push(); }
 
   function apply(sig) {
-    enabled = !!sig.supported; lossless = sig.lossless || 1; max = sig.max || MAX_ZOOM;
+    hardware = !!sig.supported;
+    // Przycisk zbliżenia jest zawsze dostępny dla osoby oglądającej. Na
+    // wspieranej kamerze wycina prawdziwy kadr po stronie nadajnika, a na
+    // pozostałych bezpiecznie powiększa tylko lokalny widok.
+    enabled = prefs.role !== "send";
+    lossless = sig.lossless || 1; max = sig.max || MAX_ZOOM;
     $("zoomBar").hidden = !enabled; $("stage").classList.toggle("zoomable", enabled);
-    if (!pointers.size) state = normalize(sig);
+    if (hardware && !pointers.size) state = normalize(sig);
     label();
   }
 
