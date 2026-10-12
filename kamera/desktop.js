@@ -55,6 +55,40 @@ if (desktopRequested) {
   const layout = main?.querySelector(".layout");
   if (main && layout) main.insertBefore(context, layout);
 
+  // Pulpit nie jest tylko bocznym menu dla starego widoku telefonu. Budujemy
+  // oddzielny, szeroki obszar operatorski i przenosimy do niego prawdziwy
+  // element <video> oraz prawdziwą listę zdarzeń. Pozostałe trzy kafelki nie
+  // udają kamer: jawnie informują, że do systemu nie dodano urządzenia.
+  const mainCol = document.querySelector(".mainCol");
+  const liveStage = document.querySelector(".mainCol > .stage");
+  const eventCard = $("viewEventsCard");
+  const overview = document.createElement("section");
+  overview.className = "desktopOverview";
+  overview.setAttribute("aria-label", "Pulpit podglądu kamer");
+  overview.innerHTML = `
+    <div class="desktopCameraGrid" aria-label="Siatka kamer">
+      <article class="desktopCameraTile desktopCameraLive"><div class="desktopTileMeta"><span class="desktopLivePill">● NA ŻYWO</span><strong>Pokój dziecka</strong></div></article>
+      <article class="desktopCameraTile desktopCameraEmpty"><div><span class="desktopEmptyIcon">＋</span><h2>Dodaj kamerę</h2><p>Brak drugiego urządzenia</p></div></article>
+      <article class="desktopCameraTile desktopCameraEmpty"><div><span class="desktopEmptyIcon">＋</span><h2>Dodaj kamerę</h2><p>Brak trzeciego urządzenia</p></div></article>
+      <article class="desktopCameraTile desktopCameraEmpty"><div><span class="desktopEmptyIcon">＋</span><h2>Dodaj kamerę</h2><p>Brak czwartego urządzenia</p></div></article>
+    </div>
+    <aside class="desktopEventsRail" aria-label="Zdarzenia systemu"><div class="desktopRailHead"><div><p>Zdarzenia</p><small>ruch i dźwięk</small></div><span id="desktopEventCount">—</span></div></aside>`;
+  if (context.parentElement) context.insertAdjacentElement("afterend", overview);
+  const liveTile = overview.querySelector(".desktopCameraLive");
+  if (liveStage && liveTile) liveTile.append(liveStage);
+  const eventRail = overview.querySelector(".desktopEventsRail");
+  if (eventCard && eventRail) eventRail.append(eventCard);
+
+  const summary = document.createElement("section");
+  summary.className = "desktopSummary";
+  summary.setAttribute("aria-label", "Stan systemu");
+  summary.innerHTML = `
+    <article><span class="desktopSummaryIcon">◈</span><div><b>System</b><strong id="desktopSummaryStatus">Sprawdzam…</strong><small>stan połączenia</small></div></article>
+    <article><span class="desktopSummaryIcon">▣</span><div><b>Kamery</b><strong id="desktopSummaryCamera">1 aktywna</strong><small>kolejne urządzenia można dodać</small></div></article>
+    <article><span class="desktopSummaryIcon">◉</span><div><b>Nagrania</b><strong id="desktopSummaryRecording">Sprawdzam…</strong><small>status zapisu i DVR</small></div></article>
+    <article><span class="desktopSummaryIcon">⌁</span><div><b>Tryb ochrony</b><strong>Gotowy</strong><small>wykrywanie ruchu i dźwięku</small></div></article>`;
+  overview.insertAdjacentElement("afterend", summary);
+
   const resize = document.createElement("div");
   resize.className = "desktopResize";
   resize.id = "desktopResize";
@@ -95,6 +129,11 @@ if (desktopRequested) {
     const choices = $("cameraSelect")?.options;
     const count = choices ? Math.max(1, choices.length - 1) : 1;
     if ($("desktopCameraCount")) $("desktopCameraCount").textContent = `Kamery: ${count} aktywna${count === 1 ? "" : "e"}`;
+    if ($("desktopSummaryCamera")) $("desktopSummaryCamera").textContent = `${count} aktywna${count === 1 ? "" : "e"}`;
+    if ($("desktopSummaryStatus")) $("desktopSummaryStatus").textContent = isLive ? "System online" : "Oczekiwanie na transmisję";
+    if ($("desktopSummaryRecording")) $("desktopSummaryRecording").textContent = mode?.textContent?.trim() || "Brak danych";
+    const events = document.querySelectorAll("#viewEvents li,#pcEvents li");
+    if ($("desktopEventCount")) $("desktopEventCount").textContent = events.length ? `${events.length} zdarzeń` : "Brak zdarzeń";
   };
   // Obserwujemy wyłącznie prawdziwe źródła stanu. Obserwowanie całego body
   // powodowałoby pętlę, bo sync() zmienia klasę własnej ikonki w sidebarze.
