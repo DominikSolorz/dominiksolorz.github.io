@@ -59,10 +59,10 @@ if (desktopRequested) {
   const layout = main?.querySelector(".layout");
   if (main && layout) main.insertBefore(context, layout);
 
-  // Pulpit nie jest tylko bocznym menu dla starego widoku telefonu. Budujemy
-  // oddzielny, szeroki obszar operatorski i przenosimy do niego prawdziwy
-  // element <video> oraz prawdziwą listę zdarzeń. Pozostałe trzy kafelki nie
-  // udają kamer: jawnie informują, że do systemu nie dodano urządzenia.
+  // Pulpit jest jednym stanowiskiem operatora, nie stroną z powielonymi
+  // kartami. Pokazuje tylko prawdziwy obraz jednej kamery oraz pełną oś DVR.
+  // Pozostałe funkcje są w bocznych modułach — nie dokładamy pustych kafelków
+  // ani sterowania pod obrazem.
   const mainCol = document.querySelector(".mainCol");
   const liveStage = document.querySelector(".mainCol > .stage");
   const eventCard = $("viewEventsCard");
@@ -70,25 +70,20 @@ if (desktopRequested) {
   overview.className = "desktopOverview";
   overview.setAttribute("aria-label", "Pulpit podglądu kamer");
   overview.innerHTML = `
-    <div class="desktopCameraGrid" aria-label="Siatka kamer">
-      <article class="desktopCameraTile desktopCameraLive"><div class="desktopTileMeta"><span class="desktopLivePill">● NA ŻYWO</span><strong>Pokój dziecka</strong></div></article>
-      <article class="desktopCameraTile desktopCameraEmpty"><div><span class="desktopEmptyIcon">＋</span><h2>Dodaj kamerę</h2><p>Brak drugiego urządzenia</p></div></article>
-      <article class="desktopCameraTile desktopCameraEmpty"><div><span class="desktopEmptyIcon">＋</span><h2>Dodaj kamerę</h2><p>Brak trzeciego urządzenia</p></div></article>
-      <article class="desktopCameraTile desktopCameraEmpty"><div><span class="desktopEmptyIcon">＋</span><h2>Dodaj kamerę</h2><p>Brak czwartego urządzenia</p></div></article>
-    </div>
-    <aside class="desktopEventsRail" aria-label="Zdarzenia systemu"><div class="desktopRailHead"><div><p>Zdarzenia</p><small>ruch i dźwięk</small></div><span id="desktopEventCount">—</span></div></aside>`;
+    <section class="desktopLiveScene" aria-label="Obraz z kamery na żywo">
+      <article class="desktopCameraTile desktopCameraLive"><div class="desktopTileMeta"><span class="desktopLivePill">● NA ŻYWO</span><strong>Aktualna kamera</strong></div></article>
+    </section>
+    <section class="desktopTimelineDock" aria-label="Oś czasu nagrań bieżącej kamery"></section>
+    <details class="desktopEventsDrawer" aria-label="Ostatnie zdarzenia"><summary><span>Ostatnie zdarzenia</span><small>ruch i dźwięk</small><b id="desktopEventCount">—</b></summary></details>`;
   if (context.parentElement) context.insertAdjacentElement("afterend", overview);
   const liveTile = overview.querySelector(".desktopCameraLive");
   if (liveStage && liveTile) liveTile.append(liveStage);
-  const eventRail = overview.querySelector(".desktopEventsRail");
-  if (eventCard && eventRail) eventRail.append(eventCard);
+  const eventsDrawer = overview.querySelector(".desktopEventsDrawer");
+  if (eventCard && eventsDrawer) eventsDrawer.append(eventCard);
 
   // Na pulpicie operatora oś doby jest częścią głównego widoku, obok obrazu
   // i zdarzeń. Pełna lista plików pojawia się dopiero w module Archiwum DVR.
-  const timelineDock = document.createElement("section");
-  timelineDock.className = "desktopTimelineDock";
-  timelineDock.setAttribute("aria-label", "Oś czasu nagrań bieżącej kamery");
-  overview.append(timelineDock);
+  const timelineDock = overview.querySelector(".desktopTimelineDock");
   const dvrCard = $("dvrCard");
   if (dvrCard) timelineDock.append(dvrCard);
 
