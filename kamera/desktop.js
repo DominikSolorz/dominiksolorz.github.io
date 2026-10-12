@@ -1,7 +1,8 @@
 // HOME SECURITY Desktop: nakładka robocza dla dużego ekranu.
 // Używa tego samego silnika transmisji, zapisu i archiwum co index.html.
 // Nie uruchamia kamery ani nie zmienia jej konfiguracji samodzielnie.
-const desktopRequested = new URLSearchParams(location.search).get("desktop") === "1";
+const desktopParam = new URLSearchParams(location.search).get("desktop");
+const desktopRequested = desktopParam === "1" || (desktopParam !== "0" && window.matchMedia("(min-width: 1024px)").matches);
 
 if (desktopRequested) {
   const $ = id => document.getElementById(id);
