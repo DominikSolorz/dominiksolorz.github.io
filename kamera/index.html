@@ -18,6 +18,7 @@
   // zostanie przypadkowo otwarty na dużym ekranie.
   const isTransmitter = location.hash === "#nadaj";
   const isMobileApp = routeParams.get("app") === "android";
+  if (isMobileApp) document.documentElement.classList.add("mobileOwnerMode");
   if (!isTransmitter && !isMobileApp && (desktopParam === "1" || (desktopParam !== "0" && matchMedia("(min-width: 1024px)").matches))) {
     document.documentElement.classList.add("desktopMode");
   }
@@ -27,7 +28,7 @@
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=126">
+<link rel="stylesheet" href="style.css?v=127">
 </head>
 <body>
 <header class="topbar">
@@ -290,5 +291,6 @@
 <script src="vendor/supabase.js?v=2.117.2"></script>
   <script type="module" src="app.js?v=125"></script>
 <script type="module" src="desktop.js?v=6"></script>
+<script type="module" src="mobile.js?v=1"></script>
 </body>
 </html>
