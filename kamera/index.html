@@ -11,8 +11,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kamera domowa">
 <script>
-  const desktopParam = new URLSearchParams(location.search).get("desktop");
-  if (desktopParam === "1" || (desktopParam !== "0" && matchMedia("(min-width: 1024px)").matches)) {
+  const routeParams = new URLSearchParams(location.search);
+  const desktopParam = routeParams.get("desktop");
+  // Nadajnik ma zawsze pozostać lekką, osobną aplikacją Chrome.
+  // Parametr app=android wymusza interfejs telefonu także wtedy, gdy link
+  // zostanie przypadkowo otwarty na dużym ekranie.
+  const isTransmitter = location.hash === "#nadaj";
+  const isMobileApp = routeParams.get("app") === "android";
+  if (!isTransmitter && !isMobileApp && (desktopParam === "1" || (desktopParam !== "0" && matchMedia("(min-width: 1024px)").matches))) {
     document.documentElement.classList.add("desktopMode");
   }
 </script>
@@ -283,6 +289,6 @@
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
   <script type="module" src="app.js?v=125"></script>
-<script type="module" src="desktop.js?v=5"></script>
+<script type="module" src="desktop.js?v=6"></script>
 </body>
 </html>
