@@ -565,7 +565,7 @@ svg .fill{fill:currentColor;stroke:none}
   .mainCol>.stage{order:1}#watchPanel{order:2}#ctrlBar{order:3}#recStatus{order:4}#status{order:5}#dvrCard{order:6}#dvrListCard{order:7}#modeCard{order:8}.rightCol{order:9}#diagCard{order:10}#viewEventsCard{order:11}
 }
 /* Widoki z menu ☰: tylko kamera i wybrany panel. Transmisja pozostaje uruchomiona. */
-.mainCol[class*="focus-"]>*{display:none!important}.mainCol[class*="focus-"]>.stage{display:block!important;order:initial!important}.mainCol[class*="focus-"]>.rightCol{display:none!important;order:initial!important}.mainCol.focus-live>.rightCol,.mainCol.focus-settings>.rightCol{display:grid!important}.mainCol.focus-live>.rightCol>#setCard,.mainCol.focus-settings>.rightCol>#systemPanel{display:none!important}.mainCol.focus-controls>#modeCard{display:block!important;order:initial!important}.mainCol.focus-controls>#ctrlBar{display:flex!important;order:initial!important}.mainCol.focus-archive>#dvrCard,.mainCol.focus-archive>#dvrListCard{display:block!important;order:initial!important}
+.mainCol[class*="focus-"]>*{display:none!important}.mainCol[class*="focus-"]>.stage{display:block!important;order:initial!important}.mainCol[class*="focus-"]>.rightCol{display:none!important;order:initial!important}.mainCol.focus-live>#dvrCard{display:block!important;order:initial!important;margin:0}.mainCol.focus-settings>.rightCol{display:grid!important}.mainCol.focus-settings>.rightCol>#systemPanel{display:none!important}.mainCol.focus-controls>#modeCard{display:block!important;order:initial!important}.mainCol.focus-controls>#ctrlBar{display:flex!important;order:initial!important}.mainCol.focus-archive>#dvrCard,.mainCol.focus-archive>#dvrListCard{display:block!important;order:initial!important}
 @media(min-width:1180px){
   .mainCol.focus-live,.mainCol.focus-settings{grid-template-columns:minmax(0,1.55fr) minmax(330px,.85fr)!important;grid-template-areas:"stage side"!important;align-items:start}.mainCol.focus-live>.stage,.mainCol.focus-settings>.stage{grid-area:stage!important;min-height:520px}.mainCol.focus-live>.rightCol,.mainCol.focus-settings>.rightCol{grid-area:side!important}
   .mainCol.focus-controls{grid-template-columns:minmax(0,1.55fr) minmax(330px,.85fr)!important;grid-template-areas:"stage modes" "stage controls"!important;align-items:start}.mainCol.focus-controls>.stage{grid-area:stage!important;min-height:520px}.mainCol.focus-controls>#modeCard{grid-area:modes!important}.mainCol.focus-controls>#ctrlBar{grid-area:controls!important}
@@ -573,6 +573,8 @@ svg .fill{fill:currentColor;stroke:none}
 }
 
 @media(max-width:600px){
+  .quickMenuActions{display:none!important}
+  .mainCol.focus-live{gap:12px!important}.mainCol.focus-live>#dvrCard{padding:12px!important}.mainCol.focus-live>#dvrCard .dvrInfo{display:none}.mainCol.focus-live>#dvrCard .panelHead p{display:none}
   .dvrGroup:last-child{display:grid;grid-template-columns:1fr 1fr 1.6fr 1fr 1fr;gap:5px}
   .dvrGroup:last-child .dvrBtn{padding:0 2px;font-size:12px}
   .dvrLive{justify-content:center;gap:5px}

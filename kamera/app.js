@@ -1858,6 +1858,10 @@ document.querySelectorAll("[data-menu-view]").forEach(btn => btn.addEventListene
   const view = btn.dataset.menuView; setWorkspace(view); setQuickMenu(false);
   toastMsg(`${btn.querySelector("b")?.textContent || "Panel"} — transmisja działa dalej.`);
 }));
+// Na telefonie i w wąskim oknie wejściem jest zawsze pulpit kamery, a nie
+// długa strona ze wszystkimi kartami. Każdy pozostały moduł otwiera się
+// wyłącznie z menu. Desktop ma własny układ w desktop.js.
+if (!document.documentElement.classList.contains("desktopMode") && !isMobileApp) setWorkspace("live");
 $("menuGrid").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictureGrid; savePrefs(); applyPictureLayout(); updateMenuGrid(); setQuickMenu(false); toastMsg(prefs.pictureGrid ? "Siatka kadru jest widoczna na obrazie." : "Siatka kadru została ukryta."); });
 $("menuFullscreen").addEventListener("click", () => { setQuickMenu(false); toggleFullscreen(); });
 $("menuPip").addEventListener("click", () => { setQuickMenu(false); togglePictureInPicture(); });
