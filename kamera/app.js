@@ -25,7 +25,8 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const VERSION = "125"; // musi się zgadzać z version.json
+const MOBILE_OWNER_APP = new URLSearchParams(location.search).get("app") === "android";
+const VERSION = "126"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1901,7 +1902,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome.
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=5", { scope: "./" }).catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=6", { scope: "./" }).catch(() => {}));
 }
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
@@ -2094,6 +2095,6 @@ if (RECEIVER_ONLY) {
   if (prefs.role === "send") showSender();
   else {
     showViewer();
-    if (OWNER_PANEL) toastMsg("Panel właściciela: oglądasz obraz z komputera i możesz nim sterować. Telefon nie przejmie kamery.");
+    if (OWNER_PANEL && !MOBILE_OWNER_APP) toastMsg("Panel właściciela: oglądasz obraz z komputera i możesz nim sterować. Telefon nie przejmie kamery.");
   }
 }
