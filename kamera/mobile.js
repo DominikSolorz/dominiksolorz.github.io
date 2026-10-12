@@ -31,7 +31,9 @@ if (isMobileOwnerApp) {
     home: ["stage", "watchPanel", "viewEventsCard"],
     alerts: ["viewEventsCard"],
     recordings: ["dvrCard", "dvrListCard"],
-    more: ["modeCard", "systemPanel", "setCard", "ctrlBar", "watchPanel"]
+    // Jedno miejsce na sterowanie: karta trybu, stan i ustawienia obrazu.
+    // Nie dublujemy tu dolnego Start/Stop ani przycisków podglądu z ekranu Dom.
+    more: ["modeCard", "systemPanel", "setCard", "diagCard"]
   };
   const managed = [...new Set(Object.values(views).flat())];
 
