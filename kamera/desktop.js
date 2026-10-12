@@ -28,7 +28,7 @@ if (desktopRequested) {
       <button class="active" type="button" data-desktop-view="live"><i>▦</i><span><b>Pulpit</b><small>podgląd na żywo</small></span><kbd>1</kbd></button>
       <button type="button" data-desktop-view="controls"><i>◉</i><span><b>Sterowanie</b><small>zapis i tryb pracy</small></span><kbd>2</kbd></button>
       <button type="button" data-desktop-view="archive"><i>⏪</i><span><b>Archiwum DVR</b><small>oś czasu i nagrania</small></span><kbd>3</kbd></button>
-      <button type="button" data-desktop-view="settings"><i>◌</i><span><b>Obraz i dźwięk</b><small>kamera oraz jakość</small></span><kbd>4</kbd></button>
+      <button type="button" data-desktop-view="settings"><i>◌</i><span><b>Ustawienia</b><small>obraz, dźwięk i zapis</small></span><kbd>4</kbd></button>
       <button type="button" data-desktop-view="diagnostics"><i>⌁</i><span><b>Diagnostyka</b><small>stan systemu</small></span><kbd>5</kbd></button>
     </nav>
     <section class="desktopCapabilities" aria-label="Możliwości urządzenia">
@@ -83,6 +83,15 @@ if (desktopRequested) {
   const eventRail = overview.querySelector(".desktopEventsRail");
   if (eventCard && eventRail) eventRail.append(eventCard);
 
+  // Na pulpicie operatora oś doby jest częścią głównego widoku, obok obrazu
+  // i zdarzeń. Pełna lista plików pojawia się dopiero w module Archiwum DVR.
+  const timelineDock = document.createElement("section");
+  timelineDock.className = "desktopTimelineDock";
+  timelineDock.setAttribute("aria-label", "Oś czasu nagrań bieżącej kamery");
+  overview.append(timelineDock);
+  const dvrCard = $("dvrCard");
+  if (dvrCard) timelineDock.append(dvrCard);
+
   const summary = document.createElement("section");
   summary.className = "desktopSummary";
   summary.setAttribute("aria-label", "Stan systemu");
@@ -92,6 +101,44 @@ if (desktopRequested) {
     <article><span class="desktopSummaryIcon">◉</span><div><b>Nagrania</b><strong id="desktopSummaryRecording">Sprawdzam…</strong><small>status zapisu i DVR</small></div></article>
     <article><span class="desktopSummaryIcon">⌁</span><div><b>Tryb ochrony</b><strong>Gotowy</strong><small>wykrywanie ruchu i dźwięku</small></div></article>`;
   overview.insertAdjacentElement("afterend", summary);
+
+  // Ustawienia to jeden uporządkowany moduł, a nie kolejna długa lista pod
+  // sterowaniem. Karty przełączają wyłącznie widoczność istniejących pól —
+  // nie zapisują i nie zmieniają konfiguracji kamery.
+  const setCard = $("setCard");
+  const pictureRow = $("pictureStyle")?.closest(".setRow");
+  const gridRow = $("gridToggle")?.closest(".setRow");
+  const settingsGroups = {
+    picture: [$("ownerLight"), pictureRow, gridRow],
+    sound: [$("ownerMedia")],
+    recording: [$("ownerQuality"), $("ownerOnce")]
+  };
+  let activeSettingsGroup = "picture";
+  const settingsTabs = document.createElement("nav");
+  settingsTabs.className = "desktopSettingsTabs";
+  settingsTabs.setAttribute("aria-label", "Kategorie ustawień kamery");
+  settingsTabs.innerHTML = `
+    <button type="button" data-settings-group="picture">Obraz</button>
+    <button type="button" data-settings-group="sound">Dźwięk</button>
+    <button type="button" data-settings-group="recording">Nagrywanie</button>`;
+  const setSettingsGroup = group => {
+    activeSettingsGroup = settingsGroups[group] ? group : "picture";
+    const visible = new Set(settingsGroups[activeSettingsGroup].filter(Boolean));
+    Object.values(settingsGroups).flat().filter(Boolean).forEach(row => { row.hidden = !visible.has(row); });
+    settingsTabs.querySelectorAll("button").forEach(button => {
+      const active = button.dataset.settingsGroup === activeSettingsGroup;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  };
+  if (setCard) {
+    setCard.querySelector(".panelHead")?.insertAdjacentElement("afterend", settingsTabs);
+    settingsTabs.addEventListener("click", event => {
+      const button = event.target.closest("button[data-settings-group]");
+      if (button) setSettingsGroup(button.dataset.settingsGroup);
+    });
+    setSettingsGroup(activeSettingsGroup);
+  }
 
   const resize = document.createElement("div");
   resize.className = "desktopResize";
@@ -110,12 +157,17 @@ if (desktopRequested) {
     // Każdy wpis w bocznym menu ma własny pełnoekranowy obszar. Dzięki temu
     // Diagnostyka i Archiwum nie zostawiają pustej połowy monitora.
     overview.hidden = view !== "live";
-    summary.hidden = view !== "live";
+    // Pulpit ma być roboczy: kamera, zdarzenia i oś czasu — bez dodatkowych
+    // kart diagnostycznych pod spodem. Ich dane są w module Diagnostyka.
+    summary.hidden = true;
+    if (view === "live" && $("dvrCard")?.parentElement !== timelineDock) timelineDock.append($("dvrCard"));
+    if (view === "live") $("dvrCard").hidden = false;
+    if (view === "archive" && $("dvrCard")?.parentElement !== main) main?.prepend($("dvrCard"));
     const labels = {
       live: ["Pulpit", "Monitoring domu"],
       controls: ["Sterowanie", "Sterowanie kamerą"],
       archive: ["Archiwum", "Nagrania DVR"],
-      settings: ["Ustawienia", "Obraz i dźwięk"],
+      settings: ["Ustawienia", "Ustawienia kamery"],
       diagnostics: ["Diagnostyka", "Stan systemu"]
     };
     const label = labels[view] || labels.live;
@@ -123,6 +175,10 @@ if (desktopRequested) {
     const heading = context.querySelector("h1");
     if (crumb) crumb.innerHTML = `${label[0]} <span>/</span> HOME SECURITY`;
     if (heading) heading.textContent = label[1];
+    // Po opuszczeniu ustawień przywracamy komplet pól dla innych trybów
+    // interfejsu; wybrana kategoria jest widoczna tylko w module Ustawienia.
+    if (view === "settings") setSettingsGroup(activeSettingsGroup);
+    else Object.values(settingsGroups).flat().filter(Boolean).forEach(row => { row.hidden = false; });
     const target = { live: "stage", controls: "modeCard", settings: "setCard", archive: "dvrCard" }[view];
     if (target) {
       if (view === "archive") document.querySelector('[data-menu-view="archive"]')?.click();
@@ -205,4 +261,8 @@ if (desktopRequested) {
     const view = { 1: "live", 2: "controls", 3: "archive", 4: "settings", 5: "diagnostics" }[event.key];
     if (view) { event.preventDefault(); setActive(view); }
   });
+
+  // Zastosuj widok Pulpit także przy pierwszym ładowaniu. Bez tego elementy
+  // modułów pozostawały pod pulpitem w DOM i użytkownik widział bałagan.
+  setActive("live");
 }

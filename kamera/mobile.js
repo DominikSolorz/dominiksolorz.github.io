@@ -6,15 +6,13 @@ const isMobileOwnerApp = mobileParams.get("app") === "android";
 if (isMobileOwnerApp) {
   const byId = id => document.getElementById(id);
   const app = byId("app");
-  const main = document.querySelector(".mainCol");
-
   document.body.classList.add("mobileOwnerMode");
 
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
     <div><h1>Dom</h1><p><i></i><span id="mobileOnline">System sprawdzam…</span></p></div>
-    <button id="mobileMore" type="button" aria-label="Ustawienia i więcej">⚙</button>`;
+    <button id="mobileMore" type="button" aria-label="Ustawienia">⚙</button>`;
   app?.insertBefore(mobileHeader, app.firstChild);
 
   const nav = document.createElement("nav");
@@ -24,22 +22,37 @@ if (isMobileOwnerApp) {
     <button class="active" type="button" data-mobile-view="home"><b>⌂</b><span>Dom</span></button>
     <button type="button" data-mobile-view="alerts"><b>♧</b><span>Alarmy</span></button>
     <button type="button" data-mobile-view="recordings"><b>▷</b><span>Nagrania</span></button>
-    <button type="button" data-mobile-view="more"><b>•••</b><span>Więcej</span></button>`;
+    <button type="button" data-mobile-view="settings"><b>⚙</b><span>Ustawienia</span></button>`;
   document.body.append(nav);
 
+  // Jedna brama do ustawień. Kategorie pokazują wyłącznie elementy, których dotyczą;
+  // nie są kopią ekranów rozmieszczoną pod podglądem.
+  const settingsHome = document.createElement("section");
+  settingsHome.id = "mobileSettingsHome";
+  settingsHome.className = "mobileSettingsHome";
+  settingsHome.innerHTML = `
+    <header><p class="eyebrow">USTAWIENIA</p><h2>Konfiguracja systemu</h2><p>Wybierz kategorię — podgląd i transmisja pozostają aktywne.</p></header>
+    <div class="mobileSettingCategories">
+      <button type="button" data-setting-section="image"><b>◉</b><span><strong>Obraz i jakość</strong><small>jasność, kolor, siatka, jakość</small></span><i>›</i></button>
+      <button type="button" data-setting-section="sound"><b>◖</b><span><strong>Dźwięk</strong><small>mikrofon i źródło transmisji</small></span><i>›</i></button>
+      <button type="button" data-setting-section="recording"><b>▣</b><span><strong>Nagrywanie</strong><small>tryb, jakość i długość zapisu</small></span><i>›</i></button>
+      <button type="button" data-setting-section="system"><b>⌘</b><span><strong>System i diagnostyka</strong><small>połączenie, stan i kontrola</small></span><i>›</i></button>
+    </div>`;
+  document.querySelector(".mainCol")?.append(settingsHome);
+
   const views = {
-    home: ["stage", "watchPanel", "viewEventsCard"],
+    home: ["stage", "watchPanel", "dvrCard", "viewEventsCard"],
     alerts: ["viewEventsCard"],
     recordings: ["dvrCard", "dvrListCard"],
-    // Jedno miejsce na sterowanie: karta trybu, stan i ustawienia obrazu.
-    // Nie dublujemy tu dolnego Start/Stop ani przycisków podglądu z ekranu Dom.
-    more: ["modeCard", "systemPanel", "setCard", "diagCard"]
+    settings: ["modeCard", "systemPanel", "setCard", "diagCard"]
   };
   const managed = [...new Set(Object.values(views).flat())];
 
   function setView(view) {
     const visible = new Set(views[view] || views.home);
     document.body.dataset.mobileView = view;
+    document.body.dataset.mobileSettings = view === "settings" ? "root" : "";
+    settingsHome.classList.toggle("mobileHidden", view !== "settings");
     managed.forEach(id => {
       const el = byId(id);
       if (!el) return;
@@ -58,7 +71,13 @@ if (isMobileOwnerApp) {
     const button = event.target.closest("button[data-mobile-view]");
     if (button) setView(button.dataset.mobileView);
   });
-  byId("mobileMore")?.addEventListener("click", () => setView("more"));
+  byId("mobileMore")?.addEventListener("click", () => setView("settings"));
+  settingsHome.addEventListener("click", event => {
+    const button = event.target.closest("button[data-setting-section]");
+    if (!button) return;
+    document.body.dataset.mobileSettings = button.dataset.settingSection;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 
   const topStatus = byId("topStatus");
   const updateStatus = () => {

@@ -85,7 +85,11 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
         el("div", { className: "dvrGroup" }, jump(-300), jump(-60), liveBtn, jump(60), jump(300)))),
     bar, el("div", { className: "dvrTickWrap" }, ticks, posLabel),
     el("div", { className: "dvrFoot" },
-      el("span", { className: "dvrLegend" }, el("i", { className: "lgRec" }), "Dostępne nagranie", el("i", { className: "lgGap" }), "Brak nagrania"),
+      el("span", { className: "dvrLegend", ariaLabel: "Legenda osi czasu" },
+        el("i", { className: "lgRec" }), "Obraz nagrany",
+        el("i", { className: "lgMotion" }), "Ruch w obrazie",
+        el("i", { className: "lgSound" }), "Dźwięk",
+        el("i", { className: "lgGap" }), "Brak nagrania"),
       timeLabel, zoomBtn),
     info,
   );
@@ -117,7 +121,10 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     const evs = files.flatMap(f => (f.events || []).map(e => ({ ...e, file: f })));
     // Z Google Drive znamy tylko liczbę zdarzeń w pliku — znacznik stoi na początku pliku.
     evLayer.replaceChildren(...evs.filter(e => e.at >= r[0] && e.at <= r[1]).map(e => el("button", {
-      className: "dvrEv", textContent: e.kind === "ruch" ? "🏃" : "🔊", title: `${e.kind === "ruch" ? "Ruch" : "Dźwięk"} ${hms(e.at)}`,
+      className: `dvrEv ${e.kind === "ruch" ? "motion" : "sound"}`,
+      textContent: e.kind === "ruch" ? "▰" : "🔊",
+      ariaLabel: `${e.kind === "ruch" ? "Ruch w obrazie" : "Dźwięk"} ${hms(e.at)}`,
+      title: `${e.kind === "ruch" ? "Ruch w obrazie" : "Dźwięk"} ${hms(e.at)}`,
       style: `left:${pct(e.at, r)}`, onclick: ev => { ev.stopPropagation(); seekTo(Math.max(e.file.start, e.at - 3000)); },
     })));
     nowEl.hidden = !(now >= r[0] && now <= r[1]); nowEl.style.left = pct(now, r);
