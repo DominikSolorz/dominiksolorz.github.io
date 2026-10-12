@@ -1899,7 +1899,9 @@ installAppBtn.addEventListener("click", async () => {
   deferredInstall = null;
 });
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=1", { scope: "./" }).catch(() => {}));
+  // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
+  // zamiast ponownego otwierania starego panelu z pamięci Chrome.
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=2", { scope: "./" }).catch(() => {}));
 }
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
