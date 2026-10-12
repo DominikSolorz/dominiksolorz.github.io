@@ -610,6 +610,7 @@ body.archiveOpen{overflow:hidden}
   .mainCol{gap:9px}
   .panel,.card{padding:10px!important;min-width:0}
   .quickMenu{width:100vw;max-width:none;padding:10px 8px 16px}
+  .quickMenu.open{transform:translateX(0)!important}
   .quickMenuHead{padding:4px 2px 10px}.quickMenuHead b{font-size:17px}
   .quickMenuList,.quickMenuActions{gap:6px;margin-top:9px}
   .quickMenuList button,.quickMenuActions button{grid-template-columns:22px minmax(0,1fr);column-gap:7px;padding:9px}
