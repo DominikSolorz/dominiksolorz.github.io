@@ -104,6 +104,22 @@ if (desktopRequested) {
     // układ wielopanelowy, dlatego przełącza tylko aktywny moduł i przewija.
     main?.classList.remove("focus-live", "focus-controls", "focus-settings", "focus-archive");
     if (main) main.dataset.desktopView = view;
+    // Każdy wpis w bocznym menu ma własny pełnoekranowy obszar. Dzięki temu
+    // Diagnostyka i Archiwum nie zostawiają pustej połowy monitora.
+    overview.hidden = view !== "live";
+    summary.hidden = view !== "live";
+    const labels = {
+      live: ["Pulpit", "Monitoring domu"],
+      controls: ["Sterowanie", "Sterowanie kamerą"],
+      archive: ["Archiwum", "Nagrania DVR"],
+      settings: ["Ustawienia", "Obraz i dźwięk"],
+      diagnostics: ["Diagnostyka", "Stan systemu"]
+    };
+    const label = labels[view] || labels.live;
+    const crumb = context.querySelector("p");
+    const heading = context.querySelector("h1");
+    if (crumb) crumb.innerHTML = `${label[0]} <span>/</span> HOME SECURITY`;
+    if (heading) heading.textContent = label[1];
     const target = { live: "stage", controls: "modeCard", settings: "setCard", archive: "dvrCard" }[view];
     if (target) {
       if (view === "archive") document.querySelector('[data-menu-view="archive"]')?.click();
