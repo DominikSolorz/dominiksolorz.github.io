@@ -1,0 +1,4 @@
+# Artefakty lokalnej kompilacji programu Windows.
+desktop-client/bin/
+desktop-client/obj/
+desktop-client/publish/
