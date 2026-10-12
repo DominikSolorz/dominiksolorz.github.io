@@ -10,12 +10,17 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kamera domowa">
+<script>
+  if (new URLSearchParams(location.search).get("desktop") === "1") {
+    document.documentElement.classList.add("desktopMode");
+  }
+</script>
 <title>Kamera na żywo</title>
 <link rel="manifest" href="manifest.webmanifest?v=1">
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=117">
+<link rel="stylesheet" href="style.css?v=118">
 </head>
 <body>
 <header class="topbar">
@@ -277,5 +282,6 @@
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
   <script type="module" src="app.js?v=125"></script>
+  <script type="module" src="desktop.js?v=1"></script>
 </body>
 </html>
