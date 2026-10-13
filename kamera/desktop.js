@@ -66,6 +66,7 @@ if (desktopRequested) {
   const mainCol = document.querySelector(".mainCol");
   const liveStage = document.querySelector(".mainCol > .stage");
   const eventCard = $("viewEventsCard");
+  const ctrlBar = $("ctrlBar");
   const overview = document.createElement("section");
   overview.className = "desktopOverview";
   overview.setAttribute("aria-label", "Pulpit podglądu kamer");
@@ -74,6 +75,7 @@ if (desktopRequested) {
       <article class="desktopCameraTile desktopCameraLive"><div class="desktopTileMeta"><span class="desktopLivePill">● NA ŻYWO</span><strong>Aktualna kamera</strong></div></article>
     </section>
     <section class="desktopTimelineDock" aria-label="Oś czasu nagrań bieżącej kamery"></section>
+    <section class="desktopControlDock" aria-label="Sterowanie transmisją i nagrywaniem"><div class="desktopControlLocked" hidden><span>🔒</span><div><b>Sterowanie właściciela</b><small>Start, Stop i Restart są dostępne wyłącznie na komputerze-kamerze lub po zalogowaniu PIN-em właściciela.</small></div></div></section>
     <details class="desktopEventsDrawer" aria-label="Ostatnie zdarzenia"><summary><span>Ostatnie zdarzenia</span><small>ruch i dźwięk</small><b id="desktopEventCount">—</b></summary></details>`;
   if (context.parentElement) context.insertAdjacentElement("afterend", overview);
   const liveTile = overview.querySelector(".desktopCameraLive");
@@ -92,6 +94,17 @@ if (desktopRequested) {
   const timelineDock = overview.querySelector(".desktopTimelineDock");
   const dvrCard = $("dvrCard");
   if (dvrCard) timelineDock.append(dvrCard);
+  const controlDock = overview.querySelector(".desktopControlDock");
+  const lockedControls = overview.querySelector(".desktopControlLocked");
+  // To są oryginalne przyciski aplikacji — zmieniamy wyłącznie ich miejsce
+  // na pulpicie. Start, Stop i Restart pozostają połączone z tą samą logiką.
+  if (ctrlBar && controlDock) controlDock.append(ctrlBar);
+  const syncControlAccess = () => {
+    if (!lockedControls || !ctrlBar) return;
+    lockedControls.hidden = !ctrlBar.hidden;
+  };
+  syncControlAccess();
+  if (ctrlBar) new MutationObserver(syncControlAccess).observe(ctrlBar, { attributes: true, attributeFilter: ["hidden"] });
 
   const summary = document.createElement("section");
   summary.className = "desktopSummary";
@@ -162,8 +175,10 @@ if (desktopRequested) {
     // kart diagnostycznych pod spodem. Ich dane są w module Diagnostyka.
     summary.hidden = true;
     if (view === "live" && $("dvrCard")?.parentElement !== timelineDock) timelineDock.append($("dvrCard"));
+    if (view === "live" && ctrlBar?.parentElement !== controlDock) controlDock?.append(ctrlBar);
     if (view === "live") $("dvrCard").hidden = false;
     if (view === "archive" && $("dvrCard")?.parentElement !== main) main?.prepend($("dvrCard"));
+    if (view === "controls" && ctrlBar?.parentElement !== main) main?.append(ctrlBar);
     const labels = {
       live: ["Pulpit", "Monitoring domu"],
       controls: ["Sterowanie", "Sterowanie kamerą"],
