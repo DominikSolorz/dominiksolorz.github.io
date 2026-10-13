@@ -1,14 +1,11 @@
 // Ekran blokady z klawiaturą PIN (telefon) i wpisywaniem z klawiatury (komputer).
-import { unlock, savedKey } from "./access.js?v=14";
+import { unlock } from "./access.js?v=15";
 
 export function requireAccess() {
-  const key = savedKey();
-  if (key) return Promise.resolve(key);
   const root = document.getElementById("lock");
   root.hidden = false;
   const dots = root.querySelector(".pinDots");
   const msg = root.querySelector(".pinMsg");
-  const remember = root.querySelector("#pinRemember");
   let pin = "", busy = false;
 
   const render = () => { dots.innerHTML = Array.from({ length: Math.max(6, pin.length) }, (_, i) => `<i class="${i < pin.length ? "on" : ""}"></i>`).join(""); };
@@ -18,7 +15,10 @@ export function requireAccess() {
     async function submit() {
       if (busy || pin.length < 4) return;
       busy = true; msg.textContent = "Sprawdzam…"; msg.className = "pinMsg";
-      const key = await unlock(pin, remember.checked);
+      // Dostęp właściciela jest celowo tylko dla bieżącej sesji aplikacji.
+      // Zamknięcie programu/okna usuwa sesję i przy kolejnym uruchomieniu
+      // zawsze wymaga wpisania PIN-u.
+      const key = await unlock(pin, false);
       busy = false;
       if (key) { root.hidden = true; document.removeEventListener("keydown", onKey); resolve(key); return; }
       pin = ""; render(); msg.textContent = "Zły PIN. Spróbuj ponownie."; msg.className = "pinMsg bad";

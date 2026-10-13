@@ -381,7 +381,11 @@ if (desktopRequested) {
     if (view && (event.altKey || !event.shiftKey)) { event.preventDefault(); setActive(view); }
   });
 
-  // Zastosuj widok Pulpit także przy pierwszym ładowaniu. Bez tego elementy
-  // modułów pozostawały pod pulpitem w DOM i użytkownik widział bałagan.
-  setActive("live");
+  // Link z `view=settings` otwiera od razu właściwy ekran — jest przydatny
+  // dla skrótu aplikacji i eliminuje ryzyko, że użytkownik zostanie na
+  // starym pulpicie po aktualizacji. Bez parametru zachowujemy Pulpit.
+  const initialView = ["live", "controls", "archive", "settings", "diagnostics"].includes(routeParams.get("view"))
+    ? routeParams.get("view")
+    : "live";
+  setActive(initialView);
 }

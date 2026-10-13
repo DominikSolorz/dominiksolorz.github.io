@@ -4,8 +4,8 @@ const { createClient } = window.supabase;
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=34";
 import { b64, sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=22";
-import { requireAccess } from "./lock.js?v=14";
-import { channelFor, lock } from "./access.js?v=14";
+import { requireAccess } from "./lock.js?v=15";
+import { channelFor, lock } from "./access.js?v=15";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 import * as recstore from "./recstore.js?v=77";
@@ -2164,6 +2164,7 @@ if (CAN_MANAGE_CAMERA) {
 }
 window.__kameraReady = true;
 $("bootError").hidden = true;
+await window.__finishSecureBoot?.();
 if (RECEIVER_ONLY) {
   CHANNEL = receiverChannel;
   $("app").hidden = false;

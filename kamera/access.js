@@ -13,10 +13,12 @@ async function sha256hex(text) {
 }
 
 // Zwraca klucz dostępu dla poprawnego PIN-u albo null.
-export async function unlock(pin, remember) {
+export async function unlock(pin) {
   const key = await deriveKey(String(pin).trim(), ACCESS_SALT);
   if ((await sha256hex(key)).slice(0, 16) !== ACCESS_CHECK) return null;
-  try { (remember ? localStorage : sessionStorage).setItem(STORE, key); } catch { /* tryb prywatny */ }
+  // Nie utrwalamy klucza w localStorage: zamknięcie aplikacji ma ponownie
+  // wymagać PIN-u. sessionStorage żyje tylko w bieżącej sesji okna.
+  try { localStorage.removeItem(STORE); sessionStorage.setItem(STORE, key); } catch { /* tryb prywatny */ }
   return key;
 }
 
