@@ -5,7 +5,7 @@ Option Explicit
 ' Nie uruchamia pętli — dzięki temu nie tworzy dodatkowych kart ani nagrań.
 Dim shell, browser, url
 Set shell = CreateObject("WScript.Shell")
-url = "https://dominiksolorz.github.io/kamera/#nadaj"
+url = "https://dominiksolorz.github.io/kamera/?host=browser#nadaj"
 browser = FindBrowser()
 If browser = "" Then WScript.Quit 2
 shell.Run Chr(34) & browser & Chr(34) & " --app=" & url & " --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows", 0, False
