@@ -10,7 +10,7 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.1.1";
+    private const string DesktopVersion = "1.1.2";
     // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
     // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
     // Desktop, który pozwala udostępnić kamerę i mikrofon.
@@ -173,8 +173,11 @@ internal static class Program
                 var temporaryPath = packagePath + ".download";
                 using (var source = await Http.GetStreamAsync(manifest.PackageUrl))
                 using (var target = File.Create(temporaryPath)) await source.CopyToAsync(target);
-                await using var packageStream = File.OpenRead(temporaryPath);
-                var downloadedHash = Convert.ToHexString(await SHA256.HashDataAsync(packageStream));
+                string downloadedHash;
+                await using (var packageStream = File.OpenRead(temporaryPath))
+                {
+                    downloadedHash = Convert.ToHexString(await SHA256.HashDataAsync(packageStream));
+                }
                 if (!string.Equals(downloadedHash, manifest.Sha256, StringComparison.OrdinalIgnoreCase))
                 {
                     File.Delete(temporaryPath);
