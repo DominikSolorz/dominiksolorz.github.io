@@ -26,17 +26,19 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
 const MOBILE_OWNER_APP = document.documentElement.classList.contains("mobileOwnerMode");
-// Jedynym gospodarzem sprzętu jest lokalny program Windows. Każda strona
-// otwierana przez telefon lub zwykłą przeglądarkę jest odbiornikiem tego
-// komputera: może oglądać obraz i DVR, ale nie uruchamia własnej kamery ani
-// nie zmienia zapisu na komputerze.
+// Jedynym gospodarzem sprzętu jest zainstalowany HOME SECURITY Desktop.
+// Każda strona otwierana przez telefon lub zwykłą przeglądarkę jest odbiornikiem
+// tego komputera: może oglądać obraz i DVR, ale nie uruchamia własnej kamery,
+// mikrofonu ani nie zmienia nadajnika.
 const hostChoice = new URLSearchParams(location.search).get("host");
-const NATIVE_HOST = hostChoice === "computer";
-// Chrome może być hostem tylko po świadomym wyborze w panelu źródła.
-const BROWSER_HOST = hostChoice === "browser";
-const CAN_MANAGE_CAMERA = NATIVE_HOST || BROWSER_HOST;
+// Ten znacznik jest wstrzykiwany przed załadowaniem strony wyłącznie przez
+// WebView2 w HOME SECURITY Desktop. Sam parametr URL nie wystarcza, więc
+// Chrome nie może zostać nadajnikiem nawet po ręcznym wpisaniu host=computer.
+const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true;
+const NATIVE_HOST = NATIVE_DESKTOP && hostChoice === "computer";
+const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "137"; // musi się zgadzać z version.json
+const VERSION = "138"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1931,7 +1933,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome.
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=14", { scope: "./" }).catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=15", { scope: "./" }).catch(() => {}));
 }
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
@@ -2183,25 +2185,14 @@ $("listenVolume").addEventListener("input", event => {
 });
 paintListeningControls();
 
-// Wybór źródła jest jawny. Nie zmieniamy hosta ani nie prosimy o kamerę bez
-// kliknięcia użytkownika w panelu źródła.
-function setSourceChoice(next) {
-  const url = new URL(location.href);
-  url.hash = "";
-  if (next === "browser") url.searchParams.set("host", "browser");
-  else url.searchParams.delete("host");
-  location.assign(url.href);
-}
+// Źródło jest stałe: nadaje wyłącznie zainstalowany HOME SECURITY Desktop.
+// Przeglądarka nie zawiera ani wyboru źródła, ani ścieżki do getUserMedia().
 const sourceDialog = $("sourceDialog");
 $("sourceBtn")?.addEventListener("click", () => sourceDialog?.showModal());
 $("sourceCancel")?.addEventListener("click", () => sourceDialog?.close());
-$("sourceViewer")?.addEventListener("click", () => setSourceChoice("viewer"));
-$("sourceBrowser")?.addEventListener("click", () => {
-  if (confirm("Użyć kamery i mikrofonu tego Chrome jako źródła? Ten komputer będzie nadawał oraz zapisywał obraz.")) setSourceChoice("browser");
-});
 $("sourceDesktop")?.addEventListener("click", () => {
   sourceDialog?.close();
-  toastMsg("Wybierz HOME SECURITY Desktop na komputerze z kamerą. Ten ekran pozostaje bezpiecznym podglądem.");
+  toastMsg("Nadajnik działa wyłącznie w HOME SECURITY Desktop na komputerze z kamerą. Ten ekran pozostaje bezpiecznym podglądem.");
 });
 
 // ---------- Start: komputer-host nadaje i zapisuje; wszystkie inne ekrany oglądają ----------

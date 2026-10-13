@@ -5,12 +5,11 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają dokładnie tę samą
-    // opublikowaną stronę. Różni je wyłącznie jawna rola host=computer, która
-    // pozwala programowi Windows udostępnić jego kamerę i mikrofon.
+    // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
+    // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
+    // Desktop, który pozwala udostępnić kamerę i mikrofon.
     private const string PanelUrl = "https://dominiksolorz.github.io/kamera/?desktop=1&native=windows&host=computer";
     private const string PublicHost = "dominiksolorz.github.io";
-    private const string LocalHost = "home-security.local";
 
     [STAThread]
     private static void Main()
@@ -43,6 +42,8 @@ internal static class Program
                 "HomeSecurityDesktop", "WebView");
             var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: dataPath);
             await webView.EnsureCoreWebView2Async(environment);
+            await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
+                "Object.defineProperty(window, '__HOME_SECURITY_DESKTOP__', { value: true, configurable: false, writable: false });");
 
             var settings = webView.CoreWebView2.Settings;
             settings.AreDefaultContextMenusEnabled = false;

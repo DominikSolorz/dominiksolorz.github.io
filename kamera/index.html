@@ -51,7 +51,7 @@
   <nav class="nav">
     <a class="navLink active" href="./">Na żywo</a>
     <a class="navLink" href="nagrania.html">Nagrania</a>
-    <button id="sourceBtn" class="navLink sourceBtn" type="button">▣ Źródło kamery</button>
+    <button id="sourceBtn" class="navLink sourceBtn" type="button">▣ Komputer nadający</button>
     <button id="lockBtn" class="navLink" title="Zablokuj stronę na tym urządzeniu" hidden>🔒</button>
   </nav>
 </header>
@@ -354,11 +354,10 @@
 </main>
 
 <dialog id="sourceDialog" class="sourceDialog" aria-labelledby="sourceDialogTitle">
-  <div class="sourceDialogHead"><div><p>ŹRÓDŁO KAMERY</p><h2 id="sourceDialogTitle">Gdzie działa kamera?</h2><span>Wybierz jedno źródło. Zmiana nie odbywa się automatycznie.</span></div><button id="sourceCancel" type="button" aria-label="Zamknij wybór">✕</button></div>
+  <div class="sourceDialogHead"><div><p>KOMPUTER NADAJĄCY</p><h2 id="sourceDialogTitle">Źródło jest chronione</h2><span>Obraz, dźwięk i nagrania może nadawać wyłącznie zainstalowany HOME SECURITY Desktop.</span></div><button id="sourceCancel" type="button" aria-label="Zamknij informację">✕</button></div>
   <div class="sourceChoices">
-    <button id="sourceDesktop" type="button"><b>▣</b><span><strong>HOME SECURITY Desktop</strong><small>Zalecane: EXE na komputerze z kamerą, nagraniami i pełnym sterowaniem.</small></span><i>Otwarty podgląd</i></button>
-    <button id="sourceBrowser" type="button"><b>◉</b><span><strong>Kamera tego Chrome</strong><small>Ten Chrome staje się hostem. Po wyborze przeglądarka poprosi o dostęp do kamery i mikrofonu.</small></span><i>Użyj Chrome</i></button>
-    <button id="sourceViewer" type="button"><b>◌</b><span><strong>Tylko podgląd</strong><small>Bez dostępu do lokalnej kamery i bez możliwości zatrzymania nagrywania hosta.</small></span><i>Oglądaj</i></button>
+    <button id="sourceDesktop" type="button"><b>▣</b><span><strong>HOME SECURITY Desktop</strong><small>Program Windows na komputerze z kamerą — jedyne miejsce, które może uruchomić transmisję, mikrofon i nagrywanie.</small></span><i>Informacja</i></button>
+    <div class="sourceViewerNote"><b>◌</b><span><strong>Przeglądarka i telefon</strong><small>Bezpieczny podgląd, archiwum i dozwolone ustawienia właściciela. Nie mogą stać się nadajnikiem.</small></span></div>
   </div>
 </dialog>
 
@@ -376,7 +375,7 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=145"></script>
+<script type="module" src="app.js?v=146"></script>
 <script type="module" src="desktop.js?v=19"></script>
 <script type="module" src="mobile.js?v=6"></script>
 </body>
