@@ -11,6 +11,9 @@ if (desktopRequested) {
   const $ = id => document.getElementById(id);
   document.documentElement.classList.add("desktopMode");
   document.body.classList.add("desktopMode");
+  // Panel operatora jest elementem po zalogowaniu. Desktop tworzy strukturę
+  // wcześniej, ale do pomyślnego PIN-u lewy pasek pozostaje niewidoczny.
+  document.body.classList.add("accessPending");
 
   const header = document.querySelector(".topbar");
   const desktopTopStatus = document.createElement("div");

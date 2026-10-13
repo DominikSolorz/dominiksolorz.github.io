@@ -2167,12 +2167,14 @@ $("bootError").hidden = true;
 await window.__finishSecureBoot?.();
 if (RECEIVER_ONLY) {
   CHANNEL = receiverChannel;
+  document.body.classList.remove("accessPending");
   $("app").hidden = false;
   showViewer();
 } else {
   ACCESS_KEY = await requireAccess();
   CHANNEL = await channelFor(ACCESS_KEY);
   if (new URLSearchParams(location.search).get("wroc") === "nagrania") location.replace("nagrania.html");
+  document.body.classList.remove("accessPending");
   $("app").hidden = false; $("lockBtn").hidden = false;
   if (prefs.role === "send") showSender();
   else {
