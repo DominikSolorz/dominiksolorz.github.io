@@ -30,10 +30,13 @@ const MOBILE_OWNER_APP = new URLSearchParams(location.search).get("app") === "an
 // otwierana przez telefon lub zwykłą przeglądarkę jest odbiornikiem tego
 // komputera: może oglądać obraz i DVR, ale nie uruchamia własnej kamery ani
 // nie zmienia zapisu na komputerze.
-const NATIVE_HOST = new URLSearchParams(location.search).get("host") === "computer";
-const CAN_MANAGE_CAMERA = NATIVE_HOST;
+const hostChoice = new URLSearchParams(location.search).get("host");
+const NATIVE_HOST = hostChoice === "computer";
+// Chrome może być hostem tylko po świadomym wyborze w panelu źródła.
+const BROWSER_HOST = hostChoice === "browser";
+const CAN_MANAGE_CAMERA = NATIVE_HOST || BROWSER_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "133"; // musi się zgadzać z version.json
+const VERSION = "134"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1753,7 +1756,7 @@ function showSender() {
 }
 
 function copyReceiverLink() {
-  const url = new URL(NATIVE_HOST ? PUBLIC_PANEL_URL : location.href);
+  const url = new URL(CAN_MANAGE_CAMERA ? PUBLIC_PANEL_URL : location.href);
   url.hash = "";
   url.search = "";
   url.searchParams.set("odbiorca", CHANNEL);
@@ -1763,7 +1766,7 @@ function copyReceiverLink() {
 }
 
 function copyOwnerLink() {
-  const url = new URL(NATIVE_HOST ? PUBLIC_PANEL_URL : location.href);
+  const url = new URL(CAN_MANAGE_CAMERA ? PUBLIC_PANEL_URL : location.href);
   url.hash = "";
   url.search = "";
   url.searchParams.set("panel", "owner");
@@ -2081,8 +2084,29 @@ $("stage").addEventListener("pointerup", e => {
 $("stage").addEventListener("dblclick", e => { if (!e.target.closest("button, a, input, select")) toggleFullscreen(); });
 $("soundBtn").addEventListener("click", () => { video.muted = !video.muted; video.volume = 1; $("soundBtn").textContent = video.muted ? "🔊 Włącz dźwięk" : "🔇 Wycisz"; });
 
+// Wybór źródła jest jawny. Nie zmieniamy hosta ani nie prosimy o kamerę bez
+// kliknięcia użytkownika w panelu źródła.
+function setSourceChoice(next) {
+  const url = new URL(location.href);
+  url.hash = "";
+  if (next === "browser") url.searchParams.set("host", "browser");
+  else url.searchParams.delete("host");
+  location.assign(url.href);
+}
+const sourceDialog = $("sourceDialog");
+$("sourceBtn")?.addEventListener("click", () => sourceDialog?.showModal());
+$("sourceCancel")?.addEventListener("click", () => sourceDialog?.close());
+$("sourceViewer")?.addEventListener("click", () => setSourceChoice("viewer"));
+$("sourceBrowser")?.addEventListener("click", () => {
+  if (confirm("Użyć kamery i mikrofonu tego Chrome jako źródła? Ten komputer będzie nadawał oraz zapisywał obraz.")) setSourceChoice("browser");
+});
+$("sourceDesktop")?.addEventListener("click", () => {
+  sourceDialog?.close();
+  toastMsg("Wybierz HOME SECURITY Desktop na komputerze z kamerą. Ten ekran pozostaje bezpiecznym podglądem.");
+});
+
 // ---------- Start: komputer-host nadaje i zapisuje; wszystkie inne ekrany oglądają ----------
-if (NATIVE_HOST) {
+if (CAN_MANAGE_CAMERA) {
   if (prefs.role !== "send") { prefs.role = "send"; savePrefs(); }
 } else if (!RECEIVER_ONLY) {
   if (prefs.role !== "watch") { prefs.role = "watch"; savePrefs(); }
