@@ -18,6 +18,9 @@
   // zostanie przypadkowo otwarty na dużym ekranie.
   const isTransmitter = location.hash === "#nadaj";
   const mobileRequested = routeParams.get("app") === "android";
+  // Opcjonalny, niezależny motyw stanowiska dowodzenia inspirowany estetyką
+  // US Military. Zmienia wyłącznie wygląd interfejsu, nie funkcje kamery.
+  if (routeParams.get("theme") === "us-military") document.documentElement.classList.add("usMilitary");
   // Link PWA może zostać otwarty także na monitorze komputera. Nie wolno
   // wtedy zmieniać stanowiska operatora w wąski, telefoniczny interfejs.
   // Wersję Mobile uruchamiamy wyłącznie na telefonie albo w wąskim oknie.
@@ -32,7 +35,7 @@
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-  <link rel="stylesheet" href="style.css?v=147">
+  <link rel="stylesheet" href="style.css?v=148">
 </head>
 <body>
 <header class="topbar">
