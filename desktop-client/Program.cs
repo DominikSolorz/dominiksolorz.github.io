@@ -10,7 +10,7 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.1.3";
+    private const string DesktopVersion = "1.1.4";
     // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
     // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
     // Desktop, który pozwala udostępnić kamerę i mikrofon.
@@ -49,9 +49,13 @@ internal static class Program
             Directory.CreateDirectory(updaterFolder);
             var helper = Path.Combine(updaterFolder, $"HomeSecurityDesktop.Updater.{Guid.NewGuid():N}.exe");
             File.Copy(exe, helper, true);
-            Process.Start(new ProcessStartInfo(helper,
-                $"--apply-update \"{pending.PackagePath}\" \"{AppContext.BaseDirectory}\" {Environment.ProcessId} \"{PendingUpdatePath}\"")
-            { UseShellExecute = false });
+            var startInfo = new ProcessStartInfo(helper) { UseShellExecute = false };
+            startInfo.ArgumentList.Add("--apply-update");
+            startInfo.ArgumentList.Add(pending.PackagePath);
+            startInfo.ArgumentList.Add(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            startInfo.ArgumentList.Add(Environment.ProcessId.ToString());
+            startInfo.ArgumentList.Add(PendingUpdatePath);
+            Process.Start(startInfo);
             return true;
         }
         catch { return false; }
