@@ -120,29 +120,84 @@ if (desktopRequested) {
     <article><span class="desktopSummaryIcon">⌁</span><div><b>Tryb ochrony</b><strong>Gotowy</strong><small>wykrywanie ruchu i dźwięku</small></div></article>`;
   overview.insertAdjacentElement("afterend", summary);
 
-  // Ustawienia to jeden uporządkowany moduł, a nie kolejna długa lista pod
-  // sterowaniem. Karty przełączają wyłącznie widoczność istniejących pól —
-  // nie zapisują i nie zmieniają konfiguracji kamery.
+  // Ustawienia są osobnym ekranem desktopowym, a nie kartą pozostawioną pod
+  // podglądem. Prawdziwe kontrolki aplikacji przenosimy do nowego układu,
+  // dzięki czemu nie dublujemy logiki kamery ani nie tworzymy atrap.
   const setCard = $("setCard");
   const pictureRow = $("pictureStyle")?.closest(".setRow");
   const gridRow = $("gridToggle")?.closest(".setRow");
+  const settingsScreen = document.createElement("section");
+  settingsScreen.className = "desktopSettingsScreen";
+  settingsScreen.hidden = true;
+  settingsScreen.setAttribute("aria-label", "Ustawienia kamery");
+  settingsScreen.innerHTML = `
+    <header class="desktopSettingsHeader">
+      <span class="desktopSettingsIcon">▣</span>
+      <div><h2>Ustawienia kamery</h2><p>Dostosuj obraz, dźwięk, nagrywanie i dostęp do wybranej kamery.</p></div>
+    </header>
+    <nav class="desktopSettingsTabs" aria-label="Kategorie ustawień kamery">
+      <button type="button" data-settings-group="picture">▣ <span>Obraz</span></button>
+      <button type="button" data-settings-group="sound">⌁ <span>Dźwięk</span></button>
+      <button type="button" data-settings-group="quality">HD <span>Jakość</span></button>
+      <button type="button" data-settings-group="recording">◉ <span>Nagrywanie</span></button>
+      <button type="button" data-settings-group="detection">◌ <span>Detekcja</span></button>
+      <button type="button" data-settings-group="devices">▤ <span>Urządzenia</span></button>
+      <button type="button" data-settings-group="access">▢ <span>Dostęp</span></button>
+      <button type="button" data-settings-group="application">▦ <span>Aplikacja</span></button>
+    </nav>
+    <div class="desktopSettingsGrid">
+      <section class="desktopSettingsControls" aria-label="Parametry wybranej kategorii"></section>
+      <section class="desktopSettingsPreview" aria-label="Rzeczywisty podgląd kamery">
+        <div class="desktopSettingsPreviewHead"><b id="desktopSettingsCameraName">Podgląd kamery</b><span id="desktopSettingsLiveState">● oczekiwanie</span></div>
+        <div class="desktopSettingsLiveFrame"></div>
+        <button id="desktopResetPicture" class="desktopResetPicture" type="button">⟳ Przywróć naturalne kolory</button>
+      </section>
+    </div>
+    <footer class="desktopSettingsFooter">
+      <div><span id="desktopSettingsDevice">Kamera: sprawdzam…</span><span id="desktopSettingsResolution">—</span><span id="desktopSettingsFps">FPS: —</span></div>
+      <button id="desktopSettingsSaved" type="button">▣ Zapis ustawień</button>
+    </footer>`;
+  context.insertAdjacentElement("afterend", settingsScreen);
+  const settingsControls = settingsScreen.querySelector(".desktopSettingsControls");
+  const settingsPreviewFrame = settingsScreen.querySelector(".desktopSettingsLiveFrame");
+  if (setCard && settingsControls) settingsControls.append(setCard);
+
+  const previewTweaks = document.createElement("section");
+  previewTweaks.className = "desktopPreviewTweaks";
+  previewTweaks.innerHTML = `
+    <p class="desktopSettingNote">Korekta podglądu na tym urządzeniu — nie zmienia fizycznych ustawień kamery.</p>
+    <label>Kontrast podglądu <input id="desktopPreviewContrast" type="range" min="70" max="140" value="100"><output>100%</output></label>
+    <label>Nasycenie kolorów <input id="desktopPreviewSaturation" type="range" min="0" max="160" value="100"><output>100%</output></label>
+    <label class="desktopPreviewSelect">Balans bieli <select disabled><option>Automatyczny — steruje kamera</option></select></label>
+    <label class="desktopPreviewSelect">Ostrość obrazu <select disabled><option>Automatyczna — steruje kamera</option></select></label>`;
+  setCard?.querySelector(".panelHead")?.insertAdjacentElement("afterend", previewTweaks);
+
   const settingsGroups = {
-    picture: [$("ownerLight"), pictureRow, gridRow],
+    picture: [$("ownerLight"), previewTweaks, pictureRow, gridRow],
     sound: [$("ownerMedia")],
-    recording: [$("ownerQuality"), $("ownerOnce")]
+    quality: [$("ownerQuality")],
+    recording: [$("ownerOnce")],
+    detection: [],
+    devices: [],
+    access: [],
+    application: []
   };
   let activeSettingsGroup = "picture";
-  const settingsTabs = document.createElement("nav");
-  settingsTabs.className = "desktopSettingsTabs";
-  settingsTabs.setAttribute("aria-label", "Kategorie ustawień kamery");
-  settingsTabs.innerHTML = `
-    <button type="button" data-settings-group="picture">Obraz</button>
-    <button type="button" data-settings-group="sound">Dźwięk</button>
-    <button type="button" data-settings-group="recording">Nagrywanie</button>`;
+  const settingsTabs = settingsScreen.querySelector(".desktopSettingsTabs");
+  const emptySettings = document.createElement("p");
+  emptySettings.className = "desktopSettingsEmpty";
   const setSettingsGroup = group => {
     activeSettingsGroup = settingsGroups[group] ? group : "picture";
     const visible = new Set(settingsGroups[activeSettingsGroup].filter(Boolean));
     Object.values(settingsGroups).flat().filter(Boolean).forEach(row => { row.hidden = !visible.has(row); });
+    emptySettings.textContent = ({
+      detection: "Detekcja ruchu i dźwięku jest konfigurowana na komputerze-kamerze. Po uruchomieniu transmisji pokażemy tu faktycznie dostępne opcje urządzenia.",
+      devices: "Ta kamera korzysta obecnie z urządzenia wybranego na komputerze-kamerze. Nie zmieniamy źródła zdalnie bez potwierdzenia tego komputera.",
+      access: "Dostęp właściciela jest chroniony PIN-em. Link odbiorcy pozostaje tylko do podglądu.",
+      application: "Autostart działa tylko po zalogowaniu do Windows. Nie uruchamia ponownie kamery po ręcznym zatrzymaniu w tej samej sesji."
+    })[activeSettingsGroup] || "";
+    emptySettings.hidden = Boolean(visible.size) || !emptySettings.textContent;
+    if (!emptySettings.parentElement) setCard?.append(emptySettings);
     settingsTabs.querySelectorAll("button").forEach(button => {
       const active = button.dataset.settingsGroup === activeSettingsGroup;
       button.classList.toggle("active", active);
@@ -150,13 +205,43 @@ if (desktopRequested) {
     });
   };
   if (setCard) {
-    setCard.querySelector(".panelHead")?.insertAdjacentElement("afterend", settingsTabs);
     settingsTabs.addEventListener("click", event => {
       const button = event.target.closest("button[data-settings-group]");
       if (button) setSettingsGroup(button.dataset.settingsGroup);
     });
     setSettingsGroup(activeSettingsGroup);
   }
+
+  const previewPrefsKey = "home-security-desktop-preview-tweaks";
+  const savedPreviewTweaks = JSON.parse(localStorage.getItem(previewPrefsKey) || '{"contrast":100,"saturation":100}');
+  const applyPreviewTweaks = () => {
+    const contrast = Number($("desktopPreviewContrast")?.value || 100);
+    const saturation = Number($("desktopPreviewSaturation")?.value || 100);
+    const stage = $("stage");
+    stage?.style.setProperty("--desktop-preview-contrast", `${contrast}%`);
+    stage?.style.setProperty("--desktop-preview-saturation", `${saturation}%`);
+    ["desktopPreviewContrast", "desktopPreviewSaturation"].forEach(id => {
+      const input = $(id); const output = input?.parentElement?.querySelector("output");
+      if (input && output) output.value = `${input.value}%`;
+    });
+    localStorage.setItem(previewPrefsKey, JSON.stringify({ contrast, saturation }));
+  };
+  ["desktopPreviewContrast", "desktopPreviewSaturation"].forEach(id => {
+    if ($(id)) $(id).value = String(savedPreviewTweaks[id === "desktopPreviewContrast" ? "contrast" : "saturation"] || 100);
+    $(id)?.addEventListener("input", applyPreviewTweaks);
+  });
+  applyPreviewTweaks();
+  $("desktopResetPicture")?.addEventListener("click", () => {
+    if ($("pictureStyle")) { $("pictureStyle").value = "color"; $("pictureStyle").dispatchEvent(new Event("change")); }
+    if ($("gridToggle")) { $("gridToggle").checked = false; $("gridToggle").dispatchEvent(new Event("change")); }
+    if ($("desktopPreviewContrast")) $("desktopPreviewContrast").value = "100";
+    if ($("desktopPreviewSaturation")) $("desktopPreviewSaturation").value = "100";
+    applyPreviewTweaks();
+  });
+  $("desktopSettingsSaved")?.addEventListener("click", () => {
+    $("desktopSettingsSaved").textContent = "✓ Ustawienia zapisane";
+    setTimeout(() => { if ($("desktopSettingsSaved")) $("desktopSettingsSaved").textContent = "▣ Zapis ustawień"; }, 2200);
+  });
 
   const resize = document.createElement("div");
   resize.className = "desktopResize";
@@ -175,6 +260,10 @@ if (desktopRequested) {
     // Każdy wpis w bocznym menu ma własny pełnoekranowy obszar. Dzięki temu
     // Diagnostyka i Archiwum nie zostawiają pustej połowy monitora.
     overview.hidden = view !== "live";
+    settingsScreen.hidden = view !== "settings";
+    if (layout) layout.hidden = view === "settings";
+    if (view === "settings" && liveStage?.parentElement !== settingsPreviewFrame) settingsPreviewFrame?.append(liveStage);
+    if (view !== "settings" && liveStage?.parentElement !== liveTile) liveTile?.append(liveStage);
     // Pulpit ma być roboczy: kamera, zdarzenia i oś czasu — bez dodatkowych
     // kart diagnostycznych pod spodem. Ich dane są w module Diagnostyka.
     summary.hidden = true;
@@ -229,6 +318,12 @@ if (desktopRequested) {
     if ($("desktopSummaryRecording")) $("desktopSummaryRecording").textContent = mode?.textContent?.trim() || "Brak danych";
     if ($("desktopTopStatusText")) $("desktopTopStatusText").textContent = isLive ? "System online" : "System offline";
     desktopTopStatus.classList.toggle("live", Boolean(isLive));
+    const settingsState = $("desktopSettingsLiveState");
+    if (settingsState) { settingsState.textContent = isLive ? "● Na żywo" : "● oczekiwanie"; settingsState.classList.toggle("live", Boolean(isLive)); }
+    const mediaSettings = document.querySelector("#video")?.srcObject?.getVideoTracks?.()[0]?.getSettings?.() || {};
+    if ($("desktopSettingsDevice")) $("desktopSettingsDevice").textContent = `Kamera: ${mediaSettings.deviceId ? "PC Camera" : "brak transmisji"}`;
+    if ($("desktopSettingsResolution")) $("desktopSettingsResolution").textContent = mediaSettings.width && mediaSettings.height ? `${mediaSettings.width} × ${mediaSettings.height}` : "Rozdzielczość: —";
+    if ($("desktopSettingsFps")) $("desktopSettingsFps").textContent = mediaSettings.frameRate ? `${Math.round(mediaSettings.frameRate)} FPS` : "FPS: —";
     const events = document.querySelectorAll("#viewEvents li,#pcEvents li");
     if ($("desktopEventCount")) $("desktopEventCount").textContent = events.length ? `${events.length} zdarzeń` : "Brak zdarzeń";
   };
