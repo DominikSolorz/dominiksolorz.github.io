@@ -1471,7 +1471,7 @@ const viewer = (() => {
     pc?.close(); pc = null; pending = [];
     video.srcObject = null;
     showLive(""); showPlaceholder("Łączenie…"); $("startHere").hidden = true;
-    $("soundBtn").hidden = true;
+    $("audioHud").hidden = true;
   }
 
   async function onSignal(sig) {
@@ -1515,7 +1515,7 @@ const viewer = (() => {
         try { e.receiver.playoutDelayHint = 0; } catch { /* brak wsparcia */ }
         const s = e.streams[0];
         if (video.srcObject !== s) { video.srcObject = s; video.play().catch(() => {}); }
-        $("soundBtn").hidden = s.getAudioTracks().length === 0;
+        $("audioHud").hidden = s.getAudioTracks().length === 0;
       };
       conn.ondatachannel = e => { if (e.channel.label === "nagrania") recClient.attach(e.channel); };
       conn.onicecandidate = e => { if (e.candidate) send(chan.channel, { type: "ice", viewerId, from: "viewer", candidate: e.candidate.toJSON() }); };
@@ -2082,7 +2082,30 @@ $("stage").addEventListener("pointerup", e => {
   if (now - lastTap < 350) { lastTap = 0; toggleFullscreen(); } else lastTap = now;
 });
 $("stage").addEventListener("dblclick", e => { if (!e.target.closest("button, a, input, select")) toggleFullscreen(); });
-$("soundBtn").addEventListener("click", () => { video.muted = !video.muted; video.volume = 1; $("soundBtn").textContent = video.muted ? "🔊 Włącz dźwięk" : "🔇 Wycisz"; });
+function paintListeningControls() {
+  const muted = video.muted;
+  const volume = Math.round((Number(video.volume) || 0) * 100);
+  const button = $("soundBtn");
+  button.textContent = muted ? "🔊 Włącz odsłuch" : "🔇 Wycisz odsłuch";
+  button.setAttribute("aria-pressed", String(!muted));
+  button.title = muted ? "Włącz odsłuch z mikrofonu kamery" : "Wycisz odsłuch z mikrofonu kamery";
+  $("listenVolume").value = String(volume);
+  $("listenVolumeLabel").textContent = `${volume}%`;
+}
+$("soundBtn").addEventListener("click", async () => {
+  video.muted = !video.muted;
+  if (!video.muted && !video.volume) video.volume = 1;
+  // Odtwarzanie dźwięku wymaga świadomego kliknięcia użytkownika.
+  if (!video.muted) await video.play().catch(() => {});
+  paintListeningControls();
+});
+$("listenVolume").addEventListener("input", event => {
+  const volume = Math.max(0, Math.min(100, Number(event.target.value) || 0)) / 100;
+  video.volume = volume;
+  if (volume > 0 && video.muted) video.muted = false;
+  paintListeningControls();
+});
+paintListeningControls();
 
 // Wybór źródła jest jawny. Nie zmieniamy hosta ani nie prosimy o kamerę bez
 // kliknięcia użytkownika w panelu źródła.

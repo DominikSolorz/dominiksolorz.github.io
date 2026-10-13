@@ -79,7 +79,13 @@ if (desktopRequested) {
   const liveTile = overview.querySelector(".desktopCameraLive");
   if (liveStage && liveTile) liveTile.append(liveStage);
   const eventsDrawer = overview.querySelector(".desktopEventsDrawer");
-  if (eventCard && eventsDrawer) eventsDrawer.append(eventCard);
+  if (eventCard && eventsDrawer) {
+    eventsDrawer.append(eventCard);
+    // Zdarzenia są częścią pulpitu operatorskiego, nie ukrytą kartą pod
+    // obrazem. Użytkownik od razu widzi ostatnie prawdziwe wykrycia.
+    eventsDrawer.open = true;
+    eventCard.open = true;
+  }
 
   // Na pulpicie operatora oś doby jest częścią głównego widoku, obok obrazu
   // i zdarzeń. Pełna lista plików pojawia się dopiero w module Archiwum DVR.
