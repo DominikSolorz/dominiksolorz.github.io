@@ -36,7 +36,7 @@
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-  <link rel="stylesheet" href="style.css?v=149">
+  <link rel="stylesheet" href="style.css?v=150">
 </head>
 <body>
 <header class="topbar">
@@ -70,12 +70,16 @@
 <!-- Krótki ekran uruchamiania. Znika dopiero przed ekranem PIN, więc obraz
      kamery ani prywatne elementy panelu nie są widoczne przed zalogowaniem. -->
 <section id="boot" class="bootScreen" aria-live="polite" aria-label="Uruchamianie HOME SECURITY">
+  <div class="bootAtmosphere" aria-hidden="true"><i></i><i></i><b></b><b></b></div>
   <div class="bootCard">
-    <div class="bootMark">⌾</div>
+    <div class="bootMark" aria-hidden="true"><span>HS</span><i></i></div>
     <p class="bootBrand">HOME <b>SECURITY</b></p>
+    <p class="bootUnit">COMMAND CENTER · SECURE CHANNEL</p>
     <h1>Uruchamianie bezpiecznego panelu</h1>
     <p id="bootText">Sprawdzam bezpieczne połączenie…</p>
     <div class="bootMeter" aria-hidden="true"><i id="bootProgress"></i></div>
+    <div class="bootMeta"><span id="bootStep">01 / 03 · WERYFIKACJA</span><strong><b id="bootCountdown">07</b> s</strong></div>
+    <ol class="bootSteps" aria-hidden="true"><li class="active">Szyfrowanie</li><li>Panel</li><li>Dostęp PIN</li></ol>
     <small>Bezpieczny start · maksymalnie 7 sekund</small>
   </div>
 </section>
@@ -85,6 +89,9 @@
     const boot = document.getElementById("boot");
     const bar = document.getElementById("bootProgress");
     const text = document.getElementById("bootText");
+    const countdown = document.getElementById("bootCountdown");
+    const step = document.getElementById("bootStep");
+    const steps = [...document.querySelectorAll(".bootSteps li")];
     let complete = false;
     const paint = () => {
       if (complete) return;
@@ -93,11 +100,12 @@
       // Kolejne komunikaty opisują etapy startu bez uruchamiania kamery.
       const progress = Math.min(94, 7 + elapsed / 6500 * 87);
       bar.style.width = `${progress}%`;
-      text.textContent = elapsed < 1900
-        ? "Sprawdzam bezpieczne połączenie…"
-        : elapsed < 4000
-          ? "Przygotowuję panel i ustawienia…"
-          : "Zabezpieczam dostęp do kamery…";
+      const phase = elapsed < 1900 ? 0 : elapsed < 4000 ? 1 : 2;
+      const copy = ["Sprawdzam bezpieczne połączenie…", "Przygotowuję panel i ustawienia…", "Zabezpieczam dostęp do kamery…"];
+      text.textContent = copy[phase];
+      countdown.textContent = String(Math.max(1, Math.ceil((6500 - elapsed) / 1000))).padStart(2, "0");
+      step.textContent = `${String(phase + 1).padStart(2, "0")} / 03 · ${["WERYFIKACJA", "PANEL", "DOSTĘP PIN"][phase]}`;
+      steps.forEach((item, index) => item.classList.toggle("active", index <= phase));
       requestAnimationFrame(paint);
     };
     requestAnimationFrame(paint);
@@ -108,6 +116,9 @@
       if (remaining) await new Promise(resolve => setTimeout(resolve, remaining));
       complete = true;
       bar.style.width = "100%";
+      countdown.textContent = "00";
+      step.textContent = "03 / 03 · GOTOWE";
+      steps.forEach(item => item.classList.add("active"));
       text.textContent = "Panel gotowy — wymagane logowanie PIN";
       await new Promise(resolve => setTimeout(resolve, 220));
       boot.hidden = true;
