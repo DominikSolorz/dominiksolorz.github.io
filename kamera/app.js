@@ -36,7 +36,7 @@ const NATIVE_HOST = hostChoice === "computer";
 const BROWSER_HOST = hostChoice === "browser";
 const CAN_MANAGE_CAMERA = NATIVE_HOST || BROWSER_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "134"; // musi się zgadzać z version.json
+const VERSION = "135"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1771,7 +1771,7 @@ function copyOwnerLink() {
   url.search = "";
   url.searchParams.set("panel", "owner");
   navigator.clipboard.writeText(url.href)
-    .then(() => toastMsg("Skopiowano prywatny link właściciela. Telefon ogląda kamerę i archiwum komputera, bez przejmowania sterowania."))
+    .then(() => toastMsg("Skopiowano prywatny link właściciela. Po PIN-ie można oglądać i sterować komputerem-kamerą."))
     .catch(() => prompt("Skopiuj ten prywatny link właściciela (po otwarciu wymaga PIN-u):", url.href));
 }
 
@@ -1782,6 +1782,22 @@ function toastMsg(text) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 6000);
 }
 let dvr = null;
+// Link odbiorcy pozostaje zawsze wyłącznie do oglądania. Panel właściciela
+// otrzymuje sterowanie dopiero po lokalnym wpisaniu PIN-u, z którego powstaje
+// ACCESS_KEY używany do podpisania każdego polecenia dla komputera-kamery.
+function canControlCamera() {
+  return CAN_MANAGE_CAMERA || (OWNER_PANEL && !RECEIVER_ONLY && !!ACCESS_KEY);
+}
+function applyControlVisibility() {
+  const controls = canControlCamera();
+  const receiverOnly = RECEIVER_ONLY;
+  ["modeCard", "setCard", "ctrlBar"].forEach(id => { $(id).hidden = !controls; });
+  ["ownerQuality", "ownerMedia", "ownerOnce", "ownerLight", "reloadPcBtn"].forEach(id => { $(id).hidden = !controls; });
+  $("viewEventsCard").hidden = receiverOnly;
+  document.querySelector("#ctrlBar .ctrlBtns").hidden = !controls;
+  $("roleBtn").hidden = !CAN_MANAGE_CAMERA;
+  document.querySelectorAll('a[href="nagrania.html"]').forEach(a => { a.hidden = receiverOnly; });
+}
 function showViewer() {
   $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("viewEventsCard").hidden = false; $("layout").classList.remove("sender");
   // Oś czasu i biblioteka pokazują nagrania zapisane na stronie (nie z Google Drive).
@@ -1789,20 +1805,12 @@ function showViewer() {
   recClient.onopen = () => dvr.refresh();
   $("dvrCard").hidden = false;
   dvr.start();
-  // Telefon, przeglądarka i drugi komputer to odbiorniki. Nie mogą uruchomić
-  // drugiej kamery, zatrzymać zapisu ani zmienić ustawień hosta Windows.
+  // Telefon, przeglądarka i drugi komputer nie uruchamiają własnej kamery.
+  // Tylko prywatny panel właściciela po PIN-ie może przesłać podpisane
+  // polecenie do komputera-kamery; link odbiorcy nie ma takiej możliwości.
   $("roleBtn").textContent = "To jest komputer z kamerą — nadawaj z niego";
   $("roleBtn").hidden = !IS_DESKTOP;
-  if (!CAN_MANAGE_CAMERA) {
-    $("modeCard").hidden = true;
-    $("setCard").hidden = true;
-    $("ctrlBar").hidden = true;
-    ["ownerQuality", "ownerMedia", "ownerOnce", "ownerLight", "reloadPcBtn"].forEach(id => { $(id).hidden = true; });
-    $("viewEventsCard").hidden = true;
-    document.querySelector("#ctrlBar .ctrlBtns").hidden = true;
-    $("roleBtn").hidden = true;
-    document.querySelectorAll('a[href="nagrania.html"]').forEach(a => a.hidden = true);
-  }
+  applyControlVisibility();
   viewer.start();
 }
 
@@ -1919,27 +1927,28 @@ if ("serviceWorker" in navigator) {
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
 $("ctrlStart").addEventListener("click", async () => {
-  if (!CAN_MANAGE_CAMERA) return;
+  if (!canControlCamera()) return;
   if (prefs.role === "send") { if (!sender.live) await sender.start(); return sender.setMode("record"); }
   viewer.setMode("record");
 });
 $("ctrlStop").addEventListener("click", () => {
-  if (!CAN_MANAGE_CAMERA) return;
+  if (!canControlCamera()) return;
   if (prefs.role !== "send") return viewer.setMode("off");
   if (confirm("Zatrzymać kamerę? Nie będzie podglądu ani nagrywania, dopóki nie naciśniesz Start.")) sender.setMode("off");
 });
 $("reloadPcBtn").addEventListener("click", () => {
-  if (!CAN_MANAGE_CAMERA || !confirm("Odświeżyć stronę komputera-kamery? Nagrywanie przerwie się na kilkanaście sekund.")) return;
+  if (!canControlCamera() || !confirm("Odświeżyć stronę komputera-kamery? Nagrywanie przerwie się na kilkanaście sekund.")) return;
   if (prefs.role === "send") sender.forceReload(); else viewer.reloadPc();
 });
 $("ctrlRestart").addEventListener("click", () => {
-  if (!CAN_MANAGE_CAMERA) return;
+  if (!canControlCamera()) return;
   if (prefs.role === "send") sender.restart(); else viewer.restart();
 });
 
-// Tylko w programie Windows przyciski mogą zmienić pracę kamery.
+// Komputer-kamera wykonuje zmianę lokalnie. Panel właściciela wysyła zaś
+// podpisane PIN-em polecenie, którego nie można uzyskać z linku odbiorcy.
 document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.addEventListener("click", () => {
-  if (!CAN_MANAGE_CAMERA) return;
+  if (!canControlCamera()) return;
   if (!sender.live) return viewer.setMode(b.dataset.mode);
   if (b.dataset.mode === "off" && !confirm("Wyłączyć kamerę? Nie będzie podglądu ani nagrywania, dopóki nie włączysz jej z powrotem.")) return;
   sender.setMode(b.dataset.mode, Number($("onceMin").value));
@@ -1971,10 +1980,10 @@ $("quality").addEventListener("change", e => sender.setQuality(e.target.value));
 $("mediaPick").value = MEDIA_LABEL[prefs.media] ? prefs.media : "av";
 $("lightPick").value = clampLight(prefs.light); $("lightVal").textContent = LIGHT_LABEL[clampLight(prefs.light)];
 $("lightPick").addEventListener("input", e => { $("lightVal").textContent = LIGHT_LABEL[clampLight(e.target.value)]; });
-$("lightPick").addEventListener("change", e => { if (!CAN_MANAGE_CAMERA) return; sender.setLight(e.target.value); });
+$("lightPick").addEventListener("change", e => { if (!canControlCamera()) return; if (CAN_MANAGE_CAMERA) sender.setLight(e.target.value); else viewer.setLight(e.target.value); });
 for (const [id, d] of [["lightDown", -1], ["lightUp", 1]]) $(id).addEventListener("click", () => { $("lightPick").value = clampLight(Number($("lightPick").value) + d); $("lightPick").dispatchEvent(new Event("input")); $("lightPick").dispatchEvent(new Event("change")); });
-$("mediaPick").addEventListener("change", e => { if (!CAN_MANAGE_CAMERA) return; sender.setMedia(e.target.value); });
-$("viewQuality").addEventListener("change", e => { if (!CAN_MANAGE_CAMERA) return; sender.setQuality(e.target.value); });
+$("mediaPick").addEventListener("change", e => { if (!canControlCamera()) return; if (CAN_MANAGE_CAMERA) sender.setMedia(e.target.value); else viewer.setMedia(e.target.value); });
+$("viewQuality").addEventListener("change", e => { if (!canControlCamera()) return; if (CAN_MANAGE_CAMERA) sender.setQuality(e.target.value); else viewer.setQuality(e.target.value); });
 $("retentionDays").closest("label").hidden = true;
 for (const id of ["segmentMin", "retentionDays"]) {
   $(id).value = String(prefs[id]);
@@ -2167,6 +2176,6 @@ if (RECEIVER_ONLY) {
   if (prefs.role === "send") showSender();
   else {
     showViewer();
-    if (OWNER_PANEL && !MOBILE_OWNER_APP) toastMsg("Panel właściciela: oglądasz obraz i archiwum z komputera-kamery. Ustawienia oraz zapis są zarządzane tylko w aplikacji Windows.");
+    if (OWNER_PANEL && !MOBILE_OWNER_APP) toastMsg("Panel właściciela: sterujesz komputerem-kamerą po wpisaniu PIN-u. Link odbiorcy nadal daje tylko podgląd.");
   }
 }
