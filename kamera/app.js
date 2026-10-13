@@ -1922,7 +1922,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome.
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=8", { scope: "./" }).catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=9", { scope: "./" }).catch(() => {}));
 }
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
