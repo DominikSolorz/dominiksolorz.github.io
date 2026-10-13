@@ -70,7 +70,7 @@
     <div class="bootMark">⌾</div>
     <p class="bootBrand">HOME <b>SECURITY</b></p>
     <h1>Uruchamianie bezpiecznego panelu</h1>
-    <p id="bootText">Przygotowuję chroniony dostęp…</p>
+    <p id="bootText">Sprawdzam bezpieczne połączenie…</p>
     <div class="bootMeter" aria-hidden="true"><i id="bootProgress"></i></div>
     <small>Bezpieczny start · maksymalnie 7 sekund</small>
   </div>
@@ -85,15 +85,22 @@
     const paint = () => {
       if (complete) return;
       const elapsed = performance.now() - started;
-      // Pasek dochodzi sam do 82%; końcówka jest pokazywana dopiero, gdy
-      // skrypty zabezpieczające są rzeczywiście gotowe.
-      bar.style.width = `${Math.min(82, 8 + elapsed / 6500 * 74)}%`;
+      // Ekran startowy ma być widoczny, ale nie może przekroczyć 7 sekund.
+      // Kolejne komunikaty opisują etapy startu bez uruchamiania kamery.
+      const progress = Math.min(94, 7 + elapsed / 6500 * 87);
+      bar.style.width = `${progress}%`;
+      text.textContent = elapsed < 1900
+        ? "Sprawdzam bezpieczne połączenie…"
+        : elapsed < 4000
+          ? "Przygotowuję panel i ustawienia…"
+          : "Zabezpieczam dostęp do kamery…";
       requestAnimationFrame(paint);
     };
     requestAnimationFrame(paint);
     window.__finishSecureBoot = async () => {
       if (complete) return;
-      const remaining = Math.max(0, 1200 - (performance.now() - started));
+      // 6,5 s daje wyraźny, elegancki start i zostawia margines do limitu 7 s.
+      const remaining = Math.max(0, 6500 - (performance.now() - started));
       if (remaining) await new Promise(resolve => setTimeout(resolve, remaining));
       complete = true;
       bar.style.width = "100%";
