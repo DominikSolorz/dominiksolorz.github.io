@@ -26,7 +26,14 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
 const MOBILE_OWNER_APP = new URLSearchParams(location.search).get("app") === "android";
-const VERSION = "126"; // musi się zgadzać z version.json
+// Jedynym gospodarzem sprzętu jest lokalny program Windows. Każda strona
+// otwierana przez telefon lub zwykłą przeglądarkę jest odbiornikiem tego
+// komputera: może oglądać obraz i DVR, ale nie uruchamia własnej kamery ani
+// nie zmienia zapisu na komputerze.
+const NATIVE_HOST = new URLSearchParams(location.search).get("host") === "computer";
+const CAN_MANAGE_CAMERA = NATIVE_HOST;
+const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
+const VERSION = "129"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -126,10 +133,9 @@ if (!prefs.mode85) { prefs.mode = "record"; prefs.recordPlan = "always"; prefs.r
 // Jednorazowo (życzenie właściciela): nagrywanie bez przerwy — dzień i noc, bez harmonogramu i bez trybu „tylko podgląd”.
 // Później tryb można dowolnie zmieniać z telefonu.
 if (!prefs.rec247) { prefs.mode = "record"; prefs.recordPlan = "always"; prefs.recordUntil = 0; prefs.rec247 = true; savePrefs(); }
-// Komputer jest tylko buforem: każdy nowy, kompletny plik trafia automatycznie
-// na Google Drive, a jego lokalna kopia znika wyłącznie po potwierdzeniu wysyłki.
-// Starszych nagrań nie dodajemy automatycznie do kolejki.
-if (!prefs.driveAuto1) { prefs.driveAuto = true; prefs.driveAuto1 = true; savePrefs(); }
+// Komputer-kamera jest źródłem archiwum. Chmura może być kopią zapasową, ale
+// nie może usuwać lokalnego nagrania po udanym wysłaniu.
+if (!prefs.localArchiveHost1) { prefs.driveAuto = false; prefs.localArchiveHost1 = true; savePrefs(); }
 // Właściciel wybrał krótkie, automatyczne fragmenty. Naprawia starsze profile,
 // w których pozostało 30 minut z poprzednich ustawień; później wybór w panelu
 // nadal może świadomie zmienić długość kolejnego segmentu.
@@ -418,12 +424,9 @@ const archive = (() => {
         try {
           const uploaded = await cloud.upload(data, key, item.events || []);
           const verified = await cloud.verifyUploaded(key, data.size, uploaded);
-          if (item.cleanupLocal) {
-            // Punkt bezpieczeństwa: lokalny plik wolno usunąć dopiero po dwóch
-            // potwierdzeniach — ukończonym uploadzie i niezależnym odczycie z Drive.
-            if (item.ref) await recstore.remove(item.ref).catch(() => {});
-            if (item.diskRef) await diskstore.remove(item.diskRef).catch(() => {});
-          } else if (item.ref) await recstore.update(item.ref, { uploaded: true }).catch(() => {});
+          // Po potwierdzeniu kopii w chmurze oznaczamy plik jako wysłany, ale
+          // nigdy nie usuwamy lokalnego materiału DVR z komputera-kamery.
+          if (item.ref) await recstore.update(item.ref, { uploaded: true }).catch(() => {});
           await idb.qDel(key);
           sentToDrive++; verifiedToDrive++; lastVerified = `${verified.name} · ID ${verified.id}`; lastError = "";
           // Retencja działa tylko w wyznaczonym folderze nagrań Drive. Błąd
@@ -474,8 +477,8 @@ const archive = (() => {
     // plik pozostaje na Pulpicie i wysyłka zostanie ponowiona automatycznie.
     if (prefs.driveAuto && cloud.enabled && (savedToDisk || await recstore.meta(name))) {
       await idb.qPut(name, savedToDisk
-        ? { diskRef: name, events: events || [], cleanupLocal: true }
-        : { ref: name, events: events || [], cleanupLocal: true });
+        ? { diskRef: name, events: events || [], cleanupLocal: false }
+        : { ref: name, events: events || [], cleanupLocal: false });
       queued++;
     }
     refreshLocal();
@@ -639,8 +642,8 @@ const archive = (() => {
     else if (disk.selected) text += ` ⚠ Folder „${disk.name}” czeka na ponowną zgodę Chrome (po odświeżeniu strony) — na komputerze kliknij „Przywróć dostęp do folderu”. Pliki w folderze są bezpieczne; do tego czasu nagrania zapisują się w pamięci strony.`;
     else text += " Nagrania zapisują się w pamięci strony (folder archiwum nie jest ustawiony).";
     text += prefs.driveAuto
-      ? " Nowe pliki: Pulpit → Google Drive → strona. Lokalna kopia znika dopiero po potwierdzeniu Drive."
-      : " Na Google Drive tylko po kliknięciu.";
+      ? " Kopia zapasowa: lokalny folder komputera → Google Drive. Lokalna kopia pozostaje na komputerze."
+      : " Nagrania pozostają lokalnie na komputerze; kopia Google Drive jest wyłączona.";
     if (local.count) text += ` W pamięci strony: ${local.count} nagrań (${gb(local.bytes)}).`;
     if (Number.isFinite(free)) text += ` Wolne miejsce dla strony: ${gb(free)}${free < 2 * 1073741824 ? " ⚠ mało miejsca — najstarsze nagrania w pamięci strony są kasowane, żeby nagrywanie nie stanęło" : ""}.${persisted ? "" : " Pamięć nietrwała."}`;
     const set = source?.getVideoTracks()[0]?.getSettings?.() || {};
@@ -1750,7 +1753,7 @@ function showSender() {
 }
 
 function copyReceiverLink() {
-  const url = new URL(location.href);
+  const url = new URL(NATIVE_HOST ? PUBLIC_PANEL_URL : location.href);
   url.hash = "";
   url.search = "";
   url.searchParams.set("odbiorca", CHANNEL);
@@ -1760,12 +1763,12 @@ function copyReceiverLink() {
 }
 
 function copyOwnerLink() {
-  const url = new URL(location.href);
+  const url = new URL(NATIVE_HOST ? PUBLIC_PANEL_URL : location.href);
   url.hash = "";
   url.search = "";
   url.searchParams.set("panel", "owner");
   navigator.clipboard.writeText(url.href)
-    .then(() => toastMsg("Skopiowano link właściciela. Na telefonie wpisz PIN: sterujesz komputerem, ale telefon nie stanie się kamerą."))
+    .then(() => toastMsg("Skopiowano prywatny link właściciela. Telefon ogląda kamerę i archiwum komputera, bez przejmowania sterowania."))
     .catch(() => prompt("Skopiuj ten prywatny link właściciela (po otwarciu wymaga PIN-u):", url.href));
 }
 
@@ -1783,12 +1786,14 @@ function showViewer() {
   recClient.onopen = () => dvr.refresh();
   $("dvrCard").hidden = false;
   dvr.start();
-  // Telefon właściciela to zawsze panel oglądania i sterowania. Nie może przez
-  // przypadek zmienić się w drugi nadajnik i odebrać kamery komputerowi 24/7.
+  // Telefon, przeglądarka i drugi komputer to odbiorniki. Nie mogą uruchomić
+  // drugiej kamery, zatrzymać zapisu ani zmienić ustawień hosta Windows.
   $("roleBtn").textContent = "To jest komputer z kamerą — nadawaj z niego";
   $("roleBtn").hidden = !IS_DESKTOP;
-  if (RECEIVER_ONLY) {
+  if (!CAN_MANAGE_CAMERA) {
     $("modeCard").hidden = true;
+    $("setCard").hidden = true;
+    $("ctrlBar").hidden = true;
     ["ownerQuality", "ownerMedia", "ownerOnce", "ownerLight", "reloadPcBtn"].forEach(id => { $(id).hidden = true; });
     $("viewEventsCard").hidden = true;
     document.querySelector("#ctrlBar .ctrlBtns").hidden = true;
@@ -1911,27 +1916,27 @@ if ("serviceWorker" in navigator) {
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
 $("ctrlStart").addEventListener("click", async () => {
-  if (RECEIVER_ONLY) return;
+  if (!CAN_MANAGE_CAMERA) return;
   if (prefs.role === "send") { if (!sender.live) await sender.start(); return sender.setMode("record"); }
   viewer.setMode("record");
 });
 $("ctrlStop").addEventListener("click", () => {
-  if (RECEIVER_ONLY) return;
+  if (!CAN_MANAGE_CAMERA) return;
   if (prefs.role !== "send") return viewer.setMode("off");
   if (confirm("Zatrzymać kamerę? Nie będzie podglądu ani nagrywania, dopóki nie naciśniesz Start.")) sender.setMode("off");
 });
 $("reloadPcBtn").addEventListener("click", () => {
-  if (RECEIVER_ONLY || !confirm("Odświeżyć stronę na komputerze-kamerze i pobrać najnowszą wersję? Nagrywanie przerwie się na kilkanaście sekund.")) return;
+  if (!CAN_MANAGE_CAMERA || !confirm("Odświeżyć stronę komputera-kamery? Nagrywanie przerwie się na kilkanaście sekund.")) return;
   if (prefs.role === "send") sender.forceReload(); else viewer.reloadPc();
 });
 $("ctrlRestart").addEventListener("click", () => {
-  if (RECEIVER_ONLY) return;
+  if (!CAN_MANAGE_CAMERA) return;
   if (prefs.role === "send") sender.restart(); else viewer.restart();
 });
 
-// Na komputerze z kamerą przyciski działają od razu, na telefonie wysyłają polecenie do komputera.
+// Tylko w programie Windows przyciski mogą zmienić pracę kamery.
 document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.addEventListener("click", () => {
-  if (RECEIVER_ONLY) return;
+  if (!CAN_MANAGE_CAMERA) return;
   if (!sender.live) return viewer.setMode(b.dataset.mode);
   if (b.dataset.mode === "off" && !confirm("Wyłączyć kamerę? Nie będzie podglądu ani nagrywania, dopóki nie włączysz jej z powrotem.")) return;
   sender.setMode(b.dataset.mode, Number($("onceMin").value));
@@ -1963,10 +1968,10 @@ $("quality").addEventListener("change", e => sender.setQuality(e.target.value));
 $("mediaPick").value = MEDIA_LABEL[prefs.media] ? prefs.media : "av";
 $("lightPick").value = clampLight(prefs.light); $("lightVal").textContent = LIGHT_LABEL[clampLight(prefs.light)];
 $("lightPick").addEventListener("input", e => { $("lightVal").textContent = LIGHT_LABEL[clampLight(e.target.value)]; });
-$("lightPick").addEventListener("change", e => { if (RECEIVER_ONLY) return; prefs.role === "send" ? sender.setLight(e.target.value) : viewer.setLight(e.target.value); });
+$("lightPick").addEventListener("change", e => { if (!CAN_MANAGE_CAMERA) return; sender.setLight(e.target.value); });
 for (const [id, d] of [["lightDown", -1], ["lightUp", 1]]) $(id).addEventListener("click", () => { $("lightPick").value = clampLight(Number($("lightPick").value) + d); $("lightPick").dispatchEvent(new Event("input")); $("lightPick").dispatchEvent(new Event("change")); });
-$("mediaPick").addEventListener("change", e => { if (RECEIVER_ONLY) return; prefs.role === "send" ? sender.setMedia(e.target.value) : viewer.setMedia(e.target.value); });
-$("viewQuality").addEventListener("change", e => sender.live ? sender.setQuality(e.target.value) : viewer.setQuality(e.target.value));
+$("mediaPick").addEventListener("change", e => { if (!CAN_MANAGE_CAMERA) return; sender.setMedia(e.target.value); });
+$("viewQuality").addEventListener("change", e => { if (!CAN_MANAGE_CAMERA) return; sender.setQuality(e.target.value); });
 $("retentionDays").closest("label").hidden = true;
 for (const id of ["segmentMin", "retentionDays"]) {
   $(id).value = String(prefs[id]);
@@ -2076,13 +2081,11 @@ $("stage").addEventListener("pointerup", e => {
 $("stage").addEventListener("dblclick", e => { if (!e.target.closest("button, a, input, select")) toggleFullscreen(); });
 $("soundBtn").addEventListener("click", () => { video.muted = !video.muted; video.volume = 1; $("soundBtn").textContent = video.muted ? "🔊 Włącz dźwięk" : "🔇 Wycisz"; });
 
-// ---------- Start: PIN, potem od razu podgląd (albo nadawanie na komputerze-kamerze) ----------
-// Tylko komputer może być nadajnikiem. Telefon właściciela ma pozostać panelem
-// oglądania i zdalnego sterowania, nawet jeśli wcześniej przypadkiem zapamiętał
-// rolę "send" albo dostał adres z #nadaj.
-if (location.hash === "#nadaj" && IS_DESKTOP && !OWNER_PANEL) { prefs.role = "send"; savePrefs(); history.replaceState(null, "", location.pathname); }
-else if ((!IS_DESKTOP || OWNER_PANEL) && !RECEIVER_ONLY) {
-  if (prefs.role === "send") { prefs.role = "watch"; savePrefs(); }
+// ---------- Start: komputer-host nadaje i zapisuje; wszystkie inne ekrany oglądają ----------
+if (NATIVE_HOST) {
+  if (prefs.role !== "send") { prefs.role = "send"; savePrefs(); }
+} else if (!RECEIVER_ONLY) {
+  if (prefs.role !== "watch") { prefs.role = "watch"; savePrefs(); }
   if (location.hash === "#nadaj") history.replaceState(null, "", `${location.pathname}${location.search}`);
 }
 window.__kameraReady = true;
@@ -2099,6 +2102,6 @@ if (RECEIVER_ONLY) {
   if (prefs.role === "send") showSender();
   else {
     showViewer();
-    if (OWNER_PANEL && !MOBILE_OWNER_APP) toastMsg("Panel właściciela: oglądasz obraz z komputera i możesz nim sterować. Telefon nie przejmie kamery.");
+    if (OWNER_PANEL && !MOBILE_OWNER_APP) toastMsg("Panel właściciela: oglądasz obraz i archiwum z komputera-kamery. Ustawienia oraz zapis są zarządzane tylko w aplikacji Windows.");
   }
 }
