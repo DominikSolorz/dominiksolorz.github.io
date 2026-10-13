@@ -13,6 +13,10 @@ if (desktopRequested) {
   document.body.classList.add("desktopMode");
 
   const header = document.querySelector(".topbar");
+  const desktopTopStatus = document.createElement("div");
+  desktopTopStatus.className = "desktopTopStatus";
+  desktopTopStatus.innerHTML = '<i></i><span id="desktopTopStatusText">Sprawdzam system…</span>';
+  header?.prepend(desktopTopStatus);
   const search = document.createElement("label");
   search.className = "desktopSearch";
   search.innerHTML = '<span aria-hidden="true">⌕</span><input id="desktopSearchInput" type="search" placeholder="Szukaj zdarzeń i nagrań…" aria-label="Szukaj zdarzeń i nagrań">';
@@ -72,7 +76,7 @@ if (desktopRequested) {
   overview.setAttribute("aria-label", "Pulpit podglądu kamer");
   overview.innerHTML = `
     <section class="desktopLiveScene" aria-label="Obraz z kamery na żywo">
-      <article class="desktopCameraTile desktopCameraLive"><div class="desktopTileMeta"><span class="desktopLivePill">● NA ŻYWO</span><strong>Aktualna kamera</strong></div></article>
+      <article class="desktopCameraTile desktopCameraLive"><div class="desktopTileMeta"><strong>Pokój dziecka — Kamera 1</strong><span class="desktopCameraSource">aktualny obraz</span><span class="desktopLivePill">● NA ŻYWO</span></div></article>
     </section>
     <section class="desktopTimelineDock" aria-label="Oś czasu nagrań bieżącej kamery"></section>
     <section class="desktopControlDock" aria-label="Sterowanie transmisją i nagrywaniem"><div class="desktopControlLocked" hidden><span>🔒</span><div><b>Sterowanie właściciela</b><small>Start, Stop i Restart są dostępne wyłącznie na komputerze-kamerze lub po zalogowaniu PIN-em właściciela.</small></div></div></section>
@@ -223,6 +227,8 @@ if (desktopRequested) {
     if ($("desktopSummaryCamera")) $("desktopSummaryCamera").textContent = `${count} aktywna${count === 1 ? "" : "e"}`;
     if ($("desktopSummaryStatus")) $("desktopSummaryStatus").textContent = isLive ? "System online" : "Oczekiwanie na transmisję";
     if ($("desktopSummaryRecording")) $("desktopSummaryRecording").textContent = mode?.textContent?.trim() || "Brak danych";
+    if ($("desktopTopStatusText")) $("desktopTopStatusText").textContent = isLive ? "System online" : "System offline";
+    desktopTopStatus.classList.toggle("live", Boolean(isLive));
     const events = document.querySelectorAll("#viewEvents li,#pcEvents li");
     if ($("desktopEventCount")) $("desktopEventCount").textContent = events.length ? `${events.length} zdarzeń` : "Brak zdarzeń";
   };
