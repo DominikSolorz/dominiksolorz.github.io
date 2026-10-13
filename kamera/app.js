@@ -25,7 +25,7 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
 const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
-const MOBILE_OWNER_APP = new URLSearchParams(location.search).get("app") === "android" && (matchMedia("(max-width: 700px)").matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
+const MOBILE_OWNER_APP = document.documentElement.classList.contains("mobileOwnerMode");
 // Jedynym gospodarzem sprzętu jest lokalny program Windows. Każda strona
 // otwierana przez telefon lub zwykłą przeglądarkę jest odbiornikiem tego
 // komputera: może oglądać obraz i DVR, ale nie uruchamia własnej kamery ani
@@ -1877,7 +1877,7 @@ document.querySelectorAll("[data-menu-view]").forEach(btn => btn.addEventListene
 // Na telefonie i w wąskim oknie wejściem jest zawsze pulpit kamery, a nie
 // długa strona ze wszystkimi kartami. Każdy pozostały moduł otwiera się
 // wyłącznie z menu. Desktop ma własny układ w desktop.js.
-if (!document.documentElement.classList.contains("desktopMode") && !isMobileApp) setWorkspace("live");
+if (!document.documentElement.classList.contains("desktopMode") && !MOBILE_OWNER_APP) setWorkspace("live");
 $("menuGrid").addEventListener("click", () => { prefs.pictureGrid = !prefs.pictureGrid; savePrefs(); applyPictureLayout(); updateMenuGrid(); setQuickMenu(false); toastMsg(prefs.pictureGrid ? "Siatka kadru jest widoczna na obrazie." : "Siatka kadru została ukryta."); });
 $("menuFullscreen").addEventListener("click", () => { setQuickMenu(false); toggleFullscreen(); });
 $("menuPip").addEventListener("click", () => { setQuickMenu(false); togglePictureInPicture(); });

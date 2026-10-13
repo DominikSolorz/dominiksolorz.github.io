@@ -1,11 +1,11 @@
 // HOME SECURITY Desktop: nakładka robocza dla dużego ekranu.
 // Używa tego samego silnika transmisji, zapisu i archiwum co index.html.
 // Nie uruchamia kamery ani nie zmienia jej konfiguracji samodzielnie.
-const routeParams = new URLSearchParams(location.search);
-const desktopParam = routeParams.get("desktop");
 const isTransmitter = location.hash === "#nadaj";
-const isMobileApp = routeParams.get("app") === "android" && (window.matchMedia("(max-width: 700px)").matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
-const desktopRequested = !isTransmitter && !isMobileApp && (desktopParam === "1" || (desktopParam !== "0" && window.matchMedia("(min-width: 1024px)").matches));
+// Tryb urządzenia jest rozstrzygany raz, przed załadowaniem CSS w index.html.
+// Dzięki temu Chrome w telefonie i wersja instalowana PWA nie rozchodzą się
+// z desktopowym panelem przy kolejnych aktualizacjach.
+const desktopRequested = !isTransmitter && document.documentElement.classList.contains("desktopMode");
 
 if (desktopRequested) {
   const $ = id => document.getElementById(id);

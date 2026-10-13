@@ -14,21 +14,26 @@
   const routeParams = new URLSearchParams(location.search);
   const desktopParam = routeParams.get("desktop");
   // Nadajnik ma zawsze pozostać lekką, osobną aplikacją Chrome.
-  // Parametr app=android wymusza interfejs telefonu także wtedy, gdy link
-  // zostanie przypadkowo otwarty na dużym ekranie.
   const isTransmitter = location.hash === "#nadaj";
-  const mobileRequested = routeParams.get("app") === "android";
+  const requestedView = routeParams.get("view");
+  const mobileRequested = routeParams.get("app") === "android" || requestedView === "mobile" || desktopParam === "0";
+  const mobileBrowser = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  const compactScreen = matchMedia("(max-width: 900px)").matches;
   // Opcjonalny, niezależny motyw stanowiska dowodzenia inspirowany estetyką
   // US Military. Zmienia wyłącznie wygląd interfejsu, nie funkcje kamery.
   if (routeParams.get("theme") === "us-military") document.documentElement.classList.add("usMilitary");
   if (routeParams.get("theme") === "police") document.documentElement.classList.add("policeCommand");
-  // Link PWA może zostać otwarty także na monitorze komputera. Nie wolno
-  // wtedy zmieniać stanowiska operatora w wąski, telefoniczny interfejs.
-  // Wersję Mobile uruchamiamy wyłącznie na telefonie albo w wąskim oknie.
-  const isMobileApp = mobileRequested && (matchMedia("(max-width: 700px)").matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
-  if (isMobileApp) document.documentElement.classList.add("mobileOwnerMode");
-  if (!isTransmitter && !isMobileApp && (desktopParam === "1" || (desktopParam !== "0" && matchMedia("(min-width: 1024px)").matches))) {
+  // Zwykły Chrome na telefonie/tablecie dostaje pełny układ Mobile bez
+  // dodatkowego parametru. "view=desktop" pozostaje świadomym wyjątkiem
+  // do testów; stary "desktop=1" nie rozwija już panelu na telefonie.
+  const isMobileApp = requestedView !== "desktop" && (mobileRequested || mobileBrowser || compactScreen);
+  if (isMobileApp) {
+    document.documentElement.classList.add("mobileOwnerMode");
+    document.documentElement.dataset.clientMode = "mobile";
+  }
+  if (!isTransmitter && !isMobileApp && (requestedView === "desktop" || desktopParam === "1" || matchMedia("(min-width: 1024px)").matches)) {
     document.documentElement.classList.add("desktopMode");
+    document.documentElement.dataset.clientMode = "desktop";
   }
 </script>
 <title>Kamera na żywo</title>
@@ -36,7 +41,7 @@
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-  <link rel="stylesheet" href="style.css?v=150">
+  <link rel="stylesheet" href="style.css?v=151">
 </head>
 <body>
 <header class="topbar">
@@ -369,8 +374,8 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=139"></script>
-<script type="module" src="desktop.js?v=18"></script>
-<script type="module" src="mobile.js?v=4"></script>
+<script type="module" src="app.js?v=140"></script>
+<script type="module" src="desktop.js?v=19"></script>
+<script type="module" src="mobile.js?v=5"></script>
 </body>
 </html>
