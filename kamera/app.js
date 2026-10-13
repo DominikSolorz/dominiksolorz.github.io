@@ -36,7 +36,7 @@ const NATIVE_HOST = hostChoice === "computer";
 const BROWSER_HOST = hostChoice === "browser";
 const CAN_MANAGE_CAMERA = NATIVE_HOST || BROWSER_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "136"; // musi się zgadzać z version.json
+const VERSION = "137"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1331,7 +1331,10 @@ const sender = (() => {
     clearInterval(keepAlive);
     keepAlive = setInterval(() => { fetch(`${SUPABASE_URL}/auth/v1/health`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY } }).catch(() => {}); }, 6 * 3600000);
     clearInterval(updateTimer);
-    updateTimer = setInterval(checkUpdate, 10 * 60000);
+    // Aktualizacja jest kontrolowana: najwyżej raz na 4 godziny i tylko po
+    // wydaniu nowej wersji. Nie uruchamia drugiego programu ani nie odświeża
+    // kamery bez zmiany wersji.
+    updateTimer = setInterval(checkUpdate, 4 * 60 * 60000);
     requestWakeLock();
   }
 
@@ -1928,7 +1931,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome.
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=13", { scope: "./" }).catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=14", { scope: "./" }).catch(() => {}));
 }
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
