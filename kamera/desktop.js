@@ -176,7 +176,6 @@ if (desktopRequested) {
     else Object.values(settingsGroups).flat().filter(Boolean).forEach(row => { row.hidden = false; });
     const target = { live: "stage", controls: "modeCard", settings: "setCard", archive: "dvrCard" }[view];
     if (target) {
-      if (view === "archive") document.querySelector('[data-menu-view="archive"]')?.click();
       main?.classList.remove("focus-live", "focus-controls", "focus-settings", "focus-archive");
       $(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
@@ -215,8 +214,10 @@ if (desktopRequested) {
   sync();
 
   const collapse = $("desktopCollapse");
-  const expanded = localStorage.getItem("home-security-desktop-sidebar") === "expanded";
-  document.documentElement.classList.toggle("desktopSidebarCollapsed", !expanded);
+  // Pierwsze uruchomienie pokazuje pełne opisy modułów. Zwinięcie paska
+  // jest wyłącznie świadomą decyzją użytkownika, nie domyślnym stanem.
+  const collapsed = localStorage.getItem("home-security-desktop-sidebar") === "collapsed";
+  document.documentElement.classList.toggle("desktopSidebarCollapsed", collapsed);
   const paintCollapse = () => {
     const isCollapsed = document.documentElement.classList.contains("desktopSidebarCollapsed");
     if (collapse) { collapse.textContent = isCollapsed ? "›" : "‹"; collapse.setAttribute("aria-label", isCollapsed ? "Rozwiń menu" : "Zwiń menu"); }
@@ -252,9 +253,10 @@ if (desktopRequested) {
 
   window.addEventListener("keydown", event => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); $("desktopSearchInput")?.focus(); return; }
-    if (!event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key === "Escape") { setActive("live"); return; }
+    if (event.ctrlKey || event.metaKey || event.target.matches("input,select,textarea")) return;
     const view = { 1: "live", 2: "controls", 3: "archive", 4: "settings", 5: "diagnostics" }[event.key];
-    if (view) { event.preventDefault(); setActive(view); }
+    if (view && (event.altKey || !event.shiftKey)) { event.preventDefault(); setActive(view); }
   });
 
   // Zastosuj widok Pulpit także przy pierwszym ładowaniu. Bez tego elementy

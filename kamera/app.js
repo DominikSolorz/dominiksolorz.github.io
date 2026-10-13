@@ -33,7 +33,7 @@ const MOBILE_OWNER_APP = new URLSearchParams(location.search).get("app") === "an
 const NATIVE_HOST = new URLSearchParams(location.search).get("host") === "computer";
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "132"; // musi się zgadzać z version.json
+const VERSION = "133"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
