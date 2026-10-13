@@ -82,7 +82,7 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 .badge.rec{left:auto;right:12px;border-color:#7f1d1d;background:rgba(69,10,10,.85)}
 .badge.rec i{animation:blink 1s steps(2,start) infinite}
 @keyframes blink{to{visibility:hidden}}
-.startHere{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:2;font-size:15px;padding:12px 18px;white-space:nowrap}
+.startHere{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);z-index:20;font-size:15px;padding:12px 18px;white-space:nowrap}
 .audioHud{position:absolute;z-index:18;right:14px;bottom:14px;display:flex;align-items:center;gap:8px;max-width:calc(100% - 28px);padding:7px 9px;border:1px solid rgba(114,167,222,.65);border-radius:14px;background:rgba(5,14,28,.86);box-shadow:0 8px 26px rgba(0,0,0,.4);backdrop-filter:blur(12px)}
 .audioListenBtn{min-height:38px;border:1px solid #3d72a4;border-radius:10px;background:#12345a;color:#eef7ff;padding:8px 11px;font:700 13px inherit;cursor:pointer;white-space:nowrap}.audioListenBtn[aria-pressed="true"]{border-color:#64d8ae;background:#104738;color:#e8fff5}.audioListenBtn:hover{filter:brightness(1.14)}.audioListenBtn:disabled{border-color:#3b4b60;background:#182331;color:#9aabc0;cursor:not-allowed}
 .audioVolume{display:flex;align-items:center;gap:7px;color:#c7d9ef;font-size:11px;white-space:nowrap}.audioVolume input{width:90px;accent-color:#41aeff}.audioVolume input:disabled{opacity:.42}.audioVolume output{min-width:32px;color:#fff;font-variant-numeric:tabular-nums;text-align:right}
