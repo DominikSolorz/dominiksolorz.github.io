@@ -1471,7 +1471,7 @@ const viewer = (() => {
     pc?.close(); pc = null; pending = [];
     video.srcObject = null;
     showLive(""); showPlaceholder("Łączenie…"); $("startHere").hidden = true;
-    $("audioHud").hidden = true;
+    setListeningAvailable(false);
   }
 
   async function onSignal(sig) {
@@ -1515,7 +1515,7 @@ const viewer = (() => {
         try { e.receiver.playoutDelayHint = 0; } catch { /* brak wsparcia */ }
         const s = e.streams[0];
         if (video.srcObject !== s) { video.srcObject = s; video.play().catch(() => {}); }
-        $("audioHud").hidden = s.getAudioTracks().length === 0;
+        setListeningAvailable(s.getAudioTracks().length > 0);
       };
       conn.ondatachannel = e => { if (e.channel.label === "nagrania") recClient.attach(e.channel); };
       conn.onicecandidate = e => { if (e.candidate) send(chan.channel, { type: "ice", viewerId, from: "viewer", candidate: e.candidate.toJSON() }); };
@@ -2082,7 +2082,25 @@ $("stage").addEventListener("pointerup", e => {
   if (now - lastTap < 350) { lastTap = 0; toggleFullscreen(); } else lastTap = now;
 });
 $("stage").addEventListener("dblclick", e => { if (!e.target.closest("button, a, input, select")) toggleFullscreen(); });
+let listeningAvailable = false;
+function setListeningAvailable(available) {
+  listeningAvailable = Boolean(available);
+  const button = $("soundBtn");
+  const slider = $("listenVolume");
+  $("audioHud").hidden = false;
+  button.disabled = !listeningAvailable;
+  slider.disabled = !listeningAvailable;
+  if (!listeningAvailable) {
+    video.muted = true;
+    button.textContent = "🎙 Brak dźwięku z kamery";
+    button.setAttribute("aria-pressed", "false");
+    button.title = "Kamera nie przekazuje obecnie ścieżki audio";
+    return;
+  }
+  paintListeningControls();
+}
 function paintListeningControls() {
+  if (!listeningAvailable) return;
   const muted = video.muted;
   const volume = Math.round((Number(video.volume) || 0) * 100);
   const button = $("soundBtn");
