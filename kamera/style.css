@@ -85,7 +85,7 @@ label.check input{width:18px;height:18px;accent-color:var(--accent)}
 .startHere{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);z-index:20;font-size:15px;padding:12px 18px;white-space:nowrap}
 .audioHud{position:absolute;z-index:18;right:14px;bottom:14px;display:flex;align-items:center;gap:8px;max-width:calc(100% - 28px);padding:7px 9px;border:1px solid rgba(114,167,222,.65);border-radius:14px;background:rgba(5,14,28,.86);box-shadow:0 8px 26px rgba(0,0,0,.4);backdrop-filter:blur(12px)}
 .audioListenBtn{min-height:38px;border:1px solid #3d72a4;border-radius:10px;background:#12345a;color:#eef7ff;padding:8px 11px;font:700 13px inherit;cursor:pointer;white-space:nowrap}.audioListenBtn[aria-pressed="true"]{border-color:#64d8ae;background:#104738;color:#e8fff5}.audioListenBtn:hover{filter:brightness(1.14)}.audioListenBtn:disabled{border-color:#3b4b60;background:#182331;color:#9aabc0;cursor:not-allowed}
-.audioVolume{display:flex;align-items:center;gap:7px;color:#c7d9ef;font-size:11px;white-space:nowrap}.audioVolume input{width:90px;accent-color:#41aeff}.audioVolume input:disabled{opacity:.42}.audioVolume output{min-width:32px;color:#fff;font-variant-numeric:tabular-nums;text-align:right}
+.audioVolume{display:flex;align-items:center;gap:7px;color:#c7d9ef;font-size:11px;white-space:nowrap}.audioVolume input{width:90px;accent-color:#41aeff}.audioVolume input:disabled{opacity:.42}.audioVolume output{min-width:32px;color:#fff;font-variant-numeric:tabular-nums;text-align:right}.listenState{display:none;color:#a8c0dd;font-size:11px;font-weight:700;white-space:nowrap}.audioHud[data-state="listening"] .listenState{display:block;color:#71efb1}.audioHud[data-state="unavailable"] .listenState{display:block;color:#fbbf24}
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .tool{flex:1 1 auto;justify-content:center;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--card);color:var(--text);border-radius:12px;padding:11px 14px;font:inherit;font-size:14px;cursor:pointer;text-decoration:none}
 .tool.primary{background:linear-gradient(180deg,#8b5cf6,#6d28d9);border-color:#7c3aed;color:#fff}
@@ -352,6 +352,7 @@ main{max-width:1180px}
 .ctrlBar[data-state="live"] .recDot{background:#22d3ee;box-shadow:0 0 12px #22d3ee}
 .ctrlBar[data-state="off"] .recClock strong{color:#64748b}
 .ctrlBtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;flex:2 1 360px}
+.ctrlActionStatus{flex-basis:100%;margin:0;color:#9fb5d1;font-size:12px;font-weight:700;text-align:center}.ctrlActionStatus[data-kind="pending"]{color:#fbbf24}.ctrlActionStatus[data-kind="ok"]{color:#6ee7b7}.ctrlActionStatus[data-kind="error"]{color:#fca5a5}.ctrl[aria-busy="true"]{opacity:.7;cursor:wait;filter:saturate(.5)}
 .ctrl{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;border-radius:14px;border:1px solid rgba(148,163,255,.25);
   color:#fff;font:800 15px/1.1 inherit;cursor:pointer;transition:transform .12s,box-shadow .2s,filter .2s}
 .ctrl small{font-size:10px;font-weight:600;opacity:.8}

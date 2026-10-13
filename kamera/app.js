@@ -3,7 +3,7 @@
 const { createClient } = window.supabase;
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=34";
 import { b64, sign, targetString } from "./pin.js?v=14";
-import { mountLibrary } from "./library-ui.js?v=22";
+import { mountLibrary } from "./library-ui.js?v=23";
 import { requireAccess } from "./lock.js?v=15";
 import { channelFor, lock } from "./access.js?v=15";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
@@ -36,7 +36,7 @@ const NATIVE_HOST = hostChoice === "computer";
 const BROWSER_HOST = hostChoice === "browser";
 const CAN_MANAGE_CAMERA = NATIVE_HOST || BROWSER_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "135"; // musi się zgadzać z version.json
+const VERSION = "136"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -806,8 +806,10 @@ const library = (() => {
   async function handle(sig, ch) {
     const reply = extra => send(ch, { type: "lib-reply", reqId: sig.reqId, nonce: newNonce(), ...extra });
     try {
-      if (sig.type === "lib-days") return reply({ days: await archive.listDays() });
-      if (sig.type === "lib-day") return reply({ hours: await archive.listDay(sig.day) });
+      // Widok „Nagrania” ma pokazywać automatyczne pliki komputera-kamery,
+      // a nie wyłącznie opcjonalną kopię Google Drive.
+      if (sig.type === "lib-days") return reply({ days: await archive.local.days() });
+      if (sig.type === "lib-day") return reply({ hours: await archive.localHours(sig.day) });
       if (sig.type === "lib-delete") {
         if (Date.now() < lockedUntil) return reply({ error: "Za dużo błędnych prób — spróbuj za 10 minut." });
         const exp = nonces.get(sig.nonce); nonces.delete(sig.nonce);
@@ -1181,6 +1183,10 @@ const sender = (() => {
       stream = s;
       lastCameraError = ""; $("retryCameraBtn").hidden = true;
       video.srcObject = s; video.muted = true;
+      // Na komputerze z kamerą odsłuch startuje wyciszony, aby nie powstało
+      // sprzężenie. Przycisk działa wyłącznie, gdy mikrofon naprawdę przekazał
+      // ścieżkę audio.
+      setListeningAvailable(s.getAudioTracks().some(track => track.readyState === "live"));
       zoomer?.stop();
       zoomer = createZoomer(s, w => { cropWidth = w; peers.forEach(p => tuneVideoSender(p.pc, w)); });
       showPlaceholder("");
@@ -1451,7 +1457,7 @@ const sender = (() => {
     }).catch(() => {});
   }
 
-  return { start, stop, restart, forceReload, takeover, setMedia, setLight, applyMedia, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; } };
+  return { start, stop, restart, forceReload, takeover, setMedia, setLight, applyMedia, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; }, get hasCamera() { return !!stream?.getVideoTracks().some(track => track.readyState === "live"); } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -1922,27 +1928,61 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome.
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=12", { scope: "./" }).catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=13", { scope: "./" }).catch(() => {}));
 }
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
+function setControlAction(text, kind = "") {
+  const status = $("ctrlActionStatus");
+  status.textContent = text;
+  status.dataset.kind = kind;
+}
+async function runControl(button, pendingText, doneText, task) {
+  if (button.disabled) return;
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  setControlAction(pendingText, "pending");
+  try {
+    await task();
+    setControlAction(doneText, "ok");
+    toastMsg(doneText);
+  } catch (error) {
+    const message = `Nie wykonano polecenia: ${error?.message || "błąd kamery"}`;
+    setControlAction(message, "error");
+    toastMsg(message);
+  } finally {
+    button.disabled = false;
+    button.removeAttribute("aria-busy");
+  }
+}
 $("ctrlStart").addEventListener("click", async () => {
   if (!canControlCamera()) return;
-  if (prefs.role === "send") { if (!sender.live) await sender.start(); return sender.setMode("record"); }
-  viewer.setMode("record");
+  await runControl($("ctrlStart"), "Uruchamiam obraz i automatyczny zapis…", "Start potwierdzony — kamera nadaje i zapisuje.", async () => {
+    if (prefs.role === "send") {
+      if (!sender.live) await sender.start();
+      await sender.setMode("record");
+      if (!sender.hasCamera) throw new Error("kamera nie przekazała jeszcze obrazu — sprawdź zgodę systemu Windows");
+    } else await viewer.setMode("record");
+  });
 });
-$("ctrlStop").addEventListener("click", () => {
+$("ctrlStop").addEventListener("click", async () => {
   if (!canControlCamera()) return;
-  if (prefs.role !== "send") return viewer.setMode("off");
-  if (confirm("Zatrzymać kamerę? Nie będzie podglądu ani nagrywania, dopóki nie naciśniesz Start.")) sender.setMode("off");
+  if (prefs.role === "send" && !confirm("Zatrzymać kamerę? Nie będzie podglądu ani nagrywania, dopóki nie naciśniesz Start.")) return;
+  await runControl($("ctrlStop"), "Zatrzymuję kamerę i domykam zapis…", "Stop potwierdzony — kamera i nagrywanie są wyłączone.", async () => {
+    if (prefs.role === "send") await sender.setMode("off");
+    else await viewer.setMode("off");
+  });
 });
 $("reloadPcBtn").addEventListener("click", () => {
   if (!canControlCamera() || !confirm("Odświeżyć stronę komputera-kamery? Nagrywanie przerwie się na kilkanaście sekund.")) return;
   if (prefs.role === "send") sender.forceReload(); else viewer.reloadPc();
 });
-$("ctrlRestart").addEventListener("click", () => {
+$("ctrlRestart").addEventListener("click", async () => {
   if (!canControlCamera()) return;
-  if (prefs.role === "send") sender.restart(); else viewer.restart();
+  await runControl($("ctrlRestart"), "Restartuję kamerę — zapis jest bezpiecznie przełączany…", "Restart potwierdzony — kamera ponownie nadaje.", async () => {
+    if (prefs.role === "send") await sender.restart();
+    else await viewer.restart();
+  });
 });
 
 // Komputer-kamera wykonuje zmianę lokalnie. Panel właściciela wysyła zaś
@@ -2104,6 +2144,8 @@ function setListeningAvailable(available) {
     button.textContent = "🎙 Brak dźwięku z kamery";
     button.setAttribute("aria-pressed", "false");
     button.title = "Kamera nie przekazuje obecnie ścieżki audio";
+    $("listenState").textContent = "Brak dźwięku z kamery";
+    $("audioHud").dataset.state = "unavailable";
     return;
   }
   paintListeningControls();
@@ -2118,13 +2160,17 @@ function paintListeningControls() {
   button.title = muted ? "Włącz odsłuch z mikrofonu kamery" : "Wycisz odsłuch z mikrofonu kamery";
   $("listenVolume").value = String(volume);
   $("listenVolumeLabel").textContent = `${volume}%`;
+  $("listenState").textContent = muted ? "Odsłuch wyłączony" : `Odsłuch włączony · ${volume}%`;
+  $("audioHud").dataset.state = muted ? "muted" : "listening";
 }
 $("soundBtn").addEventListener("click", async () => {
+  if (!listeningAvailable) return;
   video.muted = !video.muted;
   if (!video.muted && !video.volume) video.volume = 1;
   // Odtwarzanie dźwięku wymaga świadomego kliknięcia użytkownika.
   if (!video.muted) await video.play().catch(() => {});
   paintListeningControls();
+  toastMsg(video.muted ? "Odsłuch wyłączony." : `Odsłuch włączony — głośność ${Math.round(video.volume * 100)}%.`);
 });
 $("listenVolume").addEventListener("input", event => {
   const volume = Math.max(0, Math.min(100, Number(event.target.value) || 0)) / 100;

@@ -36,13 +36,13 @@ export function mountLibrary(root, api) {
         for (const f of shown) {
           const watch = api.watchUrl ? el("a", { className: "btn ghost small", href: api.watchUrl(f.name, f.id), target: "_blank", rel: "noopener", textContent: "▶ Obejrzyj" }) : "";
           const rm = api.remove ? el("button", { className: "btn ghost small danger", textContent: "🗑", title: "Usuń to nagranie", onclick: () => del({ day, hour: h.hour, name: f.name }, `nagranie z ${day} ${timeOf(f.name)}`) }) : null;
-          const shareBtn = el("button", { className: "btn ghost small", textContent: "📤 Udostępnij", title: "Wyślij ręcznie przez Messenger, WhatsApp, SMS lub e-mail", onclick: () => share(f) });
+          const shareBtn = api.share || api.watchUrl ? el("button", { className: "btn ghost small", textContent: "📤 Udostępnij", title: "Wyślij ręcznie przez Messenger, WhatsApp, SMS lub e-mail", onclick: () => share(f) }) : "";
           const badges = [f.ev && f.ev.ruch ? `🏃${f.ev.ruch}` : "", f.ev && f.ev.dzwiek ? `🔊${f.ev.dzwiek}` : ""].filter(Boolean).join(" ");
           const label = el("span", { textContent: `${timeOf(f.name)} · ${mb(f.size)}` }, badges ? el("span", { className: "evBadge", title: "Wykryty ruch / dźwięk", textContent: badges }) : "");
           list.append(el("li", {}, label, el("span", { className: "libActions" }, watch, shareBtn, rm)));
         }
         const rmHour = api.remove ? el("button", { className: "btn ghost small danger", textContent: "🗑 godzina", onclick: () => del({ day, hour: h.hour }, `wszystkie nagrania z ${day}, godz. ${hh}:00–${hh}:59`) }) : null;
-        box.append(el("div", { className: "libHour" }, el("div", { className: "libHead" }, el("b", { textContent: `🕐 ${hh}:00–${hh}:59 (${shown.length})` }), rmHour), list));
+        box.append(el("div", { className: "libHour" }, el("div", { className: "libHead" }, el("b", { textContent: `📁 ${hh}:00–${hh}:59 · automatyczne zapisy (${shown.length})` }), rmHour), list));
       }
       if (!box.children.length) box.append(el("p", { className: "muted small", textContent: "Brak nagrań z ruchem lub dźwiękiem w tym dniu." }));
     } catch (e) { box.replaceChildren(el("p", { className: "status", textContent: e.message || String(e) })); }
@@ -59,7 +59,7 @@ export function mountLibrary(root, api) {
       for (const d of days) {
         const box = el("div", { className: "libDayBody" });
         const rmDay = api.remove ? el("button", { className: "btn ghost small danger", textContent: "🗑 cały dzień", onclick: e => { e.preventDefault(); del({ day: d.day }, `wszystkie nagrania z dnia ${d.day}`); } }) : null;
-        const det = el("details", { className: "libDay" }, el("summary", {}, el("b", { textContent: `📅 ${d.day}` }), el("span", { className: "muted small", textContent: ` ${d.count} nagr.` }), rmDay), box);
+        const det = el("details", { className: "libDay" }, el("summary", {}, el("b", { textContent: `📁 ${d.day}` }), el("span", { className: "muted small", textContent: ` ${d.count} autozapisów` }), rmDay), box);
         det.addEventListener("toggle", () => { if (det.open) renderDay(box, d.day); });
         root.append(det);
       }

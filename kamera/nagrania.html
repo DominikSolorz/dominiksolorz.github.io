@@ -6,12 +6,12 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#070b16">
-<title>Nagrania — Kamera na żywo</title>
-<link rel="stylesheet" href="style.css?v=15">
+<title>Nagrania — HOME SECURITY</title>
+<link rel="stylesheet" href="style.css?v=155">
 </head>
 <body>
 <header class="topbar">
-  <div class="brand"><span class="dot"></span><span>Kamera na żywo</span></div>
+  <div class="brand"><span class="dot"></span><span>HOME SECURITY</span></div>
   <nav class="nav">
     <a class="navLink" href="./">Na żywo</a>
     <a class="navLink active" href="nagrania.html">Nagrania</a>
@@ -20,13 +20,14 @@
 <main>
   <div class="layout">
     <div class="card">
-      <div class="cardHead"><h2>📼 Nagrania</h2><button class="btn ghost small" id="refresh">↻ Odśwież</button></div>
-      <p class="muted small">Do Google Drive trafiają tylko pliki wysłane ręcznie z widoku Nagrania. Zapis lokalny strony jest podzielony na pliki co 10 minut; usunięcie pliku Drive przenosi go do kosza Google Drive.</p>
+      <div class="cardHead"><h2>📼 Nagrania automatyczne</h2><button class="btn ghost small" id="refresh">↻ Odśwież</button></div>
+      <p class="muted small">To są pliki zapisywane automatycznie przez komputer z kamerą. Otwórz folder dnia, a potem folder godziny, aby obejrzeć konkretny zapis. Bieżący obraz jest dostępny po karcie „Na żywo”.</p>
       <div id="library" class="libList"></div>
     </div>
     <div class="card">
       <details>
-        <summary class="muted">Folder na Google Drive (podgląd)</summary>
+        <summary class="muted">Opcjonalna kopia na Google Drive</summary>
+        <p class="muted small">Kopia w chmurze nie zastępuje automatycznych nagrań z komputera. Jest widoczna tylko, gdy została wcześniej skonfigurowana.</p>
         <div class="library"><iframe id="lib" title="Nagrania z kamery" loading="lazy" referrerpolicy="no-referrer"></iframe></div>
         <div class="row"><a class="btn ghost" id="openDrive" target="_blank" rel="noopener">Otwórz w Google Drive</a></div>
       </details>
@@ -37,14 +38,14 @@
 <script type="module">
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=34";
 import { sign, targetString } from "./pin.js?v=14";
-import { mountLibrary } from "./library-ui.js?v=21";
+import { mountLibrary } from "./library-ui.js?v=23";
 import { savedKey, channelFor } from "./access.js?v=14";
 
 // Bez PIN-u — najpierw ekran PIN-u na stronie głównej, potem powrót tutaj.
 const KEY = savedKey();
 if (!KEY) location.replace("./?wroc=nagrania");
 
-// Folder „nagrania” na Google Drive (podgląd; widoczny, jeśli udostępniony albo zalogowany właściciel).
+// Folder Google Drive jest tylko dodatkową kopią, nie głównym ekranem nagrań.
 const FOLDER_ID = "15c9XPFi55XkQnCjfW_cvDHqhEXo_M5V2";
 document.getElementById("lib").src = `https://drive.google.com/embeddedfolderview?id=${FOLDER_ID}#list`;
 document.getElementById("openDrive").href = `https://drive.google.com/drive/folders/${FOLDER_ID}`;
@@ -84,7 +85,6 @@ async function remove(target) {
   await request("lib-delete", { target, nonce, mac: await sign(KEY, `${nonce}|${targetString(target)}`) });
 }
 
-// Z podłączonym skryptem Google Drive lista idzie prosto z chmury — działa też przy wyłączonym komputerze.
 // Token do skryptu wyliczany jest z klucza PIN-u (ten sam co na komputerze-kamerze).
 async function drive(action, extra = {}) {
   const token = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`drive:${KEY}`)))].map(b => b.toString(16).padStart(2, "0")).join("");
@@ -95,16 +95,12 @@ async function drive(action, extra = {}) {
   return out;
 }
 
-const lib = mountLibrary(document.getElementById("library"), DRIVE_SCRIPT_URL ? {
-  days: async () => (await drive("days")).days,
-  day: async d => (await drive("day", { day: d })).hours,
-  remove: t => drive("remove", { target: t }),
-  watchUrl: driveWatchUrl,
-} : {
+// Główna biblioteka zawsze pyta komputer-kamerę, dzięki czemu pokazuje
+// rzeczywiste automatyczne pliki przeglądarki / folderu archiwum, a nie sam
+// kalendarz lub pusty folder chmury.
+const lib = mountLibrary(document.getElementById("library"), {
   days: async () => (await request("lib-days")).days,
   day: async d => (await request("lib-day", { day: d })).hours,
-  remove,
-  watchUrl: driveWatchUrl,
 });
 document.getElementById("refresh").addEventListener("click", () => lib.refresh());
 </script>

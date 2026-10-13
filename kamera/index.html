@@ -41,7 +41,7 @@
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-  <link rel="stylesheet" href="style.css?v=154">
+<link rel="stylesheet" href="style.css?v=155">
 </head>
 <body>
 <header class="topbar">
@@ -168,6 +168,7 @@
         <div id="audioHud" class="audioHud" aria-label="Odsłuch z kamery">
           <button class="audioListenBtn" id="soundBtn" type="button" aria-pressed="false" title="Włącz odsłuch z mikrofonu kamery">🔊 Włącz odsłuch</button>
           <label class="audioVolume" for="listenVolume"><span>Głośność</span><input id="listenVolume" type="range" min="0" max="100" value="100" step="1" aria-label="Głośność odsłuchu"><output id="listenVolumeLabel" for="listenVolume">100%</output></label>
+          <span id="listenState" class="listenState" role="status">Odsłuch wyłączony</span>
         </div>
         <div id="zoomBar" class="zoomBar" hidden>
           <button id="zoomOut" aria-label="Oddal">−</button>
@@ -241,6 +242,7 @@
           <button class="ctrl stop" id="ctrlStop" type="button">⏹ Stop<small>wyłącz kamerę</small></button>
           <button class="ctrl restart" id="ctrlRestart" type="button">↻ Restart<small>uruchom ponownie</small></button>
         </div>
+        <p id="ctrlActionStatus" class="ctrlActionStatus" role="status" aria-live="polite">Gotowe do sterowania</p>
       </div>
       <!-- Podgląd -->
       <div id="watchPanel" class="toolbar" hidden>
@@ -374,7 +376,7 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=143"></script>
+<script type="module" src="app.js?v=144"></script>
 <script type="module" src="desktop.js?v=19"></script>
 <script type="module" src="mobile.js?v=6"></script>
 </body>
