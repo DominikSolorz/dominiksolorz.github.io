@@ -4,7 +4,7 @@
 const routeParams = new URLSearchParams(location.search);
 const desktopParam = routeParams.get("desktop");
 const isTransmitter = location.hash === "#nadaj";
-const isMobileApp = routeParams.get("app") === "android";
+const isMobileApp = routeParams.get("app") === "android" && (window.matchMedia("(max-width: 700px)").matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
 const desktopRequested = !isTransmitter && !isMobileApp && (desktopParam === "1" || (desktopParam !== "0" && window.matchMedia("(min-width: 1024px)").matches));
 
 if (desktopRequested) {

@@ -1,7 +1,7 @@
 // HOME SECURITY Mobile: osobny układ PWA dla właściciela.
 // Przełącza tylko widoki istniejącej strony — transmisja i nagrywanie działają dalej.
 const mobileParams = new URLSearchParams(location.search);
-const isMobileOwnerApp = mobileParams.get("app") === "android";
+const isMobileOwnerApp = mobileParams.get("app") === "android" && (window.matchMedia("(max-width: 700px)").matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
 
 if (isMobileOwnerApp) {
   const byId = id => document.getElementById(id);
