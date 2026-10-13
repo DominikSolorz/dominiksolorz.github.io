@@ -12,8 +12,7 @@ if (isMobileOwnerApp) {
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
-    <div><h1>Dom</h1><p><i></i><span id="mobileOnline">System sprawdzam…</span></p></div>
-    <button id="mobileMore" type="button" aria-label="Ustawienia">⚙</button>`;
+    <div><h1>Dom</h1><p><i></i><span id="mobileOnline">System sprawdzam…</span></p></div>`;
   app?.insertBefore(mobileHeader, app.firstChild);
 
   const nav = document.createElement("nav");
@@ -72,7 +71,6 @@ if (isMobileOwnerApp) {
     const button = event.target.closest("button[data-mobile-view]");
     if (button) setView(button.dataset.mobileView);
   });
-  byId("mobileMore")?.addEventListener("click", () => setView("settings"));
   settingsHome.addEventListener("click", event => {
     const button = event.target.closest("button[data-setting-section]");
     if (!button) return;
