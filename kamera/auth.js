@@ -12,6 +12,18 @@ const message = (text, bad = false) => { const el = $("authMessage"); el.textCon
 const section = name => document.querySelectorAll("[data-auth-step]").forEach(el => { el.hidden = el.dataset.authStep !== name; });
 const callbackUrl = () => `${location.origin}${location.pathname}?auth=confirmed`;
 const postCode = value => /^\d{2}-\d{3}$/.test(value);
+let pendingConfirmationEmail = "";
+
+function explainAuthError(error) {
+  const raw = String(error?.message || error?.error_description || error || "Nieznany błąd logowania.");
+  const text = raw.toLowerCase();
+  if (text.includes("invalid login credentials")) return "Nieprawidłowy e-mail lub hasło.";
+  if (text.includes("email not confirmed")) return "Konto nie zostało jeszcze potwierdzone. Otwórz link wysłany e-mailem.";
+  if (text.includes("redirect") || text.includes("redirect_to")) return "Link potwierdzający wymaga konfiguracji adresu powrotu. Konto nie zostało jeszcze utworzone.";
+  if (text.includes("already registered") || text.includes("already been registered")) return "Ten adres ma już konto. Zaloguj się albo użyj odzyskiwania hasła.";
+  if (text.includes("network") || text.includes("fetch")) return "Nie udało się połączyć z usługą kont. Sprawdź internet i spróbuj ponownie.";
+  return `Nie udało się wykonać operacji: ${raw}`;
+}
 
 async function hashText(value) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
@@ -92,9 +104,11 @@ $("authToRegister")?.addEventListener("click", () => { message(""); section("reg
 document.querySelectorAll(".authToLogin").forEach(button => button.addEventListener("click", () => { message(""); section("login"); }));
 $("loginForm")?.addEventListener("submit", async event => {
   event.preventDefault(); const form = event.currentTarget; message("Sprawdzam dane logowania…");
-  const { error } = await accountClient.auth.signInWithPassword({ email: clean(form.email.value), password: form.password.value });
-  if (error) return message(error.message, true);
-  await continueWithSession();
+  try {
+    const { error } = await accountClient.auth.signInWithPassword({ email: clean(form.email.value), password: form.password.value });
+    if (error) return message(explainAuthError(error), true);
+    await continueWithSession();
+  } catch (error) { message(explainAuthError(error), true); }
 });
 $("registerForm")?.addEventListener("submit", async event => {
   event.preventDefault(); const form = event.currentTarget;
@@ -104,9 +118,21 @@ $("registerForm")?.addEventListener("submit", async event => {
   if (form.password.value !== form.password_repeat.value) return message("Hasła nie są identyczne.", true);
   if (!form.terms.checked) return message("Zaakceptuj Regulamin i Politykę prywatności.", true);
   message("Tworzę konto i wysyłam link potwierdzający…");
-  const { error } = await accountClient.auth.signUp({ email, password: form.password.value, options: { emailRedirectTo: callbackUrl(), data: { first_name: first, last_name: last, address_line: address, postal_code: code, phone } } });
-  if (error) return message(error.message, true);
-  section("confirm");
+  try {
+    const { error } = await accountClient.auth.signUp({ email, password: form.password.value, options: { emailRedirectTo: callbackUrl(), data: { first_name: first, last_name: last, address_line: address, postal_code: code, phone } } });
+    if (error) return message(explainAuthError(error), true);
+    pendingConfirmationEmail = email;
+    section("confirm");
+  } catch (error) { message(explainAuthError(error), true); }
+});
+$("resendConfirmation")?.addEventListener("click", async () => {
+  if (!pendingConfirmationEmail) return message("Wpisz adres e-mail w formularzu rejestracji, aby wysłać link ponownie.", true);
+  message("Wysyłam nowy link potwierdzający…");
+  try {
+    const { error } = await accountClient.auth.resend({ type: "signup", email: pendingConfirmationEmail, options: { emailRedirectTo: callbackUrl() } });
+    if (error) return message(explainAuthError(error), true);
+    message("Nowy link został wysłany. Sprawdź skrzynkę oraz folder Spam.");
+  } catch (error) { message(explainAuthError(error), true); }
 });
 $("profileForm")?.addEventListener("submit", async event => { event.preventDefault(); try { await saveProfile(event.currentTarget); section("device"); } catch (error) { message(error.message, true); } });
 document.querySelectorAll("[data-device]").forEach(button => button.addEventListener("click", () => { document.querySelectorAll("[data-device]").forEach(item => item.classList.toggle("selected", item === button)); $("deviceValue").value = button.dataset.device; $("platformChoices").hidden = button.dataset.device !== "phone"; }));
