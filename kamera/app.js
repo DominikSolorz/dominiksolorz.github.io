@@ -4,8 +4,8 @@ const { createClient } = window.supabase;
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=34";
 import { b64, sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=23";
-import { requireAccess } from "./lock.js?v=15";
-import { channelFor, lock } from "./access.js?v=15";
+import { requireAccess } from "./lock.js?v=16";
+import { channelFor, lock } from "./access.js?v=16";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 import * as recstore from "./recstore.js?v=77";
@@ -13,6 +13,7 @@ import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=5";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
 import { mountDvr } from "./dvr-ui.js?v=95";
+import { accountClient } from "./auth.js?v=1";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
@@ -43,7 +44,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP && hostChoice === "computer";
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "151"; // musi się zgadzać z version.json
+const VERSION = "152"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1514,15 +1515,17 @@ const sender = (() => {
     setTimeout(() => { yielded = false; start(); }, 7000);
   }
 
-  function report() {
+  async function report() {
     if (yielded) return; // stan raportuje okno, które ma kamerę
+    const { data: { session } } = await accountClient.auth.getSession();
+    if (!session) return;
     const r = archive.status();
     const cam = camProblem() ? `KAMERA: ${camProblem()} ` : "";
     const s = { id: CHANNEL, instance: INSTANCE, live: live && !!stream, recording: r.recording, reason: cam + r.reason, folder: r.folder,
       last_file: r.lastFile, saved: r.saved, viewers: peers.size, version: VERSION, user_agent: navigator.userAgent };
     fetch(`${SUPABASE_URL}/rest/v1/rpc/report_camera_status`, {
       method: "POST", keepalive: true,
-      headers: { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`, "Content-Type": "application/json" },
+      headers: { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ s }),
     }).catch(() => {});
   }
@@ -2273,6 +2276,7 @@ $("bootError").hidden = true;
 // Dla zwykłego wejścia na stronę najpierw pokazujemy stronę główną. Nadajnik
 // Windows i link odbiorcy rozwiązują tę bramę automatycznie w index.html.
 await window.__waitForPanel;
+if (!RECEIVER_ONLY) await window.__ensureAccountReady?.();
 await window.__finishSecureBoot?.();
 if (RECEIVER_ONLY) {
   CHANNEL = receiverChannel;
