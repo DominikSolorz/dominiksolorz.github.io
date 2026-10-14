@@ -10,7 +10,7 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.1.4";
+    private const string DesktopVersion = "1.2.0";
     // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
     // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
     // Desktop, który pozwala udostępnić kamerę i mikrofon.
@@ -36,6 +36,20 @@ internal static class Program
     private static string UpdateRoot => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HomeSecurityDesktop", "Updates");
     private static string PendingUpdatePath => Path.Combine(UpdateRoot, "pending.json");
+    private static string DiagnosticsRoot => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HomeSecurityDesktop", "Diagnostics");
+
+    private static void WriteDiagnostic(string kind, object? detail = null)
+    {
+        try
+        {
+            Directory.CreateDirectory(DiagnosticsRoot);
+            var record = new { at = DateTimeOffset.UtcNow, kind, detail };
+            File.WriteAllText(Path.Combine(DiagnosticsRoot, "latest.json"), JsonSerializer.Serialize(record, new JsonSerializerOptions { WriteIndented = true }));
+            File.AppendAllText(Path.Combine(DiagnosticsRoot, "events.ndjson"), JsonSerializer.Serialize(record) + Environment.NewLine);
+        }
+        catch { /* Diagnostyka nigdy nie może zatrzymać kamery. */ }
+    }
 
     private static bool StartPreparedUpdateIfAny()
     {
@@ -104,7 +118,6 @@ internal static class Program
     private sealed class HomeSecurityWindow : Form
     {
         private readonly WebView2 webView = new() { Dock = DockStyle.Fill };
-        private readonly System.Windows.Forms.Timer updateTimer = new() { Interval = 4 * 60 * 60 * 1000 };
         private bool checkingUpdate;
 
         public HomeSecurityWindow()
@@ -118,6 +131,7 @@ internal static class Program
             FormBorderStyle = FormBorderStyle.Sizable;
             Controls.Add(webView);
             Shown += async (_, _) => await StartPanelAsync();
+            WriteDiagnostic("desktop-start", new { version = DesktopVersion, process = Environment.ProcessId });
         }
 
         private async Task StartPanelAsync()
@@ -128,7 +142,8 @@ internal static class Program
             var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: dataPath);
             await webView.EnsureCoreWebView2Async(environment);
             await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
-                "Object.defineProperty(window, '__HOME_SECURITY_DESKTOP__', { value: true, configurable: false, writable: false });");
+                "window.__HOME_SECURITY_DESKTOP__ = true; window.__HOME_SECURITY_DEVICE__ = 'windows';");
+            WriteDiagnostic("webview-ready", new { dataPath });
 
             var settings = webView.CoreWebView2.Settings;
             settings.AreDefaultContextMenusEnabled = false;
@@ -145,8 +160,16 @@ internal static class Program
                     e.PermissionKind is CoreWebView2PermissionKind.Camera or CoreWebView2PermissionKind.Microphone)
                 {
                     e.State = CoreWebView2PermissionState.Allow;
+                    WriteDiagnostic("media-permission-allowed", new { e.Uri, permission = e.PermissionKind.ToString() });
                 }
             };
+
+            webView.CoreWebView2.WebMessageReceived += (_, e) =>
+            {
+                try { WriteDiagnostic("panel-state", JsonDocument.Parse(e.WebMessageAsJson).RootElement.Clone()); }
+                catch { WriteDiagnostic("panel-message", e.TryGetWebMessageAsString()); }
+            };
+            webView.CoreWebView2.ProcessFailed += (_, e) => WriteDiagnostic("webview-process-failed", new { reason = e.Reason.ToString(), kind = e.ProcessFailedKind.ToString() });
 
             webView.CoreWebView2.NewWindowRequested += (_, e) => e.Handled = true;
             webView.CoreWebView2.NavigationStarting += (_, e) =>
@@ -158,9 +181,7 @@ internal static class Program
                 }
             };
             webView.CoreWebView2.Navigate(PanelUrl);
-            _ = CheckForUpdateAsync();
-            updateTimer.Tick += async (_, _) => await CheckForUpdateAsync();
-            updateTimer.Start();
+            WriteDiagnostic("panel-navigation", new { url = PanelUrl });
         }
 
         private async Task CheckForUpdateAsync()
