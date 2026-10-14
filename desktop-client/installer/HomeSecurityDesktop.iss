@@ -4,10 +4,10 @@
 ; użytkownika z %LOCALAPPDATA%\HomeSecurityDesktop podczas odinstalowania.
 
 #define AppName "HOME SECURITY Desktop"
-#define AppVersion "1.3.0"
+#define AppVersion "1.3.1"
 #define AppPublisher "HOME SECURITY"
 #define AppExeName "HomeSecurityDesktop.exe"
-#define PublishDir "..\publish-installer"
+#define PublishDir "..\publish-1.3.1"
 
 [Setup]
 AppId={{6CC3B91C-0337-42B3-BAF8-B1AE10A5B1B8}

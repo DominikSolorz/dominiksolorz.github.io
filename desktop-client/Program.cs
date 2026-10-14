@@ -10,11 +10,12 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.3.0";
+    private const string DesktopVersion = "1.3.1";
+    private const string WebPanelBuild = "155";
     // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
     // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
     // Desktop, który pozwala udostępnić kamerę i mikrofon.
-    private const string PanelUrl = "https://dominiksolorz.github.io/kamera/?desktop=1&native=windows&host=computer";
+    private const string PanelUrl = "https://dominiksolorz.github.io/kamera/?desktop=1&native=windows&host=computer&ui_build=155";
     private const string PublicHost = "dominiksolorz.github.io";
     private const string UpdateManifestUrl = "https://dominiksolorz.github.io/kamera/desktop-update.json";
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(4) };
@@ -39,6 +40,7 @@ internal static class Program
     private static string PendingUpdatePath => Path.Combine(UpdateRoot, "pending.json");
     private static string DiagnosticsRoot => Path.Combine(
         DataRoot, "Diagnostics");
+    private static string WebShellMarkerPath => Path.Combine(DataRoot, "web-shell-build.txt");
 
     private static void WriteDiagnostic(string kind, object? detail = null)
     {
@@ -144,6 +146,7 @@ internal static class Program
                 DataRoot, "WebView");
             var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: dataPath);
             await webView.EnsureCoreWebView2Async(environment);
+            await RefreshWebShellIfNeededAsync();
             await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
                 "window.__HOME_SECURITY_DESKTOP__ = true; window.__HOME_SECURITY_DEVICE__ = 'windows';");
             WriteDiagnostic("webview-ready", new { dataPath });
@@ -186,6 +189,31 @@ internal static class Program
             webView.CoreWebView2.Navigate(PanelUrl);
             WriteDiagnostic("panel-navigation", new { url = PanelUrl });
             _ = CheckForUpdateAsync();
+        }
+
+        private async Task RefreshWebShellIfNeededAsync()
+        {
+            try
+            {
+                var installedBuild = File.Exists(WebShellMarkerPath)
+                    ? File.ReadAllText(WebShellMarkerPath).Trim()
+                    : string.Empty;
+                if (installedBuild == WebPanelBuild) return;
+
+                // Usuwamy wyłącznie pamięć powłoki strony i service worker.
+                // Sesja użytkownika, PIN i pozostałe ustawienia nie są kasowane.
+                await webView.CoreWebView2.CallDevToolsProtocolMethodAsync("Network.clearBrowserCache", "{}");
+                await webView.CoreWebView2.CallDevToolsProtocolMethodAsync(
+                    "Storage.clearDataForOrigin",
+                    "{\"origin\":\"https://dominiksolorz.github.io\",\"storageTypes\":\"cache_storage,service_workers\"}");
+                Directory.CreateDirectory(DataRoot);
+                File.WriteAllText(WebShellMarkerPath, WebPanelBuild);
+                WriteDiagnostic("web-shell-cache-cleared", new { build = WebPanelBuild });
+            }
+            catch (Exception ex)
+            {
+                WriteDiagnostic("web-shell-cache-clear-failed", new { build = WebPanelBuild, error = ex.Message });
+            }
         }
 
         private void ToggleFullScreen()
