@@ -41,10 +41,12 @@ const hostChoice = new URLSearchParams(location.search).get("host");
 // Dzięki temu brak pojedynczego znacznika wstrzykniętego przy starcie nie
 // odbiera programowi uprawnień do jego własnej kamery.
 const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview;
-const NATIVE_HOST = NATIVE_DESKTOP && hostChoice === "computer";
+// Nawigacja do logowania może usunąć parametry URL. Tożsamość nadajnika
+// pochodzi z powłoki Windows i pozostaje ważna na każdej stronie konta.
+const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "160"; // musi się zgadzać z version.json
+const VERSION = "161"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2002,7 +2004,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "66";
+  const SERVICE_WORKER_BUILD = "67";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2066,7 +2068,10 @@ $("reloadPcBtn").addEventListener("click", () => {
 $("ctrlRestart").addEventListener("click", async () => {
   if (!canControlCamera()) return;
   await runControl($("ctrlRestart"), "Restartuję kamerę — zapis jest bezpiecznie przełączany…", "Restart potwierdzony — kamera ponownie nadaje.", async () => {
-    if (prefs.role === "send") await sender.restart();
+    if (prefs.role === "send") {
+      await sender.restart();
+      if (!sender.hasCamera) throw new Error("kamera nie przekazała obrazu po restarcie — sprawdź urządzenie i uprawnienia");
+    }
     else await viewer.restart();
   });
 });
