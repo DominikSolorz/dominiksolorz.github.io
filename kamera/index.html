@@ -66,13 +66,12 @@
 <script>
   (() => {
     const p = new URLSearchParams(location.search);
-    const isNative = p.get("native") === "windows";
     const isReceiver = /^cam-[a-f0-9]{32}$/.test(p.get("odbiorca") || "");
     const home = document.getElementById("publicHome");
     let enter, opened = false;
     // Boot ma wiedzieć, czy strona główna nadal jest świadomie oglądana.
     // Dzięki temu awaryjne wznowienie nie zamknie strony informacyjnej.
-    window.__publicHomeActive = !(isNative || isReceiver);
+    window.__publicHomeActive = !isReceiver;
     window.__waitForPanel = new Promise(resolve => { enter = resolve; });
     const openPanel = () => {
       if (opened) return;
@@ -84,9 +83,10 @@
     window.__openSecurePanel = openPanel;
     document.getElementById("publicLogin")?.addEventListener("click", openPanel);
     document.getElementById("publicLoginTop")?.addEventListener("click", openPanel);
-    // Nadajnik Windows oraz bezpośredni, tylko-odczytowy link odbiorcy nie
-    // przechodzą przez marketingową stronę główną.
-    if (isNative || isReceiver) openPanel();
+    // Tylko bezpośredni, tylko-odczytowy link odbiorcy nie przechodzi przez
+    // stronę główną. Program Windows stosuje ten sam bezpieczny przebieg co
+    // strona: strona główna → logowanie → start → PIN → pulpit.
+    if (isReceiver) openPanel();
   })();
 </script>
 <header class="topbar">
@@ -144,10 +144,9 @@
     const step = document.getElementById("bootStep");
     const steps = [...document.querySelectorAll(".bootSteps li")];
     const retry = document.getElementById("bootRetry");
-    // Ten ekran blokował zarówno telefon, jak i WebView2 na komputerze.
-    // Nie może stać na drodze do PIN-u: start jest więc niewizualny na każdym
-    // urządzeniu. Nie otwiera to panelu — właściwy skrypt nadal wymaga PIN-u.
-    const skipBootAnimation = true;
+    // Ekran startowy jest wspólny dla telefonu i aplikacji Windows. Przejście
+    // po czasie jest niezależne od animacji, aby nie utknąć na ostatniej sekundzie.
+    const skipBootAnimation = false;
     if (skipBootAnimation) boot.hidden = true;
     let complete = false;
     // Zabezpieczenie dla telefonów, które zatrzymały stary moduł PWA w pamięci.
@@ -163,18 +162,13 @@
       text.textContent = "Start trwa zbyt długo — otwórz ekran PIN ponownie.";
       retry.hidden = false;
     };
-    const fallback = skipBootAnimation ? null : setTimeout(() => {
+    const fallback = setTimeout(() => {
       if (complete) return;
-      // Na telefonie moduł może być gotowy, a animacja pozostać w pamięci
-      // Safari. Kończymy wyłącznie animację; dalsza ścieżka nadal wymaga PIN-u.
-      if (!window.__publicHomeActive && window.__kameraReady && typeof window.__finishSecureBoot === "function") {
-        text.textContent = "Kończę bezpieczny start…";
-        // To tylko kończy animację startu. Nie pokazuje panelu i nie omija
-        // requireAccess(), które nadal wymusza PIN przed dostępem do kamery.
-        Promise.resolve(window.__finishSecureBoot()).catch(showRetry);
-        setTimeout(() => { if (!complete) showRetry(); }, 1200);
-      } else showRetry();
-    }, 8000);
+      text.textContent = "Panel przygotowany — przechodzę do PIN-u…";
+      // Bezpiecznik nie zależy od gotowości WebRTC ani modułu aplikacji.
+      // Kończy tylko animację; właściwy panel nadal wymaga poprawnego PIN-u.
+      Promise.resolve(window.__finishSecureBoot()).catch(showRetry);
+    }, 7100);
     const paint = () => {
       if (complete) return;
       const elapsed = performance.now() - started;
@@ -455,7 +449,7 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=155"></script>
+<script type="module" src="app.js?v=156"></script>
 <script type="module" src="desktop.js?v=19"></script>
 <script type="module" src="mobile.js?v=7"></script>
 </body>
