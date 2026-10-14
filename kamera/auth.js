@@ -115,3 +115,5 @@ $("deviceForm")?.addEventListener("submit", async event => { event.preventDefaul
 $("pinSetupForm")?.addEventListener("submit", async event => { event.preventDefault(); const pin = $("setupPin").value, repeat = $("setupPinRepeat").value; if (!/^\d{4}$|^\d{6}$/.test(pin)) return message("PIN musi mieć dokładnie 4 albo 6 cyfr.", true); if (pin !== repeat) return message("Numery PIN nie są identyczne.", true); try { await savePin(pin); message("PIN zapisany. Otwieram bezpieczny panel…"); setTimeout(enterPanel, 280); } catch (error) { message(error.message, true); } });
 
 accountClient.auth.onAuthStateChange((event) => { if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && new URLSearchParams(location.search).get("auth") === "confirmed") { $("authDialog").hidden = false; setTimeout(() => continueWithSession().catch(error => message(error.message, true)), 0); } });
+// Sygnalizuje stronie głównej, że kliknięcie „Zaloguj się” może już otworzyć okno.
+window.__authReadyResolve?.();

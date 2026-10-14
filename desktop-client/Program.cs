@@ -10,7 +10,7 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.2.0";
+    private const string DesktopVersion = "1.3.0";
     // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
     // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
     // Desktop, który pozwala udostępnić kamerę i mikrofon.
@@ -33,11 +33,12 @@ internal static class Program
         Application.Run(new HomeSecurityWindow());
     }
 
-    private static string UpdateRoot => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HomeSecurityDesktop", "Updates");
+    private static string DataRoot => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HomeSecurityDesktop");
+    private static string UpdateRoot => Path.Combine(DataRoot, "Updates");
     private static string PendingUpdatePath => Path.Combine(UpdateRoot, "pending.json");
     private static string DiagnosticsRoot => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HomeSecurityDesktop", "Diagnostics");
+        DataRoot, "Diagnostics");
 
     private static void WriteDiagnostic(string kind, object? detail = null)
     {
@@ -126,19 +127,21 @@ internal static class Program
             MinimumSize = new Size(1180, 720);
             ClientSize = new Size(1600, 950);
             StartPosition = FormStartPosition.CenterScreen;
+            WindowState = FormWindowState.Maximized;
             BackColor = Color.FromArgb(7, 11, 22);
             Icon = SystemIcons.Shield;
             FormBorderStyle = FormBorderStyle.Sizable;
+            KeyPreview = true;
             Controls.Add(webView);
             Shown += async (_, _) => await StartPanelAsync();
+            KeyDown += (_, e) => { if (e.KeyCode == Keys.F11) ToggleFullScreen(); };
             WriteDiagnostic("desktop-start", new { version = DesktopVersion, process = Environment.ProcessId });
         }
 
         private async Task StartPanelAsync()
         {
             var dataPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "HomeSecurityDesktop", "WebView");
+                DataRoot, "WebView");
             var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: dataPath);
             await webView.EnsureCoreWebView2Async(environment);
             await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
@@ -182,6 +185,14 @@ internal static class Program
             };
             webView.CoreWebView2.Navigate(PanelUrl);
             WriteDiagnostic("panel-navigation", new { url = PanelUrl });
+            _ = CheckForUpdateAsync();
+        }
+
+        private void ToggleFullScreen()
+        {
+            var fullScreen = FormBorderStyle == FormBorderStyle.None;
+            FormBorderStyle = fullScreen ? FormBorderStyle.Sizable : FormBorderStyle.None;
+            WindowState = FormWindowState.Maximized;
         }
 
         private async Task CheckForUpdateAsync()

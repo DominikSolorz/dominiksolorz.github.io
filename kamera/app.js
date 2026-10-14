@@ -13,7 +13,7 @@ import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=5";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
 import { mountDvr } from "./dvr-ui.js?v=95";
-import { accountClient } from "./auth.js?v=1";
+import { accountClient } from "./auth.js?v=2";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.

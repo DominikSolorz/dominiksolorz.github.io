@@ -57,7 +57,7 @@
 <section id="publicHome" class="publicHome" aria-label="Strona główna HOME SECURITY">
   <header class="publicHomeBar"><a class="publicLogo" href="./"><span>⌂</span> HOME <b>SECURITY</b></a><nav><a href="#jak-dziala">Jak działa</a><a href="#funkcje">Funkcje</a><a href="#bezpieczenstwo">Bezpieczeństwo</a><a href="kontakt.html">Kontakt</a><button id="publicLoginTop" type="button">Zaloguj się</button></nav></header>
   <main class="publicMain">
-    <section class="publicHero"><div><p class="publicEyebrow">PRYWATNY MONITORING DOMU</p><h1>Spokojny dom.<br><b>Jeden bezpieczny panel.</b></h1><p class="publicLead">Podgląd kamery, nagrania i powiadomienia w aplikacji Windows oraz w telefonie. Nadajnik działa wyłącznie na wybranym komputerze.</p><div class="publicActions"><button id="publicLogin" class="publicPrimary" type="button">Zaloguj się do panelu <span>→</span></button><a class="publicSecondary" href="#funkcje">Zobacz jak działa</a></div><p class="publicHint">Po wejściu wymagany jest Twój PIN. Link odbiorcy daje tylko podgląd.</p></div><aside class="publicPreview" aria-label="Przykładowy bezpieczny podgląd"><div class="publicPreviewHead"><span><i></i> SYSTEM GOTOWY</span><b>HOME</b></div><div class="publicPreviewFrame"><span>NA ŻYWO</span><strong>Obraz dostępny<br>po zalogowaniu</strong><i></i></div><div class="publicPreviewRows"><span>✓ Szyfrowane połączenie</span><span>✓ Nagrania lokalne</span><span>✓ Kontrola dostępu PIN</span></div></aside></section>
+    <section class="publicHero"><div><p class="publicEyebrow">PRYWATNY MONITORING DOMU</p><h1>Spokojny dom.<br><b>Jeden bezpieczny panel.</b></h1><p class="publicLead">Podgląd kamery, nagrania i powiadomienia w aplikacji Windows oraz w telefonie. Nadajnik działa wyłącznie na wybranym komputerze.</p><div class="publicActions"><button id="publicLogin" class="publicPrimary" type="button">Zaloguj się do panelu <span>→</span></button><a class="publicSecondary" href="downloads/HOME-SECURITY-Desktop-Setup-1.3.0.exe" download>⬇ Pobierz instalator Windows</a><a class="publicSecondary" href="#funkcje">Zobacz jak działa</a></div><p class="publicHint">Instalator pozwala wybrać folder programu. Po wejściu wymagany jest Twój PIN.</p></div><aside class="publicPreview" aria-label="Przykładowy bezpieczny podgląd"><div class="publicPreviewHead"><span><i></i> SYSTEM GOTOWY</span><b>HOME</b></div><div class="publicPreviewFrame"><span>NA ŻYWO</span><strong>Obraz dostępny<br>po zalogowaniu</strong><i></i></div><div class="publicPreviewRows"><span>✓ Szyfrowane połączenie</span><span>✓ Nagrania lokalne</span><span>✓ Kontrola dostępu PIN</span></div></aside></section>
     <section id="funkcje" class="publicFeatures"><article><b>▣</b><h2>Program Windows</h2><p>Komputer z kamerą jest jedynym nadajnikiem obrazu, mikrofonu i nagrań.</p></article><article><b>◉</b><h2>Telefon i przeglądarka</h2><p>Oglądaj obraz, sprawdzaj DVR i korzystaj z dozwolonych ustawień właściciela.</p></article><article><b>⌁</b><h2>Twoje nagrania</h2><p>Wybierasz folder lokalny oraz opcjonalną kopię zapasową po własnym zalogowaniu do Drive.</p></article></section>
     <section id="bezpieczenstwo" class="publicSecurity"><div><p class="publicEyebrow">BEZPIECZEŃSTWO I PRYWATNOŚĆ</p><h2>Najpierw dostęp, potem obraz.</h2></div><p>Panel nie pokazuje obrazu kamery na stronie głównej. Dostęp do części właścicielskiej jest chroniony PIN-em, a odbiorca otrzymuje tylko oddzielny link podglądu.</p><div><a href="polityka-prywatnosci.html">Polityka prywatności</a><a href="regulamin.html">Regulamin</a><a href="rodo.html">Informacja RODO</a></div></section>
     <section class="publicTrustBar" aria-label="Najważniejsze zasady działania"><span><b>01</b> Komputer z kamerą jest nadajnikiem</span><span><b>02</b> PIN chroni panel właściciela</span><span><b>03</b> Telefon służy do bezpiecznego podglądu</span></section>
@@ -97,7 +97,13 @@
       enter();
     };
     window.__openSecurePanel = openPanel;
-    const requestAccount = () => window.dispatchEvent(new Event("hs-auth-request"));
+    // Moduł konta jest ładowany osobno. Kliknięcie nie może przepaść, jeżeli
+    // użytkownik naciśnie „Zaloguj się” zanim przeglądarka dokończy jego start.
+    window.__authReady = new Promise(resolve => { window.__authReadyResolve = resolve; });
+    const requestAccount = () => {
+      if (typeof window.__showAccount === "function") return window.__showAccount();
+      return window.__authReady.then(() => window.__showAccount?.());
+    };
     document.getElementById("publicLogin")?.addEventListener("click", requestAccount);
     document.getElementById("publicLoginTop")?.addEventListener("click", requestAccount);
     // Tylko bezpośredni, tylko-odczytowy link odbiorcy nie przechodzi przez
@@ -386,7 +392,7 @@
           <button class="btn primary" id="startBtn" hidden>▶ Uruchom kamerę</button>
           <button class="btn ghost" id="retryCameraBtn" hidden>↻ Spróbuj ponownie</button>
         </div>
-        <div class="row"><a class="btn ghost" href="kamera-instaluj.bat" download>⬇ Program 24/7 + skrót na pulpicie (Windows)</a></div>
+        <div class="row"><a class="btn ghost" href="downloads/HOME-SECURITY-Desktop-Setup-1.3.0.exe" download>⬇ Pobierz instalator HOME SECURITY Desktop (Windows)</a></div>
       </div>
 
       <div class="card">
@@ -473,7 +479,7 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="auth.js?v=1"></script>
+<script type="module" src="auth.js?v=2"></script>
 <script type="module" src="app.js?v=160"></script>
 <script type="module" src="desktop.js?v=19"></script>
 <script type="module" src="mobile.js?v=7"></script>
