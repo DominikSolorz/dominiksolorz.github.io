@@ -43,7 +43,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP && hostChoice === "computer";
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "142"; // musi się zgadzać z version.json
+const VERSION = "143"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -98,6 +98,53 @@ const iceServers = () => {
   if (TURN_SERVER) s.push(TURN_SERVER);
   return s;
 };
+
+// ---------- Diagnostyka WebRTC (bez adresów IP i bez danych dostępu) ----------
+// STUN pomaga znaleźć drogę bezpośrednią. Tylko TURN daje typ "relay", który
+// jest niezbędny, gdy NAT operatora lub router blokuje połączenie P2P.
+const webRtcDiagnostics = (() => {
+  const entries = [];
+  const snapshot = () => ({ last: entries.at(-1)?.text || "Jeszcze nie zestawiono połączenia WebRTC.", failed: !!entries.at(-1)?.failed, recent: entries.slice(-6) });
+  const note = (role, text, failed = false) => {
+    const row = { at: Date.now(), role, text, failed };
+    entries.push(row); if (entries.length > 40) entries.splice(0, entries.length - 40);
+    const prefix = `[WebRTC/${role}]`;
+    (failed ? console.error : console.info)(prefix, text);
+    // Program Windows zapisuje wyłącznie stan i typ trasy; nigdy kandydata z IP,
+    // PIN-u, obrazu, nagrania ani danych użytkownika.
+    reportNativePanelState({ role: "webrtc", webrtc: snapshot() });
+  };
+  const candidateType = candidate => candidate?.type || / typ ([a-z]+)/i.exec(candidate?.candidate || "")?.[1] || "nieznany";
+  const selectedRoute = async (pc, role) => {
+    try {
+      const stats = await pc.getStats(); let pair = null;
+      stats.forEach(s => { if (s.type === "candidate-pair" && (s.selected || (s.nominated && s.state === "succeeded"))) pair ||= s; });
+      if (!pair) return note(role, "Połączono, ale przeglądarka nie udostępniła wybranej trasy ICE.");
+      const local = stats.get(pair.localCandidateId), remote = stats.get(pair.remoteCandidateId);
+      note(role, `Aktywna trasa ICE: ${local?.candidateType || "nieznany"} → ${remote?.candidateType || "nieznany"}.`);
+    } catch { note(role, "Nie udało się odczytać statystyk wybranej trasy ICE."); }
+  };
+  const attach = (pc, role) => {
+    note(role, `Start ICE. TURN: ${TURN_SERVER ? "skonfigurowany" : "brak"}.`);
+    pc.addEventListener("icecandidate", e => {
+      if (e.candidate) note(role, `Kandydat ICE: ${candidateType(e.candidate)}.`);
+      else note(role, "Zakończono zbieranie kandydatów ICE.");
+    });
+    pc.addEventListener("icecandidateerror", e => note(role, `Błąd ICE ${e.errorCode || "nieznany"}: ${e.errorText || "brak opisu"}.`, true));
+    pc.addEventListener("icegatheringstatechange", () => note(role, `Zbieranie ICE: ${pc.iceGatheringState}.`));
+    pc.addEventListener("iceconnectionstatechange", () => {
+      const state = pc.iceConnectionState;
+      const noRelay = !TURN_SERVER && (state === "failed" || state === "disconnected");
+      note(role, noRelay ? `ICE: ${state}. Brak TURN — sieć z NAT może blokować telefon.` : `ICE: ${state}.`, state === "failed");
+    });
+    pc.addEventListener("connectionstatechange", () => {
+      const state = pc.connectionState;
+      note(role, `Połączenie WebRTC: ${state}.`, state === "failed");
+      if (state === "connected") void selectedRoute(pc, role);
+    });
+  };
+  return { attach, snapshot };
+})();
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
 const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, detectSound: false, sensitivity: "medium", recQuality: "max", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, media: "av", light: 0 };
@@ -926,6 +973,7 @@ function renderDiag(d, extra = []) {
     ok(!!d.mic && d.micOn, d.mic ? `Mikrofon podłączony: ${d.mic}` : "Mikrofon nie jest używany (brak dźwięku w nagraniach)"),
     ok(d.recording, d.recording ? `Nagrywanie trwa · ${d.quality || ""}` : d.mode === "preview" ? "Nie nagrywa — tryb „Sam podgląd”" : d.mode === "off" ? "Nie nagrywa — kamera wyłączona" : "Nie nagrywa"),
     ...(d.light ? [ok(true, d.light)] : []),
+    ...(d.webrtc ? [ok(!d.webrtc.failed, `WebRTC: ${d.webrtc.last}`)] : []),
     ok(!!d.lastFile, d.lastFile ? `Ostatni zapisany plik: ${d.lastFile}` : "Jeszcze żaden plik nie został zapisany w tej sesji (pierwszy po ok. 10 min)"),
     ...extra,
   ];
@@ -1032,6 +1080,7 @@ const sender = (() => {
     closePeer(viewerId);
     const pc = new RTCPeerConnection({ iceServers: iceServers() });
     const peer = { pc, pending: [] };
+    webRtcDiagnostics.attach(pc, "nadajnik");
     peers.set(viewerId, peer); renderViewers();
     // „Tylko zapis”: bez obrazu i dźwięku na żywo — zostaje kanał danych (telefon nadal przegląda nagrania).
     const out = zoomer?.stream || stream;
@@ -1428,7 +1477,7 @@ const sender = (() => {
     const v = stream?.getVideoTracks()[0], a = stream?.getAudioTracks()[0], st = v?.getSettings?.() || {}, r = archive.status();
     return { cam: v ? (v.label || "kamera") : "", camLive: v?.readyState === "live", w: st.width, h: st.height, fps: Math.round(st.frameRate || 0),
       mic: a ? (a.label || "mikrofon") : "", micOn: !!a && a.enabled && a.readyState === "live", recording: r.recording, lastFile: r.lastFile,
-      quality: recQuality().short, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem(), light: cameraLight };
+      quality: recQuality().short, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem(), light: cameraLight, webrtc: webRtcDiagnostics.snapshot() };
   }
   const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, light: clampLight(prefs.light), lightSw, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, visible: document.visibilityState === "visible", diag: diag() }), reportNativePanelState({ role: "transmitter", live: !!stream, cameraError: camProblem(), recording: archive.status().recording, camera: diag().cam, resolution: `${diag().w || 0}x${diag().h || 0}`, fps: diag().fps || 0 }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream, quality: prefs.recQuality }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
@@ -1536,6 +1585,7 @@ const viewer = (() => {
       reset();
       const conn = new RTCPeerConnection({ iceServers: iceServers() });
       pc = conn;
+      webRtcDiagnostics.attach(conn, "odbiornik");
       conn.ontrack = e => {
         // Minimalne opóźnienie odtwarzania (obraz „na żywo”, bez zbędnego buforowania).
         try { e.receiver.jitterBufferTarget = 0; } catch { /* brak wsparcia */ }
@@ -1553,7 +1603,7 @@ const viewer = (() => {
           brokenSince = 0; showPlaceholder(""); showLive("NA ŻYWO"); setStatus("");
           send(chan.channel, { type: "zoom-get" });
           $("fullBtn").disabled = false;
-        } else if (st === "failed") { showLive(""); setStatus("Nie udało się zestawić połączenia. Przy sieci komórkowej może być potrzebny serwer TURN."); }
+        } else if (st === "failed") { showLive(""); setStatus(TURN_SERVER ? "Nie udało się zestawić połączenia WebRTC. Sprawdź diagnostykę ICE." : "Nie udało się zestawić połączenia WebRTC. Brak serwera TURN — przez LTE/5G lub restrykcyjny NAT obraz może nie przejść."); }
         else if (st === "disconnected") { showLive(""); setStatus("Połączenie przerwane — wznawiam…"); }
       };
       await conn.setRemoteDescription(sig.sdp);
