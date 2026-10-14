@@ -62,7 +62,9 @@ if (desktopRequested) {
         <button type="button" id="desktopOpenLive" title="Otwórz aktualny obraz w pełnym ekranie">⛶ Pełny ekran</button>
       </div>
     </div>`;
-  const main = document.querySelector("main");
+  // Strona informacyjna również ma <main>. Pulpit i kamera muszą być
+  // montowane w chronionym panelu #app, a nie w publicznej stronie głównej.
+  const main = $("app");
   const layout = main?.querySelector(".layout");
   if (main && layout) main.insertBefore(context, layout);
 
