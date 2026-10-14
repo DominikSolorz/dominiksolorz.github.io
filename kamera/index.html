@@ -44,24 +44,29 @@
     document.documentElement.dataset.clientMode = "desktop";
   }
 </script>
-<title>Kamera na żywo</title>
+<title>HOME SECURITY — monitoring domu</title>
 <link rel="manifest" href="manifest.webmanifest?v=1">
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=159">
+<link rel="stylesheet" href="style.css?v=160">
 </head>
 <body>
 <!-- Publiczna strona główna. Panel kamery pojawia się dopiero po świadomym
      wejściu do zabezpieczonej części i wpisaniu PIN-u. -->
 <section id="publicHome" class="publicHome" aria-label="Strona główna HOME SECURITY">
-  <header class="publicHomeBar"><a class="publicLogo" href="./"><span>⌂</span> HOME <b>SECURITY</b></a><nav><a href="#funkcje">Funkcje</a><a href="#bezpieczenstwo">Bezpieczeństwo</a><button id="publicLoginTop" type="button">Zaloguj się</button></nav></header>
+  <header class="publicHomeBar"><a class="publicLogo" href="./"><span>⌂</span> HOME <b>SECURITY</b></a><nav><a href="#jak-dziala">Jak działa</a><a href="#funkcje">Funkcje</a><a href="#bezpieczenstwo">Bezpieczeństwo</a><a href="kontakt.html">Kontakt</a><button id="publicLoginTop" type="button">Zaloguj się</button></nav></header>
   <main class="publicMain">
     <section class="publicHero"><div><p class="publicEyebrow">PRYWATNY MONITORING DOMU</p><h1>Spokojny dom.<br><b>Jeden bezpieczny panel.</b></h1><p class="publicLead">Podgląd kamery, nagrania i powiadomienia w aplikacji Windows oraz w telefonie. Nadajnik działa wyłącznie na wybranym komputerze.</p><div class="publicActions"><button id="publicLogin" class="publicPrimary" type="button">Zaloguj się do panelu <span>→</span></button><a class="publicSecondary" href="#funkcje">Zobacz jak działa</a></div><p class="publicHint">Po wejściu wymagany jest Twój PIN. Link odbiorcy daje tylko podgląd.</p></div><aside class="publicPreview" aria-label="Przykładowy bezpieczny podgląd"><div class="publicPreviewHead"><span><i></i> SYSTEM GOTOWY</span><b>HOME</b></div><div class="publicPreviewFrame"><span>NA ŻYWO</span><strong>Obraz dostępny<br>po zalogowaniu</strong><i></i></div><div class="publicPreviewRows"><span>✓ Szyfrowane połączenie</span><span>✓ Nagrania lokalne</span><span>✓ Kontrola dostępu PIN</span></div></aside></section>
     <section id="funkcje" class="publicFeatures"><article><b>▣</b><h2>Program Windows</h2><p>Komputer z kamerą jest jedynym nadajnikiem obrazu, mikrofonu i nagrań.</p></article><article><b>◉</b><h2>Telefon i przeglądarka</h2><p>Oglądaj obraz, sprawdzaj DVR i korzystaj z dozwolonych ustawień właściciela.</p></article><article><b>⌁</b><h2>Twoje nagrania</h2><p>Wybierasz folder lokalny oraz opcjonalną kopię zapasową po własnym zalogowaniu do Drive.</p></article></section>
     <section id="bezpieczenstwo" class="publicSecurity"><div><p class="publicEyebrow">BEZPIECZEŃSTWO I PRYWATNOŚĆ</p><h2>Najpierw dostęp, potem obraz.</h2></div><p>Panel nie pokazuje obrazu kamery na stronie głównej. Dostęp do części właścicielskiej jest chroniony PIN-em, a odbiorca otrzymuje tylko oddzielny link podglądu.</p><div><a href="polityka-prywatnosci.html">Polityka prywatności</a><a href="regulamin.html">Regulamin</a><a href="rodo.html">Informacja RODO</a></div></section>
+    <section class="publicTrustBar" aria-label="Najważniejsze zasady działania"><span><b>01</b> Komputer z kamerą jest nadajnikiem</span><span><b>02</b> PIN chroni panel właściciela</span><span><b>03</b> Telefon służy do bezpiecznego podglądu</span></section>
+    <section id="jak-dziala" class="publicHow"><div class="publicSectionIntro"><p class="publicEyebrow">PROSTY START</p><h2>Trzy kroki do własnego panelu.</h2><p>Bez skomplikowanej konfiguracji na telefonie. Źródło kamery uruchamiasz tylko na komputerze, który pozostaje w domu.</p></div><figure class="publicHowImage"><img src="assets/home-security-how-it-works.png" alt="Komputer z kamerą, bezpieczny PIN i telefon połączone w system HOME SECURITY"><figcaption>Twój komputer nadaje. Ty wybierasz, gdzie oglądasz.</figcaption></figure><ol class="publicSteps"><li><span>01</span><div><h3>Podłącz i wybierz kamerę</h3><p>W programie Windows wskazujesz kamerę i lokalny folder nagrań.</p></div></li><li><span>02</span><div><h3>Zaloguj się i wpisz PIN</h3><p>Po zalogowaniu panel zawsze wymaga dodatkowego kodu PIN.</p></div></li><li><span>03</span><div><h3>Oglądaj, sprawdzaj, reaguj</h3><p>W telefonie lub przeglądarce masz podgląd, DVR i ustawienia dozwolone dla właściciela.</p></div></li></ol></section>
+    <section class="publicRoles"><div class="publicSectionIntro"><p class="publicEyebrow">JEDEN SYSTEM · DWA URZĄDZENIA</p><h2>Jasny podział ról.</h2></div><div class="publicRoleTable" role="table" aria-label="Porównanie ról urządzeń"><div class="publicRoleHead" role="row"><span role="columnheader">Co robisz</span><span role="columnheader">Program HOME SECURITY Desktop</span><span role="columnheader">Telefon / przeglądarka</span></div><div role="row"><b role="rowheader">Kamera i mikrofon</b><span>Wybierasz oraz uruchamiasz</span><span>Oglądasz tylko udostępniony obraz</span></div><div role="row"><b role="rowheader">Nagrania</b><span>Wskazujesz folder i zasady zapisu</span><span>Przeglądasz archiwum DVR</span></div><div role="row"><b role="rowheader">Bezpieczeństwo</b><span>Ustawiasz PIN i dostęp</span><span>Wchodzisz przez login oraz PIN</span></div></div></section>
+    <section class="publicGallery" aria-label="Podgląd funkcji aplikacji"><article class="publicGalleryCard publicGalleryHero"><img src="assets/home-security-hero.png" alt="Nowoczesne wnętrze objęte prywatnym monitoringiem"><div><p>OBRAZ NA ŻYWO</p><h2>Spokój, który widać od razu.</h2><span>Panel powstaje dla domu — czytelny także na telefonie.</span></div></article><article class="publicQuote"><span>“</span><p>Nie buduj systemu pod technologię. Zbuduj go pod moment, w którym chcesz po prostu sprawdzić, czy w domu wszystko jest w porządku.</p></article></section>
+    <section class="publicContactTeaser"><div><p class="publicEyebrow">POMOC I KONTAKT</p><h2>Masz pytanie o własną instalację?</h2><p>Na stronie kontaktowej znajdziesz prostą ścieżkę zgłoszenia oraz informację, jakie dane warto przygotować przed rozmową z administratorem.</p></div><a class="publicPrimary" href="kontakt.html">Przejdź do kontaktu <span>→</span></a></section>
   </main>
-  <footer class="publicFooter"><span>© HOME SECURITY</span><span>Monitoring prywatny · wersja domowa</span></footer>
+  <footer class="publicFooter"><span>© HOME SECURITY</span><span>Monitoring prywatny · wersja domowa</span><span><a href="polityka-prywatnosci.html">Prywatność</a> · <a href="rodo.html">RODO</a> · <a href="regulamin.html">Regulamin</a> · <a href="kontakt.html">Kontakt</a></span></footer>
 </section>
 <script>
   (() => {
@@ -456,7 +461,7 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=158"></script>
+<script type="module" src="app.js?v=159"></script>
 <script type="module" src="desktop.js?v=19"></script>
 <script type="module" src="mobile.js?v=7"></script>
 </body>
