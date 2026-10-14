@@ -136,7 +136,7 @@
 </section>
 <script>
   (() => {
-    const started = performance.now();
+    let started = 0;
     const boot = document.getElementById("boot");
     const bar = document.getElementById("bootProgress");
     const text = document.getElementById("bootText");
@@ -144,11 +144,10 @@
     const step = document.getElementById("bootStep");
     const steps = [...document.querySelectorAll(".bootSteps li")];
     const retry = document.getElementById("bootRetry");
-    // Ekran startowy jest wspólny dla telefonu i aplikacji Windows. Przejście
-    // po czasie jest niezależne od animacji, aby nie utknąć na ostatniej sekundzie.
-    const skipBootAnimation = false;
-    if (skipBootAnimation) boot.hidden = true;
-    let complete = false;
+    // Ładowanie zaczyna się dopiero po kliknięciu „Zaloguj się”, nigdy pod
+    // stroną główną. Dzięki temu komputer i telefon mają ten sam przebieg.
+    boot.hidden = true;
+    let complete = false, bootActive = false, fallback = null;
     // Zabezpieczenie dla telefonów, które zatrzymały stary moduł PWA w pamięci.
     // Nie odsłaniamy panelu bez PIN-u; dajemy wyłącznie bezpieczny restart z
     // numerem w adresie, aby pobrać świeżą powłokę z GitHub Pages.
@@ -162,13 +161,6 @@
       text.textContent = "Start trwa zbyt długo — otwórz ekran PIN ponownie.";
       retry.hidden = false;
     };
-    const fallback = setTimeout(() => {
-      if (complete) return;
-      text.textContent = "Panel przygotowany — przechodzę do PIN-u…";
-      // Bezpiecznik nie zależy od gotowości WebRTC ani modułu aplikacji.
-      // Kończy tylko animację; właściwy panel nadal wymaga poprawnego PIN-u.
-      Promise.resolve(window.__finishSecureBoot()).catch(showRetry);
-    }, 7100);
     const paint = () => {
       if (complete) return;
       const elapsed = performance.now() - started;
@@ -184,12 +176,27 @@
       steps.forEach((item, index) => item.classList.toggle("active", index <= phase));
       requestAnimationFrame(paint);
     };
-    if (!skipBootAnimation) requestAnimationFrame(paint);
+    const startBoot = () => {
+      if (bootActive || complete) return;
+      bootActive = true;
+      started = performance.now();
+      boot.hidden = false;
+      retry.hidden = true;
+      requestAnimationFrame(paint);
+      // Niezależny od WebRTC i modułu aplikacji bezpiecznik — nie da się
+      // utknąć na „01 s”. Kończy on wyłącznie animację, nie sprawdzanie PIN-u.
+      fallback = setTimeout(() => {
+        if (complete) return;
+        text.textContent = "Panel przygotowany — przechodzę do PIN-u…";
+        Promise.resolve(window.__finishSecureBoot()).catch(showRetry);
+      }, 7100);
+    };
+    window.__waitForPanel?.then(startBoot);
     window.__finishSecureBoot = async () => {
       if (complete) return;
-      // Animacja nie blokuje już żadnego urządzenia; późniejsza ścieżka nadal
-      // wymaga poprawnego PIN-u.
-      const remaining = skipBootAnimation ? 0 : Math.max(0, 6500 - (performance.now() - started));
+      startBoot();
+      // 6,5 s daje czytelny start i zostawia margines do limitu 7 sekund.
+      const remaining = Math.max(0, 6500 - (performance.now() - started));
       if (remaining) await new Promise(resolve => setTimeout(resolve, remaining));
       complete = true;
       clearTimeout(fallback);
@@ -199,7 +206,7 @@
       step.textContent = "03 / 03 · GOTOWE";
       steps.forEach(item => item.classList.add("active"));
       text.textContent = "Panel gotowy — wymagane logowanie PIN";
-      if (!skipBootAnimation) await new Promise(resolve => setTimeout(resolve, 220));
+      await new Promise(resolve => setTimeout(resolve, 220));
       boot.hidden = true;
     };
   })();
@@ -449,7 +456,7 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=156"></script>
+<script type="module" src="app.js?v=157"></script>
 <script type="module" src="desktop.js?v=19"></script>
 <script type="module" src="mobile.js?v=7"></script>
 </body>
