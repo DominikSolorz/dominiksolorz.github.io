@@ -694,6 +694,9 @@ body.archiveOpen{overflow:hidden}
   .desktopMode .mainCol[data-desktop-view="live"]>#dvrListCard,.desktopMode .mainCol[data-desktop-view="controls"]>#dvrListCard,.desktopMode .mainCol[data-desktop-view="settings"]>#dvrListCard,.desktopMode .mainCol[data-desktop-view="diagnostics"]>#dvrListCard{display:none!important}
   /* Główny pulpit ma tylko obraz, zdarzenia i oś DVR. Reguły z identyfikatorami
      są celowo jawne, aby żadna starsza karta nie przebiła się przez układ. */
+  /* Awaryjny wariant: gdy nakładka desktopowa nie przeniesie jeszcze obrazu do
+     pulpitu, pokaż oryginalne okno kamery z komunikatem zamiast pustej strony. */
+  .desktopMode .mainCol[data-desktop-view="live"]>#stage{display:block!important;min-height:390px!important;grid-column:1/-1!important}
   .desktopMode .mainCol[data-desktop-view="live"]>#modeCard,.desktopMode .mainCol[data-desktop-view="live"]>.rightCol,.desktopMode .mainCol[data-desktop-view="live"]>#ctrlBar,.desktopMode .mainCol[data-desktop-view="live"]>#watchPanel,.desktopMode .mainCol[data-desktop-view="live"]>#recStatus,.desktopMode .mainCol[data-desktop-view="live"]>#status,.desktopMode .mainCol[data-desktop-view="live"]>#diagCard{display:none!important}
   .desktopMode .mainCol[data-desktop-view="controls"]>#dvrCard,.desktopMode .mainCol[data-desktop-view="controls"]>#watchPanel,.desktopMode .mainCol[data-desktop-view="controls"]>#recStatus,.desktopMode .mainCol[data-desktop-view="controls"]>#status,.desktopMode .mainCol[data-desktop-view="controls"]>#diagCard{display:none!important}
   /* Archiwum jest osobnym ekranem: tylko oś czasu oraz lista prawdziwych

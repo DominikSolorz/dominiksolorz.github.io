@@ -43,7 +43,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP && hostChoice === "computer";
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "149"; // musi się zgadzać z version.json
+const VERSION = "150"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1999,7 +1999,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome.
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=22", { scope: "./" }).catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=23", { scope: "./" }).catch(() => {}));
 }
 $("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
@@ -2281,13 +2281,24 @@ if (RECEIVER_ONLY) {
   showViewer();
 } else {
   ACCESS_KEY = await requireAccess();
-  CHANNEL = await channelFor(ACCESS_KEY);
-  if (new URLSearchParams(location.search).get("wroc") === "nagrania") location.replace("nagrania.html");
+  // Pulpit ma pojawić się natychmiast po poprawnym PIN-ie. Obliczenie kanału
+  // lub późniejsze łączenie sieciowe nie może zostawić użytkownika z pustym
+  // ekranem; obraz pokaże wtedy czytelny stan oczekiwania.
   document.body.classList.remove("accessPending");
   $("app").hidden = false; $("lockBtn").hidden = false;
-  if (prefs.role === "send") showSender();
-  else {
-    showViewer();
-    if (OWNER_PANEL && !MOBILE_OWNER_APP) toastMsg("Panel właściciela: sterujesz komputerem-kamerą po wpisaniu PIN-u. Link odbiorcy nadal daje tylko podgląd.");
+  showPlaceholder("Przygotowuję podgląd kamery…");
+  try {
+    CHANNEL = await channelFor(ACCESS_KEY);
+    if (new URLSearchParams(location.search).get("wroc") === "nagrania") location.replace("nagrania.html");
+    if (prefs.role === "send") showSender();
+    else {
+      showViewer();
+      if (OWNER_PANEL && !MOBILE_OWNER_APP) toastMsg("Panel właściciela: sterujesz komputerem-kamerą po wpisaniu PIN-u. Link odbiorcy nadal daje tylko podgląd.");
+    }
+  } catch (error) {
+    const detail = errText(error);
+    showPlaceholder("Panel jest otwarty, ale nie udało się przygotować połączenia z kamerą. Otwórz Diagnostykę albo uruchom ponownie aplikację.");
+    setStatus(`Błąd przygotowania panelu: ${detail}`);
+    renderDiag({ cam: "", camLive: false, w: 0, h: 0, fps: 0, mic: "", micOn: false, recording: false, lastFile: "", quality: "", mode: "", viewers: 0, version: VERSION, camError: detail, light: 0, webrtc: webRtcDiagnostics.snapshot() }, [diagRow(false, "Panel nie nawiązał jeszcze połączenia z usługą transmisji.")]);
   }
 }
