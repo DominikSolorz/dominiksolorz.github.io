@@ -37,6 +37,13 @@ export async function currentAccountUser() {
   const { data: { user } } = await accountClient.auth.getUser();
   return user || null;
 }
+export async function accessRoleForCurrentUser() {
+  const user = await currentAccountUser();
+  if (!user) return null;
+  const { data, error } = await accountClient.from("user_access_roles").select("role").eq("user_id", user.id).maybeSingle();
+  if (error) throw error;
+  return data?.role || "viewer";
+}
 export async function securityForCurrentUser() {
   const user = await currentAccountUser();
   if (!user) return null;
