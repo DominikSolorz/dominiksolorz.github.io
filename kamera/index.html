@@ -49,9 +49,36 @@
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=156">
+<link rel="stylesheet" href="style.css?v=157">
 </head>
 <body>
+<!-- Publiczna strona główna. Panel kamery pojawia się dopiero po świadomym
+     wejściu do zabezpieczonej części i wpisaniu PIN-u. -->
+<section id="publicHome" class="publicHome" aria-label="Strona główna HOME SECURITY">
+  <header class="publicHomeBar"><a class="publicLogo" href="./"><span>⌂</span> HOME <b>SECURITY</b></a><nav><a href="#funkcje">Funkcje</a><a href="#bezpieczenstwo">Bezpieczeństwo</a><button id="publicLoginTop" type="button">Zaloguj się</button></nav></header>
+  <main class="publicMain">
+    <section class="publicHero"><div><p class="publicEyebrow">PRYWATNY MONITORING DOMU</p><h1>Spokojny dom.<br><b>Jeden bezpieczny panel.</b></h1><p class="publicLead">Podgląd kamery, nagrania i powiadomienia w aplikacji Windows oraz w telefonie. Nadajnik działa wyłącznie na wybranym komputerze.</p><div class="publicActions"><button id="publicLogin" class="publicPrimary" type="button">Zaloguj się do panelu <span>→</span></button><a class="publicSecondary" href="#funkcje">Zobacz jak działa</a></div><p class="publicHint">Po wejściu wymagany jest Twój PIN. Link odbiorcy daje tylko podgląd.</p></div><aside class="publicPreview" aria-label="Przykładowy bezpieczny podgląd"><div class="publicPreviewHead"><span><i></i> SYSTEM GOTOWY</span><b>HOME</b></div><div class="publicPreviewFrame"><span>NA ŻYWO</span><strong>Obraz dostępny<br>po zalogowaniu</strong><i></i></div><div class="publicPreviewRows"><span>✓ Szyfrowane połączenie</span><span>✓ Nagrania lokalne</span><span>✓ Kontrola dostępu PIN</span></div></aside></section>
+    <section id="funkcje" class="publicFeatures"><article><b>▣</b><h2>Program Windows</h2><p>Komputer z kamerą jest jedynym nadajnikiem obrazu, mikrofonu i nagrań.</p></article><article><b>◉</b><h2>Telefon i przeglądarka</h2><p>Oglądaj obraz, sprawdzaj DVR i korzystaj z dozwolonych ustawień właściciela.</p></article><article><b>⌁</b><h2>Twoje nagrania</h2><p>Wybierasz folder lokalny oraz opcjonalną kopię zapasową po własnym zalogowaniu do Drive.</p></article></section>
+    <section id="bezpieczenstwo" class="publicSecurity"><div><p class="publicEyebrow">BEZPIECZEŃSTWO I PRYWATNOŚĆ</p><h2>Najpierw dostęp, potem obraz.</h2></div><p>Panel nie pokazuje obrazu kamery na stronie głównej. Dostęp do części właścicielskiej jest chroniony PIN-em, a odbiorca otrzymuje tylko oddzielny link podglądu.</p><div><a href="polityka-prywatnosci.html">Polityka prywatności</a><a href="regulamin.html">Regulamin</a><a href="rodo.html">Informacja RODO</a></div></section>
+  </main>
+  <footer class="publicFooter"><span>© HOME SECURITY</span><span>Monitoring prywatny · wersja domowa</span></footer>
+</section>
+<script>
+  (() => {
+    const p = new URLSearchParams(location.search);
+    const isNative = p.get("native") === "windows";
+    const isReceiver = /^cam-[a-f0-9]{32}$/.test(p.get("odbiorca") || "");
+    const home = document.getElementById("publicHome");
+    let enter;
+    window.__waitForPanel = new Promise(resolve => { enter = resolve; });
+    const openPanel = () => { home.hidden = true; enter(); };
+    document.getElementById("publicLogin")?.addEventListener("click", openPanel);
+    document.getElementById("publicLoginTop")?.addEventListener("click", openPanel);
+    // Nadajnik Windows oraz bezpośredni, tylko-odczytowy link odbiorcy nie
+    // przechodzą przez marketingową stronę główną.
+    if (isNative || isReceiver) openPanel();
+  })();
+</script>
 <header class="topbar">
   <button id="quickMenuBtn" class="quickMenuBtn" type="button" aria-label="Otwórz menu kamery" aria-controls="quickMenu" aria-expanded="false"><i></i><i></i><i></i></button>
   <div class="brand"><span class="dot"></span><span class="brandText">Kamera <b>na żywo</b></span></div>
@@ -383,7 +410,7 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=148"></script>
+<script type="module" src="app.js?v=149"></script>
 <script type="module" src="desktop.js?v=19"></script>
 <script type="module" src="mobile.js?v=7"></script>
 </body>
