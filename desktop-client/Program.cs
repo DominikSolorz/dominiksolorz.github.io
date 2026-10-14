@@ -10,12 +10,12 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.3.2";
-    private const string WebPanelBuild = "156";
+    private const string DesktopVersion = "1.3.3";
+    private const string WebPanelBuild = "159";
     // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
     // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
     // Desktop, który pozwala udostępnić kamerę i mikrofon.
-    private const string PanelUrl = "https://dominiksolorz.github.io/kamera/?desktop=1&native=windows&host=computer&ui_build=156";
+    private const string PanelUrl = "https://dominiksolorz.github.io/kamera/?desktop=1&native=windows&host=computer&ui_build=159";
     private const string PublicHost = "dominiksolorz.github.io";
     private const string UpdateManifestUrl = "https://dominiksolorz.github.io/kamera/desktop-update.json";
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(4) };
@@ -121,7 +121,11 @@ internal static class Program
     private sealed class HomeSecurityWindow : Form
     {
         private readonly WebView2 webView = new() { Dock = DockStyle.Fill };
+        private readonly Panel updateBar = new() { Dock = DockStyle.Top, Height = 48, Visible = false, BackColor = Color.FromArgb(43, 14, 19) };
+        private readonly Button updateButton = new() { AutoSize = true, Anchor = AnchorStyles.Top | AnchorStyles.Right, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(190, 27, 50), ForeColor = Color.White, Font = new Font("Segoe UI", 10F, FontStyle.Bold), Text = "↻ Aktualizacja", UseVisualStyleBackColor = false };
         private bool checkingUpdate;
+        private bool downloadingUpdate;
+        private DesktopUpdateManifest? offeredUpdate;
 
         public HomeSecurityWindow()
         {
@@ -134,7 +138,12 @@ internal static class Program
             Icon = SystemIcons.Shield;
             FormBorderStyle = FormBorderStyle.Sizable;
             KeyPreview = true;
+            updateBar.Controls.Add(updateButton);
+            updateBar.Resize += (_, _) => updateButton.Location = new Point(Math.Max(12, updateBar.ClientSize.Width - updateButton.Width - 16), 8);
+            updateButton.FlatAppearance.BorderColor = Color.FromArgb(255, 112, 128);
+            updateButton.Click += async (_, _) => await DownloadAndPrepareOfferedUpdateAsync();
             Controls.Add(webView);
+            Controls.Add(updateBar);
             Shown += async (_, _) => await StartPanelAsync();
             KeyDown += (_, e) => { if (e.KeyCode == Keys.F11) ToggleFullScreen(); };
             WriteDiagnostic("desktop-start", new { version = DesktopVersion, process = Environment.ProcessId });
@@ -233,6 +242,32 @@ internal static class Program
                 WriteDiagnostic("update-manifest", new { installed = DesktopVersion, available = manifest?.Version });
                 if (manifest is null || !Version.TryParse(manifest.Version, out var available) || available <= Version.Parse(DesktopVersion)) return;
                 if (string.IsNullOrWhiteSpace(manifest.PackageUrl) || string.IsNullOrWhiteSpace(manifest.Sha256)) return;
+                offeredUpdate = manifest;
+                BeginInvoke(() => ShowUpdateOffer(manifest.Version));
+                WriteDiagnostic("update-offered", new { manifest.Version });
+            }
+            catch (Exception ex) { WriteDiagnostic("update-check-failed", new { error = ex.Message }); }
+            finally { checkingUpdate = false; }
+        }
+
+        // Samo sprawdzenie wersji nie pobiera plików i nie restartuje programu.
+        // Aktualizacja następuje dopiero po wyraźnym kliknięciu użytkownika.
+        private void ShowUpdateOffer(string version)
+        {
+            updateButton.Text = $"↻ Aktualizuj do wersji {version}";
+            updateButton.Location = new Point(Math.Max(12, updateBar.ClientSize.Width - updateButton.Width - 16), 8);
+            updateBar.Visible = true;
+        }
+
+        private async Task DownloadAndPrepareOfferedUpdateAsync()
+        {
+            if (downloadingUpdate || offeredUpdate is null) return;
+            downloadingUpdate = true;
+            var manifest = offeredUpdate;
+            updateButton.Enabled = false;
+            updateButton.Text = "Pobieranie aktualizacji…";
+            try
+            {
                 Directory.CreateDirectory(UpdateRoot);
                 var packagePath = Path.Combine(UpdateRoot, $"HomeSecurityDesktop-{manifest.Version}.zip");
                 var temporaryPath = packagePath + ".download";
@@ -247,15 +282,20 @@ internal static class Program
                 {
                     File.Delete(temporaryPath);
                     WriteDiagnostic("update-hash-mismatch", new { manifest.Version, downloadedHash });
-                    return;
+                    throw new InvalidDataException("Pobrany pakiet ma nieprawidłową sumę kontrolną.");
                 }
                 File.Move(temporaryPath, packagePath, true);
                 File.WriteAllText(PendingUpdatePath, JsonSerializer.Serialize(new PendingUpdate(packagePath)));
                 WriteDiagnostic("update-ready", new { manifest.Version, packagePath });
-                BeginInvoke(() => RestartIntoPreparedUpdate(manifest.Version));
+                RestartIntoPreparedUpdate(manifest.Version);
             }
-            catch (Exception ex) { WriteDiagnostic("update-check-failed", new { error = ex.Message }); }
-            finally { checkingUpdate = false; }
+            catch (Exception ex)
+            {
+                WriteDiagnostic("update-download-failed", new { manifest.Version, error = ex.Message });
+                updateButton.Enabled = true;
+                updateButton.Text = $"↻ Spróbuj ponownie: {manifest.Version}";
+            }
+            finally { downloadingUpdate = false; }
         }
 
         private void RestartIntoPreparedUpdate(string version)

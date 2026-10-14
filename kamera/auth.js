@@ -105,6 +105,9 @@ async function continueWithSession() {
 
 window.__ensureAccountReady = async () => { await continueWithSession(); return currentAccountUser(); };
 window.__showAccount = async () => { $("authDialog").hidden = false; message(""); await continueWithSession(); };
+// Osobny adres ?auth=register otwiera formularz niezależnie od skryptów strony głównej.
+// Pozwala to wkleić link bezpośrednio w przeglądarce lub aplikacji Windows.
+window.__showRegistration = async () => { $("authDialog").hidden = false; message(""); section("register"); };
 
 window.addEventListener("hs-auth-request", () => window.__showAccount());
 
