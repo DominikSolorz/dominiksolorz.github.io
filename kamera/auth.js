@@ -10,7 +10,9 @@ const $ = id => document.getElementById(id);
 const clean = value => String(value || "").trim();
 const message = (text, bad = false) => { const el = $("authMessage"); el.textContent = text || ""; el.classList.toggle("bad", !!bad); };
 const section = name => document.querySelectorAll("[data-auth-step]").forEach(el => { el.hidden = el.dataset.authStep !== name; });
-const callbackUrl = () => `${location.origin}${location.pathname}?auth=confirmed`;
+// Zostawiamy adres bez parametrów. Jest zgodny z dozwolonym adresem strony
+// w Supabase, a po potwierdzeniu zdarzenie SIGNED_IN otworzy konfigurację.
+const callbackUrl = () => `${location.origin}${location.pathname}`;
 const postCode = value => /^\d{2}-\d{3}$/.test(value);
 let pendingConfirmationEmail = "";
 
@@ -134,12 +136,30 @@ $("resendConfirmation")?.addEventListener("click", async () => {
     message("Nowy link został wysłany. Sprawdź skrzynkę oraz folder Spam.");
   } catch (error) { message(explainAuthError(error), true); }
 });
+$("verificationCodeForm")?.addEventListener("submit", async event => {
+  event.preventDefault();
+  const token = clean($("verificationCode")?.value);
+  if (!/^\d{6}$/.test(token)) return message("Wpisz sześciocyfrowy kod z wiadomości e-mail.", true);
+  if (!pendingConfirmationEmail) return message("Wróć do rejestracji i wpisz adres e-mail, aby potwierdzić kod.", true);
+  message("Potwierdzam kod…");
+  try {
+    const { error } = await accountClient.auth.verifyOtp({ email: pendingConfirmationEmail, token, type: "signup" });
+    if (error) return message(explainAuthError(error), true);
+    await continueWithSession();
+  } catch (error) { message(explainAuthError(error), true); }
+});
 $("profileForm")?.addEventListener("submit", async event => { event.preventDefault(); try { await saveProfile(event.currentTarget); section("device"); } catch (error) { message(error.message, true); } });
 document.querySelectorAll("[data-device]").forEach(button => button.addEventListener("click", () => { document.querySelectorAll("[data-device]").forEach(item => item.classList.toggle("selected", item === button)); $("deviceValue").value = button.dataset.device; $("platformChoices").hidden = button.dataset.device !== "phone"; }));
 document.querySelectorAll("[data-platform]").forEach(button => button.addEventListener("click", () => { document.querySelectorAll("[data-platform]").forEach(item => item.classList.toggle("selected", item === button)); $("platformValue").value = button.dataset.platform; }));
 $("deviceForm")?.addEventListener("submit", async event => { event.preventDefault(); const device = $("deviceValue").value, platform = $("platformValue").value; if (!device || (device === "phone" && !platform)) return message("Wybierz urządzenie, a przy telefonie także Android albo iPhone.", true); try { await saveDevice(device, platform); section("pin"); } catch (error) { message(error.message, true); } });
 $("pinSetupForm")?.addEventListener("submit", async event => { event.preventDefault(); const pin = $("setupPin").value, repeat = $("setupPinRepeat").value; if (!/^\d{4}$|^\d{6}$/.test(pin)) return message("PIN musi mieć dokładnie 4 albo 6 cyfr.", true); if (pin !== repeat) return message("Numery PIN nie są identyczne.", true); try { await savePin(pin); message("PIN zapisany. Otwieram bezpieczny panel…"); setTimeout(enterPanel, 280); } catch (error) { message(error.message, true); } });
 
-accountClient.auth.onAuthStateChange((event) => { if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && new URLSearchParams(location.search).get("auth") === "confirmed") { $("authDialog").hidden = false; setTimeout(() => continueWithSession().catch(error => message(error.message, true)), 0); } });
+accountClient.auth.onAuthStateChange((event, session) => {
+  const returnedFromEmail = event === "SIGNED_IN" && (!!session || location.hash.includes("access_token"));
+  if (returnedFromEmail || (event === "INITIAL_SESSION" && new URLSearchParams(location.search).get("auth") === "confirmed")) {
+    $("authDialog").hidden = false;
+    setTimeout(() => continueWithSession().catch(error => message(error.message, true)), 0);
+  }
+});
 // Sygnalizuje stronie głównej, że kliknięcie „Zaloguj się” może już otworzyć okno.
 window.__authReadyResolve?.();

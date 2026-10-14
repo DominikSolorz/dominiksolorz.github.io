@@ -10,12 +10,12 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.3.1";
-    private const string WebPanelBuild = "155";
+    private const string DesktopVersion = "1.3.2";
+    private const string WebPanelBuild = "156";
     // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
     // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
     // Desktop, który pozwala udostępnić kamerę i mikrofon.
-    private const string PanelUrl = "https://dominiksolorz.github.io/kamera/?desktop=1&native=windows&host=computer&ui_build=155";
+    private const string PanelUrl = "https://dominiksolorz.github.io/kamera/?desktop=1&native=windows&host=computer&ui_build=156";
     private const string PublicHost = "dominiksolorz.github.io";
     private const string UpdateManifestUrl = "https://dominiksolorz.github.io/kamera/desktop-update.json";
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(4) };
@@ -230,6 +230,7 @@ internal static class Program
             try
             {
                 var manifest = await Http.GetFromJsonAsync<DesktopUpdateManifest>($"{UpdateManifestUrl}?t={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
+                WriteDiagnostic("update-manifest", new { installed = DesktopVersion, available = manifest?.Version });
                 if (manifest is null || !Version.TryParse(manifest.Version, out var available) || available <= Version.Parse(DesktopVersion)) return;
                 if (string.IsNullOrWhiteSpace(manifest.PackageUrl) || string.IsNullOrWhiteSpace(manifest.Sha256)) return;
                 Directory.CreateDirectory(UpdateRoot);
@@ -245,14 +246,29 @@ internal static class Program
                 if (!string.Equals(downloadedHash, manifest.Sha256, StringComparison.OrdinalIgnoreCase))
                 {
                     File.Delete(temporaryPath);
+                    WriteDiagnostic("update-hash-mismatch", new { manifest.Version, downloadedHash });
                     return;
                 }
                 File.Move(temporaryPath, packagePath, true);
                 File.WriteAllText(PendingUpdatePath, JsonSerializer.Serialize(new PendingUpdate(packagePath)));
-                BeginInvoke(() => Text = $"HOME SECURITY Desktop · aktualizacja {manifest.Version} gotowa przy następnym uruchomieniu");
+                WriteDiagnostic("update-ready", new { manifest.Version, packagePath });
+                BeginInvoke(() => RestartIntoPreparedUpdate(manifest.Version));
             }
-            catch { /* Brak sieci nie blokuje kamery ani bieżącej pracy programu. */ }
+            catch (Exception ex) { WriteDiagnostic("update-check-failed", new { error = ex.Message }); }
             finally { checkingUpdate = false; }
+        }
+
+        private void RestartIntoPreparedUpdate(string version)
+        {
+            Text = $"HOME SECURITY Desktop · instaluję aktualizację {version}…";
+            var timer = new System.Windows.Forms.Timer { Interval = 2500 };
+            timer.Tick += (_, _) =>
+            {
+                timer.Stop();
+                timer.Dispose();
+                Application.Restart();
+            };
+            timer.Start();
         }
     }
 
