@@ -12,7 +12,8 @@ if (isMobileOwnerApp) {
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
-    <div><h1>Dom</h1><p><i></i><span id="mobileOnline">System sprawdzam…</span></p></div>`;
+    <div><h1>Dom</h1><p><i></i><span id="mobileOnline">System sprawdzam…</span></p></div>
+    <button id="deviceLayoutBtn" type="button" aria-label="Zmień układ urządzenia"><span>▣</span><b>Telefon</b></button>`;
   app?.insertBefore(mobileHeader, app.firstChild);
 
   const nav = document.createElement("nav");
@@ -24,6 +25,32 @@ if (isMobileOwnerApp) {
     <button type="button" data-mobile-view="recordings"><b>▷</b><span>Nagrania</span></button>
     <button type="button" data-mobile-view="settings"><b>⚙</b><span>Ustawienia</span></button>`;
   document.body.append(nav);
+
+  const deviceSheet = document.createElement("section");
+  deviceSheet.className = "deviceLayoutSheet";
+  deviceSheet.hidden = true;
+  deviceSheet.innerHTML = `
+    <div class="deviceLayoutCard" role="dialog" aria-modal="true" aria-labelledby="deviceLayoutTitle">
+      <button class="deviceLayoutClose" type="button" aria-label="Zamknij">×</button>
+      <p>UKŁAD APLIKACJI</p><h2 id="deviceLayoutTitle">Na czym oglądasz?</h2>
+      <span>Zmienia się tylko wielkość i układ ekranu. Nadajnik kamery pozostaje w programie Windows.</span>
+      <div>
+        <button type="button" data-ui-mode="phone"><b>▯</b><strong>Telefon</strong><small>duży obraz, dolna nawigacja, obsługa dotykiem</small></button>
+        <button type="button" data-ui-mode="computer"><b>▣</b><strong>Komputer</strong><small>panel boczny, pełny pulpit i więcej informacji</small></button>
+      </div>
+    </div>`;
+  document.body.append(deviceSheet);
+  const setDeviceSheet = open => { deviceSheet.hidden = !open; if (open) deviceSheet.querySelector("[data-ui-mode='phone']")?.focus(); };
+  byId("deviceLayoutBtn")?.addEventListener("click", () => setDeviceSheet(true));
+  deviceSheet.addEventListener("click", event => {
+    if (event.target === deviceSheet || event.target.closest(".deviceLayoutClose")) return setDeviceSheet(false);
+    const button = event.target.closest("[data-ui-mode]");
+    if (!button) return;
+    try { localStorage.setItem("hs-ui-mode", button.dataset.uiMode); } catch (_) { /* tryb prywatny */ }
+    const url = new URL(location.href);
+    url.searchParams.set("ui", button.dataset.uiMode);
+    location.assign(url.toString());
+  });
 
   // Jedna brama do ustawień. Kategorie pokazują wyłącznie elementy, których dotyczą;
   // nie są kopią ekranów rozmieszczoną pod podglądem.
@@ -64,6 +91,7 @@ if (isMobileOwnerApp) {
       button.classList.toggle("active", active);
       button.setAttribute("aria-current", active ? "page" : "false");
     });
+    try { sessionStorage.setItem("hs-mobile-view", view); } catch (_) { /* tryb prywatny */ }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -85,6 +113,8 @@ if (isMobileOwnerApp) {
   };
   new MutationObserver(updateStatus).observe(topStatus || document.body, { childList: true, subtree: true, characterData: true });
   updateStatus();
-  // app.js ustawia stan odbiorcy asynchronicznie; widok Dom jest wymuszony po starcie.
-  setTimeout(() => setView("home"), 350);
+  // Powrót z archiwum lub ustawień nie może wyrzucać użytkownika na początek.
+  let initialView = "home";
+  try { initialView = sessionStorage.getItem("hs-mobile-view") || "home"; } catch (_) { /* tryb prywatny */ }
+  setTimeout(() => setView(views[initialView] ? initialView : "home"), 350);
 }

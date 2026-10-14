@@ -13,6 +13,14 @@
 <script>
   const routeParams = new URLSearchParams(location.search);
   const desktopParam = routeParams.get("desktop");
+  // Użytkownik może świadomie wybrać układ, niezależnie od tego, z jakiego
+  // urządzenia korzysta. Wybór jest tylko ustawieniem wyglądu i nie zmienia
+  // tego, który komputer jest nadajnikiem kamery.
+  let savedUiMode = "";
+  try { savedUiMode = localStorage.getItem("hs-ui-mode") || ""; } catch (_) { /* tryb prywatny */ }
+  const requestedUiMode = routeParams.get("ui");
+  const selectedUiMode = requestedUiMode === "phone" || requestedUiMode === "computer"
+    ? requestedUiMode : savedUiMode;
   // Nadajnik ma zawsze pozostać lekką, osobną aplikacją Chrome.
   const isTransmitter = location.hash === "#nadaj";
   const requestedView = routeParams.get("view");
@@ -26,12 +34,12 @@
   // Zwykły Chrome na telefonie/tablecie dostaje pełny układ Mobile bez
   // dodatkowego parametru. "view=desktop" pozostaje świadomym wyjątkiem
   // do testów; stary "desktop=1" nie rozwija już panelu na telefonie.
-  const isMobileApp = requestedView !== "desktop" && (mobileRequested || mobileBrowser || compactScreen);
+  const isMobileApp = selectedUiMode === "phone" || (selectedUiMode !== "computer" && requestedView !== "desktop" && (mobileRequested || mobileBrowser || compactScreen));
   if (isMobileApp) {
     document.documentElement.classList.add("mobileOwnerMode");
     document.documentElement.dataset.clientMode = "mobile";
   }
-  if (!isTransmitter && !isMobileApp && (requestedView === "desktop" || desktopParam === "1" || matchMedia("(min-width: 1024px)").matches)) {
+  if (!isTransmitter && !isMobileApp && (selectedUiMode === "computer" || requestedView === "desktop" || desktopParam === "1" || matchMedia("(min-width: 1024px)").matches)) {
     document.documentElement.classList.add("desktopMode");
     document.documentElement.dataset.clientMode = "desktop";
   }
@@ -41,7 +49,7 @@
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=155">
+<link rel="stylesheet" href="style.css?v=156">
 </head>
 <body>
 <header class="topbar">
@@ -375,8 +383,8 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="app.js?v=146"></script>
+<script type="module" src="app.js?v=147"></script>
 <script type="module" src="desktop.js?v=19"></script>
-<script type="module" src="mobile.js?v=6"></script>
+<script type="module" src="mobile.js?v=7"></script>
 </body>
 </html>

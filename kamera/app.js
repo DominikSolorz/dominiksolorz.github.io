@@ -24,7 +24,9 @@ const RECEIVER_ONLY = /^cam-[a-f0-9]{32}$/.test(receiverChannel);
 // Ten adres jest dla właściciela na telefonie/tablecie: PIN + zdalne sterowanie,
 // ale nigdy nie przejmuje kamery komputera. Obsługujemy także polską nazwę parametru.
 const ownerPanel = new URLSearchParams(location.search).get("panel");
-const OWNER_PANEL = ownerPanel === "owner" || ownerPanel === "wlasciciel";
+// Zwykłe wejście na adres aplikacji jest panelem właściciela po PIN-ie.
+// Wyłącznie link z parametrem odbiorca pozostaje celowo tylko do podglądu.
+const OWNER_PANEL = !RECEIVER_ONLY && (ownerPanel === "owner" || ownerPanel === "wlasciciel" || !ownerPanel);
 const MOBILE_OWNER_APP = document.documentElement.classList.contains("mobileOwnerMode");
 // Jedynym gospodarzem sprzętu jest zainstalowany HOME SECURITY Desktop.
 // Każda strona otwierana przez telefon lub zwykłą przeglądarkę jest odbiornikiem
@@ -34,11 +36,14 @@ const hostChoice = new URLSearchParams(location.search).get("host");
 // Ten znacznik jest wstrzykiwany przed załadowaniem strony wyłącznie przez
 // WebView2 w HOME SECURITY Desktop. Sam parametr URL nie wystarcza, więc
 // Chrome nie może zostać nadajnikiem nawet po ręcznym wpisaniu host=computer.
-const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true;
+// WebView2 jest drugim, niezależnym dowodem, że strona działa w EXE Windows.
+// Dzięki temu brak pojedynczego znacznika wstrzykniętego przy starcie nie
+// odbiera programowi uprawnień do jego własnej kamery.
+const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview;
 const NATIVE_HOST = NATIVE_DESKTOP && hostChoice === "computer";
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "138"; // musi się zgadzać z version.json
+const VERSION = "139"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
