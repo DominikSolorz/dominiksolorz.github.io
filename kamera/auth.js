@@ -149,7 +149,7 @@ $("resendConfirmation")?.addEventListener("click", async () => {
 $("verificationCodeForm")?.addEventListener("submit", async event => {
   event.preventDefault();
   const token = clean($("verificationCode")?.value);
-  if (!/^\d{6}$/.test(token)) return message("Wpisz sześciocyfrowy kod z wiadomości e-mail.", true);
+  if (!/^\d{6,8}$/.test(token)) return message("Wpisz pełny kod z wiadomości e-mail (6–8 cyfr).", true);
   if (!pendingConfirmationEmail) return message("Wróć do rejestracji i wpisz adres e-mail, aby potwierdzić kod.", true);
   message("Potwierdzam kod…");
   try {
