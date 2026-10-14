@@ -104,6 +104,14 @@ if (desktopRequested) {
   const dvrCard = $("dvrCard");
   if (dvrCard) timelineDock.append(dvrCard);
   const controlDock = overview.querySelector(".desktopControlDock");
+  const deviceManager = document.createElement("section");
+  deviceManager.className = "desktopDeviceManager";
+  deviceManager.setAttribute("aria-label", "Kamera i mikrofon tego komputera");
+  deviceManager.innerHTML = '<h2>Kamera i mikrofon</h2><div class="deviceFields"></div><div class="row"><button id="refreshCameraDevices" class="btn primary" type="button">＋ Dodaj / wykryj kamerę</button><button id="removeCameraDevice" class="btn ghost" type="button">Odłącz kamerę</button></div><p class="muted small">Podłącz kamerę USB, wykryj urządzenia i wybierz kamerę z listy, aby ją zastąpić. Zmiana urządzenia jest dostępna w programie Windows.</p>';
+  const cameraFields = $("cameraSelect")?.closest(".grid");
+  if (cameraFields) deviceManager.querySelector(".deviceFields").append(cameraFields);
+  if ($("retryCameraBtn")) deviceManager.querySelector(".row").append($("retryCameraBtn"));
+  controlDock?.append(deviceManager);
   const lockedControls = overview.querySelector(".desktopControlLocked");
   // To są oryginalne przyciski aplikacji — zmieniamy wyłącznie ich miejsce
   // na pulpicie. Start, Stop i Restart pozostają połączone z tą samą logiką.

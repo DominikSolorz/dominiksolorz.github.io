@@ -46,7 +46,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "162"; // musi się zgadzać z version.json
+const VERSION = "163"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1193,8 +1193,9 @@ const sender = (() => {
       return prepareCameraStream(s);
     } catch (e) {
       // Brak mikrofonu (odłączony / wyłączony) = przeglądarka odrzuca też obraz. Próbujemy sam obraz.
-      if (e?.name === "NotFoundError" && prefs.audio) {
+      if (["NotFoundError", "NotAllowedError", "NotReadableError"].includes(e?.name) && prefs.audio) {
         const s = await navigator.mediaDevices.getUserMedia({ video: mediaConstraints(deviceId).video, audio: false });
+        toastMsg("Kamera działa bez dźwięku. Mikrofon jest niedostępny lub nie ma zgody — sprawdź ustawienia Windows.");
         return prepareCameraStream(s);
       }
       // Starsze/tańsze kamery czasem odrzucają 1080p/30 fps mimo że działają bez dodatkowych wymagań.
@@ -1270,6 +1271,7 @@ const sender = (() => {
     } catch (e) {
       camWaitSince = 0;
       lastCameraError = `${cameraErrorMessage(e)} [${e?.name || "błąd"}]`;
+      showPlaceholder(lastCameraError);
       $("retryCameraBtn").hidden = false;
       setStatus(`${lastCameraError} Automatyczna próba zostanie ponowiona.`);
       return false;
@@ -1532,7 +1534,7 @@ const sender = (() => {
     }).catch(() => {});
   }
 
-  return { start, stop, restart, forceReload, takeover, setMedia, setLight, applyMedia, retryCamera, switchCamera, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; }, get hasCamera() { return !!stream?.getVideoTracks().some(track => track.readyState === "live"); } };
+  return { start, stop, restart, forceReload, takeover, setMedia, setLight, applyMedia, retryCamera, switchCamera, listCameras, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; }, get hasCamera() { return !!stream?.getVideoTracks().some(track => track.readyState === "live"); } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -2004,7 +2006,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "68";
+  const SERVICE_WORKER_BUILD = "69";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2126,7 +2128,24 @@ $("recordPlan").addEventListener("change", e => {
   sender.applyRecordingPlan();
   toastMsg(`Harmonogram: ${e.target.options[e.target.selectedIndex].text}.`);
 });
-$("cameraSelect").addEventListener("change", e => { prefs.cameraId = e.target.value; savePrefs(); sender.switchCamera(); });
+$("cameraSelect").addEventListener("change", async e => {
+  if (!CAN_MANAGE_CAMERA) return;
+  prefs.cameraId = e.target.value; savePrefs();
+  if (!sender.live) await sender.start();
+  else await sender.switchCamera();
+});
+document.addEventListener("click", async event => {
+  if (!event.target.closest("#refreshCameraDevices")) return;
+  if (!CAN_MANAGE_CAMERA) return toastMsg("Urządzenia dodajesz w programie Windows na komputerze z kamerą.");
+  try { await sender.listCameras(); if (!sender.live) await sender.start(); await sender.setMode("record"); await sender.retryCamera(); }
+  catch (error) { showPlaceholder(`Nie można odczytać urządzeń: ${errText(error)}`); }
+});
+document.addEventListener("click", async event => {
+  if (!event.target.closest("#removeCameraDevice")) return;
+  if (!CAN_MANAGE_CAMERA || !confirm("Odłączyć kamerę od transmisji i zatrzymać zapis? Możesz podłączyć ją ponownie przyciskiem Dodaj / wykryj.")) return;
+  await sender.setMode("off"); sender.stop(); prefs.cameraId = ""; savePrefs();
+  $("cameraSelect").value = ""; showPlaceholder("Kamera odłączona od transmisji. Kliknij Dodaj / wykryj albo Start.");
+});
 $("detectToggle").checked = prefs.detect;
 $("detectToggle").addEventListener("change", e => { prefs.detect = e.target.checked; savePrefs(); sender.switchCamera(); });
 $("detectSound").checked = !!prefs.detectSound;
