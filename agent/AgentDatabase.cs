@@ -4,7 +4,7 @@ using Microsoft.Data.Sqlite;
 
 namespace HomeSecurity.Agent;
 
-public sealed class AgentDatabase
+public sealed partial class AgentDatabase
 {
     private readonly string connectionString;
     public AgentDatabase(string directory)
@@ -13,26 +13,20 @@ public sealed class AgentDatabase
         connectionString = new SqliteConnectionStringBuilder {
             DataSource = Path.Combine(directory, "agent.db"), Mode = SqliteOpenMode.ReadWriteCreate,
             Pooling = false, DefaultTimeout = 5 }.ToString();
-        using var db = Open(); using var command = db.CreateCommand();
-        command.CommandText = """
-            PRAGMA journal_mode=WAL;
-            CREATE TABLE IF NOT EXISTS schema_version(version INTEGER NOT NULL);
-            INSERT INTO schema_version SELECT 1 WHERE NOT EXISTS(SELECT 1 FROM schema_version);
-            CREATE TABLE IF NOT EXISTS component_state(id TEXT PRIMARY KEY, json TEXT NOT NULL, updated_at TEXT NOT NULL);
-            CREATE TABLE IF NOT EXISTS commands(id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, status TEXT NOT NULL,
-                result_json TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
-            CREATE TABLE IF NOT EXISTS upload_jobs(id TEXT PRIMARY KEY, segment_id TEXT NOT NULL,
-                integration_id TEXT NOT NULL, status TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, next_attempt_at TEXT);
-            CREATE TABLE IF NOT EXISTS segments(id TEXT PRIMARY KEY, camera_id TEXT NOT NULL, path TEXT NOT NULL,
-                start_utc TEXT NOT NULL, end_utc TEXT, status TEXT NOT NULL, size_bytes INTEGER);
-            """;
-        command.ExecuteNonQuery();
+        using var db = Open();
+        Migrate(db);
         using var recovery = db.CreateCommand();
         recovery.CommandText = "UPDATE commands SET status='unknown', updated_at=$now WHERE status='executing'";
         recovery.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O")); recovery.ExecuteNonQuery();
         SetState("agent", new { status = "ready", protocol = 1, mediaEngine = "not_implemented" });
     }
-    private SqliteConnection Open() { var db = new SqliteConnection(connectionString); db.Open(); return db; }
+    internal SqliteConnection Open()
+    {
+        var db = new SqliteConnection(connectionString); db.Open();
+        using var settings = db.CreateCommand();
+        settings.CommandText = "PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL;";
+        settings.ExecuteNonQuery(); return db;
+    }
     public void SetState(string id, object value)
     {
         using var db = Open(); using var command = db.CreateCommand();
@@ -55,13 +49,16 @@ public sealed class AgentDatabase
         command.Parameters.AddWithValue("$id", id.ToString()); using var reader = command.ExecuteReader();
         if (!reader.Read()) return null;
         var status = reader.GetString(1);
-        var reply = status == "unknown" || reader.IsDBNull(2) ? new AgentReply(id, status, "RECOVERY_OR_PENDING")
+        var reply = status == "retained" ? new AgentReply(id, "unknown", "RESULT_EXPIRED")
+            : status == "unknown" || reader.IsDBNull(2) ? new AgentReply(id, status, "RECOVERY_OR_PENDING")
             : JsonSerializer.Deserialize<AgentReply>(reader.GetString(2), AgentProtocol.Json)!;
         return (reader.GetString(0), reply);
     }
     public void Begin(AgentCommand request, string fingerprint)
     {
         using var db = Open(); using var tx = db.BeginTransaction(); using var command = db.CreateCommand(); command.Transaction = tx;
+        command.CommandText = "SELECT COUNT(*) FROM commands";
+        if (Convert.ToInt64(command.ExecuteScalar()) >= 100000) throw new JournalCapacityException();
         command.CommandText = "INSERT INTO commands VALUES($id,$fingerprint,'executing',NULL,$now,$now)";
         command.Parameters.AddWithValue("$id", request.Id.ToString()); command.Parameters.AddWithValue("$fingerprint", fingerprint);
         command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O")); command.ExecuteNonQuery(); tx.Commit();

@@ -19,7 +19,8 @@ public sealed class AgentDispatcher(AgentDatabase database)
             if (previous is { } saved) return saved.Fingerprint == fingerprint ? saved.Reply : new(request.Id, "rejected", "ID_CONFLICT");
             if (request.ExpiresAt < DateTimeOffset.UtcNow || request.ExpiresAt > DateTimeOffset.UtcNow.AddMinutes(1))
                 return new(request.Id, "rejected", "EXPIRED_OR_INVALID_DEADLINE");
-            database.Begin(request, fingerprint);
+            try { database.Begin(request, fingerprint); }
+            catch (JournalCapacityException) { return new(request.Id, "rejected", "JOURNAL_CAPACITY_REACHED"); }
             AgentReply result;
             try
             {
