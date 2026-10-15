@@ -899,3 +899,52 @@ html,body{background:radial-gradient(1000px 650px at 95% 0,rgba(154,22,44,.17),t
   #stage #audioHud #listenVolume{width:76px!important;min-width:0!important;max-width:22vw!important;height:32px!important;margin:0!important;padding:0!important}
   #stage #audioHud #listenVolumeLabel{min-width:28px!important;font-size:10px!important}
 }
+
+/* Telefon: natywny pionowy układ, a nie pomniejszony pulpit. */
+html.mobileOwnerMode{width:100%;min-height:100%;background:#09090c;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body.mobileOwnerMode{margin:0;min-width:0;width:100%;min-height:100dvh;background:#09090c!important;overflow-x:hidden;color:#f5f1f3}
+.mobileOwnerMode #app{box-sizing:border-box;width:100%;max-width:none!important;min-height:100dvh;margin:0!important;padding:0 max(12px,env(safe-area-inset-right)) calc(76px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))!important}
+.mobileOwnerMode .mobileAppHeader{box-sizing:border-box;display:flex;gap:10px;width:100%;max-width:none;margin:0;padding:calc(12px + env(safe-area-inset-top)) 0 14px;background:#09090c}
+.mobileOwnerMode .mobileBrandLogo{width:36px;height:42px;object-fit:contain;border-radius:7px;flex-shrink:0}
+.mobileOwnerMode .mobileAppHeader>div{flex:1;min-width:0}
+.mobileOwnerMode .mobileAppHeader h1{font-size:22px;line-height:1.2;letter-spacing:-.03em}
+.mobileOwnerMode .mobileAppHeader p{font-size:12px;line-height:1.4;margin:4px 0 0;color:#b9afb5}
+.mobileOwnerMode .mobileAppHeader p i{width:7px;height:7px;background:#bd8b44;box-shadow:none;flex-shrink:0}
+.mobileOwnerMode .mobileAppHeader.online p i{background:#46c88d}
+.mobileOwnerMode #deviceLayoutBtn{min-width:48px;background:#21151c;border-color:#51303c;color:#e1bec9}
+.mobileOwnerMode .layout,.mobileOwnerMode .mainCol,.mobileOwnerMode .rightCol{width:100%;min-width:0;max-width:none;gap:12px!important;margin:0;padding:0}
+.mobileOwnerMode .mainCol>*{box-sizing:border-box;max-width:100%;min-width:0}
+.mobileOwnerMode #stage:not(:fullscreen){width:100%;height:auto;aspect-ratio:4/3;min-height:0!important;max-height:65dvh;border-radius:14px;border-color:#473039;background:#000}
+.mobileOwnerMode #stage video{width:100%;height:100%;object-fit:contain!important}
+.mobileOwnerMode #stage .placeholder{padding:64px 16px 22px;font-size:14px;line-height:1.5}
+.mobileOwnerMode .monitorClock{font-size:9px!important;max-width:58%;white-space:nowrap;overflow:hidden}
+.mobileOwnerMode .badge{font-size:9px;padding:4px 7px}
+.mobileOwnerMode #watchPanel{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mobileOwnerMode #watchPanel[hidden],.mobileOwnerMode #watchPanel.mobileHidden{display:none!important}
+.mobileOwnerMode #watchPanel .tool{display:flex;align-items:center;justify-content:center;min-height:44px;padding:7px 4px;font-size:11px!important;line-height:1.3;border-radius:10px;background:#20151c;border-color:#473039;color:#eee3e8}
+.mobileOwnerMode #watchPanel .tool::first-letter{font-size:inherit}
+.mobileOwnerMode[data-mobile-view="home"] #dvrCard,.mobileOwnerMode[data-mobile-view="home"] #viewEventsCard{display:none!important}
+.mobileOwnerMode .mobileBottomNav{box-sizing:border-box;left:0;right:0;bottom:0;width:100%;max-width:none;transform:none;border-radius:0;padding:6px max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));background:#141015;border-color:#3d2934;backdrop-filter:none}
+.mobileOwnerMode .mobileBottomNav button{min-height:48px;font-size:11px;gap:4px;color:#a99ba5}
+.mobileOwnerMode .mobileBottomNav button b{font-size:21px}
+.mobileOwnerMode .mobileBottomNav button.active{background:#3b1523;border-color:#7d2b44;box-shadow:none;color:#fff}
+.mobileOwnerMode .mobileBottomNav button.active b{color:#fa647f;text-shadow:none}
+.mobileOwnerMode .mobileBottomNav button.active::after{background:#ed4568;box-shadow:none}
+.mobileOwnerMode .mobileSettingsHome h2{font-size:23px}
+.mobileOwnerMode .mobileSettingsHome header{padding:8px 0 18px}
+.mobileOwnerMode .mobileSettingsHome p{font-size:13px;color:#b9aab4}
+.mobileOwnerMode .mobileSettingCategories button{padding:12px;border-radius:12px;border-color:#422c37;background:#191419}
+.mobileOwnerMode .mobileSettingCategories button>b{background:#331a27;color:#f5748d}
+.mobileOwnerMode .mobileSettingCategories small{color:#af9da8}
+.mobileOwnerMode .mobileSettingsBack{display:none;min-height:44px;padding:10px 12px;text-align:left;border:1px solid #49303c;border-radius:10px;background:#21151d;color:#f4dce5;font:inherit;font-size:13px}
+.mobileOwnerMode[data-mobile-view="settings"]:not([data-mobile-settings="root"]) .mobileSettingsBack{display:block}
+.mobileOwnerMode input,.mobileOwnerMode select,.mobileOwnerMode textarea{box-sizing:border-box;max-width:100%;font-size:16px!important}
+.mobileOwnerMode .card,.mobileOwnerMode .panel{padding:14px;border-radius:14px;border-color:#422c37;background:#171217}
+.mobileOwnerMode .dvrCtrls,.mobileOwnerMode .dvrCard .row{flex-wrap:wrap;gap:6px}
+.mobileOwnerMode .dvrCard .panelHead h2{font-size:19px}
+.mobileOwnerMode .dvrCard .panelHead p{font-size:12px}
+.mobileOwnerMode #viewEventsCard::before{font-size:21px;margin:4px 0 12px}
+.mobileOwnerMode .authCard{max-height:92dvh;padding:24px 20px}
+.mobileOwnerMode .authGrid{grid-template-columns:1fr}
+.mobileOwnerMode .authForm h1{font-size:27px}
+@media(orientation:landscape) and (max-height:600px){.mobileOwnerMode #stage:not(:fullscreen){aspect-ratio:16/9;height:calc(100dvh - 165px);max-height:none}.mobileOwnerMode .mobileAppHeader{padding-top:8px;padding-bottom:8px}.mobileOwnerMode .mobileBottomNav button{min-height:40px}}

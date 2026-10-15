@@ -12,7 +12,7 @@ if (isMobileOwnerApp) {
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
-    <div><h1>Dom</h1><p><i></i><span id="mobileOnline">System sprawdzam…</span></p></div>
+    <img class="mobileBrandLogo" src="assets/ds-logo.jpg" alt="DS"><div><h1 id="mobilePageTitle">Dom</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
     <button id="deviceLayoutBtn" type="button" aria-label="Zmień układ urządzenia"><span>▣</span><b>Telefon</b></button>`;
   app?.insertBefore(mobileHeader, app.firstChild);
 
@@ -66,9 +66,15 @@ if (isMobileOwnerApp) {
       <button type="button" data-setting-section="system"><b>⌘</b><span><strong>System i diagnostyka</strong><small>połączenie, stan i kontrola</small></span><i>›</i></button>
     </div>`;
   document.querySelector(".mainCol")?.append(settingsHome);
+  const backSettings = document.createElement("button");
+  backSettings.type = "button";
+  backSettings.className = "mobileSettingsBack";
+  backSettings.textContent = "← Kategorie ustawień";
+  document.querySelector(".mainCol")?.prepend(backSettings);
+  backSettings.addEventListener("click", () => { document.body.dataset.mobileSettings = "root"; });
 
   const views = {
-    home: ["stage", "watchPanel", "dvrCard", "viewEventsCard"],
+    home: ["stage", "watchPanel"],
     alerts: ["viewEventsCard"],
     recordings: ["dvrCard", "dvrListCard"],
     settings: ["modeCard", "systemPanel", "setCard", "diagCard"]
@@ -76,6 +82,7 @@ if (isMobileOwnerApp) {
   const managed = [...new Set(Object.values(views).flat())];
 
   function setView(view) {
+    byId("mobilePageTitle").textContent = ({ home: "Dom", alerts: "Alarmy", recordings: "Nagrania", settings: "Ustawienia" })[view] || "Dom";
     const visible = new Set(views[view] || views.home);
     document.body.dataset.mobileView = view;
     document.body.dataset.mobileSettings = view === "settings" ? "root" : "";
@@ -109,7 +116,9 @@ if (isMobileOwnerApp) {
   const topStatus = byId("topStatus");
   const updateStatus = () => {
     const label = byId("mobileOnline");
-    if (label && topStatus) label.textContent = topStatus.textContent?.trim() === "● NA ŻYWO" ? "System online" : "Łączenie z kamerą…";
+    const connected = topStatus?.classList.contains("live");
+    mobileHeader.classList.toggle("online", Boolean(connected));
+    if (label && topStatus) label.textContent = connected ? "Transmisja aktywna" : topStatus.textContent?.trim() || "Sprawdzam połączenie…";
   };
   new MutationObserver(updateStatus).observe(topStatus || document.body, { childList: true, subtree: true, characterData: true });
   updateStatus();
