@@ -101,6 +101,9 @@ if (desktopRequested) {
   // Na pulpicie operatora oś doby jest częścią głównego widoku, obok obrazu
   // i zdarzeń. Pełna lista plików pojawia się dopiero w module Archiwum DVR.
   const timelineDock = overview.querySelector(".desktopTimelineDock");
+  // Archiwum jest osobnym ekranem; DVR pozostaje przygotowany w ukrytym
+  // kontenerze do przeniesienia przez ten sam odtwarzacz, bez jego kopiowania.
+  timelineDock.hidden = true;
   const dvrCard = $("dvrCard");
   if (dvrCard) timelineDock.append(dvrCard);
   const controlDock = overview.querySelector(".desktopControlDock");
