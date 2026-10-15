@@ -5,6 +5,7 @@ import { createStore } from "../kamera/core/store.mjs";
 import { createRouter } from "../kamera/core/router.mjs";
 import { CommandClient, CommandDispatcher } from "../kamera/communication/commands.mjs";
 import { createPeerDiagnostics } from "../kamera/core/peer-diagnostics.mjs";
+import { NativeAgentClient } from "../kamera/communication/native-agent-client.mjs";
 import vm from "node:vm";
 
 test("telemetry survives logs; freshness does not erase auth failure", () => {
@@ -159,4 +160,21 @@ test("command signature binds command ID, client and expiry", async () => {
     context.packet = { ...signed, [field]: "tampered" };
     assert.equal(await vm.runInContext("validOwnerControl(packet)", context), false);
   }
+});
+
+test("native adapter supports read-only IPC and propagates unknown", async () => {
+  const previous = globalThis.__HOME_SECURITY_AGENT_BRIDGE__;
+  globalThis.__HOME_SECURITY_AGENT_BRIDGE__ = true;
+  class WebView extends EventTarget { postMessage(value) { this.sent = value; } }
+  const webview = new WebView(), client = new NativeAgentClient(webview);
+  try {
+    assert.throws(() => client.execute("secret.read"));
+    const pending = client.execute("system.snapshot");
+    await Promise.resolve(); await Promise.resolve();
+    assert.equal(webview.sent.type, "agent.command");
+    webview.dispatchEvent(Object.assign(new Event("message"), { data: {
+      type: "agent.result", result: { id: webview.sent.id, status: "unknown", code: "PIPE_UNAVAILABLE" }
+    } }));
+    assert.equal((await pending).code, "PIPE_UNAVAILABLE");
+  } finally { client.dispose(); globalThis.__HOME_SECURITY_AGENT_BRIDGE__ = previous; }
 });

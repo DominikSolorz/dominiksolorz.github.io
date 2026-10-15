@@ -2,3 +2,11 @@
 desktop-client/bin/
 desktop-client/obj/
 desktop-client/publish/
+agent/bin/
+agent/obj/
+agent-client/bin/
+agent-client/obj/
+agent-contracts/bin/
+agent-contracts/obj/
+agent-tests/bin/
+agent-tests/obj/

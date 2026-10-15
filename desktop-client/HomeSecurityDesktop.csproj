@@ -16,6 +16,7 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../agent-client/HomeSecurity.Agent.Client.csproj" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3065.39" />
   </ItemGroup>
 </Project>

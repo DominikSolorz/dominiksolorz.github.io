@@ -124,6 +124,7 @@ internal static class Program
         private readonly Panel updateBar = new() { Dock = DockStyle.Top, Height = 48, Visible = false, BackColor = Color.FromArgb(43, 14, 19) };
         private readonly Button updateButton = new() { AutoSize = true, Anchor = AnchorStyles.Top | AnchorStyles.Right, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(190, 27, 50), ForeColor = Color.White, Font = new Font("Segoe UI", 10F, FontStyle.Bold), Text = "↻ Aktualizacja", UseVisualStyleBackColor = false };
         private bool checkingUpdate;
+        private AgentWebViewBridge? agentBridge;
         private bool downloadingUpdate;
         private DesktopUpdateManifest? offeredUpdate;
 
@@ -155,6 +156,13 @@ internal static class Program
                 DataRoot, "WebView");
             var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: dataPath);
             await webView.EnsureCoreWebView2Async(environment);
+            // Włączane wyłącznie dla testów nowej architektury; nie uruchamia agenta ani kamery.
+            if (Environment.GetEnvironmentVariable("HOME_SECURITY_AGENT_BRIDGE") == "1")
+            {
+                agentBridge = new AgentWebViewBridge(webView.CoreWebView2);
+                FormClosed += (_, _) => agentBridge?.Dispose();
+                await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.__HOME_SECURITY_AGENT_BRIDGE__ = true;");
+            }
             await RefreshWebShellIfNeededAsync();
             await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
                 "window.__HOME_SECURITY_DESKTOP__ = true; window.__HOME_SECURITY_DEVICE__ = 'windows';");
@@ -181,6 +189,8 @@ internal static class Program
 
             webView.CoreWebView2.WebMessageReceived += (_, e) =>
             {
+                // Nie logujemy treści nowego IPC. Ma osobny, walidowany handler.
+                try { using var message = JsonDocument.Parse(e.WebMessageAsJson); if (message.RootElement.TryGetProperty("type", out var type) && type.GetString() == "agent.command") return; } catch { }
                 try { WriteDiagnostic("panel-state", JsonDocument.Parse(e.WebMessageAsJson).RootElement.Clone()); }
                 catch { WriteDiagnostic("panel-message", e.TryGetWebMessageAsString()); }
             };
