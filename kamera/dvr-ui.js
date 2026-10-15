@@ -15,7 +15,10 @@ const DAY_MS = 86400000;
 const nameTime = n => { const m = /(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})/.exec(n || ""); return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : 0; };
 const SEG_MS = 600000;
 
-export function mountDvr({ client, drive, allowUpload = true, root, listRoot = null, stage, liveVideo, toast, onState = () => {} }) {
+export function mountDvr({ client, drive, allowUpload = true, root, listRoot = null, stage: liveStage, toast, onState = () => {} }) {
+  // Odtwarzacz ma własny kontener. Nigdy nie przenosi i nie modyfikuje liveVideo.
+  const stage = el("div", { className: "stage archivePlaybackStage", hidden: true });
+  root.before(stage);
   const playback = el("video", { className: "playback", playsInline: true, controls: true, hidden: true });
   playback.setAttribute("playsinline", "");
   // Nagrania z Google Drive odtwarza odtwarzacz Google (zalogowane konto właściciela).
@@ -44,8 +47,8 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     archiveModal = el("section", { className: "archiveModal", role: "dialog", ariaModal: "true", ariaLabel: "Archiwum nagrań kamery" },
       el("header", { className: "archiveModalHead" }, el("div", {}, el("h2", { textContent: "Sprawdź nagrania" }), hint), closeBtn), body);
     document.body.append(archiveModal); document.body.classList.add("archiveOpen"); closeBtn.focus();
-    liveVideo.style.visibility = "hidden";
-    progressBadge.hidden = false; progressBadge.textContent = "Wybierz nagranie lub dzień. Kamera i zapis nadal działają.";
+    stage.hidden = false;
+    progressBadge.hidden = false; progressBadge.textContent = "Wybierz nagranie lub dzień. Otwarcie archiwum nie zmienia stanu kamery ani zapisu.";
     refresh().then(() => {
       const latest = files.filter(f => !f.recording).at(-1);
       if (latest) play(latest, 0, true);
@@ -54,14 +57,14 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
   }
   function closeArchive() {
     if (!archiveModal) return;
-    goLive(); progressBadge.hidden = true;
+    goLive(); progressBadge.hidden = true; stage.hidden = true;
     restoreStage.replaceWith(stage); restoreDvr.replaceWith(root);
     if (listRoot && restoreList) restoreList.replaceWith(listRoot);
     archiveModal.remove(); archiveModal = null; restoreStage = restoreDvr = restoreList = null;
     document.body.classList.remove("archiveOpen");
     document.dispatchEvent(new Event("hs-recordings-closed"));
   }
-  stage.addEventListener("contextmenu", e => {
+  liveStage.addEventListener("contextmenu", e => {
     if (e.target.closest("#zoomBar, #startHere")) return;
     e.preventDefault(); openArchive();
   });
@@ -175,7 +178,8 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
   }
 
   function showPlayback(on, viaFrame = false) {
-    playback.hidden = !on || viaFrame; frame.hidden = !on || !viaFrame; liveVideo.style.visibility = on ? "hidden" : "";
+    playback.hidden = !on || viaFrame; frame.hidden = !on || !viaFrame;
+    stage.hidden = !on && !archiveModal;
     onState(on);
     if (!on || !viaFrame) frame.removeAttribute("src");
     liveBtn.classList.toggle("off", !on);

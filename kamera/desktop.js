@@ -1,6 +1,7 @@
 // HOME SECURITY Desktop: nakładka robocza dla dużego ekranu.
 // Używa tego samego silnika transmisji, zapisu i archiwum co index.html.
 // Nie uruchamia kamery ani nie zmienia jej konfiguracji samodzielnie.
+import { createRouter } from "./core/router.mjs";
 const isTransmitter = location.hash === "#nadaj";
 // Tryb urządzenia jest rozstrzygany raz, przed załadowaniem CSS w index.html.
 // Dzięki temu Chrome w telefonie i wersja instalowana PWA nie rozchodzą się
@@ -332,7 +333,7 @@ if (desktopRequested) {
     const diag = $("diagCard");
     if (diag) { diag.hidden = false; diag.open = true; diag.scrollIntoView({ behavior: "smooth", block: "start" }); }
   };
-  const setActive = view => {
+  const renderRoute = view => {
     if (view === "archive") {
       shell.querySelectorAll("[data-desktop-view]").forEach(button => button.classList.toggle("active", button.dataset.desktopView === "archive"));
       document.dispatchEvent(new Event("hs-open-recordings"));
@@ -341,6 +342,8 @@ if (desktopRequested) {
     shell.querySelectorAll("[data-desktop-view]").forEach(button => button.classList.toggle("active", button.dataset.desktopView === view));
     openExistingView(view);
   };
+  const router = createRouter({ routes: ["live", "controls", "archive", "settings", "diagnostics"], render: renderRoute });
+  const setActive = view => router.navigate(view);
   shell.querySelectorAll("[data-desktop-view]").forEach(button => button.addEventListener("click", () => setActive(button.dataset.desktopView)));
   document.addEventListener("hs-recordings-closed", () => setActive("live"));
   shell.querySelectorAll("[data-desktop-view]").forEach(button => { button.title = button.querySelector("b").textContent; });

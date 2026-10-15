@@ -12,8 +12,11 @@ import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=5";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=99";
+import { mountDvr } from "./dvr-ui.js?v=100";
 import { accountClient } from "./auth.js?v=8";
+import { systemStore } from "./core/store.mjs";
+import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
+import { createPeerDiagnostics } from "./core/peer-diagnostics.mjs";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
@@ -46,7 +49,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "177"; // musi się zgadzać z version.json
+const VERSION = "178"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -105,49 +108,8 @@ const iceServers = () => {
 // ---------- Diagnostyka WebRTC (bez adresów IP i bez danych dostępu) ----------
 // STUN pomaga znaleźć drogę bezpośrednią. Tylko TURN daje typ "relay", który
 // jest niezbędny, gdy NAT operatora lub router blokuje połączenie P2P.
-const webRtcDiagnostics = (() => {
-  const entries = [];
-  const snapshot = () => ({ last: entries.at(-1)?.text || "Jeszcze nie zestawiono połączenia WebRTC.", failed: !!entries.at(-1)?.failed, recent: entries.slice(-6) });
-  const note = (role, text, failed = false) => {
-    const row = { at: Date.now(), role, text, failed };
-    entries.push(row); if (entries.length > 40) entries.splice(0, entries.length - 40);
-    const prefix = `[WebRTC/${role}]`;
-    (failed ? console.error : console.info)(prefix, text);
-    // Program Windows zapisuje wyłącznie stan i typ trasy; nigdy kandydata z IP,
-    // PIN-u, obrazu, nagrania ani danych użytkownika.
-    reportNativePanelState({ role: "webrtc", webrtc: snapshot() });
-  };
-  const candidateType = candidate => candidate?.type || / typ ([a-z]+)/i.exec(candidate?.candidate || "")?.[1] || "nieznany";
-  const selectedRoute = async (pc, role) => {
-    try {
-      const stats = await pc.getStats(); let pair = null;
-      stats.forEach(s => { if (s.type === "candidate-pair" && (s.selected || (s.nominated && s.state === "succeeded"))) pair ||= s; });
-      if (!pair) return note(role, "Połączono, ale przeglądarka nie udostępniła wybranej trasy ICE.");
-      const local = stats.get(pair.localCandidateId), remote = stats.get(pair.remoteCandidateId);
-      note(role, `Aktywna trasa ICE: ${local?.candidateType || "nieznany"} → ${remote?.candidateType || "nieznany"}.`);
-    } catch { note(role, "Nie udało się odczytać statystyk wybranej trasy ICE."); }
-  };
-  const attach = (pc, role) => {
-    note(role, `Start ICE. TURN: ${TURN_SERVER ? "skonfigurowany" : "brak"}.`);
-    pc.addEventListener("icecandidate", e => {
-      if (e.candidate) note(role, `Kandydat ICE: ${candidateType(e.candidate)}.`);
-      else note(role, "Zakończono zbieranie kandydatów ICE.");
-    });
-    pc.addEventListener("icecandidateerror", e => note(role, `Błąd ICE ${e.errorCode || "nieznany"}: ${e.errorText || "brak opisu"}.`, true));
-    pc.addEventListener("icegatheringstatechange", () => note(role, `Zbieranie ICE: ${pc.iceGatheringState}.`));
-    pc.addEventListener("iceconnectionstatechange", () => {
-      const state = pc.iceConnectionState;
-      const noRelay = !TURN_SERVER && (state === "failed" || state === "disconnected");
-      note(role, noRelay ? `ICE: ${state}. Brak TURN — sieć z NAT może blokować telefon.` : `ICE: ${state}.`, state === "failed");
-    });
-    pc.addEventListener("connectionstatechange", () => {
-      const state = pc.connectionState;
-      note(role, `Połączenie WebRTC: ${state}.`, state === "failed");
-      if (state === "connected") void selectedRoute(pc, role);
-    });
-  };
-  return { attach, snapshot };
-})();
+const webRtcDiagnostics = createPeerDiagnostics({ turnConfigured: !!TURN_SERVER,
+  report: webrtc => reportNativePanelState({ role: "webrtc", webrtc }) });
 
 // ---------- Ustawienia (pamiętane w przeglądarce) ----------
 const DEFAULTS = { role: null, cameraId: "", audio: true, detect: true, detectSound: false, sensitivity: "medium", recQuality: "max", segmentMin: 10, retentionDays: 1, mode: "record", recordPlan: "always", pictureStyle: "color", pictureGrid: false, media: "av", light: 0 };
@@ -273,8 +235,11 @@ const cloud = (() => {
       if (!res.ok) throw new Error(`Google Drive odpowiedział ${res.status}`);
       const out = await res.json();
       if (out.error) throw new Error(out.error);
+      systemStore.component("cloudAccess", { status: "healthy", message: "Usługa chmury odpowiedziała poprawnie." });
       return out;
     } catch (e) {
+      const message = e?.name === "AbortError" ? "Przekroczono czas zapytania do chmury." : errText(e);
+      systemStore.component("cloudAccess", { status: /token|unauthor|401|403/i.test(message) ? "auth_required" : "degraded", message });
       throw new Error(e?.name === "AbortError" ? "przekroczono czas wysyłania" : errText(e));
     } finally { clearTimeout(t); }
   }
@@ -737,6 +702,7 @@ const archive = (() => {
   const status = () => ({ recording: running, since: running ? recSince : 0, reason: describe(), folder: disk.ready ? disk.name : "nieustawiony", lastFile: lastName, saved, queued, migrated: sentToDrive, verifiedToDrive, lastVerified });
 
   function render() {
+    systemStore.component("cloudQueue", { status: pumping ? "uploading" : queued ? "queued" : "idle", queued, verified: verifiedToDrive });
     $("recBadge").hidden = !running;
     $("archiveInfo").textContent = describe();
     const operational = $("opArchive");
@@ -854,14 +820,15 @@ const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", pay
 // Link odbiorcy zawiera tylko nazwę kanału, dlatego nie wystarcza jako uprawnienie do sterowania.
 const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "light-set", "restart", "reload"]);
 const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}${sig.type === "light-set" ? `|L${clampLight(sig.light)}` : ""}`;
+const controlSignatureText = sig => controlText(sig) + (sig.commandId ? `|v1|${sig.commandId}|${sig.clientId}|${sig.expiresAt}` : "");
 async function signedOwnerControl(payload) {
   if (!ACCESS_KEY) return null;
   const ts = Date.now();
-  return { ...payload, ts, mac: await sign(ACCESS_KEY, `${ts}|${controlText(payload)}`) };
+  return { ...payload, ts, mac: await sign(ACCESS_KEY, `${ts}|${controlSignatureText(payload)}`) };
 }
 async function validOwnerControl(sig) {
   if (!OWNER_CONTROL.has(sig.type) || !ACCESS_KEY || !Number.isFinite(sig.ts) || Math.abs(Date.now() - sig.ts) > 60000 || typeof sig.mac !== "string") return false;
-  return sig.mac === await sign(ACCESS_KEY, `${sig.ts}|${controlText(sig)}`);
+  return sig.mac === await sign(ACCESS_KEY, `${sig.ts}|${controlSignatureText(sig)}`);
 }
 
 // ---------- Biblioteka nagrań: polecenia z telefonu (lista / usuwanie podpisane kluczem z PIN-u) ----------
@@ -967,33 +934,40 @@ async function tuneVideoSender(pc, cropWidth = 0) {
 
 // Karta „Kontrola kamery” (komputer i telefon): czy kamera i mikrofon są podłączone, czy obraz dociera,
 // czy trwa zapis i jaki był ostatni plik. Dane z komputera-kamery (heartbeat co 15 s).
-let diagShownBad = false;
 function renderDiag(d, extra = []) {
   if (!$("diagList") || !d) return;
-  const ok = (good, text) => Object.assign(document.createElement("li"), { className: good ? "ok" : "bad", textContent: `${good ? "✅" : "❌"} ${text}` });
+  const capture = d.camLive ? "track_live" : d.mode === "off" ? "disabled" : d.camError ? "error" : "waiting";
+  systemStore.component("capture", { status: capture, camera: d.cam, width: d.w, height: d.h, fps: d.fps, message: d.camError || "" });
+  systemStore.component("recording", { status: d.recording ? "recording" : ["preview", "off"].includes(d.mode) ? "idle" : "waiting", lastFile: d.lastFile || null });
+  systemStore.component("microphone", { status: d.micOn ? "active" : "unused", device: d.mic || null });
+  const row = (status, text) => Object.assign(document.createElement("li"), {
+    className: status === "error" ? "bad" : status === "warning" ? "warn" : "ok",
+    textContent: `${status === "error" ? "❌" : status === "warning" ? "⚠" : "•"} ${text}`
+  });
+  const rtc = webRtcDiagnostics.snapshot();
+  const cloud = systemStore.read("cloudAccess", 120000);
   const rows = [
-    ok(!!d.cam && d.camLive, d.cam ? `Kamera podłączona: ${d.cam}${d.w ? ` · ${d.w}×${d.h}` : ""}${d.fps ? ` · ${d.fps} kl./s` : ""}` : `Kamera nie daje obrazu${d.camError ? ` — ${d.camError}` : ""}`),
-    ok(!!d.mic && d.micOn, d.mic ? `Mikrofon podłączony: ${d.mic}` : "Mikrofon nie jest używany (brak dźwięku w nagraniach)"),
-    ok(d.recording, d.recording ? `Nagrywanie trwa · ${d.quality || ""}` : d.mode === "preview" ? "Nie nagrywa — tryb „Sam podgląd”" : d.mode === "off" ? "Nie nagrywa — kamera wyłączona" : "Nie nagrywa"),
-    ...(d.light ? [ok(true, d.light)] : []),
-    ...(d.webrtc ? [ok(!d.webrtc.failed, `WebRTC: ${d.webrtc.last}`)] : []),
-    ok(!!d.lastFile, d.lastFile ? `Ostatni zapisany plik: ${d.lastFile}` : "Brak zamkniętego pliku w tej sesji — sprawdź stan nagrywania i długość segmentu"),
-    ok(true, `Wersja panelu: ${VERSION} · urządzenie: ${NATIVE_DESKTOP ? "program Windows" : "przeglądarka / telefon"}`),
-    ok(navigator.onLine, `Sieć tego urządzenia: ${navigator.onLine ? "online" : "offline"}`),
-    ok(true, `Zapis: segment ${prefs.segmentMin} min · retencja ${prefs.retentionDays || "bez limitu"} dni · harmonogram ${prefs.recordPlan || "always"}`),
-    ok(!!d.camLive, `Ścieżka obrazu: ${d.camLive ? "aktywna" : "nieaktywna"} · rozdzielczość ${d.w || 0}×${d.h || 0} · FPS ${d.fps || 0}`),
-    ...extra,
+    row(capture === "error" ? "error" : "info", d.camLive ? `Ścieżka kamery aktywna: ${d.cam || "kamera"} · ${d.w || "?"}×${d.h || "?"} · ustawienie ${d.fps || "?"} FPS` : capture === "disabled" ? "Kamera wyłączona wybranym trybem." : d.camError || "Oczekiwanie na telemetrię kamery."),
+    row("info", d.micOn ? `Mikrofon aktywny: ${d.mic || "mikrofon"}` : "Mikrofon nieużywany — nie jest to błąd kamery."),
+    row("info", d.recording ? "Nagrywanie aktywne." : ["preview", "off"].includes(d.mode) ? "Zapis wyłączony wybranym trybem." : "Oczekiwanie na zapis lub harmonogram."),
+    row(rtc.failed ? "error" : "info", `WebRTC tego ekranu: ${rtc.last}`),
+    row("info", d.lastFile ? `Ostatni zamknięty plik: ${d.lastFile}` : "Brak zamkniętego segmentu w tej sesji."),
+    row(["auth_required", "degraded"].includes(cloud.status) ? "warning" : "info", `Chmura: ${cloud.status}${cloud.message ? " — " + cloud.message : ""}`),
+    row("info", `Panel ${VERSION} · segment ${prefs.segmentMin} min · harmonogram ${prefs.recordPlan || "always"}`),
+    ...extra
   ];
   $("diagList").replaceChildren(...rows);
-  const bad = rows.filter(r => r.className === "bad").length;
-  $("diagSum").textContent = bad ? `⚠ Kontrola kamery: ${bad} do sprawdzenia` : "✅ Kamera sprawdzona — wszystko działa";
-  $("diagCard").classList.toggle("warn", !!bad);
-  if (bad && !diagShownBad) $("diagCard").open = true;
-  diagShownBad = !!bad;
+  const bad = rows.filter(item => item.className === "bad").length;
+  const warnings = rows.filter(item => item.className === "warn").length;
+  $("diagSum").textContent = bad ? `Diagnostyka: ${bad} błędów komponentów` : warnings ? `Diagnostyka: ${warnings} ostrzeżeń` : "Diagnostyka — stan komponentów";
+  $("diagCard").classList.toggle("warn", !!(bad || warnings));
+  // Diagnostyka nigdy nie przejmuje aktywnego ekranu ani nie blokuje PIN-u.
   $("diagTime").textContent = new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
   $("diagCard").hidden = false;
 }
-const diagRow = (good, text) => Object.assign(document.createElement("li"), { className: good ? "ok" : "bad", textContent: `${good ? "✅" : "❌"} ${text}` });
+const diagRow = (good, text) => Object.assign(document.createElement("li"), {
+  className: good ? "ok" : "warn", textContent: `${good ? "•" : "⚠"} ${text}`
+});
 
 // Pasek pod osią czasu: licznik nagrywania (godz:min:s) i przyciski Start / Stop / Restart.
 const ctrlState = { recording: false, since: 0, mode: "", until: 0, skew: 0, hasCam: true, quality: "" };
@@ -1115,16 +1089,23 @@ const sender = (() => {
       if (sig.from && sig.from !== INSTANCE && sig.hasCam && live && !stream) {
         // Okno, na które ktoś patrzy, wygrywa z ukrytym/zminimalizowanym — przejmuje kamerę samo.
         // Starsze okno (bez pola „visible”) nie zna przejęcia — najpierw zdalnie je odświeżamy do nowej wersji.
-        const hidden = sig.visible === false || sig.visible === undefined;
-        if (Date.now() - lastAutoTakeover > 5 * 60000) autoTries = 0;
-        if (document.visibilityState === "visible" && hidden && autoTries < 3) { autoTries++; lastAutoTakeover = Date.now(); yielded = true; stop(); takeover(sig.visible === undefined); }
-        else yieldToOther();
+        // Widoczność okna nie decyduje o własności kamery. Przejęcie wymaga kliknięcia.
+        yieldToOther();
       }
       return;
     }
     if (sig.type === "takeover") { if (sig.from && sig.from !== INSTANCE && live) yieldToOther(); return; }
     if (OWNER_CONTROL.has(sig.type)) {
       if (!(await validOwnerControl(sig))) return;
+      if (sig.commandId) {
+        if (typeof sig.clientId !== "string" || sig.clientId.length > 80) return;
+        const args = { mode: sig.mode, minutes: sig.minutes, q: sig.q, media: sig.media, light: sig.light };
+        const result = await commandDispatcher.execute({ v: 1, id: sig.commandId, name: sig.type, args, expiresAt: sig.expiresAt }, sig.clientId);
+        const reply = { type: "command-result", clientId: sig.clientId, result };
+        reply.mac = await sign(ACCESS_KEY, JSON.stringify([reply.clientId, reply.result]));
+        send(chan.channel, reply);
+        return;
+      }
       if (sig.type === "mode-set") return setMode(sig.mode, sig.minutes);
       if (sig.type === "quality-set") return setQuality(sig.q);
       if (sig.type === "media-set") return setMedia(sig.media);
@@ -1184,7 +1165,7 @@ const sender = (() => {
   function setLight(n) {
     prefs.light = clampLight(n); savePrefs();
     $("lightPick").value = prefs.light; $("lightVal").textContent = LIGHT_LABEL[prefs.light];
-    optimizeCameraLight(stream?.getVideoTracks()[0]).then(() => { beat(); report(); });
+    return optimizeCameraLight(stream?.getVideoTracks()[0]).then(() => { beat(); report(); });
   }
   async function prepareCameraStream(s) {
     const track = s.getVideoTracks()[0];
@@ -1327,7 +1308,7 @@ const sender = (() => {
     if (liveChanged && stream && m !== "off") { closeAll(); send(chan.channel, { type: "broadcaster-ready" }); }
     if (m === "off") {
       clearTimeout(camTimer);
-      archive.stop(); detector.stop(); closeAll();
+      await archive.flush(archive.stop()); detector.stop(); closeAll();
       zoomer?.stop(); zoomer = null;
       stream?.getTracks().forEach(t => t.stop()); stream = null;
       video.srcObject = null; showLive(""); setStatus(""); showPlaceholder("Kamera wyłączona. Otwórz Sterowanie i wybierz Start lub Sam podgląd.");
@@ -1336,7 +1317,7 @@ const sender = (() => {
       if (await acquireCamera()) { setStatus(""); send(chan.channel, { type: "broadcaster-ready" }); }
       else if (live) scheduleCameraRetry();
     } else if (RECORDING_MODES.has(m) && recordingScheduledNow()) archive.start(stream);
-    else archive.stop();
+    else await archive.flush(archive.stop());
     beat();
     report();
   }
@@ -1502,9 +1483,6 @@ const sender = (() => {
 
   let yielded = false, lastAutoTakeover = 0, autoTries = 0;
   // Ustąpione okno, które ktoś otworzy/przywróci na ekran, samo przejmuje kamerę od ukrytego.
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && yielded && Date.now() - lastAutoTakeover > 60000) { lastAutoTakeover = Date.now(); takeover(); }
-  });
   function yieldToOther() {
     yielded = true;
     stop();
@@ -1546,6 +1524,21 @@ const sender = (() => {
 // ---------- PODGLĄD (telefon) ----------
 const viewer = (() => {
   const viewerId = crypto.randomUUID();
+  const commandClient = new CommandClient({
+    send: async command => {
+      if (!chan.channel) throw new Error("Brak połączenia z nadajnikiem.");
+      const payload = await signedOwnerControl({ type: command.name, ...command.args,
+        commandId: command.id, clientId: viewerId, expiresAt: command.expiresAt });
+      if (!payload) throw new Error("Panel jest zablokowany.");
+      const status = await send(chan.channel, payload);
+      if (status !== "ok") throw new Error("Nie potwierdzono wysłania.");
+    },
+    onResult: result => systemStore.component("command", { status: result.status, id: result.id, code: result.code })
+  });
+  async function requestControl(name, args = {}) {
+    const result = await commandClient.execute(name, args);
+    return requireCommandSuccess(result);
+  }
   let pc = null, pending = [], lastSeen = 0, lastJoin = 0, brokenSince = 0, watchdog = null, active = false;
   let camOff = false, liveNote = false;
   const chan = reconnectingChannel({
@@ -1565,6 +1558,12 @@ const viewer = (() => {
 
   async function onSignal(sig) {
     if (!active) return;
+    if (sig.type === "command-result") {
+      if (sig.clientId !== viewerId || !ACCESS_KEY || typeof sig.mac !== "string") return;
+      if (sig.mac !== await sign(ACCESS_KEY, JSON.stringify([sig.clientId, sig.result]))) return;
+      commandClient.receive(sig.result);
+      return;
+    }
     if (!["viewer-join", "viewer-leave"].includes(sig.type) && !(sig.type === "ice" && sig.from === "viewer")) lastSeen = Date.now();
     if (sig.type === "heartbeat") {
       if (sig.rec) showRecStatus(sig.rec);
@@ -1639,12 +1638,8 @@ const viewer = (() => {
     camOff = off;
   }
   async function setMode(m) {
-    if (m === "off" && !confirm("Wyłączyć kamerę? Nie będzie podglądu ani nagrywania, dopóki nie włączysz jej z powrotem.")) return;
-    const command = await signedOwnerControl({ type: "mode-set", mode: m, minutes: Number($("onceMin").value) });
-    if (!command) return;
-    send(chan.channel, command);
-    setStatus("Wysłano polecenie do kamery…");
-    setTimeout(() => setStatus(""), 4000);
+    if (m === "off" && !confirm("Wyłączyć kamerę i zapis?")) return;
+    return requestControl("mode-set", { mode: m, minutes: Number($("onceMin").value) });
   }
 
 
@@ -1670,6 +1665,7 @@ const viewer = (() => {
   function stop() {
     if (!active) return;
     active = false;
+    commandClient.disconnect();
     clearInterval(watchdog);
     send(chan.channel, { type: "viewer-leave", viewerId });
     chan.stop(); reset();
@@ -1680,28 +1676,13 @@ const viewer = (() => {
 
   function sendZoom(st) { send(chan.channel, { type: "zoom", ...st }); }
 
-  async function setMedia(m) {
-    const command = await signedOwnerControl({ type: "media-set", media: m });
-    if (!command) return;
-    send(chan.channel, command);
-    setStatus(`Zmieniam źródło na: ${MEDIA_LABEL[m]}.`);
-    setTimeout(() => setStatus(""), 4000);
+  async function setMedia(m) { return requestControl("media-set", { media: m });
   }
 
-  async function setLight(n) {
-    const command = await signedOwnerControl({ type: "light-set", light: clampLight(n) });
-    if (!command) return;
-    send(chan.channel, command);
-    setStatus(`Zmieniam jasność kamery: ${LIGHT_LABEL[clampLight(n)]}.`);
-    setTimeout(() => setStatus(""), 4000);
+  async function setLight(n) { return requestControl("light-set", { light: clampLight(n) });
   }
 
-  async function setQuality(q) {
-    const command = await signedOwnerControl({ type: "quality-set", q });
-    if (!command) return;
-    send(chan.channel, command);
-    setStatus("Zmieniam jakość nagrań — następny plik nagra się już w tej jakości.");
-    setTimeout(() => setStatus(""), 4000);
+  async function setQuality(q) { return requestControl("quality-set", { q });
   }
 
   async function reloadPc() {
@@ -1711,16 +1692,47 @@ const viewer = (() => {
     setStatus("Komputer-kamera odświeża stronę i pobiera najnowszą wersję — obraz wróci za ok. 15 s…");
     setTimeout(() => setStatus(""), 8000);
   }
-  async function restart() {
-    const command = await signedOwnerControl({ type: "restart" });
-    if (!command) return;
-    send(chan.channel, command);
-    setStatus("Restartuję kamerę na komputerze — obraz wróci za kilka sekund…");
-    setTimeout(() => setStatus(""), 6000);
+  async function restart() { return requestControl("restart");
   }
 
-  return { start, stop, restart, reloadPc, sendZoom, setMode, setQuality, setMedia, setLight, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
+  return { start, stop, restart, reloadPc, sendZoom, setMode, setQuality, setMedia, setLight, requestControl, rejoin() { reset(); setStatus("Łączę ponownie…"); join(); } };
 })();
+
+function requireCommandSuccess(result) {
+  if (result.status === "succeeded") return result.result;
+  const error = new Error(result.status === "unknown" ? "Wynik nieznany — sprawdź aktualny stan przed ponowieniem." : result.message || result.code || "Polecenie odrzucone.");
+  error.uncertain = result.status === "unknown";
+  throw error;
+}
+const commandDispatcher = new CommandDispatcher({ handlers: {
+  "mode-set": async ({ mode, minutes }) => {
+    if (!["record", "preview", "off", "once", "rec-only"].includes(mode)) throw new Error("Nieprawidłowy tryb.");
+    if (mode === "once" && (!Number.isFinite(Number(minutes)) || Number(minutes) < 1 || Number(minutes) > 1440)) throw new Error("Nieprawidłowy czas zapisu.");
+    if (!sender.live && mode === "off") { prefs.mode = "off"; savePrefs(); return { mode: "off", recording: false, hasCamera: false }; }
+    if (!sender.live && mode !== "off") await sender.start();
+    await sender.setMode(mode, minutes);
+    if (mode !== "off" && !sender.hasCamera) throw new Error("Brak aktywnej ścieżki kamery.");
+    return { mode: prefs.mode, recording: archive.status().recording, hasCamera: sender.hasCamera };
+  },
+  restart: async () => {
+    await sender.restart();
+    if (!sender.hasCamera) throw new Error("Kamera nie uruchomiła się po restarcie.");
+    return { hasCamera: true };
+  },
+  "quality-set": ({ q }) => { if (!REC_QUALITY[q]) throw new Error("Nieprawidłowa jakość."); return sender.setQuality(q); },
+  "media-set": ({ media }) => { if (!MEDIA_LABEL[media]) throw new Error("Nieprawidłowe źródło."); return sender.setMedia(media); },
+  "light-set": ({ light }) => { if (!Number.isFinite(Number(light))) throw new Error("Nieprawidłowa jasność."); return sender.setLight(light); }
+} });
+const localCommands = new CommandClient({
+  send: async command => localCommands.receive(await commandDispatcher.execute(command)),
+  onResult: result => systemStore.component("command", { status: result.status, id: result.id, code: result.code })
+});
+async function executeControl(name, args = {}) {
+  if (!canControlCamera()) throw new Error("Brak uprawnień do sterowania.");
+  return prefs.role === "send"
+    ? requireCommandSuccess(await localCommands.execute(name, args))
+    : viewer.requestControl(name, args);
+}
 
 // Zdarzenie na telefonie: wyskakujące powiadomienie, wibracja, lista ostatnich zdarzeń.
 const viewEvents = [];
@@ -2013,7 +2025,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "83";
+  const SERVICE_WORKER_BUILD = "84";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2040,11 +2052,12 @@ async function runControl(button, pendingText, doneText, task) {
   button.setAttribute("aria-busy", "true");
   setControlAction(pendingText, "pending");
   try {
-    await task();
-    setControlAction(doneText, "ok");
-    toastMsg(doneText);
+    const result = await task();
+    const confirmed = result?.mode === "record" && !result.recording ? "Tryb zapisu ustawiony — oczekiwanie na inicjalizację lub harmonogram." : doneText;
+    setControlAction(confirmed, "ok");
+    toastMsg(confirmed);
   } catch (error) {
-    const message = `Nie wykonano polecenia: ${error?.message || "błąd kamery"}`;
+    const message = error?.uncertain ? error.message : `Nie wykonano polecenia: ${error?.message || "błąd kamery"}`;
     setControlAction(message, "error");
     toastMsg(message);
   } finally {
@@ -2055,18 +2068,13 @@ async function runControl(button, pendingText, doneText, task) {
 $("ctrlStart").addEventListener("click", async () => {
   if (!canControlCamera()) return;
   await runControl($("ctrlStart"), "Uruchamiam obraz i automatyczny zapis…", "Start potwierdzony — kamera nadaje i zapisuje.", async () => {
-    if (prefs.role === "send") {
-      if (!sender.live) await sender.start();
-      await sender.setMode("record");
-      if (!sender.hasCamera) throw new Error("kamera nie przekazała jeszcze obrazu — sprawdź zgodę systemu Windows");
-    } else await viewer.setMode("record");
+    return executeControl("mode-set", { mode: "record" });
   });
 });
 $("ctrlStop").addEventListener("click", async () => {
   if (!canControlCamera()) return;
   await runControl($("ctrlStop"), "Kończę nagrywanie — podgląd pozostaje aktywny…", "Nagrywanie zatrzymane — kamera nadal nadaje na żywo.", async () => {
-    if (prefs.role === "send") await sender.setMode("preview");
-    else await viewer.setMode("preview");
+    return executeControl("mode-set", { mode: "preview" });
   });
 });
 $("reloadPcBtn").addEventListener("click", () => {
@@ -2076,11 +2084,7 @@ $("reloadPcBtn").addEventListener("click", () => {
 $("ctrlRestart").addEventListener("click", async () => {
   if (!canControlCamera()) return;
   await runControl($("ctrlRestart"), "Restartuję kamerę — zapis jest bezpiecznie przełączany…", "Restart potwierdzony — kamera ponownie nadaje.", async () => {
-    if (prefs.role === "send") {
-      await sender.restart();
-      if (!sender.hasCamera) throw new Error("kamera nie przekazała obrazu po restarcie — sprawdź urządzenie i uprawnienia");
-    }
-    else await viewer.restart();
+    return executeControl("restart");
   });
 });
 
@@ -2088,9 +2092,8 @@ $("ctrlRestart").addEventListener("click", async () => {
 // podpisane PIN-em polecenie, którego nie można uzyskać z linku odbiorcy.
 document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.addEventListener("click", () => {
   if (!canControlCamera()) return;
-  if (!sender.live) return viewer.setMode(b.dataset.mode);
   if (b.dataset.mode === "off" && !confirm("Wyłączyć kamerę? Nie będzie podglądu ani nagrywania, dopóki nie włączysz jej z powrotem.")) return;
-  sender.setMode(b.dataset.mode, Number($("onceMin").value));
+  executeControl("mode-set", { mode: b.dataset.mode, minutes: Number($("onceMin").value) }).catch(error => toastMsg(error.message));
 }));
 $("stopBtn").addEventListener("click", () => sender.stop());
 $("retryCameraBtn").addEventListener("click", () => sender.retryCamera());
@@ -2115,14 +2118,14 @@ for (const id of ["quality", "viewQuality"]) {
   $(id).replaceChildren(...Object.entries(REC_QUALITY).map(([k, q]) => new Option(q.label, k)));
   $(id).value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high";
 }
-$("quality").addEventListener("change", e => sender.setQuality(e.target.value));
+$("quality").addEventListener("change", e => executeControl("quality-set", { q: e.target.value }).catch(error => toastMsg(error.message)));
 $("mediaPick").value = MEDIA_LABEL[prefs.media] ? prefs.media : "av";
 $("lightPick").value = clampLight(prefs.light); $("lightVal").textContent = LIGHT_LABEL[clampLight(prefs.light)];
 $("lightPick").addEventListener("input", e => { $("lightVal").textContent = LIGHT_LABEL[clampLight(e.target.value)]; });
-$("lightPick").addEventListener("change", e => { if (!canControlCamera()) return; if (CAN_MANAGE_CAMERA) sender.setLight(e.target.value); else viewer.setLight(e.target.value); });
+$("lightPick").addEventListener("change", e => executeControl("light-set", { light: clampLight(e.target.value) }).catch(error => toastMsg(error.message)));
 for (const [id, d] of [["lightDown", -1], ["lightUp", 1]]) $(id).addEventListener("click", () => { $("lightPick").value = clampLight(Number($("lightPick").value) + d); $("lightPick").dispatchEvent(new Event("input")); $("lightPick").dispatchEvent(new Event("change")); });
-$("mediaPick").addEventListener("change", e => { if (!canControlCamera()) return; if (CAN_MANAGE_CAMERA) sender.setMedia(e.target.value); else viewer.setMedia(e.target.value); });
-$("viewQuality").addEventListener("change", e => { if (!canControlCamera()) return; if (CAN_MANAGE_CAMERA) sender.setQuality(e.target.value); else viewer.setQuality(e.target.value); });
+$("mediaPick").addEventListener("change", e => executeControl("media-set", { media: e.target.value }).catch(error => toastMsg(error.message)));
+$("viewQuality").addEventListener("change", e => executeControl("quality-set", { q: e.target.value }).catch(error => toastMsg(error.message)));
 $("retentionDays").closest("label").hidden = false;
 for (const id of ["segmentMin", "retentionDays"]) {
   $(id).value = String(prefs[id]);

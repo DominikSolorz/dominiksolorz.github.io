@@ -900,6 +900,9 @@ html,body{background:radial-gradient(1000px 650px at 95% 0,rgba(154,22,44,.17),t
   #stage #audioHud #listenVolumeLabel{min-width:28px!important;font-size:10px!important}
 }
 
+.archivePlaybackStage{min-height:260px;aspect-ratio:16/9;background:#000;position:relative}
+.archivePlaybackStage[hidden]{display:none!important}
+body.mobileOwnerMode:not([data-mobile-view="recordings"]) #app .archivePlaybackStage{display:none!important}
 /* Brama wyboru urządzenia przed obowiązkowym PIN-em. */
 #deviceForm .deviceTiles button{min-height:154px;padding:20px;border:1px solid #53313f;background:#171117;border-radius:15px;transition:border-color .15s,background .15s}
 #deviceForm .deviceTiles button>b{font-size:34px;color:#f16b85}

@@ -2,6 +2,7 @@
 // Przełącza tylko widoki istniejącej strony — transmisja i nagrywanie działają dalej.
 // index.html wybiera tryb urządzenia przed narysowaniem strony. To obejmuje
 // aplikację instalowaną oraz zwykły Chrome na telefonie/tablecie.
+import { createRouter } from "./core/router.mjs";
 const isMobileOwnerApp = document.documentElement.classList.contains("mobileOwnerMode");
 
 if (isMobileOwnerApp) {
@@ -81,7 +82,7 @@ if (isMobileOwnerApp) {
   };
   const managed = [...new Set(Object.values(views).flat())];
 
-  function setView(view) {
+  function renderView(view) {
     byId("mobilePageTitle").textContent = ({ home: "Dom", alerts: "Alarmy", recordings: "Nagrania", settings: "Ustawienia" })[view] || "Dom";
     const visible = new Set(views[view] || views.home);
     document.body.dataset.mobileView = view;
@@ -102,6 +103,8 @@ if (isMobileOwnerApp) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  const router = createRouter({ routes: Object.keys(views), render: renderView });
+  const setView = view => router.navigate(view);
   nav.addEventListener("click", event => {
     const button = event.target.closest("button[data-mobile-view]");
     if (button) setView(button.dataset.mobileView);
