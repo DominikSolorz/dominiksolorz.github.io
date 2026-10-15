@@ -141,11 +141,11 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
   }
 
   // ----- przeciąganie po pasku -----
-  let dragging = false;
+  let dragging = false, scrubTimer = null;
   const timeAt = x => { const b = bar.getBoundingClientRect(), r = range(); return r[0] + ((x - b.left) / b.width) * (r[1] - r[0]); };
   bar.addEventListener("pointerdown", e => { dragging = true; bar.setPointerCapture(e.pointerId); cursor = timeAt(e.clientX); draw(); });
-  bar.addEventListener("pointermove", e => { if (!dragging) return; cursor = timeAt(e.clientX); draw(); });
-  const release = () => { if (!dragging) return; dragging = false; seekTo(cursor); };
+  bar.addEventListener("pointermove", e => { if (!dragging) return; cursor = timeAt(e.clientX); draw(); clearTimeout(scrubTimer); scrubTimer = setTimeout(() => { const f = fileAt(cursor); if (f?.local && !f.recording) play(f, cursor - f.start, true); }, 220); });
+  const release = () => { if (!dragging) return; clearTimeout(scrubTimer); dragging = false; seekTo(cursor); };
   bar.addEventListener("pointerup", release); bar.addEventListener("pointercancel", release);
 
   // ----- odtwarzanie -----
@@ -169,7 +169,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     liveBtn.classList.toggle("off", !on);
   }
 
-  async function play(f, offsetMs = 0) {
+  async function play(f, offsetMs = 0, paused = false) {
     if (!f) return;
     if (f.recording) { toast("Ten fragment jeszcze się nagrywa — będzie do obejrzenia po zamknięciu pliku (co 10 min). Pokazuję obraz na żywo."); return goLive(); }
     if (!f.local) {
@@ -181,6 +181,11 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
       return;
     }
     try {
+      if (playing?.name === f.name && playback.src) {
+        showPlayback(true); playback.currentTime = Math.max(0, offsetMs / 1000);
+        if (paused) playback.pause(); else playback.play().catch(() => {});
+        return;
+      }
       const blob = await fetchFile(f);
       playing = f; drawLib();
       if (playback.src) URL.revokeObjectURL(playback.src);
@@ -192,7 +197,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
         if (!Number.isFinite(playback.duration)) { playback.currentTime = 1e9; await new Promise(r => setTimeout(r, 300)); }
         playback.currentTime = offsetMs / 1000;
       }
-      playback.play().catch(() => {});
+      if (paused) playback.pause(); else playback.play().catch(() => {});
     } catch (e) { toast(`Nie udało się pobrać nagrania: ${e.message || e}`); }
   }
 

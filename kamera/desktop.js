@@ -185,13 +185,17 @@ if (desktopRequested) {
     <label class="desktopPreviewSelect">Ostrość obrazu <select disabled><option>Automatyczna — steruje kamera</option></select></label>`;
   setCard?.querySelector(".panelHead")?.insertAdjacentElement("afterend", previewTweaks);
 
+  const recordingSettings = $("recordPlan")?.closest(".card");
+  const detectionSettings = $("detectToggle")?.closest(".card");
+  if (recordingSettings) settingsControls.append(recordingSettings);
+  if (detectionSettings) settingsControls.append(detectionSettings);
   const settingsGroups = {
     picture: [$("ownerLight"), previewTweaks, pictureRow, gridRow],
     sound: [$("ownerMedia")],
     quality: [$("ownerQuality")],
-    recording: [$("ownerOnce")],
-    detection: [],
-    devices: [],
+    recording: [$("ownerOnce"), recordingSettings],
+    detection: [detectionSettings],
+    devices: [deviceManager],
     access: [],
     application: []
   };
@@ -201,6 +205,7 @@ if (desktopRequested) {
   emptySettings.className = "desktopSettingsEmpty";
   const setSettingsGroup = group => {
     activeSettingsGroup = settingsGroups[group] ? group : "picture";
+    if (activeSettingsGroup === "devices") settingsControls.append(deviceManager);
     const visible = new Set(settingsGroups[activeSettingsGroup].filter(Boolean));
     Object.values(settingsGroups).flat().filter(Boolean).forEach(row => { row.hidden = !visible.has(row); });
     emptySettings.textContent = ({
@@ -276,12 +281,15 @@ if (desktopRequested) {
     settingsScreen.hidden = view !== "settings";
     if (layout) layout.hidden = view === "settings";
     if (view === "settings" && liveStage?.parentElement !== settingsPreviewFrame) settingsPreviewFrame?.append(liveStage);
-    if (view !== "settings" && liveStage?.parentElement !== liveTile) liveTile?.append(liveStage);
+    if (view === "archive" && liveStage?.parentElement !== main) main?.prepend(liveStage);
+    if (view !== "settings" && view !== "archive" && liveStage?.parentElement !== liveTile) liveTile?.append(liveStage);
     // Pulpit ma być roboczy: kamera, zdarzenia i oś czasu — bez dodatkowych
     // kart diagnostycznych pod spodem. Ich dane są w module Diagnostyka.
     summary.hidden = true;
     if (view === "live" && $("dvrCard")?.parentElement !== timelineDock) timelineDock.append($("dvrCard"));
     if (view === "live" && ctrlBar?.parentElement !== controlDock) controlDock?.append(ctrlBar);
+    if (view === "live" && deviceManager.parentElement !== controlDock) controlDock?.append(deviceManager);
+    if (view === "live") deviceManager.hidden = false;
     if (view === "live") $("dvrCard").hidden = false;
     if (view === "archive" && $("dvrCard")?.parentElement !== main) main?.prepend($("dvrCard"));
     if (view === "controls" && ctrlBar?.parentElement !== main) main?.append(ctrlBar);
@@ -351,7 +359,7 @@ if (desktopRequested) {
   const collapse = $("desktopCollapse");
   // Pierwsze uruchomienie pokazuje pełne opisy modułów. Zwinięcie paska
   // jest wyłącznie świadomą decyzją użytkownika, nie domyślnym stanem.
-  const collapsed = localStorage.getItem("home-security-desktop-sidebar") === "collapsed";
+  const collapsed = localStorage.getItem("home-security-desktop-sidebar") !== "expanded";
   document.documentElement.classList.toggle("desktopSidebarCollapsed", collapsed);
   const paintCollapse = () => {
     const isCollapsed = document.documentElement.classList.contains("desktopSidebarCollapsed");

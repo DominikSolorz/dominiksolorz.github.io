@@ -12,7 +12,7 @@ import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=5";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=95";
+import { mountDvr } from "./dvr-ui.js?v=96";
 import { accountClient } from "./auth.js?v=7";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
@@ -46,7 +46,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "164"; // musi się zgadzać z version.json
+const VERSION = "165"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -977,7 +977,11 @@ function renderDiag(d, extra = []) {
     ok(d.recording, d.recording ? `Nagrywanie trwa · ${d.quality || ""}` : d.mode === "preview" ? "Nie nagrywa — tryb „Sam podgląd”" : d.mode === "off" ? "Nie nagrywa — kamera wyłączona" : "Nie nagrywa"),
     ...(d.light ? [ok(true, d.light)] : []),
     ...(d.webrtc ? [ok(!d.webrtc.failed, `WebRTC: ${d.webrtc.last}`)] : []),
-    ok(!!d.lastFile, d.lastFile ? `Ostatni zapisany plik: ${d.lastFile}` : "Jeszcze żaden plik nie został zapisany w tej sesji (pierwszy po ok. 10 min)"),
+    ok(!!d.lastFile, d.lastFile ? `Ostatni zapisany plik: ${d.lastFile}` : "Brak zamkniętego pliku w tej sesji — sprawdź stan nagrywania i długość segmentu"),
+    ok(true, `Wersja panelu: ${VERSION} · urządzenie: ${NATIVE_DESKTOP ? "program Windows" : "przeglądarka / telefon"}`),
+    ok(navigator.onLine, `Sieć tego urządzenia: ${navigator.onLine ? "online" : "offline"}`),
+    ok(true, `Zapis: segment ${prefs.segmentMin} min · retencja ${prefs.retentionDays || "bez limitu"} dni · harmonogram ${prefs.recordPlan || "always"}`),
+    ok(!!d.camLive, `Ścieżka obrazu: ${d.camLive ? "aktywna" : "nieaktywna"} · rozdzielczość ${d.w || 0}×${d.h || 0} · FPS ${d.fps || 0}`),
     ...extra,
   ];
   $("diagList").replaceChildren(...rows);
@@ -2008,7 +2012,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "70";
+  const SERVICE_WORKER_BUILD = "71";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2119,7 +2123,7 @@ $("lightPick").addEventListener("change", e => { if (!canControlCamera()) return
 for (const [id, d] of [["lightDown", -1], ["lightUp", 1]]) $(id).addEventListener("click", () => { $("lightPick").value = clampLight(Number($("lightPick").value) + d); $("lightPick").dispatchEvent(new Event("input")); $("lightPick").dispatchEvent(new Event("change")); });
 $("mediaPick").addEventListener("change", e => { if (!canControlCamera()) return; if (CAN_MANAGE_CAMERA) sender.setMedia(e.target.value); else viewer.setMedia(e.target.value); });
 $("viewQuality").addEventListener("change", e => { if (!canControlCamera()) return; if (CAN_MANAGE_CAMERA) sender.setQuality(e.target.value); else viewer.setQuality(e.target.value); });
-$("retentionDays").closest("label").hidden = true;
+$("retentionDays").closest("label").hidden = false;
 for (const id of ["segmentMin", "retentionDays"]) {
   $(id).value = String(prefs[id]);
   $(id).addEventListener("change", e => { prefs[id] = Number(e.target.value); savePrefs(); });

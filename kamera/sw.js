@@ -1,7 +1,7 @@
 // Zmieniaj wersję tylko wtedy, gdy aktualizujemy powłokę aplikacji.
 // Dzięki temu zainstalowany panel nie otworzy przestarzałego index.html.
-const CACHE = "kamera-domowa-shell-v70";
-const SHELL = ["./", "./index.html", "./style.css?v=167", "./auth.js?v=7", "./app.js?v=170", "./desktop.js?v=21", "./mobile.js?v=7", "./manifest.webmanifest?v=1", "./icons/kamera-192.svg", "./icons/kamera-512.svg", "./vendor/supabase.js?v=2.117.2"];
+const CACHE = "kamera-domowa-shell-v71";
+const SHELL = ["./", "./index.html", "./style.css?v=168", "./auth.js?v=7", "./app.js?v=171", "./desktop.js?v=22", "./mobile.js?v=7", "./manifest.webmanifest?v=1", "./icons/kamera-192.svg", "./icons/kamera-512.svg", "./vendor/supabase.js?v=2.117.2"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
