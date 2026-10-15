@@ -42,8 +42,7 @@ if (desktopRequested) {
       <h2>Urządzenie</h2>
       <p><span class="capOk">●</span> Podgląd, zapis i DVR</p>
       <p><span class="capOk">●</span> Zoom cyfrowy</p>
-      <p><span class="capOff">●</span> PTZ: brak w PC Camera</p>
-      <p><span class="capOff">●</span> Siatki 2–16: brak kamer</p>
+      <p class="muted">Stan urządzeń znajdziesz w Diagnostyce.</p>
     </section>
     <div class="desktopSidebarFoot"><span>Alt + 1–5 przełącza moduły</span><a href="./?panel=owner" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
   document.body.prepend(shell);
@@ -81,7 +80,7 @@ if (desktopRequested) {
   overview.setAttribute("aria-label", "Pulpit podglądu kamer");
   overview.innerHTML = `
     <section class="desktopLiveScene" aria-label="Obraz z kamery na żywo">
-      <article class="desktopCameraTile desktopCameraLive"><div class="desktopTileMeta"><strong>Pokój dziecka — Kamera 1</strong><span class="desktopCameraSource">aktualny obraz</span><span class="desktopLivePill">● NA ŻYWO</span></div></article>
+      <article class="desktopCameraTile desktopCameraLive"><div class="desktopTileMeta"><strong>Kamera główna</strong><span class="desktopCameraSource">podgląd z wybranego źródła</span></div></article>
     </section>
     <section class="desktopTimelineDock" aria-label="Oś czasu nagrań bieżącej kamery"></section>
     <section class="desktopControlDock" aria-label="Sterowanie transmisją i nagrywaniem"><div class="desktopControlLocked" hidden><span>🔒</span><div><b>Sterowanie właściciela</b><small>Start, Stop i Restart są dostępne wyłącznie na komputerze-kamerze lub po zalogowaniu PIN-em właściciela.</small></div></div></section>
@@ -177,6 +176,24 @@ if (desktopRequested) {
   const settingsControls = settingsScreen.querySelector(".desktopSettingsControls");
   const settingsPreviewFrame = settingsScreen.querySelector(".desktopSettingsLiveFrame");
   if (setCard && settingsControls) settingsControls.append(setCard);
+  settingsControls.append(deviceManager);
+  // Stały właściciel kontrolek. Zmiana ekranu nie zatrzymuje strumienia.
+  const controlsScreen = document.createElement("section");
+  controlsScreen.className = "desktopControlsScreen";
+  controlsScreen.hidden = true;
+  controlsScreen.innerHTML = '<header><p class="desktopEyebrow">CENTRUM STEROWANIA</p><h2>Transmisja i nagrywanie</h2><p>Stop kończy zapis, ale pozostawia kamerę na żywo. Pełne wyłączenie jest osobnym trybem.</p></header>';
+  context.insertAdjacentElement("afterend", controlsScreen);
+  if (ctrlBar) controlsScreen.append(ctrlBar);
+  if (lockedControls) controlsScreen.append(lockedControls);
+  if ($("modeCard")) controlsScreen.append($("modeCard"));
+  controlDock.hidden = true;
+  settingsScreen.querySelector(".desktopSettingsPreview").hidden = true;
+  settingsScreen.querySelector(".desktopSettingsGrid").classList.add("settingsOnly");
+  settingsScreen.querySelector(".desktopSettingsFooter button").remove();
+  const autoSaveNote = document.createElement("p");
+  autoSaveNote.className = "muted small";
+  autoSaveNote.textContent = "Zmiany są stosowane przez poszczególne kontrolki. Parametry dostępne tylko na nadajniku pozostają zablokowane w podglądzie.";
+  settingsScreen.querySelector(".desktopSettingsFooter").append(autoSaveNote);
 
   const previewTweaks = document.createElement("section");
   previewTweaks.className = "desktopPreviewTweaks";
@@ -282,20 +299,15 @@ if (desktopRequested) {
     // Diagnostyka i Archiwum nie zostawiają pustej połowy monitora.
     overview.hidden = view !== "live";
     settingsScreen.hidden = view !== "settings";
-    if (layout) layout.hidden = view === "settings";
-    if (view === "settings" && liveStage?.parentElement !== settingsPreviewFrame) settingsPreviewFrame?.append(liveStage);
-    if (view === "archive" && liveStage?.parentElement !== main) main?.prepend(liveStage);
-    if (view !== "settings" && view !== "archive" && liveStage?.parentElement !== liveTile) liveTile?.append(liveStage);
+    controlsScreen.hidden = view !== "controls";
+    if (layout) layout.hidden = view !== "diagnostics";
+    context.querySelector(".desktopContextActions").hidden = view !== "live";
     // Pulpit ma być roboczy: kamera, zdarzenia i oś czasu — bez dodatkowych
     // kart diagnostycznych pod spodem. Ich dane są w module Diagnostyka.
     summary.hidden = true;
     if (view === "live" && $("dvrCard")?.parentElement !== timelineDock) timelineDock.append($("dvrCard"));
-    if (view === "live" && ctrlBar?.parentElement !== controlDock) controlDock?.append(ctrlBar);
-    if (view === "live" && deviceManager.parentElement !== controlDock) controlDock?.append(deviceManager);
-    if (view === "live") deviceManager.hidden = false;
     if (view === "live") $("dvrCard").hidden = false;
     if (view === "archive" && $("dvrCard")?.parentElement !== main) main?.prepend($("dvrCard"));
-    if (view === "controls" && ctrlBar?.parentElement !== main) main?.append(ctrlBar);
     const labels = {
       live: ["Pulpit", "Monitoring domu"],
       controls: ["Sterowanie", "Sterowanie kamerą"],
@@ -311,8 +323,7 @@ if (desktopRequested) {
     // Po opuszczeniu ustawień przywracamy komplet pól dla innych trybów
     // interfejsu; wybrana kategoria jest widoczna tylko w module Ustawienia.
     if (view === "settings") setSettingsGroup(activeSettingsGroup);
-    else Object.values(settingsGroups).flat().filter(Boolean).forEach(row => { row.hidden = false; });
-    const target = { live: "stage", controls: "modeCard", settings: "setCard", archive: "dvrCard" }[view];
+    const target = { live: "stage", controls: "ctrlBar", settings: "setCard", archive: "dvrCard" }[view];
     if (target) {
       main?.classList.remove("focus-live", "focus-controls", "focus-settings", "focus-archive");
       $(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -323,6 +334,7 @@ if (desktopRequested) {
   };
   const setActive = view => {
     if (view === "archive") {
+      shell.querySelectorAll("[data-desktop-view]").forEach(button => button.classList.toggle("active", button.dataset.desktopView === "archive"));
       document.dispatchEvent(new Event("hs-open-recordings"));
       return;
     }
@@ -330,6 +342,8 @@ if (desktopRequested) {
     openExistingView(view);
   };
   shell.querySelectorAll("[data-desktop-view]").forEach(button => button.addEventListener("click", () => setActive(button.dataset.desktopView)));
+  document.addEventListener("hs-recordings-closed", () => setActive("live"));
+  shell.querySelectorAll("[data-desktop-view]").forEach(button => { button.title = button.querySelector("b").textContent; });
 
   const sync = () => {
     const live = $("topStatus");
@@ -339,8 +353,8 @@ if (desktopRequested) {
     if ($("desktopLiveState")) $("desktopLiveState").textContent = isLive ? "Transmisja aktywna" : "Brak transmisji";
     if ($("desktopLiveDetail")) $("desktopLiveDetail").textContent = mode?.textContent?.trim() || live?.textContent?.trim() || "Sprawdzam stan…";
     const choices = $("cameraSelect")?.options;
-    const count = choices ? Math.max(1, choices.length - 1) : 1;
-    if ($("desktopCameraCount")) $("desktopCameraCount").textContent = `Kamery: ${count} aktywna${count === 1 ? "" : "e"}`;
+    const count = choices ? Array.from(choices).filter(option => option.value).length : 0;
+    if ($("desktopCameraCount")) $("desktopCameraCount").textContent = `Wykryte źródła: ${count}`;
     if ($("desktopSummaryCamera")) $("desktopSummaryCamera").textContent = `${count} aktywna${count === 1 ? "" : "e"}`;
     if ($("desktopSummaryStatus")) $("desktopSummaryStatus").textContent = isLive ? "System online" : "Oczekiwanie na transmisję";
     if ($("desktopSummaryRecording")) $("desktopSummaryRecording").textContent = mode?.textContent?.trim() || "Brak danych";

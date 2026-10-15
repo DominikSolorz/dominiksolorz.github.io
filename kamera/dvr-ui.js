@@ -59,6 +59,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     if (listRoot && restoreList) restoreList.replaceWith(listRoot);
     archiveModal.remove(); archiveModal = null; restoreStage = restoreDvr = restoreList = null;
     document.body.classList.remove("archiveOpen");
+    document.dispatchEvent(new Event("hs-recordings-closed"));
   }
   stage.addEventListener("contextmenu", e => {
     if (e.target.closest("#zoomBar, #startHere")) return;
