@@ -5,7 +5,7 @@
 }
 
 @media(max-width:950px),(pointer:coarse){
-  #stage #audioHud{top:54px!important;left:max(8px,env(safe-area-inset-left))!important;right:auto!important;bottom:auto!important}
+  html #stage #audioHud{top:54px!important;left:max(8px,env(safe-area-inset-left))!important;right:auto!important;bottom:auto!important}
   #stage #audioHud:not(.audioExpanded) .audioVolume{display:none!important}
 }
 *{box-sizing:border-box}
