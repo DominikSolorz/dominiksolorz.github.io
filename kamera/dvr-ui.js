@@ -140,7 +140,8 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     })));
     nowEl.hidden = !(now >= r[0] && now <= r[1]); nowEl.style.left = pct(now, r);
     cursorEl.hidden = cursor === null; if (cursor !== null) cursorEl.style.left = pct(cursor, r);
-    const n = zoom === "day" ? 12 : 6, step = (r[1] - r[0]) / n;
+    const compact = document.documentElement.classList.contains("mobileOwnerMode");
+    const n = compact ? (zoom === "day" ? 4 : 3) : (zoom === "day" ? 12 : 6), step = (r[1] - r[0]) / n;
     ticks.replaceChildren(...Array.from({ length: n + 1 }, (_, i) => el("span", { textContent: hm(r[0] + i * step), style: `left:${(100 * i) / n}%` })));
     timeLabel.textContent = cursor === null ? "● na żywo" : `▶ ${hms(cursor)}`;
     const at = cursor ?? now, show = at >= r[0] && at <= r[1];
@@ -315,7 +316,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     const total = files.filter(f => !f.recording);
     info.textContent = (total.length
       ? `${total.length} nagrań z tego dnia (od ${hm(total[0].start)}). Przeciągnij po pasku, aby przewinąć, albo dotknij 🏃/🔊.`
-      : "Brak nagrań z tego dnia.") + (driveErr ? ` (Google Drive: ${driveErr.message || driveErr})` : "");
+      : driveErr ? "Nie udało się sprawdzić archiwum Google Drive." : "Brak nagrań z tego dnia.") + (driveErr ? ` Błąd dostępu: ${driveErr.message || driveErr}. Sprawdź połączenie z archiwum w konfiguracji nadajnika.` : "");
     draw(); drawLib();
   }
 

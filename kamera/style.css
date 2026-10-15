@@ -900,6 +900,37 @@ html,body{background:radial-gradient(1000px 650px at 95% 0,rgba(154,22,44,.17),t
   #stage #audioHud #listenVolumeLabel{min-width:28px!important;font-size:10px!important}
 }
 
+/* PIN i formularze pozostają ponad nawigacją. */
+body.mobileOwnerMode:has(#lock:not([hidden])) .mobileBottomNav,body.mobileOwnerMode:has(#publicHome:not([hidden])) .mobileBottomNav,body.mobileOwnerMode:has(#authDialog:not([hidden])) .mobileBottomNav{display:none!important}
+.mobileOwnerMode #lock{box-sizing:border-box;min-height:100dvh;padding:16px;position:relative;z-index:110}
+.mobileOwnerMode .pinCard{box-sizing:border-box;width:min(100%,360px);max-width:360px;padding:22px 20px;border-radius:20px}
+.mobileOwnerMode .pinCard h1,.mobileOwnerMode .pinCard h2{font-size:26px}
+.mobileOwnerMode .keypad{gap:8px}
+.mobileOwnerMode .keypad button{height:clamp(46px,8dvh,62px);font-size:24px;border-radius:12px}
+.mobileOwnerMode #setCard{background:#171217!important;border-color:#49303d!important}
+.mobileOwnerMode #setCard .setRow{gap:10px;padding:10px 0}
+.mobileOwnerMode #setCard .setRow>svg{width:22px;height:22px;flex-shrink:0;color:#e9607d}
+.mobileOwnerMode #setCard .setRow label{min-width:0;font-size:13px;color:#cdbec8}
+.mobileOwnerMode #setCard select{font-size:16px!important;background:#241923;border-color:#553141;color:#f6eaf0;height:44px;padding:0 10px}
+.mobileOwnerMode #setCard h2{font-size:20px}
+.mobileOwnerMode #setCard .lightCtl button{width:38px;height:38px;background:#301b27;border-color:#663149}
+.mobileOwnerMode .dvrCtrls{display:grid!important;gap:10px;min-width:0;width:100%}
+.mobileOwnerMode .dvrCtrls>.dvrGroup{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));width:100%;min-width:0;gap:4px}
+.mobileOwnerMode .dvrCtrls>.dvrGroup:first-of-type{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.7fr)}
+.mobileOwnerMode .dvrGroup .dvrBtn{min-width:0!important;min-height:42px;padding:7px 3px!important;font-size:11px!important;white-space:normal}
+.mobileOwnerMode .dvrDate{box-sizing:border-box;width:100%;min-width:0!important;padding:6px!important;font-size:16px!important}
+.mobileOwnerMode .dvrOpenArchive{font-size:13px!important;min-height:44px;white-space:normal}
+.mobileOwnerMode .dvrLegend{display:flex!important;flex-wrap:wrap!important;gap:6px!important;white-space:normal!important;font-size:10px!important;max-width:100%}
+.mobileOwnerMode .dvrFoot{flex-wrap:wrap!important;gap:10px}
+.mobileOwnerMode .dvrTicks span{font-size:10px!important}
+.mobileOwnerMode .dvrTicks span:nth-child(n){display:block!important}
+.mobileOwnerMode .dvrTickWrap{padding-bottom:28px}
+.mobileOwnerMode .dvrPos{top:24px!important;font-size:11px!important;max-width:76px}
+.mobileOwnerMode .dvrInfo{font-size:12px!important;line-height:1.5;overflow-wrap:anywhere}
+.mobileOwnerMode .dvrCard,.mobileOwnerMode .dvrListCard{background:#171217!important;border-color:#49303d!important}
+.mobileOwnerMode .archiveModal{padding:12px;overflow:auto;background:#09090c}
+.mobileOwnerMode .archiveModalHead{flex-wrap:wrap;gap:10px}
+.mobileOwnerMode .archiveModalBody{display:flex;flex-direction:column;min-width:0}
 /* Telefon: natywny pionowy układ, a nie pomniejszony pulpit. */
 html.mobileOwnerMode{width:100%;min-height:100%;background:#09090c;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body.mobileOwnerMode{margin:0;min-width:0;width:100%;min-height:100dvh;background:#09090c!important;overflow-x:hidden;color:#f5f1f3}

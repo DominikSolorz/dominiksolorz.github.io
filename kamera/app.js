@@ -12,7 +12,7 @@ import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=5";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=98";
+import { mountDvr } from "./dvr-ui.js?v=99";
 import { accountClient } from "./auth.js?v=7";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
@@ -46,7 +46,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "175"; // musi się zgadzać z version.json
+const VERSION = "176"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1076,7 +1076,7 @@ const sender = (() => {
     onSubscribed: ch => { if (stream) setStatus(""); send(ch, { type: "broadcaster-ready" }); },
   });
 
-  function renderViewers() { if (live) showLive(`NA ŻYWO · oglądający: ${peers.size}`); }
+  function renderViewers() { showLive(live && stream && prefs.mode !== "off" ? `NA ŻYWO · oglądający: ${peers.size}` : ""); }
   function closePeer(id) { peers.get(id)?.pc.close(); peers.delete(id); renderViewers(); }
   function closeAll() { peers.forEach(p => p.pc.close()); peers.clear(); renderViewers(); }
 
@@ -1266,6 +1266,7 @@ const sender = (() => {
       zoomer?.stop();
       zoomer = createZoomer(s, w => { cropWidth = w; peers.forEach(p => tuneVideoSender(p.pc, w)); });
       showPlaceholder("");
+      renderViewers();
       s.getVideoTracks()[0]?.addEventListener("ended", () => { if (live && stream === s) cameraLost(); });
       camAttempt = 0;
       applyMedia();
@@ -1329,7 +1330,7 @@ const sender = (() => {
       archive.stop(); detector.stop(); closeAll();
       zoomer?.stop(); zoomer = null;
       stream?.getTracks().forEach(t => t.stop()); stream = null;
-      video.srcObject = null; setStatus(""); showPlaceholder("Kamera wstrzymana — włącz ją z telefonu.");
+      video.srcObject = null; showLive(""); setStatus(""); showPlaceholder("Kamera wyłączona. Otwórz Sterowanie i wybierz Start lub Sam podgląd.");
     } else if (!stream) {
       camAttempt = 0; setStatus("Uruchamiam kamerę i mikrofon…");
       if (await acquireCamera()) { setStatus(""); send(chan.channel, { type: "broadcaster-ready" }); }
@@ -1390,8 +1391,8 @@ const sender = (() => {
     live = true;
     clearInterval(senderLockTimer); senderLockTimer = setInterval(renewSenderLock, 10000);
     $("startBtn").hidden = true; $("stopBtn").hidden = false;
-    showLive("NA ŻYWO · oglądający: 0");
-    if (prefs.mode === "off") { setStatus(""); showPlaceholder("Kamera wstrzymana — włącz ją z telefonu."); }
+    showLive("");
+    if (prefs.mode === "off") { setStatus(""); showPlaceholder("Kamera wyłączona. Otwórz Sterowanie i wybierz Start lub Sam podgląd."); }
     else {
       setStatus("Uruchamiam kamerę i mikrofon…");
       if (!(await acquireCamera()) && live) scheduleCameraRetry();
@@ -2012,7 +2013,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "81";
+  const SERVICE_WORKER_BUILD = "82";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {

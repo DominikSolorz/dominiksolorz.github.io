@@ -120,7 +120,7 @@ if (isMobileOwnerApp) {
     mobileHeader.classList.toggle("online", Boolean(connected));
     if (label && topStatus) label.textContent = connected ? "Transmisja aktywna" : topStatus.textContent?.trim() || "Sprawdzam połączenie…";
   };
-  new MutationObserver(updateStatus).observe(topStatus || document.body, { childList: true, subtree: true, characterData: true });
+  new MutationObserver(updateStatus).observe(topStatus || document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] });
   updateStatus();
   // Powrót z archiwum lub ustawień nie może wyrzucać użytkownika na początek.
   let initialView = "home";
