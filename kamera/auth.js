@@ -15,6 +15,16 @@ const section = name => document.querySelectorAll("[data-auth-step]").forEach(el
 const callbackUrl = () => `${location.origin}${location.pathname}`;
 const postCode = value => /^\d{2}-\d{3}$/.test(value);
 let pendingConfirmationEmail = "";
+const ENTRY_TICKET = "hs-device-entry-v1";
+let returnedWithEmailToken = location.hash.includes("access_token");
+let continuing = false;
+function takeDeviceEntry(user) {
+  let ticket = null;
+  try { ticket = JSON.parse(sessionStorage.getItem(ENTRY_TICKET) || "null"); sessionStorage.removeItem(ENTRY_TICKET); } catch (_) {}
+  return !!ticket && ticket.userId === user.id && Date.now() - ticket.at >= 0 && Date.now() - ticket.at < 120000
+    && ["desktop", "phone"].includes(ticket.device)
+    && (ticket.device !== "phone" || ["iphone", "android"].includes(ticket.platform));
+}
 
 function explainAuthError(error) {
   const raw = String(error?.message || error?.error_description || error || "Nieznany błąd logowania.");
@@ -87,7 +97,10 @@ async function saveDevice(device, platform) {
 }
 function enterPanel() { $("authDialog").hidden = true; window.__openSecurePanel?.(); }
 
-async function continueWithSession() {
+async function continueWithSession(deviceChosen = false) {
+  if (continuing) return;
+  continuing = true;
+  try {
   const user = await currentAccountUser();
   if (!user) { section("login"); return; }
   const profile = await profileFor(user);
@@ -98,12 +111,18 @@ async function continueWithSession() {
     section("profile"); return;
   }
   const security = await securityForCurrentUser();
-  if (!profile.preferred_device) { section("device"); return; }
-  if (!security) { section("pin"); return; }
+  // Wybór dotyczy bieżącego urządzenia, nie ostatniego urządzenia konta.
+  if (!deviceChosen) { section("device"); message(""); return; }
+  if (!security?.pin_hash) { section("pin"); message(""); return; }
   enterPanel();
+  } finally { continuing = false; }
 }
 
-window.__ensureAccountReady = async () => { await continueWithSession(); return currentAccountUser(); };
+window.__ensureAccountReady = async () => {
+  const user = await currentAccountUser();
+  if (!user) throw new Error("Sesja konta wygasła. Zaloguj się ponownie.");
+  return user;
+};
 window.__showAccount = async () => { $("authDialog").hidden = false; message(""); await continueWithSession(); };
 // Osobny adres ?auth=register otwiera formularz niezależnie od skryptów strony głównej.
 // Pozwala to wkleić link bezpośrednio w przeglądarce lub aplikacji Windows.
@@ -159,16 +178,50 @@ $("verificationCodeForm")?.addEventListener("submit", async event => {
   } catch (error) { message(explainAuthError(error), true); }
 });
 $("profileForm")?.addEventListener("submit", async event => { event.preventDefault(); try { await saveProfile(event.currentTarget); section("device"); } catch (error) { message(error.message, true); } });
-document.querySelectorAll("[data-device]").forEach(button => button.addEventListener("click", () => { document.querySelectorAll("[data-device]").forEach(item => item.classList.toggle("selected", item === button)); $("deviceValue").value = button.dataset.device; $("platformChoices").hidden = button.dataset.device !== "phone"; }));
-document.querySelectorAll("[data-platform]").forEach(button => button.addEventListener("click", () => { document.querySelectorAll("[data-platform]").forEach(item => item.classList.toggle("selected", item === button)); $("platformValue").value = button.dataset.platform; }));
-$("deviceForm")?.addEventListener("submit", async event => { event.preventDefault(); const device = $("deviceValue").value, platform = $("platformValue").value; if (!device || (device === "phone" && !platform)) return message("Wybierz urządzenie, a przy telefonie także Android albo iPhone.", true); try { await saveDevice(device, platform); section("pin"); } catch (error) { message(error.message, true); } });
+document.querySelectorAll("[data-device]").forEach(button => button.addEventListener("click", () => {
+  document.querySelectorAll("[data-device]").forEach(item => { const active = item === button; item.classList.toggle("selected", active); item.setAttribute("aria-pressed", String(active)); });
+  $("deviceValue").value = button.dataset.device;
+  $("platformValue").value = "";
+  document.querySelectorAll("[data-platform]").forEach(item => { item.classList.remove("selected"); item.setAttribute("aria-pressed", "false"); });
+  $("platformChoices").hidden = button.dataset.device !== "phone";
+  message("");
+}));
+document.querySelectorAll("[data-platform]").forEach(button => button.addEventListener("click", () => { document.querySelectorAll("[data-platform]").forEach(item => { const active = item === button; item.classList.toggle("selected", active); item.setAttribute("aria-pressed", String(active)); }); $("platformValue").value = button.dataset.platform; }));
+$("deviceForm")?.addEventListener("submit", async event => {
+  event.preventDefault();
+  const device = $("deviceValue").value, platform = $("platformValue").value;
+  if (!["desktop", "phone"].includes(device) || (device === "phone" && !["iphone", "android"].includes(platform))) return message("Wybierz urządzenie, a przy telefonie także Android albo iPhone.", true);
+  const submit = event.currentTarget.querySelector('[type="submit"]');
+  submit.disabled = true;
+  message("Przygotowuję wybrany panel…");
+  try {
+    const user = await currentAccountUser();
+    if (!user) throw new Error("Sesja wygasła. Zaloguj się ponownie.");
+    await saveDevice(device, device === "phone" ? platform : null);
+    // Jednorazowe wznowienie po przeładowaniu nie przechowuje PIN-u ani uprawnień.
+    sessionStorage.setItem(ENTRY_TICKET, JSON.stringify({ userId: user.id, device, platform, at: Date.now() }));
+    localStorage.setItem("hs-ui-mode", device === "phone" ? "phone" : "computer");
+    localStorage.setItem("hs-phone-platform", device === "phone" ? platform : "");
+    const url = new URL(location.href);
+    ["auth", "view", "desktop", "app", "wroc"].forEach(key => url.searchParams.delete(key));
+    url.searchParams.set("ui", device === "phone" ? "phone" : "computer");
+    url.hash = "";
+    location.replace(url.toString());
+  } catch (error) { submit.disabled = false; message(error.message, true); }
+});
 $("pinSetupForm")?.addEventListener("submit", async event => { event.preventDefault(); const pin = $("setupPin").value, repeat = $("setupPinRepeat").value; if (!/^\d{4}$|^\d{6}$/.test(pin)) return message("PIN musi mieć dokładnie 4 albo 6 cyfr.", true); if (pin !== repeat) return message("Numery PIN nie są identyczne.", true); try { await savePin(pin); message("PIN zapisany. Otwieram bezpieczny panel…"); setTimeout(enterPanel, 280); } catch (error) { message(error.message, true); } });
 
 accountClient.auth.onAuthStateChange((event, session) => {
-  const returnedFromEmail = event === "SIGNED_IN" && (!!session || location.hash.includes("access_token"));
-  if (returnedFromEmail || (event === "INITIAL_SESSION" && new URLSearchParams(location.search).get("auth") === "confirmed")) {
+  const returnedFromEmail = event === "SIGNED_IN" && returnedWithEmailToken && !!session;
+  let pendingEntry = false;
+  try { pendingEntry = !!sessionStorage.getItem(ENTRY_TICKET); } catch (_) {}
+  if (returnedFromEmail || (event === "INITIAL_SESSION" && (pendingEntry || new URLSearchParams(location.search).get("auth") === "confirmed"))) {
+    returnedWithEmailToken = false;
     $("authDialog").hidden = false;
-    setTimeout(() => continueWithSession().catch(error => message(error.message, true)), 0);
+    setTimeout(async () => {
+      try { const user = await currentAccountUser(); await continueWithSession(user ? takeDeviceEntry(user) : false); }
+      catch (error) { message(error.message, true); }
+    }, 0);
   }
 });
 // Sygnalizuje stronie głównej, że kliknięcie „Zaloguj się” może już otworzyć okno.

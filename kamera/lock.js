@@ -1,5 +1,5 @@
 // Ekran blokady z klawiaturą PIN (telefon) i wpisywaniem z klawiatury (komputer).
-import { unlock } from "./access.js?v=17";
+import { unlock } from "./access.js?v=18";
 
 export function requireAccess() {
   const root = document.getElementById("lock");

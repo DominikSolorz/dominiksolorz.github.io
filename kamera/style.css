@@ -900,6 +900,18 @@ html,body{background:radial-gradient(1000px 650px at 95% 0,rgba(154,22,44,.17),t
   #stage #audioHud #listenVolumeLabel{min-width:28px!important;font-size:10px!important}
 }
 
+/* Brama wyboru urządzenia przed obowiązkowym PIN-em. */
+#deviceForm .deviceTiles button{min-height:154px;padding:20px;border:1px solid #53313f;background:#171117;border-radius:15px;transition:border-color .15s,background .15s}
+#deviceForm .deviceTiles button>b{font-size:34px;color:#f16b85}
+#deviceForm .deviceTiles button.selected{border-color:#fa6984;background:linear-gradient(145deg,#481b2c,#23141e);box-shadow:0 0 0 2px #e34b6a22}
+#deviceForm .platformChoices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0}
+#deviceForm .platformChoices[hidden]{display:none!important}
+#deviceForm .platformChoices>p{grid-column:1/-1;margin:0 0 3px;color:#ccb8c3;font-size:13px}
+#deviceForm .platformChoices button{display:grid;gap:5px;min-height:66px;border:1px solid #53313f;border-radius:10px;background:#1b121b;color:#f5e8ee;font:700 15px inherit;padding:12px}
+#deviceForm .platformChoices button small{font-size:11px;color:#bca6b2;font-weight:400}
+#deviceForm .platformChoices button.selected{background:#491b2d;border-color:#fa6984}
+#deviceForm .deviceSecurityNote{padding:12px;border-left:2px solid #ce3d5f;background:#25131d;font-size:12px!important;color:#cab8c2!important;border-radius:5px}
+@media(max-width:420px){#deviceForm .deviceTiles button{min-height:140px;padding:14px}#deviceForm .deviceTiles button small{font-size:11px}}
 /* PIN i formularze pozostają ponad nawigacją. */
 body.mobileOwnerMode:has(#lock:not([hidden])) .mobileBottomNav,body.mobileOwnerMode:has(#publicHome:not([hidden])) .mobileBottomNav,body.mobileOwnerMode:has(#authDialog:not([hidden])) .mobileBottomNav{display:none!important}
 .mobileOwnerMode #lock{box-sizing:border-box;min-height:100dvh;padding:16px;position:relative;z-index:110}

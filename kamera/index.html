@@ -20,8 +20,8 @@
   try { savedUiMode = localStorage.getItem("hs-ui-mode") || ""; } catch (_) { /* tryb prywatny */ }
   const requestedUiMode = routeParams.get("ui");
   const nativeWindowsApp = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview;
-  const selectedUiMode = nativeWindowsApp ? "computer" : requestedUiMode === "phone" || requestedUiMode === "computer"
-    ? requestedUiMode : savedUiMode;
+  const selectedUiMode = requestedUiMode === "phone" || requestedUiMode === "computer"
+    ? requestedUiMode : nativeWindowsApp ? "computer" : savedUiMode;
   // Nadajnik ma zawsze pozostać lekką, osobną aplikacją Chrome.
   const isTransmitter = location.hash === "#nadaj";
   const requestedView = routeParams.get("view");
@@ -35,7 +35,7 @@
   // Zwykły Chrome na telefonie/tablecie dostaje pełny układ Mobile bez
   // dodatkowego parametru. "view=desktop" pozostaje świadomym wyjątkiem
   // do testów; stary "desktop=1" nie rozwija już panelu na telefonie.
-  const isMobileApp = !nativeWindowsApp && (selectedUiMode === "phone" || (mobileBrowser && requestedUiMode !== "computer" && requestedView !== "desktop") || (selectedUiMode !== "computer" && requestedView !== "desktop" && (mobileRequested || compactScreen)));
+  const isMobileApp = selectedUiMode === "phone" || (!nativeWindowsApp && ((mobileBrowser && requestedUiMode !== "computer" && requestedView !== "desktop") || (selectedUiMode !== "computer" && requestedView !== "desktop" && (mobileRequested || compactScreen))));
   if (isMobileApp) {
     document.documentElement.classList.add("mobileOwnerMode");
     document.documentElement.dataset.clientMode = "mobile";
@@ -50,7 +50,7 @@
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=177">
+<link rel="stylesheet" href="style.css?v=178">
 </head>
 <body>
 <!-- Publiczna strona główna. Panel kamery pojawia się dopiero po świadomym
@@ -76,7 +76,19 @@
 <form id="registerForm" data-auth-step="register" class="authForm" hidden><p class="authEyebrow">NOWE KONTO</p><h1>Załóż konto</h1><p>Wszystkie pola oznaczone gwiazdką są potrzebne do utworzenia konta.</p><div class="authGrid"><label>Imię *<input name="first_name" autocomplete="given-name" required></label><label>Nazwisko *<input name="last_name" autocomplete="family-name" required></label></div><label>Adres *<input name="address_line" autocomplete="street-address" required></label><div class="authGrid"><label>Kod pocztowy *<input name="postal_code" placeholder="00-000" autocomplete="postal-code" required></label><label>Telefon <input name="phone" type="tel" autocomplete="tel"></label></div><label>E-mail *<input name="email" type="email" autocomplete="email" required></label><div class="authGrid"><label>Hasło *<input name="password" type="password" autocomplete="new-password" required></label><label>Powtórz hasło *<input name="password_repeat" type="password" autocomplete="new-password" required></label></div><label class="authCheck"><input name="terms" type="checkbox" required><span>Akceptuję <a href="regulamin.html" target="_blank">Regulamin</a> i <a href="polityka-prywatnosci.html" target="_blank">Politykę prywatności</a>.</span></label><button class="authPrimary" type="submit">Utwórz konto i wyślij e-mail →</button><button class="authToLogin authTextBtn" type="button">Masz konto? Zaloguj się</button></form>
 <section data-auth-step="confirm" class="authForm" hidden><p class="authEyebrow">POTWIERDŹ KONTO</p><h1>Sprawdź e-mail</h1><p>Wysłaliśmy wiadomość potwierdzającą. Otwórz bezpieczny link w wiadomości albo przepisz kod weryfikacyjny, jeśli jest podany.</p><form id="verificationCodeForm" class="verificationCodeForm"><label>Kod weryfikacyjny (opcjonalnie)<input id="verificationCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" maxlength="8" placeholder="Kod z e-maila"></label><button class="authSecondary" type="submit">Potwierdź kod</button></form><div class="authNotice">Link lub kod są jednorazowe. Nie przekazuj ich innej osobie. Jeśli nie widzisz wiadomości, sprawdź Spam.</div><button id="resendConfirmation" class="authPrimary" type="button">Wyślij wiadomość ponownie</button><button class="authToLogin authTextBtn" type="button">Wróć do logowania</button></section>
     <form id="profileForm" data-auth-step="profile" class="authForm" hidden><p class="authEyebrow">DANE WŁAŚCICIELA</p><h1>Uzupełnij profil</h1><p>Dane są dostępne wyłącznie na Twoim koncie.</p><div class="authGrid"><label>Imię *<input name="first_name" required></label><label>Nazwisko *<input name="last_name" required></label></div><label>Adres *<input name="address_line" required></label><div class="authGrid"><label>Kod pocztowy *<input name="postal_code" placeholder="00-000" required></label><label>Telefon <input name="phone" type="tel"></label></div><button class="authPrimary" type="submit">Dalej →</button></form>
-    <form id="deviceForm" data-auth-step="device" class="authForm" hidden><p class="authEyebrow">TWOJE URZĄDZENIE</p><h1>Na czym korzystasz?</h1><p>Dobierzemy układ panelu. Nie zmienia to komputera-nadajnika kamery.</p><div class="deviceTiles"><button data-device="desktop" type="button"><b>▣</b><span>Komputer</span><small>Windows / przeglądarka</small></button><button data-device="phone" type="button"><b>◉</b><span>Telefon</span><small>mobilny widok panelu</small></button></div><div id="platformChoices" class="platformChoices" hidden><button data-platform="android" type="button">Android</button><button data-platform="iphone" type="button">iPhone</button></div><input id="deviceValue" type="hidden"><input id="platformValue" type="hidden"><button class="authPrimary" type="submit">Zapisz wybór →</button></form>
+    <form id="deviceForm" data-auth-step="device" class="authForm" hidden>
+      <p class="authEyebrow">KONTO → URZĄDZENIE → PIN → PANEL</p>
+      <h1>Wybierz swój panel</h1>
+      <p>Na jakim urządzeniu chcesz teraz korzystać? Po wyborze poprosimy o Twój PIN.</p>
+      <div class="deviceTiles" role="group" aria-label="Wybierz urządzenie">
+        <button data-device="desktop" type="button" aria-pressed="false"><b aria-hidden="true">▣</b><span>Komputer</span><small>Duży podgląd, boczne menu i pełny pulpit</small></button>
+        <button data-device="phone" type="button" aria-pressed="false"><b aria-hidden="true">▯</b><span>Telefon</span><small>Pełna szerokość ekranu i dolna nawigacja</small></button>
+      </div>
+      <div id="platformChoices" class="platformChoices" hidden role="group" aria-label="System telefonu"><p>Wybierz system telefonu</p><button data-platform="iphone" type="button" aria-pressed="false">iPhone <small>iOS / Safari</small></button><button data-platform="android" type="button" aria-pressed="false">Android <small>Chrome / PWA</small></button></div>
+      <input id="deviceValue" type="hidden"><input id="platformValue" type="hidden">
+      <p class="deviceSecurityNote">Wybór zmienia wygląd panelu, nie uprawnienia ani komputer nadający obraz.</p>
+      <button class="authPrimary" type="submit">Dalej do PIN-u →</button>
+    </form>
     <form id="pinSetupForm" data-auth-step="pin" class="authForm" hidden><p class="authEyebrow">DRUGI POZIOM DOSTĘPU</p><h1>Ustaw nowy PIN</h1><p>Wybierz cztery albo sześć cyfr. PIN będzie wymagany przy każdym następnym wejściu do panelu.</p><label>PIN<input id="setupPin" inputmode="numeric" pattern="[0-9]{4}|[0-9]{6}" maxlength="6" type="password" autocomplete="new-password" required></label><label>Powtórz PIN<input id="setupPinRepeat" inputmode="numeric" pattern="[0-9]{4}|[0-9]{6}" maxlength="6" type="password" autocomplete="new-password" required></label><button class="authPrimary" type="submit">Zapisz PIN i otwórz panel →</button></form>
   </div>
 </section>
@@ -483,8 +495,8 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="auth.js?v=7"></script>
-<script type="module" src="app.js?v=182"></script>
+<script type="module" src="auth.js?v=8"></script>
+<script type="module" src="app.js?v=183"></script>
 <script type="module" src="desktop.js?v=26"></script>
 <script type="module" src="mobile.js?v=9"></script>
 </body>
