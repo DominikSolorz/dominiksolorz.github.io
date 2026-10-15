@@ -6,6 +6,9 @@ if (args.FirstOrDefault() == "--crash-harness") {
     await CrashTestHost.RunAsync(args); return;
 }
 var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HomeSecurityAgent");
+if(args.FirstOrDefault()?.StartsWith("--drive-",StringComparison.Ordinal)==true) {
+    await DriveNativeCommands.Run(args,directory); return;
+}
 string? testPipe = null;
 if (args.Length != 0)
 {

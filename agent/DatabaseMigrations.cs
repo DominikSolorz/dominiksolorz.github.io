@@ -6,7 +6,7 @@ public sealed class JournalCapacityException : Exception;
 
 public sealed partial class AgentDatabase
 {
-    public const int CurrentSchema = 3;
+    public const int CurrentSchema = 4;
     private static readonly string[] Migrations = [
         """
         CREATE TABLE component_state(id TEXT PRIMARY KEY, json TEXT NOT NULL, updated_at TEXT NOT NULL);
@@ -33,6 +33,20 @@ public sealed partial class AgentDatabase
         CREATE TABLE integrations(id TEXT PRIMARY KEY, provider TEXT NOT NULL CHECK(provider='fake'),
             revision TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('configured_unverified','disabled')),
             updated_at TEXT NOT NULL);
+        """,
+        """
+        ALTER TABLE integrations RENAME TO integrations_v3;
+        CREATE TABLE integrations(id TEXT PRIMARY KEY, provider TEXT NOT NULL CHECK(provider IN ('fake','google_drive')),
+            revision TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('configured_unverified','disabled')),
+            updated_at TEXT NOT NULL);
+        INSERT INTO integrations SELECT * FROM integrations_v3;
+        DROP TABLE integrations_v3;
+        CREATE TABLE drive_uploads(id TEXT PRIMARY KEY, integration_id TEXT NOT NULL REFERENCES integrations(id),
+            path TEXT NOT NULL, folder_id TEXT NOT NULL, name TEXT NOT NULL, size INTEGER NOT NULL, md5 TEXT NOT NULL,
+            remote_id TEXT, status TEXT NOT NULL CHECK(status IN ('queued','running','retry_wait','blocked','failed','succeeded')),
+            attempts INTEGER NOT NULL DEFAULT 0, next_ms INTEGER NOT NULL, lease TEXT, lease_until_ms INTEGER,
+            code TEXT, updated_ms INTEGER NOT NULL);
+        CREATE INDEX drive_uploads_ready ON drive_uploads(status,next_ms);
         """
     ];
     private static void Migrate(SqliteConnection db)

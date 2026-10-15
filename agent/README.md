@@ -1,5 +1,7 @@
 # HomeSecurityAgent — szkielet etapu 2
 
+Natywny adapter Google Drive API, autoryzację OAuth i granice weryfikacji opisano w [GOOGLE-DRIVE.md](GOOGLE-DRIVE.md). Adapter nie został jeszcze zweryfikowany uploadem na rzeczywiste konto ani dołączony do instalatora.
+
 Agent jest osobnym procesem .NET 10 dla Windows. Nie jest uruchamiany przez panel, nie ma zależności od WebView2 i nie otwiera kamery. Nie zainstalowano autostartu ani usługi Windows.
 
 ## Projekty

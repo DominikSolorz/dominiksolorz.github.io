@@ -42,7 +42,7 @@ static class CredentialTests
             old.SetState("migration-fixture",new { status="preserved" });
             using (var legacy = new SqliteConnection("Data Source=" + Path.Combine(migrationRoot,"agent.db"))) {
                 legacy.Open(); using var fixture = legacy.CreateCommand();
-                fixture.CommandText = "DROP TABLE integrations; UPDATE schema_version SET version=2"; fixture.ExecuteNonQuery();
+                fixture.CommandText = "DROP TABLE drive_uploads; DROP TABLE integrations; UPDATE schema_version SET version=2"; fixture.ExecuteNonQuery();
             }
             var migrated = new AgentDatabase(migrationRoot);
             check(migrated.Snapshot().GetProperty("components").TryGetProperty("migration-fixture",out _), "schema 2 upgrade preserves existing state");

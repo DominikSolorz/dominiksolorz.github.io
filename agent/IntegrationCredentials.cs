@@ -16,6 +16,10 @@ public sealed class IntegrationCredentials
     // Native provisioning only. Caller owns and must clear the incoming buffer.
     // Immutable encrypted revisions are written BEFORE the SQLite pointer is committed.
     public void ConfigureFake(Guid integrationId, byte[] credential)
+        => Configure(integrationId, credential, "fake");
+    internal void ConfigureDrive(Guid integrationId, byte[] credential)
+        => Configure(integrationId, credential, "google_drive");
+    private void Configure(Guid integrationId, byte[] credential, string provider)
     {
         if (integrationId == Guid.Empty) throw new ArgumentException("Integration ID required.");
         if (credential.Length is < 16 or > 16000) throw new ArgumentException("Credential size invalid.");
@@ -25,11 +29,34 @@ public sealed class IntegrationCredentials
         credential.CopyTo(envelope,32);
         try { secrets.Save(revision, envelope); } finally { CryptographicOperations.ZeroMemory(envelope); }
         using var db = database.Open(); using var tx = db.BeginTransaction(); using var c = db.CreateCommand(); c.Transaction = tx;
-        c.CommandText = "INSERT INTO integrations VALUES($id,'fake',$revision,'configured_unverified',$now) ON CONFLICT(id) DO UPDATE SET revision=$revision,status='configured_unverified',updated_at=$now";
+        c.CommandText = "INSERT INTO integrations VALUES($id,$provider,$revision,'configured_unverified',$now) ON CONFLICT(id) DO UPDATE SET provider=$provider,revision=$revision,status='configured_unverified',updated_at=$now";
+        c.Parameters.AddWithValue("$provider", provider);
         c.Parameters.AddWithValue("$id", integrationId.ToString()); c.Parameters.AddWithValue("$revision", revision);
         c.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O")); c.ExecuteNonQuery(); tx.Commit();
     }
     public IntegrationMetadata? GetMetadata(Guid id) => Read(id)?.Metadata;
+    internal string DriveRevision(Guid id) {
+        var entry=Read(id);
+        if(entry is null || entry.Value.Metadata.Provider!="google_drive" || entry.Value.Metadata.Status=="disabled")
+            throw new DriveFailure("INTEGRATION_UNAVAILABLE",true);
+        return entry.Value.Revision;
+    }
+    internal byte[] ResolveDrive(Guid id)
+    {
+        var entry = Read(id);
+        if (entry is null || entry.Value.Metadata.Provider != "google_drive" || entry.Value.Metadata.Status == "disabled")
+            throw new DriveFailure("INTEGRATION_UNAVAILABLE", blocked: true);
+        byte[]? envelope = null;
+        try {
+            envelope = secrets.Read(entry.Value.Revision);
+            if (envelope is null || envelope.Length < 48 || new Guid(envelope.AsSpan(0,16)) != id ||
+                new Guid(envelope.AsSpan(16,16)).ToString("N") != entry.Value.Revision)
+                throw new DriveFailure("SECRET_UNAVAILABLE", blocked: true);
+            return envelope.AsSpan(32).ToArray();
+        } catch (Exception e) when (e is CryptographicException or IOException or UnauthorizedAccessException or ArgumentException) {
+            throw new DriveFailure("SECRET_UNREADABLE", blocked: true);
+        } finally { if (envelope is not null) CryptographicOperations.ZeroMemory(envelope); }
+    }
     private (IntegrationMetadata Metadata, string Revision)? Read(Guid id)
     {
         using var db = database.Open(); using var c = db.CreateCommand();
@@ -50,6 +77,7 @@ public sealed class IntegrationCredentials
         var entry = Read(id);
         if (entry is null) return new("not_configured", "INTEGRATION_NOT_FOUND");
         if (entry.Value.Metadata.Status == "disabled") return new("disabled");
+        if (entry.Value.Metadata.Provider != "fake") return new("not_applicable");
         byte[]? buffer = null;
         try
         {
