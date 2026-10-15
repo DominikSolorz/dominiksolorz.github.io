@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Test mostka agenta</title>
+<style>
+body{font:15px system-ui;background:#100c12;color:#f6edf2;margin:0;padding:30px}main{max-width:960px;margin:auto}
+h1{font-size:26px}p{color:#bcaab6;line-height:1.5}.actions{display:flex;gap:12px;flex-wrap:wrap}
+button{padding:14px 20px;background:#491d30;color:white;border:1px solid #be4164;border-radius:10px;font:inherit;cursor:pointer}
+button:disabled{opacity:.5}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#201720;border:1px solid #49313f;padding:18px;border-radius:10px}
+#state{font-weight:700;color:#f78da8}small{color:#bcaab6}
+</style><main>
+<h1>Diagnostyka Named Pipe / WebView2</h1>
+<p>Izolowany test. Ta strona nie ładuje app.js, nie otwiera kamery i nie korzysta z prawdziwych poświadczeń Drive.</p>
+<div class="actions"><button id="ping">Ping agenta</button><button id="snapshot">Pobierz stan</button><button id="lookup">Wynik ostatniej komendy</button></div>
+<p id="state" role="status">Gotowy</p><small id="last"></small><pre id="output">Oczekiwanie na test…</pre>
+</main><script>
+const pending=new Map(), records=[]; let lastId=window.bridgeTestConfig.priorId || null;
+const output=document.getElementById('output'), state=document.getElementById('state');
+chrome.webview.addEventListener('message',event=>{
+ if(event.data?.type!=='agent.result')return;
+ const result=event.data.result, request=pending.get(result.id); if(!request)return;
+ clearTimeout(request.timer);pending.delete(result.id);request.resolve(result);
+});
+async function command(name,args={},id=crypto.randomUUID()){
+ const started=performance.now();
+ const result=await new Promise(resolve=>{
+  const timer=setTimeout(()=>{pending.delete(id);resolve({id,status:'unknown',code:'PAGE_TIMEOUT'});},7000);
+  pending.set(id,{resolve,timer});chrome.webview.postMessage({type:'agent.command',id,name,args});
+ });
+ const record={name,id,status:result.status,code:result.code||null,milliseconds:Math.round(performance.now()-started),result:result.result};
+ records.push(record);output.textContent=JSON.stringify(records,null,2);state.textContent=name+': '+result.status;
+ document.getElementById('last').textContent='ID: '+id;
+ if(name!=='command.status')lastId=id;
+ return result;
+}
+async function manual(name){
+ document.querySelectorAll('button').forEach(b=>b.disabled=true);
+ try{await command(name,name==='command.status'?{id:lastId||crypto.randomUUID()}:{});}
+ finally{document.querySelectorAll('button').forEach(b=>b.disabled=false);}
+}
+document.getElementById('ping').onclick=()=>manual('agent.ping');
+document.getElementById('snapshot').onclick=()=>manual('system.snapshot');
+document.getElementById('lookup').onclick=()=>manual('command.status');
+async function suite(){
+ let firstId=null;
+ function check(condition,message){if(!condition)throw new Error(message);}
+ try{
+  if(window.bridgeTestConfig.unavailable){
+   const missing=await command('agent.ping');check(missing.status==='unknown'&&missing.code!=='PAGE_TIMEOUT','Agent missing must return native unknown');
+  }else{
+   if(window.bridgeTestConfig.priorId){
+    const prior=await command('command.status',{id:window.bridgeTestConfig.priorId});
+    check(prior.status==='succeeded'&&prior.result?.status==='succeeded','Prior result must survive agent restart');
+   }
+   const ping=await command('agent.ping');firstId=ping.id;check(ping.status==='succeeded','Ping failed');
+   const snapshot=await command('system.snapshot');check(snapshot.status==='succeeded'&&snapshot.result?.components?.agent?.state?.status==='ready','Snapshot failed');
+   const saved=await command('command.status',{id:firstId});check(saved.result?.status==='succeeded','Command lookup failed');
+   check((await command('agent.ping',{},firstId)).status==='succeeded','Duplicate failed');
+   check((await command('system.snapshot',{},firstId)).code==='ID_CONFLICT','Conflict not rejected');
+   check((await command('secret.read',{id:'drive'})).status==='rejected','Secret command exposed');
+   check((await command('system.snapshot',{sql:'SELECT 1'})).status==='rejected','Unexpected args accepted');
+  }
+  state.textContent='Test zakończony pomyślnie';
+  chrome.webview.postMessage({type:'bridge-test.report',report:{passed:true,firstId,records}});
+ }catch(error){
+  state.textContent='Błąd testu: '+error.message;
+  chrome.webview.postMessage({type:'bridge-test.report',report:{passed:false,error:error.message,firstId,records}});
+ }
+}
+if(window.bridgeTestConfig.navigatePending){
+ command('agent.ping');
+ setTimeout(()=>location.href='https://agent-test.home-security.invalid/untrusted.html',150);
+}else if(window.bridgeTestConfig.automatic)suite();
+</script></html>

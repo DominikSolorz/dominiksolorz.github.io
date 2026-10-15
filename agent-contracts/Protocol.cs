@@ -19,6 +19,8 @@ public static class AgentProtocol
         && uri.AbsolutePath is "/kamera/" or "/kamera/index.html";
     public static string PipeName => "HomeSecurity.Agent.v1." + Convert.ToHexString(
         SHA256.HashData(Encoding.UTF8.GetBytes(WindowsIdentity.GetCurrent().User!.Value)))[..24];
+    public static string TestPipeName(string directory) => PipeName + ".test." +
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Path.GetFullPath(directory).ToUpperInvariant())))[..16];
     public static JsonElement Element(object value) => JsonSerializer.SerializeToElement(value, Json);
     public static bool IsAllowed(string name, JsonElement args)
     {

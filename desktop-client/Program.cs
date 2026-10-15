@@ -23,6 +23,12 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        if (args.Length >= 2 && args[0] == "--agent-bridge-test")
+        {
+            ApplicationConfiguration.Initialize();
+            Application.Run(new AgentBridgeTestWindow(args));
+            return; // Bez aktualizatora, strony publicznej, PIN-u i uruchamiania kamery.
+        }
         if (args.Length == 5 && args[0] == "--apply-update")
         {
             ApplyPreparedUpdate(args);
