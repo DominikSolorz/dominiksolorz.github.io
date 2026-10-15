@@ -21,7 +21,7 @@ dotnet run --project agent-tests/HomeSecurity.Agent.Tests.csproj -c Release
 dotnet run --project agent/HomeSecurityAgent.csproj -c Release
 ```
 
-Agent używa katalogu LocalApplicationData/HomeSecurityAgent bieżącego użytkownika: agent.db, agent.lock, secrets/. Katalog ma chroniony ACL z dostępem dla użytkownika procesu. Nie używa istniejącego katalogu nagrań. Ctrl+C kończy proces deweloperski.
+Agent używa katalogu LocalApplicationData/HomeSecurityAgent bieżącego użytkownika: agent.db, agent.lock, integration-secrets/. Katalog ma chroniony ACL z dostępem dla użytkownika procesu. Nie używa istniejącego katalogu nagrań. Ctrl+C kończy proces deweloperski. Moduł fikcyjnych integracji i ograniczenia DPAPI opisano w [INTEGRATION-CREDENTIALS.md](INTEGRATION-CREDENTIALS.md).
 
 Mostek w nowo skompilowanym panelu włącza się wyłącznie zmienną środowiskową HOME_SECURITY_AGENT_BRIDGE=1. Samo włączenie mostka nie uruchamia agenta. Nie podmieniono zainstalowanego EXE.
 

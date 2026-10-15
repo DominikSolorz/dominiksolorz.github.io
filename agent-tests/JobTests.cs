@@ -45,7 +45,7 @@ static class JobTests
         check(db.RetainJournal(now.AddDays(31), TimeSpan.FromDays(30)) == 1 && db.Find(command)?.Reply.Code == "RESULT_EXPIRED", "retention preserves command tombstone");
         using var sql = new SqliteConnection("Data Source=" + Path.Combine(root, "agent.db")); sql.Open();
         using var query = sql.CreateCommand(); query.CommandText = "SELECT version FROM schema_version";
-        check(Convert.ToInt32(query.ExecuteScalar()) == 2, "versioned schema migration");
+        check(Convert.ToInt32(query.ExecuteScalar()) == AgentDatabase.CurrentSchema, "versioned schema migration");
         query.CommandText = "UPDATE schema_version SET version=999"; query.ExecuteNonQuery();
         var future = false; try { _ = new AgentDatabase(root); } catch (InvalidDataException) { future = true; }
         check(future, "future schema rejected without downgrade");

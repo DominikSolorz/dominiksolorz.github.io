@@ -18,7 +18,7 @@ PrivateDirectory.Create(directory);
 // Blokada nie jest związana z oknem UI; drugi agent nie przejmuje zasobów pierwszego.
 using var instance = new FileStream(Path.Combine(directory, "agent.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
 var database = new AgentDatabase(directory);
-_ = new SecretStore(Path.Combine(directory, "secrets"));
+_ = new IntegrationCredentials(database, Path.Combine(directory, "integration-secrets"));
 using var stop = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) => { e.Cancel = true; stop.Cancel(); };
 Console.WriteLine("HomeSecurityAgent: ready; media engine not implemented.");

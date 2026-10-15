@@ -64,6 +64,7 @@ try
     Check(recovered.Find(pendingId)?.Reply.Status == "unknown", "unfinished command is unknown after restart, never auto-reexecuted");
     Check((await new AgentCommandClient(pipeName + ".absent").ExecuteAsync("agent.ping", empty, timeout: TimeSpan.FromMilliseconds(100))).Status == "unknown", "missing agent yields unknown");
     await JobTests.RunAsync(Check, Path.Combine(directory, "jobs"));
+    CredentialTests.Run(Check, Path.Combine(directory, "credentials"));
     if (args.Length == 2 && args[0] == "--process-crash") await ProcessCrashTests.RunAsync(Check, Path.GetFullPath(args[1]));
     Console.WriteLine($"ALL {count} TESTS PASSED");
 }

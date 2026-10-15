@@ -48,6 +48,8 @@ public sealed class SecretStore
     public byte[]? Read(string id)
     {
         var path = PathFor(id);
+        if (File.Exists(path) && ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0 || new FileInfo(path).Length > 32768))
+            throw new IOException("Invalid encrypted file.");
         return File.Exists(path) ? ProtectedData.Unprotect(File.ReadAllBytes(path), null, DataProtectionScope.CurrentUser) : null;
     }
 }

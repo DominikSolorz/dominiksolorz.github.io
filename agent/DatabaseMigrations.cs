@@ -6,7 +6,7 @@ public sealed class JournalCapacityException : Exception;
 
 public sealed partial class AgentDatabase
 {
-    public const int CurrentSchema = 2;
+    public const int CurrentSchema = 3;
     private static readonly string[] Migrations = [
         """
         CREATE TABLE component_state(id TEXT PRIMARY KEY, json TEXT NOT NULL, updated_at TEXT NOT NULL);
@@ -28,6 +28,11 @@ public sealed partial class AgentDatabase
             at_ms INTEGER NOT NULL, status TEXT NOT NULL, code TEXT);
         CREATE INDEX job_history_age ON job_history(at_ms);
         CREATE INDEX commands_age ON commands(status,updated_at);
+        """,
+        """
+        CREATE TABLE integrations(id TEXT PRIMARY KEY, provider TEXT NOT NULL CHECK(provider='fake'),
+            revision TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('configured_unverified','disabled')),
+            updated_at TEXT NOT NULL);
         """
     ];
     private static void Migrate(SqliteConnection db)
