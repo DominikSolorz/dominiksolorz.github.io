@@ -3,6 +3,11 @@
   --text:#eaf0fb;--muted:#8d9ab4;--accent:#7c3aed;--accent2:#a78bfa;--ok:#22c55e;--red:#ef4444;
   --radius:16px;--shadow:0 10px 30px rgba(0,0,0,.35)
 }
+
+@media(max-width:950px),(pointer:coarse){
+  #stage #audioHud{top:54px!important;left:max(8px,env(safe-area-inset-left))!important;right:auto!important;bottom:auto!important}
+  #stage #audioHud:not(.audioExpanded) .audioVolume{display:none!important}
+}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   background:radial-gradient(1200px 600px at 10% -10%,#1a1440 0%,transparent 60%),radial-gradient(900px 500px at 110% 10%,#0e2448 0%,transparent 55%),var(--bg);background-attachment:fixed}
