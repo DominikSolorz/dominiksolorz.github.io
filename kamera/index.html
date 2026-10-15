@@ -50,7 +50,7 @@
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=169">
+<link rel="stylesheet" href="style.css?v=170">
 </head>
 <body>
 <!-- Publiczna strona główna. Panel kamery pojawia się dopiero po świadomym
@@ -118,7 +118,7 @@
 </script>
 <header class="topbar">
   <button id="quickMenuBtn" class="quickMenuBtn" type="button" aria-label="Otwórz menu kamery" aria-controls="quickMenu" aria-expanded="false"><i></i><i></i><i></i></button>
-  <div class="brand"><span class="dot"></span><span class="brandText">Kamera <b>na żywo</b></span></div>
+  <div class="brand"><img class="dsPanelLogo" src="assets/ds-logo.jpg" alt="Logo DS"><span class="brandText">HOME <b>SECURITY</b></span></div>
   <span id="topStatus" class="chip">offline</span>
   <nav class="nav">
     <a class="navLink active" href="./">Na żywo</a>
@@ -149,7 +149,7 @@
 <section id="boot" class="bootScreen" aria-live="polite" aria-label="Uruchamianie HOME SECURITY">
   <div class="bootAtmosphere" aria-hidden="true"><i></i><i></i><b></b><b></b></div>
   <div class="bootCard">
-    <div class="bootMark" aria-hidden="true"><span>HS</span><i></i></div>
+    <div class="bootMark"><img class="dsPanelLogo" src="assets/ds-logo.jpg" alt="Logo DS"></div>
     <p class="bootBrand">HOME <b>SECURITY</b></p>
     <p class="bootUnit">COMMAND CENTER · SECURE CHANNEL</p>
     <h1>Uruchamianie bezpiecznego panelu</h1>
@@ -242,7 +242,7 @@
 <!-- Wejście PIN-em -->
 <section id="lock" class="lockScreen" hidden>
   <div class="pinCard">
-    <div class="pinLogo"><span class="dot"></span></div>
+    <div class="pinLogo"><img class="dsPanelLogo" src="assets/ds-logo.jpg" alt="Logo DS"></div>
     <h1>Wpisz PIN</h1>
     <p class="muted small">Dostęp do kamery i nagrań tylko z PIN-em.</p>
     <div class="pinDots" aria-hidden="true"></div>
@@ -484,8 +484,8 @@
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=7"></script>
-<script type="module" src="app.js?v=173"></script>
-<script type="module" src="desktop.js?v=23"></script>
+<script type="module" src="app.js?v=174"></script>
+<script type="module" src="desktop.js?v=24"></script>
 <script type="module" src="mobile.js?v=7"></script>
 </body>
 </html>
