@@ -50,7 +50,7 @@
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=170">
+<link rel="stylesheet" href="style.css?v=171">
 </head>
 <body>
 <!-- Publiczna strona główna. Panel kamery pojawia się dopiero po świadomym
@@ -155,7 +155,7 @@
     <h1>Uruchamianie bezpiecznego panelu</h1>
     <p id="bootText">Sprawdzam bezpieczne połączenie…</p>
     <div class="bootMeter" aria-hidden="true"><i id="bootProgress"></i></div>
-    <div class="bootMeta"><span id="bootStep">01 / 03 · WERYFIKACJA</span><strong><b id="bootCountdown">07</b> s</strong></div>
+    <div class="bootMeta"><span id="bootStep">01 / 03 · WERYFIKACJA</span><strong><b id="bootCountdown">01</b> s</strong></div>
     <ol class="bootSteps" aria-hidden="true"><li class="active">Szyfrowanie</li><li>Panel</li><li>Dostęp PIN</li></ol>
     <small>Bezpieczny start · maksymalnie 7 sekund</small>
     <button id="bootRetry" class="bootRetry" type="button" hidden>Otwórz PIN ponownie</button>
@@ -193,12 +193,12 @@
       const elapsed = performance.now() - started;
       // Ekran startowy ma być widoczny, ale nie może przekroczyć 7 sekund.
       // Kolejne komunikaty opisują etapy startu bez uruchamiania kamery.
-      const progress = Math.min(94, 7 + elapsed / 6500 * 87);
+      const progress = Math.min(94, 7 + elapsed / 700 * 87);
       bar.style.width = `${progress}%`;
-      const phase = elapsed < 1900 ? 0 : elapsed < 4000 ? 1 : 2;
-      const copy = ["Sprawdzam bezpieczne połączenie…", "Przygotowuję panel i ustawienia…", "Zabezpieczam dostęp do kamery…"];
+      const phase = elapsed < 200 ? 0 : elapsed < 450 ? 1 : 2;
+      const copy = ["Otwieram aplikację…", "Przygotowuję układ panelu…", "Przechodzę do dostępu PIN…"];
       text.textContent = copy[phase];
-      countdown.textContent = String(Math.max(1, Math.ceil((6500 - elapsed) / 1000))).padStart(2, "0");
+      countdown.textContent = String(Math.max(0, Math.ceil((700 - elapsed) / 1000))).padStart(2, "0");
       step.textContent = `${String(phase + 1).padStart(2, "0")} / 03 · ${["WERYFIKACJA", "PANEL", "DOSTĘP PIN"][phase]}`;
       steps.forEach((item, index) => item.classList.toggle("active", index <= phase));
       requestAnimationFrame(paint);
@@ -222,8 +222,8 @@
     window.__finishSecureBoot = async () => {
       if (complete) return;
       startBoot();
-      // 6,5 s daje czytelny start i zostawia margines do limitu 7 sekund.
-      const remaining = Math.max(0, 6500 - (performance.now() - started));
+      // Krótkie przejście zamiast obowiązkowych 6,5 sekundy oczekiwania.
+      const remaining = Math.max(0, 700 - (performance.now() - started));
       if (remaining) await new Promise(resolve => setTimeout(resolve, remaining));
       complete = true;
       clearTimeout(fallback);
@@ -484,7 +484,7 @@
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=7"></script>
-<script type="module" src="app.js?v=174"></script>
+<script type="module" src="app.js?v=175"></script>
 <script type="module" src="desktop.js?v=24"></script>
 <script type="module" src="mobile.js?v=7"></script>
 </body>
