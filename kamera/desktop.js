@@ -319,6 +319,10 @@ if (desktopRequested) {
     if (diag) { diag.hidden = false; diag.open = true; diag.scrollIntoView({ behavior: "smooth", block: "start" }); }
   };
   const setActive = view => {
+    if (view === "archive") {
+      document.dispatchEvent(new Event("hs-open-recordings"));
+      return;
+    }
     shell.querySelectorAll("[data-desktop-view]").forEach(button => button.classList.toggle("active", button.dataset.desktopView === view));
     openExistingView(view);
   };

@@ -36,17 +36,25 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     restoreDvr = document.createComment("kamera-dvr");
     stage.before(restoreStage); root.before(restoreDvr);
     if (listRoot) { restoreList = document.createComment("kamera-dvr-list"); listRoot.before(restoreList); }
-    const closeBtn = el("button", { className: "archiveClose", type: "button", textContent: "× Zamknij archiwum", onclick: () => closeArchive() });
+    const closeBtn = el("button", { className: "archiveClose", type: "button", textContent: "← Wróć do kamery na żywo", onclick: () => closeArchive() });
     const hint = el("p", { className: "archiveHint", textContent: "Przeciągnij wskaźnik po osi doby. Niebieskie odcinki to dostępne nagrania; ● NA ŻYWO wraca do bieżącej kamery." });
     const body = el("div", { className: "archiveModalBody" });
     body.append(stage, root);
     if (listRoot) body.append(listRoot);
     archiveModal = el("section", { className: "archiveModal", role: "dialog", ariaModal: "true", ariaLabel: "Archiwum nagrań kamery" },
       el("header", { className: "archiveModalHead" }, el("div", {}, el("h2", { textContent: "Sprawdź nagrania" }), hint), closeBtn), body);
-    document.body.append(archiveModal); document.body.classList.add("archiveOpen"); closeBtn.focus(); refresh();
+    document.body.append(archiveModal); document.body.classList.add("archiveOpen"); closeBtn.focus();
+    liveVideo.style.visibility = "hidden";
+    progressBadge.hidden = false; progressBadge.textContent = "Wybierz nagranie lub dzień. Kamera i zapis nadal działają.";
+    refresh().then(() => {
+      const latest = files.filter(f => !f.recording).at(-1);
+      if (latest) play(latest, 0, true);
+      else { progressBadge.hidden = false; progressBadge.textContent = "Brak zamkniętych nagrań z wybranego dnia. Wybierz inny dzień."; }
+    });
   }
   function closeArchive() {
     if (!archiveModal) return;
+    goLive(); progressBadge.hidden = true;
     restoreStage.replaceWith(stage); restoreDvr.replaceWith(root);
     if (listRoot && restoreList) restoreList.replaceWith(listRoot);
     archiveModal.remove(); archiveModal = null; restoreStage = restoreDvr = restoreList = null;
@@ -57,6 +65,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     e.preventDefault(); openArchive();
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && archiveModal) closeArchive(); });
+  document.addEventListener("hs-open-recordings", openArchive);
 
   // ----- układ -----
   const dateInput = el("input", { type: "date", className: "dvrDate", value: day, onchange: () => setDay(dateInput.value) });
@@ -81,6 +90,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     el("div", { className: "dvrTop" },
       el("div", { className: "panelHead" }, el("div", {}, el("h2", { textContent: "Odtwarzacz nagrań (DVR)" }), el("p", { textContent: "Przeglądaj zapisane nagrania z kamery" }))),
       el("div", { className: "dvrCtrls" },
+        el("button", { className: "dvrBtn dvrOpenArchive", textContent: "Otwórz odtwarzanie nagrań ↗", onclick: openArchive }),
         el("div", { className: "dvrGroup" }, todayBtn, yestBtn, dateInput),
         el("div", { className: "dvrGroup" }, jump(-300), jump(-60), liveBtn, jump(60), jump(300)))),
     bar, el("div", { className: "dvrTickWrap" }, ticks, posLabel),
@@ -295,7 +305,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     }
     for (const f of lr?.files || []) {
       if (f.recording) map.set("__nagrywany", f);
-      else if (!map.has(f.name)) map.set(f.name, { ...f, local: true });
+      else map.set(f.name, { ...map.get(f.name), ...f, local: true });
     }
     files = [...map.values()].filter(f => f.start).sort((a, b) => a.start - b.start);
     // Koniec pliku z Drive = początek następnego (najwyżej 10 min).
