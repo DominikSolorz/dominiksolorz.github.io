@@ -1,6 +1,10 @@
 using HomeSecurity.Agent;
 
 if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Windows only.");
+// Explicit isolated process-test entry point; never reachable through IPC or the panel.
+if (args.FirstOrDefault() == "--crash-harness") {
+    await CrashTestHost.RunAsync(args); return;
+}
 var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HomeSecurityAgent");
 string? testPipe = null;
 if (args.Length != 0)

@@ -110,10 +110,11 @@ public sealed class SyntheticFileWorker
             for (var parent = new DirectoryInfo(path); parent is not null; parent = parent.Parent)
                 if ((parent.Attributes & FileAttributes.ReparsePoint) != 0) throw new IOException("Reparse directory rejected.");
     }
-    public async Task<bool> RunOneAsync(DateTimeOffset now, CancellationToken cancellation = default, Action? afterOutput = null)
+    public async Task<bool> RunOneAsync(DateTimeOffset now, CancellationToken cancellation = default, Action? afterOutput = null, Action<string>? checkpoint = null)
     {
         var elapsed = System.Diagnostics.Stopwatch.StartNew();
         var lease = jobs.Claim(now); if (lease is null) return false;
+        checkpoint?.Invoke("claimed");
         try
         {
             cancellation.ThrowIfCancellationRequested(); CheckDirectories(); SyntheticJobs.ValidateName(lease.InputName);
@@ -128,7 +129,11 @@ public sealed class SyntheticFileWorker
                 var hash = Convert.ToHexString(await SHA256.HashDataAsync(stream, cancellation));
                 var bytes = JsonSerializer.SerializeToUtf8Bytes(new { jobId = lease.Id, inputName = lease.InputName, sha256 = hash, size = stream.Length });
                 var temporary = Path.Combine(Output, lease.Id.ToString("N") + "." + lease.Token + ".tmp");
-                using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { output.Write(bytes); output.Flush(true); }
+                using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None)) {
+                    output.Write(bytes.AsSpan(0, bytes.Length / 2)); output.Flush(true);
+                    checkpoint?.Invoke("partial");
+                    output.Write(bytes.AsSpan(bytes.Length / 2)); output.Flush(true);
+                }
                 File.Move(temporary, artifact, false);
             }
             if ((File.GetAttributes(artifact) & FileAttributes.ReparsePoint) != 0) throw new IOException("Reparse receipt rejected.");
@@ -136,7 +141,9 @@ public sealed class SyntheticFileWorker
             using var receipt = JsonDocument.Parse(await File.ReadAllTextAsync(artifact, cancellation));
             if (receipt.RootElement.GetProperty("jobId").GetGuid() != lease.Id || receipt.RootElement.GetProperty("inputName").GetString() != lease.InputName) throw new IOException("Invalid receipt.");
             afterOutput?.Invoke();
+            checkpoint?.Invoke("receipt");
             jobs.Finish(lease, now.Add(elapsed.Elapsed), receipt.RootElement.GetRawText());
+            checkpoint?.Invoke("completed");
         }
         catch (OperationCanceledException) { throw; } // Leave the lease for recovery, not a false terminal result.
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException or KeyNotFoundException)
