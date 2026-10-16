@@ -28,4 +28,13 @@ integration is not connected by this folder-selection change.
 
 Verification: seven diskstore tests cover existing folder, create subfolder,
 folder switch, cancellation, denied permission, invalid paths and size mismatch.
-Changes are local source changes, not a published installer or live acceptance.
+Desktop placement update, web build 188: the existing storage controls are moved
+into the right sidebar of the Nagrania / DVR workspace while open and restored on
+close. They are hidden in desktop Settings; no duplicate controls are created.
+Disconnect keeps all files. Empty-folder deletion is non-recursive and restricted
+to the currently selected folder that this app actually created, not pre-existing
+folders. It rejects any file or subdirectory and requires explicit confirmation.
+An open recording continues with temporary IndexedDB storage after disconnect.
+Unit coverage includes disconnect, empty deletion, non-empty rejection and rejection
+of pre-existing folders. Public deployment and running-EXE acceptance are separate
+from these code/test results; the packaged 1.3.4 installer has not been rebuilt here.

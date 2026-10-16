@@ -31,10 +31,32 @@ export async function choose({ newFolder = null } = {}) {
   if (!window.showDirectoryPicker) throw new Error("Ta przeglądarka nie obsługuje zapisu do folderu. Użyj aktualnego Chrome lub Edge.");
   let handle = await window.showDirectoryPicker({ id: "home-security-archive", mode: "readwrite", startIn: "desktop" });
   if (!(await usable(handle, true))) throw new Error("Brak zgody na zapis do wybranego folderu.");
-  if (newFolder !== null) handle = await handle.getDirectoryHandle(newFolder, { create: true });
+  let managed = null;
+  if (newFolder !== null) {
+    const parent = handle;
+    let existed = true;
+    try { await parent.getDirectoryHandle(newFolder); }
+    catch (error) { if (error.name !== "NotFoundError") throw error; existed = false; }
+    handle = await parent.getDirectoryHandle(newFolder, { create: true });
+    if (!existed) managed = { parent, name: newFolder, handle };
+  }
   await put("folder", handle);
+  await put("managedFolder", managed);
   handles.clear(); // Never reuse handles belonging to the previous archive location.
   return handle.name;
+}
+export async function disconnect() {
+  await put("folder", null); await put("managedFolder", null); handles.clear();
+}
+export async function deleteEmptyCreatedFolder() {
+  const managed = await get("managedFolder"), current = await get("folder");
+  if (!managed || !current || !(await current.isSameEntry(managed.handle)))
+    throw new Error("Można usunąć tylko folder utworzony przez program i aktualnie wybrany.");
+  if (!(await usable(managed.parent))) throw new Error("Brak dostępu do folderu nadrzędnego.");
+  const first = await current.entries().next();
+  if (!first.done) throw new Error("Folder nie jest pusty. Nie usunięto żadnych plików.");
+  await managed.parent.removeEntry(managed.name, { recursive: false });
+  await disconnect();
 }
 export async function status(ask = false) { const h = await get("folder"); return { selected: !!h, name: h && h.name ? h.name : "", ready: await usable(h, ask) }; }
 // Nazwa pliku → uchwyt (także w podfolderach dni/godzin), uzupełniane przy każdym przeglądaniu folderu.

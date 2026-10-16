@@ -29,7 +29,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
 
   let day = dayKey(new Date()), files = [], now = Date.now(), zoom = "day", cursor = null, playing = null, refreshTimer = null;
   const cache = new Map(); // nazwa → Blob (ostatnie 3 pliki)
-  let archiveModal = null, restoreStage = null, restoreDvr = null, restoreList = null;
+  let archiveModal = null, restoreStage = null, restoreDvr = null, restoreList = null, restoreStorage = null;
 
   // Prawy klik na obrazie otwiera pełne archiwum. To te same działające elementy,
   // więc w oknie jest prawdziwy obraz kamery/odtwarzacz i prawdziwy pasek doby.
@@ -44,8 +44,15 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     const body = el("div", { className: "archiveModalBody" });
     body.append(stage, root);
     if (listRoot) body.append(listRoot);
+    const workspace = el("div", { className: "archiveWorkspace" }, body);
+    const storage = document.getElementById("archiveStoragePanel");
+    if (document.documentElement.classList.contains("desktopMode") && storage) {
+      restoreStorage = document.createComment("archive-storage-home"); storage.before(restoreStorage);
+      const tools = el("aside", { className: "archiveStorageSidebar", ariaLabel: "Zarządzanie folderem nagrań" }, storage);
+      workspace.append(tools);
+    }
     archiveModal = el("section", { className: "archiveModal", role: "dialog", ariaModal: "true", ariaLabel: "Archiwum nagrań kamery" },
-      el("header", { className: "archiveModalHead" }, el("div", {}, el("h2", { textContent: "Sprawdź nagrania" }), hint), closeBtn), body);
+      el("header", { className: "archiveModalHead" }, el("div", {}, el("h2", { textContent: "Nagrania" }), hint), closeBtn), workspace);
     document.body.append(archiveModal); document.body.classList.add("archiveOpen"); closeBtn.focus();
     stage.hidden = false;
     progressBadge.hidden = false; progressBadge.textContent = "Wybierz nagranie lub dzień. Otwarcie archiwum nie zmienia stanu kamery ani zapisu.";
@@ -60,6 +67,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     goLive(); progressBadge.hidden = true; stage.hidden = true;
     restoreStage.replaceWith(stage); restoreDvr.replaceWith(root);
     if (listRoot && restoreList) restoreList.replaceWith(listRoot);
+    if (restoreStorage) { restoreStorage.replaceWith(document.getElementById("archiveStoragePanel")); restoreStorage = null; }
     archiveModal.remove(); archiveModal = null; restoreStage = restoreDvr = restoreList = null;
     document.body.classList.remove("archiveOpen");
     document.dispatchEvent(new Event("hs-recordings-closed"));

@@ -50,7 +50,7 @@
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=180">
+<link rel="stylesheet" href="style.css?v=181">
 </head>
 <body>
 <!-- Publiczna strona główna. Panel kamery pojawia się dopiero po świadomym
@@ -433,14 +433,20 @@
       <div class="card">
         <div class="cardHead"><h2>📼 Nagrywanie 24/7</h2><span class="muted small">na tym urządzeniu</span></div>
         <div id="archiveInfo" class="status"></div>
+        <section id="archiveStoragePanel" aria-label="Folder zapisu nagrań">
+        <h2>Folder zapisu nagrań</h2>
         <div class="row"><button class="btn primary" id="chooseArchiveDir">📁 Wybierz istniejący folder</button></div>
         <label>Nazwa nowego folderu <input id="newArchiveFolderName" value="nagrania" maxlength="100" autocomplete="off"></label>
         <button class="btn" id="createArchiveDir" type="button">📁 Utwórz folder w wybranym miejscu</button>
+        <button class="btn ghost" id="disconnectArchiveDir" type="button">Odłącz folder — zachowaj pliki</button>
+        <button class="btn ghost" id="deleteEmptyArchiveDir" type="button">Usuń pusty folder utworzony w programie</button>
+        <p class="muted small">Usuwanie dotyczy tylko pustego folderu utworzonego przez program. Folder zawierający nagrania nie zostanie skasowany.</p>
         <p class="muted small">Wybierz własną lokalizację: pulpit, Dokumenty lub dostępny dysk C:, D: albo inny. Przy tworzeniu wskaż folder nadrzędny. Anulowanie nie zmienia dotychczasowego archiwum. Zmiana folderu nie przenosi wcześniejszych nagrań.</p>
         <label><input id="driveAuto" type="checkbox"> Automatyczna kopia nowych nagrań na Google Drive</label>
         <p class="muted small">Dotychczasowa integracja Apps Script. Lokalna kopia pozostaje do czasu potwierdzenia wysyłki i po nim. To nie jest jeszcze nowy adapter natywnego agenta.</p>
         <button class="btn" id="sendCurrentFragment" type="button">☁ Domknij i wyślij bieżący fragment</button>
         <p id="driveBackupStatus" class="status" role="status" aria-live="polite">Wysyłka wymaga potwierdzenia pliku przez Google Drive.</p>
+        </section>
         <div class="grid">
           <label>Harmonogram
             <select id="recordPlan">
@@ -505,8 +511,8 @@
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=10"></script>
-<script type="module" src="app.js?v=187"></script>
-<script type="module" src="desktop.js?v=27"></script>
+<script type="module" src="app.js?v=188"></script>
+<script type="module" src="desktop.js?v=28"></script>
 <script type="module" src="mobile.js?v=10"></script>
 </body>
 </html>

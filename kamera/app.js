@@ -10,9 +10,9 @@ import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
-import * as diskstore from "./diskstore.js?v=6";
+import * as diskstore from "./diskstore.js?v=7";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=100";
+import { mountDvr } from "./dvr-ui.js?v=101";
 import { accountClient } from "./auth.js?v=10";
 import { systemStore } from "./core/store.mjs";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
@@ -49,7 +49,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "187"; // musi się zgadzać z version.json
+const VERSION = "188"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -793,8 +793,14 @@ const archive = (() => {
     render();
     return name;
   }
+  async function disconnectDisk(removeEmpty = false) {
+    if (removeEmpty) await diskstore.deleteEmptyCreatedFolder();
+    else await diskstore.disconnect();
+    disk = { selected: false, ready: false, name: "", error: "" };
+    await refreshLocal(); render();
+  }
 
-  return { init, chooseDisk, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, flush, sendCurrentFragment, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
+  return { init, chooseDisk, disconnectDisk, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, flush, sendCurrentFragment, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
 })();
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
@@ -2036,7 +2042,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "89";
+  const SERVICE_WORKER_BUILD = "90";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2126,6 +2132,17 @@ $("chooseArchiveDir").addEventListener("click", async () => {
   finally { button.disabled = false; button.textContent = old; }
 });
 $("createArchiveDir").disabled = !CAN_MANAGE_CAMERA;
+for (const [id, removeEmpty] of [["disconnectArchiveDir", false], ["deleteEmptyArchiveDir", true]]) {
+  $(id).disabled = !CAN_MANAGE_CAMERA;
+  $(id).addEventListener("click", async e => {
+    if (!CAN_MANAGE_CAMERA) return;
+    if (!confirm(removeEmpty ? "Usunąć z dysku pusty folder utworzony przez program? Folder z plikami nie zostanie usunięty. Dalszy zapis będzie tymczasowo w pamięci programu." : "Odłączyć folder bez usuwania plików? Dalszy zapis będzie tymczasowo w pamięci programu, dopóki nie wybierzesz folderu.")) return;
+    const button = e.currentTarget; button.disabled = true;
+    try { await archive.disconnectDisk(removeEmpty); toastMsg(removeEmpty ? "Pusty folder usunięty." : "Folder odłączony. Pliki zachowano."); }
+    catch (error) { toastMsg(errText(error)); }
+    finally { button.disabled = false; }
+  });
+}
 $("createArchiveDir").addEventListener("click", async e => {
   if (!CAN_MANAGE_CAMERA) return;
   const name = $("newArchiveFolderName").value.trim();
