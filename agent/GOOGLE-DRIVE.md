@@ -7,10 +7,22 @@ Windows Temp/HomeSecurityAgent-tests-e7167d12a6d74fc5a5cc148eb6ba1061.
 No live OAuth grant or upload was performed in this run.
 
 This code uses real OAuth and Drive v3 endpoints. It is not an Apps Script wrapper
-and makes no changes to camera capture or the installed desktop app. Live acceptance
-is NOT yet complete: a Desktop OAuth client and user consent are still required.
-The requested folder is `15c9XPFi55XkQnCjfW_cvDHqhEXo_M5V2`; its accessibility from
-this OAuth application has not been established by a successful API call.
+and makes no changes to camera capture or the installed desktop app. On 2026-10-16
+the existing Desktop client completed native Picker consent for the requested
+folder `15c9XPFi55XkQnCjfW_cvDHqhEXo_M5V2`. The agent verified write capability
+through the real API, and credentials were saved using DPAPI.
+
+Live upload evidence: job `7df6229f-3c90-4bbd-a18d-78fed538f412` succeeded on
+attempt 1, remote ID `1s31zGpf8MYNuMz9dww6IKV5PceSsx-SV`, file
+`home-security-drive-verification.txt`. The worker checked server-side MD5, size,
+parent and job appProperty. The file was also visibly present in the Drive folder.
+Only a harmless fixture was uploaded, not camera footage. This proves the basic
+live path, NOT production readiness, sustained recording uploads or live fault recovery.
+
+SECURITY BLOCKER before private footage: Drive's folder details showed anyone
+on the internet with the link can edit its contents. This run did not change
+sharing. Owner approval is required to restrict it. Do not send private recordings
+until destination access has been secured and rechecked.
 
 ## Implementation
 
@@ -122,6 +134,10 @@ URI or token. For live acceptance: authorize, enqueue one explicitly selected sm
 file, wait for succeeded, then inspect the actual remote file/folder and checksum.
 Revoke consent and verify blocked; reauthorize and explicitly resume. Do not run
 live acceptance on private recordings before these checks pass.
+
+`--drive-check-folder <integration-guid> <folder-id>` performs read-only destination
+preflight. `--drive-worker-once` executes one eligible queued job and exits; inspect
+the job status separately, because completing an iteration does not imply success.
 
 ## Verification boundaries
 

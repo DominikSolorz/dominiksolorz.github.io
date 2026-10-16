@@ -45,6 +45,11 @@ public static class DriveNativeCommands
                             await worker.RunOne(stop.Token); await Task.Delay(1000,stop.Token);
                         }
                     } break;
+                case "--drive-worker-once" when args.Length==1:
+                    using(var api=new GoogleDriveApi(credentials,sessionDirectory:Path.Combine(directory,"drive-sessions"))) {
+                        await new DriveUploadWorker(queue,api).RunOne(stop.Token);
+                        Console.WriteLine("Google Drive: one queue iteration completed; inspect job status for server confirmation.");
+                    } break;
                 default: throw new ArgumentException("Invalid native Drive command arguments.");
             }
         } catch(DriveFailure error) { Console.Error.WriteLine(error.Code); Environment.ExitCode=2; }

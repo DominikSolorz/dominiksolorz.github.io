@@ -1,0 +1,4 @@
+HOME SECURITY - real Google Drive API verification
+This harmless text file verifies the native upload queue, DPAPI credentials,
+resumable upload and server-side checksum confirmation.
+No camera image, audio, recording or personal data is included.
