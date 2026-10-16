@@ -10,7 +10,7 @@ import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
-import * as diskstore from "./diskstore.js?v=8";
+import * as diskstore from "./diskstore.js?v=9";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
 import { mountDvr } from "./dvr-ui.js?v=101";
 import { accountClient } from "./auth.js?v=10";
@@ -52,7 +52,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "191"; // musi się zgadzać z version.json
+const VERSION = "192"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -863,7 +863,7 @@ const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", pay
 
 // Polecenia zmieniające pracę komputera-kamery muszą być podpisane kluczem z PIN-u.
 // Link odbiorcy zawiera tylko nazwę kanału, dlatego nie wystarcza jako uprawnienie do sterowania.
-const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "light-set", "restart", "reload", "folder-browse", "folder-create", "folder-select"]);
+const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "light-set", "restart", "reload", "folder-browse", "folder-create", "folder-select", "folder-delete-empty"]);
 const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}${sig.type === "light-set" ? `|L${clampLight(sig.light)}` : ""}${sig.type.startsWith("folder-") ? `|F${JSON.stringify(sig.folderEnvelope)}` : ""}`;
 const controlSignatureText = sig => controlText(sig) + (sig.commandId ? `|v1|${sig.commandId}|${sig.clientId}|${sig.expiresAt}` : "");
 async function signedOwnerControl(payload) {
@@ -1786,6 +1786,10 @@ const commandDispatcher = new CommandDispatcher({ handlers: {
     if (!CAN_MANAGE_CAMERA) throw new Error("Brak dostępu do folderów komputera.");
     return archive.selectRemoteFolder(folderPath);
   },
+  "folder-delete-empty": async ({folderPath}) => {
+    if (!CAN_MANAGE_CAMERA) throw new Error("Brak dostępu do folderów komputera.");
+    return diskstore.deleteRemoteEmptyFolder(folderPath);
+  },
   "mode-set": async ({ mode, minutes }) => {
     if (!["record", "preview", "off", "once", "rec-only"].includes(mode)) throw new Error("Nieprawidłowy tryb.");
     if (mode === "once" && (!Number.isFinite(Number(minutes)) || Number(minutes) < 1 || Number(minutes) > 1440)) throw new Error("Nieprawidłowy czas zapisu.");
@@ -2116,7 +2120,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "93";
+  const SERVICE_WORKER_BUILD = "94";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {

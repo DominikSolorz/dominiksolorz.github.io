@@ -7,7 +7,7 @@ export function createRemoteFolderPicker({execute,onSelected=()=>{}}) {
     try {await task();} catch(error){if(choose?.disabled)title.textContent='Foldery niedostępne';status.textContent=error.uncertain?'Komputer nie potwierdził operacji. Może mieć starszą wersję panelu albo utracić połączenie. Nie ponawiaj tworzenia folderu bez sprawdzenia jego stanu.':error.message||'Komputer nie odpowiedział.';}
     finally{busy=false;dialog?.removeAttribute('aria-busy');}
   }
-  let title,list,status,back,previous,next,choose,nameInput,create;
+  let title,list,status,back,previous,next,choose,nameInput,create,remove;
   async function refresh() {
     status.textContent='Odczytuję foldery komputera…';
     const result=await execute('folder-browse',{folderPath:path,folderOffset:offset});
@@ -18,6 +18,7 @@ export function createRemoteFolderPicker({execute,onSelected=()=>{}}) {
     back.disabled=!path.length;previous.disabled=offset===0;next.disabled=result.nextOffset===null;
     next.dataset.offset=String(result.nextOffset??0);
     choose.disabled=false;create.disabled=false;
+    remove.disabled=!path.length;
     status.textContent='To foldery komputera z kamerą, nie telefonu.';
   }
   return {open:async()=>{
@@ -30,9 +31,10 @@ export function createRemoteFolderPicker({execute,onSelected=()=>{}}) {
     back.disabled=previous.disabled=next.disabled=true;
     nameInput=el('input');nameInput.placeholder='Nazwa nowego folderu';nameInput.maxLength=100;nameInput.setAttribute('aria-label','Nazwa nowego folderu');
     create=el('button','Utwórz folder');create.disabled=true;
+    remove=el('button','Usuń ten pusty folder');remove.disabled=true;remove.type='button';
     const actions=el('div');actions.className='remoteFolderActions';actions.append(back,previous,next);
     const creation=el('div');creation.className='remoteFolderActions';creation.append(nameInput,create);
-    dialog.append(heading,el('p','Przeglądasz tylko miejsce zatwierdzone na komputerze. Zmiana nie przenosi ani nie usuwa wcześniejszych nagrań.'),title,actions,list,creation,choose,status,close);
+    dialog.append(heading,el('p','Przeglądasz tylko miejsce zatwierdzone na komputerze. Zmiana nie przenosi ani nie usuwa wcześniejszych nagrań. Dostęp do innego miejsca zatwierdź przyciskiem wyboru folderu na komputerze.'),title,actions,list,creation,choose,remove,status,close);
     const shut=()=>{dialog?.close();dialog?.remove();dialog=null;};
     close.addEventListener('click',()=>{if(!busy)shut();});dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();else shut();});
     back.addEventListener('click',()=>run(async()=>{path=path.slice(0,-1);offset=0;await refresh();}));
@@ -40,6 +42,10 @@ export function createRemoteFolderPicker({execute,onSelected=()=>{}}) {
     next.addEventListener('click',()=>run(async()=>{offset=Number(next.dataset.offset);await refresh();}));
     create.addEventListener('click',()=>run(async()=>{const folderName=nameInput.value.trim();if(!folderName)throw Error('Podaj nazwę folderu.');await execute('folder-create',{folderPath:path,folderName});nameInput.value='';await refresh();}));
     choose.addEventListener('click',()=>run(async()=>{const result=await execute('folder-select',{folderPath:path});onSelected(result);shut();}));
+    remove.addEventListener('click',()=>run(async()=>{
+      if(!confirm(`Usunąć pusty folder „${path.at(-1)}” z komputera? Folder z plikami ani aktywne miejsce zapisu nie zostaną usunięte.`))return;
+      await execute('folder-delete-empty',{folderPath:path});path=path.slice(0,-1);offset=0;await refresh();
+    }));
     document.body.append(dialog);dialog.showModal();await run(refresh);
   }};
 }

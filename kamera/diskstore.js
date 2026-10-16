@@ -20,6 +20,22 @@ async function usable(handle, ask = false) {
   return state === "granted" || (ask && await handle.requestPermission({ mode: "readwrite" }) === "granted");
 }
 
+async function verifyWritable(handle) {
+  const name = `.home-security-write-check-${crypto.randomUUID()}.tmp`;
+  let created = false;
+  try {
+    try { await handle.getFileHandle(name); throw new Error("Kolizja pliku kontrolnego."); }
+    catch (error) { if (error.name !== "NotFoundError") throw error; }
+    const file = await handle.getFileHandle(name, { create: true }); created = true;
+    const output = await file.createWritable();
+    try { await output.write("HOME SECURITY write check"); await output.close(); }
+    catch (error) { try { await output.abort(); } catch {} throw error; }
+    if ((await file.getFile()).size !== 25) throw new Error("Nie udało się potwierdzić zapisu w folderze.");
+  } finally {
+    if (created) await handle.removeEntry(name, { recursive: false });
+  }
+}
+
 export function validFolderName(name) {
   return typeof name === "string" && name.length > 0 && name.length <= 100 &&
     name === name.trim() && !/[<>:"/\\|?*\x00-\x1f]/.test(name) &&
@@ -40,6 +56,7 @@ export async function choose({ newFolder = null } = {}) {
     handle = await parent.getDirectoryHandle(newFolder, { create: true });
     if (!existed) managed = { parent, name: newFolder, handle };
   }
+  await verifyWritable(handle);
   await put("folder", handle);
   await put("browseRoot", handle);
   await put("managedFolder", managed);
@@ -77,6 +94,7 @@ export async function browseFolders(path=[], offset=0) {
 }
 export async function selectRemoteFolder(path) {
   const {handle}=await remoteDirectory(path);
+  await verifyWritable(handle);
   await put("folder",handle); await put("managedFolder",null); handles.clear();
   return {name:handle.name};
 }
@@ -85,6 +103,19 @@ export async function createRemoteFolder(path,name) {
   const {handle}=await remoteDirectory(path);
   await handle.getDirectoryHandle(name,{create:true});
   return {name};
+}
+export async function deleteRemoteEmptyFolder(path) {
+  if (!Array.isArray(path) || !path.length) throw new Error("Nie można usunąć zatwierdzonego folderu nadrzędnego.");
+  const {handle} = await remoteDirectory(path);
+  const selected = await get("folder");
+  if (selected && (await handle.isSameEntry(selected) || await handle.resolve(selected) !== null))
+    throw new Error("Ten folder jest używany do zapisu nagrań. Najpierw wybierz inne miejsce.");
+  if (!(await handle.entries().next()).done) throw new Error("Folder nie jest pusty. Żadne pliki nie zostały usunięte.");
+  const {handle:parent} = await remoteDirectory(path.slice(0,-1));
+  const current = await parent.getDirectoryHandle(path.at(-1));
+  if (!(await current.isSameEntry(handle))) throw new Error("Folder zmienił się. Odśwież listę.");
+  await parent.removeEntry(path.at(-1), {recursive:false});
+  return {deleted:true};
 }
 export async function deleteEmptyCreatedFolder() {
   const managed = await get("managedFolder"), current = await get("folder");
