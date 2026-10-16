@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile></PropertyGroup>
   <ItemGroup><ProjectReference Include="../agent/HomeSecurityAgent.csproj" /><ProjectReference Include="../agent-client/HomeSecurity.Agent.Client.csproj" /></ItemGroup>
+  <ItemGroup><Compile Include="../desktop-client/PanelDiagnostics.cs" Link="PanelDiagnostics.cs" /></ItemGroup>
 </Project>

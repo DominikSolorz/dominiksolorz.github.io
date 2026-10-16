@@ -11,11 +11,11 @@ namespace HomeSecurityDesktop;
 internal static class Program
 {
     private const string DesktopVersion = "1.3.3";
-    private const string WebPanelBuild = "159";
+    private const string WebPanelBuild = "185";
     // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
     // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
     // Desktop, który pozwala udostępnić kamerę i mikrofon.
-    private const string PanelUrl = "https://dominiksolorz.github.io/kamera/?desktop=1&native=windows&host=computer&ui_build=159";
+    private const string PanelUrl = "https://dominiksolorz.github.io/kamera/?desktop=1&native=windows&host=computer&ui_build=" + WebPanelBuild;
     private const string PublicHost = "dominiksolorz.github.io";
     private const string UpdateManifestUrl = "https://dominiksolorz.github.io/kamera/desktop-update.json";
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(4) };
@@ -195,10 +195,10 @@ internal static class Program
 
             webView.CoreWebView2.WebMessageReceived += (_, e) =>
             {
-                // Nie logujemy treści nowego IPC. Ma osobny, walidowany handler.
-                try { using var message = JsonDocument.Parse(e.WebMessageAsJson); if (message.RootElement.TryGetProperty("type", out var type) && type.GetString() == "agent.command") return; } catch { }
-                try { WriteDiagnostic("panel-state", JsonDocument.Parse(e.WebMessageAsJson).RootElement.Clone()); }
-                catch { WriteDiagnostic("panel-message", e.TryGetWebMessageAsString()); }
+                // Never persist arbitrary page payloads, OAuth sessions or IPC arguments.
+                if (e.Source != webView.CoreWebView2.Source || !AgentWebViewBridge.Trusted(e.Source)) return;
+                var safe = PanelDiagnostics.Project(e.WebMessageAsJson);
+                if (safe is not null) WriteDiagnostic("panel-state", safe);
             };
             webView.CoreWebView2.ProcessFailed += (_, e) => WriteDiagnostic("webview-process-failed", new { reason = e.Reason.ToString(), kind = e.ProcessFailedKind.ToString() });
 

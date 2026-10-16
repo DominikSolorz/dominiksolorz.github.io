@@ -7,6 +7,11 @@ using HomeSecurity.Agent.Contracts;
 
 var count = 0;
 void Check(bool condition, string name) { if (!condition) throw new Exception("FAIL: " + name); Console.WriteLine("PASS: " + name); count++; }
+var projected = HomeSecurityDesktop.PanelDiagnostics.Project("{\"type\":\"camera-state\",\"role\":\"transmitter\",\"live\":true,\"access_token\":\"test-secret\",\"cameraError\":\"test-secret\"}");
+Check(projected is not null && !System.Text.Json.JsonSerializer.Serialize(projected).Contains("test-secret"), "page diagnostics exclude arbitrary secrets");
+Check(HomeSecurityDesktop.PanelDiagnostics.Project("{\"type\":\"auth.session\",\"access_token\":\"test-secret\"}") is null, "auth messages never logged");
+Check(HomeSecurityDesktop.PanelDiagnostics.Project("not json") is null, "malformed diagnostics ignored");
+Check(HomeSecurityDesktop.PanelDiagnostics.Project(System.Text.Json.JsonSerializer.Serialize("{\"type\":\"camera-state\",\"live\":true}")) is not null, "legacy string telemetry accepted safely");
 var directory = Path.Combine(Path.GetTempPath(), "HomeSecurityAgent-tests-" + Guid.NewGuid().ToString("N"));
 var pipeName = "HomeSecurityAgent.tests." + Guid.NewGuid().ToString("N");
 PrivateDirectory.Create(directory);
