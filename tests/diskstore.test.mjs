@@ -6,10 +6,11 @@ const source = (await readFile(new URL('../kamera/diskstore.js',import.meta.url)
 function setup() {
   let picked=null;
   const ctx=vm.createContext({Map,Set,Error,window:{showDirectoryPicker:async()=>{if(picked instanceof Error) throw picked; return picked;}}});
-  vm.runInContext(source+'\n globalThis.values=new Map(); globalThis.api={choose,save,validFolderName,disconnect,deleteEmptyCreatedFolder}; get=async k=>values.get(k); put=async(k,v)=>{values.set(k,v);};',ctx);
+  vm.runInContext(source+'\n globalThis.values=new Map(); globalThis.api={choose,save,validFolderName,disconnect,deleteEmptyCreatedFolder,browseFolders,selectRemoteFolder,createRemoteFolder}; get=async k=>values.get(k); put=async(k,v)=>{values.set(k,v);};',ctx);
   function folder(name,{sizeMismatch=false,granted=true}={}) {
     const files=new Map(), children=new Map();
-    return {name,files,children,queryPermission:async()=>granted?'granted':'denied',requestPermission:async()=>granted?'granted':'denied',
+    return {name,kind:'directory',files,children,queryPermission:async()=>granted?'granted':'denied',requestPermission:async()=>granted?'granted':'denied',
+      resolve:async other=>{const walk=(node,path)=>{if(node.files===other.files)return path;for(const [name,child] of node.children){const found=walk(child,[...path,name]);if(found)return found;}return null;};return walk({files,children},[]);},
       isSameEntry:async other=>other.files===files,
       entries:()=>[...files,...children][Symbol.iterator](),
       removeEntry:async(child,options)=>{assert.equal(options.recursive,false);const target=children.get(child);if(target.files.size||target.children.size)throw Error('not empty');children.delete(child);},
@@ -30,3 +31,8 @@ test('disconnect preserves all recorded files',async()=>{const s=setup(),f=s.fol
 test('only empty app-created folder may be deleted',async()=>{const s=setup(),parent=s.folder('desktop');s.pick(parent);await s.ctx.api.choose({newFolder:'nagrania'});await s.ctx.api.deleteEmptyCreatedFolder();assert.equal(parent.children.size,0);assert.equal(s.selected(),null);});
 test('folder with recordings is never deleted',async()=>{const s=setup(),parent=s.folder('desktop');s.pick(parent);await s.ctx.api.choose({newFolder:'nagrania'});await s.ctx.api.save(name,{size:10});await assert.rejects(s.ctx.api.deleteEmptyCreatedFolder());assert.equal(parent.children.size,1);assert.equal(s.selected().files.size,1);});
 test('pre-existing chosen folder cannot be deleted by app',async()=>{const s=setup(),f=s.folder('existing');s.pick(f);await s.ctx.api.choose();await assert.rejects(s.ctx.api.deleteEmptyCreatedFolder());assert.equal(s.selected(),f);});
+test('remote browser lists only directories under approved root',async()=>{const s=setup(),f=s.folder('approved');s.pick(f);await s.ctx.api.choose();await s.ctx.api.createRemoteFolder([],'child');const result=await s.ctx.api.browseFolders([]);assert.equal(result.root,'approved');assert.equal(result.entries[0].name,'child');});
+test('remote selection changes archive without widening browse root',async()=>{const s=setup(),f=s.folder('approved');s.pick(f);await s.ctx.api.choose();await s.ctx.api.createRemoteFolder([],'child');await s.ctx.api.selectRemoteFolder(['child']);assert.equal(s.selected(),f.children.get('child'));assert.equal((await s.ctx.api.browseFolders([])).root,'approved');});
+test('remote traversal and invalid names rejected',async()=>{const s=setup(),f=s.folder('approved');s.pick(f);await s.ctx.api.choose();for(const path of [['..'],['C:\\'],Array(13).fill('child')])await assert.rejects(s.ctx.api.browseFolders(path));await assert.rejects(s.ctx.api.createRemoteFolder([],'../escape'));});
+test('disconnect revokes remote folder browsing',async()=>{const s=setup(),f=s.folder('approved');s.pick(f);await s.ctx.api.choose();await s.ctx.api.disconnect();await assert.rejects(s.ctx.api.browseFolders([]));});
+test('remote pagination is bounded',async()=>{const s=setup(),f=s.folder('approved');s.pick(f);await s.ctx.api.choose();for(let i=0;i<101;i++)await s.ctx.api.createRemoteFolder([],'child'+i);const first=await s.ctx.api.browseFolders([]);assert.equal(first.entries.length,100);assert.equal(first.nextOffset,100);assert.equal((await s.ctx.api.browseFolders([],100)).entries.length,1);});

@@ -87,8 +87,8 @@ if (isMobileOwnerApp) {
   recordingStorage.innerHTML = `<summary>Zapis i kopia Drive</summary>
     <p id="mobileRecordingState" role="status">Oczekuję na stan komputera nagrywającego.</p>
     <p class="muted small">Nagrania są zapisywane na komputerze z kamerą. Telefon nie wybiera folderu na jego dysku.</p>
-    <div id="mobileRecordingFolderControls"><button type="button" disabled>Zmień folder na komputerze</button><button type="button" disabled>Utwórz folder na komputerze</button><button type="button" disabled>Odłącz folder komputera</button></div>
-    <p class="muted small">Zmiana lub utworzenie folderu wymaga obsługi na komputerze. Zdalne okno wyboru folderu nie jest jeszcze dostępne.</p>`;
+    <div id="mobileRecordingFolderControls"><button type="button" id="mobileChooseComputerFolder">📁 Wybierz folder komputera</button></div>
+    <p class="muted small">Komputer musi być włączony. Widzisz miejsce wcześniej zatwierdzone w programie Windows; możesz otwierać podfoldery, tworzyć je i wybierać miejsce zapisu.</p>`;
   document.querySelector(".mainCol")?.append(recordingStorage);
   const managed = [...new Set(Object.values(views).flat())];
 

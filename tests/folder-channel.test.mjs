@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import vm from 'node:vm';
+import {sealFolder,openFolder} from '../kamera/communication/folder-channel.mjs';
+const secret=Buffer.alloc(32,7).toString('base64');
+test('folder request/response are encrypted and authenticated',async()=>{const value={folderPath:['private-folder'],entries:[{name:'confidential'}]};const envelope=await sealFolder(value,secret,'client','id');assert.ok(!JSON.stringify(envelope).includes('private-folder'));assert.deepEqual(await openFolder(envelope,secret,'client','id'),value);});
+test('viewer without owner key cannot read folder data',async()=>{const envelope=await sealFolder({name:'private'},secret,'client','id');await assert.rejects(openFolder(envelope,Buffer.alloc(32,8).toString('base64'),'client','id'));});
+test('encrypted data is bound to client and command ID',async()=>{const envelope=await sealFolder({name:'private'},secret,'client','id');await assert.rejects(openFolder(envelope,secret,'other','id'));await assert.rejects(openFolder(envelope,secret,'client','other'));});
+test('tampered ciphertext is rejected',async()=>{const envelope=await sealFolder({name:'private'},secret,'client','id');const bytes=Buffer.from(envelope.data,'base64');bytes[0]^=1;await assert.rejects(openFolder({...envelope,data:bytes.toString('base64')},secret,'client','id'));});
+test('folder command signature binds encrypted arguments',async()=>{const app=await readFile(new URL('../kamera/app.js',import.meta.url),'utf8');const source=app.slice(app.indexOf('const controlText ='),app.indexOf('// ---------- Biblioteka nagrań'));const ctx=vm.createContext({OWNER_CONTROL:new Set(['folder-select']),ACCESS_KEY:'key',sign:async(k,m)=>k+m,clampLight:Number,Date});vm.runInContext(source,ctx);const packet=await vm.runInContext('signedOwnerControl({type:"folder-select",commandId:"id",clientId:"client",expiresAt:123,folderEnvelope:{id:"id",iv:"iv",data:"encrypted"}})',ctx);ctx.packet=packet;assert.equal(await vm.runInContext('validOwnerControl(packet)',ctx),true);ctx.packet={...packet,folderEnvelope:{...packet.folderEnvelope,data:'modified'}};assert.equal(await vm.runInContext('validOwnerControl(packet)',ctx),false);});

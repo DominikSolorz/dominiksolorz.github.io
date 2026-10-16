@@ -10,13 +10,15 @@ import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
-import * as diskstore from "./diskstore.js?v=7";
+import * as diskstore from "./diskstore.js?v=8";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
 import { mountDvr } from "./dvr-ui.js?v=101";
 import { accountClient } from "./auth.js?v=10";
 import { systemStore } from "./core/store.mjs";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
 import { createPeerDiagnostics } from "./core/peer-diagnostics.mjs";
+import { sealFolder, openFolder } from "./communication/folder-channel.mjs";
+import { createRemoteFolderPicker } from "./remote-folder-ui.mjs";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
@@ -49,7 +51,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "189"; // musi się zgadzać z version.json
+const VERSION = "190"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -809,8 +811,14 @@ const archive = (() => {
     disk = { selected: false, ready: false, name: "", error: "" };
     await refreshLocal(); render();
   }
+  async function selectRemoteFolder(path) {
+    if ((await idb.qKeys()).length) throw new Error("Najpierw zakończ wysyłanie kolejki Drive. Zmiana folderu mogłaby odłączyć jej pliki.");
+    const result = await diskstore.selectRemoteFolder(path);
+    disk = { selected:true, ready:true, name:result.name, error:"" };
+    await refreshLocal(); render(); return result;
+  }
 
-  return { init, chooseDisk, disconnectDisk, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, flush, sendCurrentFragment, prepareUpdate, abortUpdate, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
+  return { init, chooseDisk, disconnectDisk, selectRemoteFolder, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, flush, sendCurrentFragment, prepareUpdate, abortUpdate, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
 })();
 window.chrome?.webview?.addEventListener("message", async event => {
   const message = event.data;
@@ -854,8 +862,8 @@ const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", pay
 
 // Polecenia zmieniające pracę komputera-kamery muszą być podpisane kluczem z PIN-u.
 // Link odbiorcy zawiera tylko nazwę kanału, dlatego nie wystarcza jako uprawnienie do sterowania.
-const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "light-set", "restart", "reload"]);
-const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}${sig.type === "light-set" ? `|L${clampLight(sig.light)}` : ""}`;
+const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "light-set", "restart", "reload", "folder-browse", "folder-create", "folder-select"]);
+const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}${sig.type === "light-set" ? `|L${clampLight(sig.light)}` : ""}${sig.type.startsWith("folder-") ? `|F${JSON.stringify(sig.folderEnvelope)}` : ""}`;
 const controlSignatureText = sig => controlText(sig) + (sig.commandId ? `|v1|${sig.commandId}|${sig.clientId}|${sig.expiresAt}` : "");
 async function signedOwnerControl(payload) {
   if (!ACCESS_KEY) return null;
@@ -1145,8 +1153,14 @@ const sender = (() => {
       if (!(await validOwnerControl(sig))) return;
       if (sig.commandId) {
         if (typeof sig.clientId !== "string" || sig.clientId.length > 80) return;
-        const args = { mode: sig.mode, minutes: sig.minutes, q: sig.q, media: sig.media, light: sig.light };
+        const isFolder = sig.type.startsWith("folder-");
+        const args = isFolder ? await openFolder(sig.folderEnvelope, ACCESS_KEY, sig.clientId, sig.commandId)
+          : { mode: sig.mode, minutes: sig.minutes, q: sig.q, media: sig.media, light: sig.light };
         const result = await commandDispatcher.execute({ v: 1, id: sig.commandId, name: sig.type, args, expiresAt: sig.expiresAt }, sig.clientId);
+        if (isFolder) {
+          send(chan.channel, { type:"folder-result", clientId:sig.clientId, envelope:await sealFolder(result,ACCESS_KEY,sig.clientId,sig.commandId) });
+          return;
+        }
         const reply = { type: "command-result", clientId: sig.clientId, result };
         reply.mac = await sign(ACCESS_KEY, JSON.stringify([reply.clientId, reply.result]));
         send(chan.channel, reply);
@@ -1573,7 +1587,8 @@ const viewer = (() => {
   const commandClient = new CommandClient({
     send: async command => {
       if (!chan.channel) throw new Error("Brak połączenia z nadajnikiem.");
-      const payload = await signedOwnerControl({ type: command.name, ...command.args,
+      const args = command.name.startsWith("folder-") ? {folderEnvelope:await sealFolder(command.args,ACCESS_KEY,viewerId,command.id)} : command.args;
+      const payload = await signedOwnerControl({ type: command.name, ...args,
         commandId: command.id, clientId: viewerId, expiresAt: command.expiresAt });
       if (!payload) throw new Error("Panel jest zablokowany.");
       const status = await send(chan.channel, payload);
@@ -1604,6 +1619,11 @@ const viewer = (() => {
 
   async function onSignal(sig) {
     if (!active) return;
+    if (sig.type === "folder-result") {
+      if (sig.clientId !== viewerId || !ACCESS_KEY) return;
+      try { commandClient.receive(await openFolder(sig.envelope,ACCESS_KEY,viewerId,sig.envelope?.id)); } catch { /* not an authenticated owner response */ }
+      return;
+    }
     if (sig.type === "command-result") {
       if (sig.clientId !== viewerId || !ACCESS_KEY || typeof sig.mac !== "string") return;
       if (sig.mac !== await sign(ACCESS_KEY, JSON.stringify([sig.clientId, sig.result]))) return;
@@ -1751,6 +1771,18 @@ function requireCommandSuccess(result) {
   throw error;
 }
 const commandDispatcher = new CommandDispatcher({ handlers: {
+  "folder-browse": async ({folderPath,folderOffset=0}) => {
+    if (!CAN_MANAGE_CAMERA) throw new Error("Wybór folderu wymaga programu Windows na komputerze z kamerą.");
+    return diskstore.browseFolders(folderPath,folderOffset);
+  },
+  "folder-create": async ({folderPath,folderName}) => {
+    if (!CAN_MANAGE_CAMERA) throw new Error("Brak dostępu do folderów komputera.");
+    return diskstore.createRemoteFolder(folderPath,folderName);
+  },
+  "folder-select": async ({folderPath}) => {
+    if (!CAN_MANAGE_CAMERA) throw new Error("Brak dostępu do folderów komputera.");
+    return archive.selectRemoteFolder(folderPath);
+  },
   "mode-set": async ({ mode, minutes }) => {
     if (!["record", "preview", "off", "once", "rec-only"].includes(mode)) throw new Error("Nieprawidłowy tryb.");
     if (mode === "once" && (!Number.isFinite(Number(minutes)) || Number(minutes) < 1 || Number(minutes) > 1440)) throw new Error("Nieprawidłowy czas zapisu.");
@@ -1779,6 +1811,13 @@ async function executeControl(name, args = {}) {
     ? requireCommandSuccess(await localCommands.execute(name, args))
     : viewer.requestControl(name, args);
 }
+const remoteFolderPicker = createRemoteFolderPicker({execute:executeControl,onSelected:result=>toastMsg(`Komputer potwierdził folder zapisu: ${result.name}`)});
+document.addEventListener("click", event => {
+  if (event.target.closest("#mobileChooseComputerFolder")) {
+    if (!canControlCamera()) return toastMsg("Zaloguj się jako właściciel i odblokuj panel PIN-em.");
+    remoteFolderPicker.open();
+  }
+});
 
 // Zdarzenie na telefonie: wyskakujące powiadomienie, wibracja, lista ostatnich zdarzeń.
 const viewEvents = [];
@@ -2071,7 +2110,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "91";
+  const SERVICE_WORKER_BUILD = "92";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2144,7 +2183,10 @@ document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.addEventListen
 $("stopBtn").addEventListener("click", () => sender.stop());
 $("retryCameraBtn").addEventListener("click", () => sender.retryCamera());
 $("chooseArchiveDir").addEventListener("click", async () => {
-  if (!CAN_MANAGE_CAMERA) return toastMsg("Folder nagrań wybierasz na komputerze z kamerą.");
+  if (!CAN_MANAGE_CAMERA) {
+    if (!canControlCamera()) return toastMsg("Odblokuj panel właściciela PIN-em.");
+    return remoteFolderPicker.open();
+  }
   const button = $("chooseArchiveDir"), old = button.textContent;
   button.disabled = true;
   if (archive.diskNeedsGrant) {

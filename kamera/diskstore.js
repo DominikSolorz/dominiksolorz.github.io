@@ -41,12 +41,50 @@ export async function choose({ newFolder = null } = {}) {
     if (!existed) managed = { parent, name: newFolder, handle };
   }
   await put("folder", handle);
+  await put("browseRoot", handle);
   await put("managedFolder", managed);
   handles.clear(); // Never reuse handles belonging to the previous archive location.
   return handle.name;
 }
 export async function disconnect() {
-  await put("folder", null); await put("managedFolder", null); handles.clear();
+  await put("folder", null); await put("managedFolder", null); await put("browseRoot", null); handles.clear();
+}
+async function remoteDirectory(path) {
+  if (!Array.isArray(path) || path.length>12 || path.some(name=>!validFolderName(name))) throw new Error("Nieprawidłowa ścieżka folderu.");
+  const root=await get("browseRoot") || await get("folder");
+  if (!root || !(await usable(root))) throw new Error("Na komputerze najpierw wybierz folder nadrzędny i przywróć dostęp do niego. Telefon widzi tylko zatwierdzone miejsce.");
+  let handle=root;
+  for (const name of path) handle=await handle.getDirectoryHandle(name);
+  const relative=await root.resolve(handle);
+  if (!relative || relative.length!==path.length || relative.some((name,i)=>name!==path[i])) throw new Error("Folder poza zatwierdzonym miejscem.");
+  return {root,handle};
+}
+export async function browseFolders(path=[], offset=0) {
+  if (!Number.isInteger(offset) || offset<0 || offset>10000) throw new Error("Nieprawidłowa strona listy.");
+  const {root,handle}=await remoteDirectory(path);
+  const entries=[]; let index=0, more=false;
+  const iterator=handle.entries();
+  for (;;) {
+    const next=await iterator.next(); if(next.done) break;
+    const [name,entry]=next.value;
+    if(entry.kind!=="directory" || !validFolderName(name)) continue;
+    if(index++<offset) continue;
+    if(entries.length===100) {more=true;break;}
+    entries.push({name});
+  }
+  entries.sort((a,b)=>a.name.localeCompare(b.name));
+  return {root:root.name,path:[...path],entries,offset,nextOffset:more?offset+100:null};
+}
+export async function selectRemoteFolder(path) {
+  const {handle}=await remoteDirectory(path);
+  await put("folder",handle); await put("managedFolder",null); handles.clear();
+  return {name:handle.name};
+}
+export async function createRemoteFolder(path,name) {
+  if(!validFolderName(name)) throw new Error("Nieprawidłowa nazwa nowego folderu.");
+  const {handle}=await remoteDirectory(path);
+  await handle.getDirectoryHandle(name,{create:true});
+  return {name};
 }
 export async function deleteEmptyCreatedFolder() {
   const managed = await get("managedFolder"), current = await get("folder");
