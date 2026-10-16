@@ -77,9 +77,19 @@ if (isMobileOwnerApp) {
   const views = {
     home: ["stage", "watchPanel"],
     alerts: ["viewEventsCard"],
-    recordings: ["dvrCard", "dvrListCard"],
+    recordings: ["dvrCard", "dvrListCard", "mobileRecordingStorage"],
     settings: ["modeCard", "systemPanel", "setCard", "diagCard"]
   };
+  const recordingStorage = document.createElement("details");
+  recordingStorage.id = "mobileRecordingStorage";
+  recordingStorage.className = "card mobileRecordingStorage mobileHidden";
+  recordingStorage.open = true;
+  recordingStorage.innerHTML = `<summary>Zapis i kopia Drive</summary>
+    <p id="mobileRecordingState" role="status">Oczekuję na stan komputera nagrywającego.</p>
+    <p class="muted small">Nagrania są zapisywane na komputerze z kamerą. Telefon nie wybiera folderu na jego dysku.</p>
+    <div id="mobileRecordingFolderControls"><button type="button" disabled>Zmień folder na komputerze</button><button type="button" disabled>Utwórz folder na komputerze</button><button type="button" disabled>Odłącz folder komputera</button></div>
+    <p class="muted small">Zmiana lub utworzenie folderu wymaga obsługi na komputerze. Zdalne okno wyboru folderu nie jest jeszcze dostępne.</p>`;
+  document.querySelector(".mainCol")?.append(recordingStorage);
   const managed = [...new Set(Object.values(views).flat())];
 
   function renderView(view) {

@@ -49,7 +49,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "188"; // musi się zgadzać z version.json
+const VERSION = "189"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -362,6 +362,7 @@ const SLOW_FPS = 60, FAST_FPS = 60, FAST_HOLD_MS = 10000;
 const REC_AUDIO_BPS = 64000;
 
 const archive = (() => {
+  let localSaveFailures = 0, updateSource = null;
   let source = null, recStream = null, running = false, rec = null, segTimer = null, clock = null;
   let recSince = 0, saved = 0, lastName = "", lastError = "", queued = 0, sentToDrive = 0, verifiedToDrive = 0, lastVerified = "", pumping = false, retryTimer = null, looped = 0;
   let local = { count: 0, bytes: 0, oldest: 0 }, free = Infinity, persisted = false;
@@ -508,7 +509,7 @@ const archive = (() => {
       try {
         await recstore.put({ name, start, end, events: events || [], type: data.type, uploaded: false }, data);
         saved++; lastName = name; lastError = "";
-      } catch (e) { lastError = `Nie udało się zapisać ${name}: ${errText(e)}`; }
+      } catch (e) { localSaveFailures++; lastError = `Nie udało się zapisać ${name}: ${errText(e)}`; }
     }
     // Kolejka powstaje dopiero po pełnym lokalnym zapisie. Gdy nie ma internetu,
     // plik pozostaje na Pulpicie i wysyłka zostanie ponowiona automatycznie.
@@ -615,7 +616,7 @@ const archive = (() => {
         try { await saving; }
         finally { pendingSaves.delete(saving); }
       } catch (e) {
-        lastError = `Nie udało się domknąć nagrania: ${errText(e)}`;
+        localSaveFailures++; lastError = `Nie udało się domknąć nagrania: ${errText(e)}`;
         render();
       } finally { resolveStopped(); }
     };
@@ -674,6 +675,15 @@ const archive = (() => {
     await flush(done);
     await pump();
     return status();
+  }
+  async function prepareUpdate() {
+    updateSource = source;
+    const failures = localSaveFailures;
+    await flush(stop());
+    if (localSaveFailures !== failures) { await abortUpdate(); throw new Error("Nie udało się bezpiecznie zapisać fragmentu."); }
+  }
+  async function abortUpdate() {
+    if (updateSource) { source = updateSource; updateSource = null; await resume(); }
   }
 
   const gb = n => `${(n / 1073741824).toFixed(1)} GB`;
@@ -800,8 +810,17 @@ const archive = (() => {
     await refreshLocal(); render();
   }
 
-  return { init, chooseDisk, disconnectDisk, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, flush, sendCurrentFragment, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
+  return { init, chooseDisk, disconnectDisk, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, flush, sendCurrentFragment, prepareUpdate, abortUpdate, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
 })();
+window.chrome?.webview?.addEventListener("message", async event => {
+  const message = event.data;
+  if (!CAN_MANAGE_CAMERA || typeof message?.id !== "string") return;
+  if (message.type === "desktop.update.abort") { await archive.abortUpdate(); return; }
+  if (message.type !== "desktop.update.prepare") return;
+  let ok = false;
+  try { await archive.prepareUpdate(); ok = true; } catch { /* native update must not restart after a failed save */ }
+  window.chrome.webview.postMessage({type:"desktop.update.prepared", id:message.id, ok});
+});
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
 function reconnectingChannel({ onSignal, onSubscribed, label }) {
@@ -1002,7 +1021,17 @@ function paintSystemPanel() {
   badge.textContent = viewingArchive ? "ARCHIWUM" : active ? "● NAGRYWA" : ctrlState.mode === "preview" ? "PODGLĄD" : ctrlState.mode === "off" ? "WYŁĄCZONA" : "ŁĄCZENIE";
   badge.dataset.state = viewingArchive ? "archive" : active ? "record" : ctrlState.mode || "waiting";
 }
-function setCtrlState(s) { Object.assign(ctrlState, s); paintCtrl(); paintSystemPanel(); }
+function setCtrlState(s) {
+  if (Object.hasOwn(s, "archive")) s.archiveReceivedAt = Date.now();
+  Object.assign(ctrlState, s); paintCtrl(); paintSystemPanel();
+  const mobileState = $("mobileRecordingState");
+  if (mobileState) {
+    const rec = Date.now() - (ctrlState.archiveReceivedAt || 0) <= OFFLINE_AFTER_MS ? ctrlState.archive : null;
+    mobileState.textContent = rec ? `${rec.recording ? "Komputer nagrywa." : "Zapis wstrzymany."} Folder: ${rec.folder || "nieustawiony"}. Zapisano: ${rec.saved || 0}. Kolejka Drive: ${rec.queued || 0}. Potwierdzono na Drive: ${rec.verifiedToDrive || 0}. ${rec.reason || ""}`
+      : "Brak aktualnych informacji o folderze komputera. Połącz się z nadajnikiem.";
+  }
+}
+setInterval(() => { if (ctrlState.archive && Date.now() - (ctrlState.archiveReceivedAt || 0) > OFFLINE_AFTER_MS) setCtrlState({ archive: null }); }, 15000);
 function paintCtrl() {
   const now = Date.now() + ctrlState.skew;
   const rec = ctrlState.recording && ctrlState.since > 0;
@@ -1589,7 +1618,7 @@ const viewer = (() => {
         diagRow(pc?.connectionState === "connected", pc?.connectionState === "connected" ? "Telefon połączony z kamerą" : "Telefon nie jest jeszcze połączony z kamerą"),
         diagRow(video.videoWidth > 0, video.videoWidth > 0 ? `Obraz dociera na ten ekran (${video.videoWidth}×${video.videoHeight})` : "Obraz jeszcze nie dotarł na ten ekran"),
       ]);
-      setCtrlState({ recording: !!sig.rec?.recording, since: sig.rec?.since || 0, mode: sig.mode || "", until: sig.until || 0, skew: sig.now ? sig.now - Date.now() : 0, hasCam: !sig.camError, quality: sig.quality || "" });
+      setCtrlState({ archive: sig.rec || null, recording: !!sig.rec?.recording, since: sig.rec?.since || 0, mode: sig.mode || "", until: sig.until || 0, skew: sig.now ? sig.now - Date.now() : 0, hasCam: !sig.camError, quality: sig.quality || "" });
       if (REC_QUALITY[sig.quality] && document.activeElement !== $("viewQuality")) $("viewQuality").value = sig.quality;
       if (MEDIA_LABEL[sig.media] && document.activeElement !== $("mediaPick")) $("mediaPick").value = sig.media;
       if (sig.light !== undefined && document.activeElement !== $("lightPick")) { $("lightPick").value = clampLight(sig.light); $("lightVal").textContent = LIGHT_LABEL[clampLight(sig.light)]; }
@@ -2042,7 +2071,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "90";
+  const SERVICE_WORKER_BUILD = "91";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {

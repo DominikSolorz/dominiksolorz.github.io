@@ -47,6 +47,23 @@ if (desktopRequested) {
     </section>
     <div class="desktopSidebarFoot"><span>Alt + 1–5 przełącza moduły</span><a href="./?panel=owner" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
   document.body.prepend(shell);
+  const updateNotice = document.createElement("section");
+  updateNotice.id = "desktopUpdateNotice"; updateNotice.className = "desktopUpdateNotice"; updateNotice.hidden = true;
+  updateNotice.innerHTML = '<button type="button" id="desktopUpdateAction">↻ Dostępna aktualizacja</button><progress id="desktopUpdateProgress" max="100" hidden></progress><small id="desktopUpdateStatus" role="status"></small>';
+  shell.append(updateNotice);
+  $("desktopUpdateAction").addEventListener("click", () => window.chrome?.webview?.postMessage({ type: "desktop.update.request" }));
+  window.chrome?.webview?.addEventListener("message", event => {
+    const state = event.data;
+    if (state?.type !== "desktop.update.state") return;
+    updateNotice.hidden = state.status === "none";
+    $("desktopUpdateAction").disabled = !["available", "error"].includes(state.status);
+    $("desktopUpdateAction").textContent = state.status === "available" ? `↻ Aktualizuj do ${state.version}` : "↻ Aktualizacja programu";
+    $("desktopUpdateStatus").textContent = state.message || "";
+    const progress = $("desktopUpdateProgress"); progress.hidden = state.status !== "downloading";
+    if (Number.isFinite(state.percent)) progress.value = Math.max(0, Math.min(100, state.percent));
+    else progress.removeAttribute("value");
+  });
+  window.chrome?.webview?.postMessage({ type: "desktop.update.query" });
 
   const context = document.createElement("section");
   context.className = "desktopContext";

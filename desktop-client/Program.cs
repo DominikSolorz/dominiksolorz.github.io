@@ -10,8 +10,8 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.3.4";
-    private const string WebPanelBuild = "188";
+    private const string DesktopVersion = "1.3.5";
+    private const string WebPanelBuild = "189";
     // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
     // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
     // Desktop, który pozwala udostępnić kamerę i mikrofon.
@@ -133,6 +133,19 @@ internal static class Program
         private AgentWebViewBridge? agentBridge;
         private bool downloadingUpdate;
         private DesktopUpdateManifest? offeredUpdate;
+        private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 15 * 60 * 1000 };
+        private readonly ProgressBar updateProgress = new() { Dock = DockStyle.Bottom, Height = 6, Visible = false };
+        private bool sidebarUpdateReady;
+        private object updateState = new { type = "desktop.update.state", status = "none" };
+        private TaskCompletionSource<bool>? updatePrepared;
+        private string? updatePreparationId;
+
+        private void PublishUpdateState(string status, string message = "", double? percent = null)
+        {
+            updateState = new { type = "desktop.update.state", status, version = offeredUpdate?.Version, message, percent };
+            try { if (AgentWebViewBridge.Trusted(webView.CoreWebView2.Source)) webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); } catch { }
+            updateBar.Visible = !sidebarUpdateReady && status != "none";
+        }
 
         public HomeSecurityWindow()
         {
@@ -146,6 +159,9 @@ internal static class Program
             FormBorderStyle = FormBorderStyle.Sizable;
             KeyPreview = true;
             updateBar.Controls.Add(updateButton);
+            updateBar.Controls.Add(updateProgress);
+            updateCheckTimer.Tick += async (_, _) => await CheckForUpdateAsync();
+            FormClosed += (_, _) => updateCheckTimer.Dispose();
             updateBar.Resize += (_, _) => updateButton.Location = new Point(Math.Max(12, updateBar.ClientSize.Width - updateButton.Width - 16), 8);
             updateButton.FlatAppearance.BorderColor = Color.FromArgb(255, 112, 128);
             updateButton.Click += async (_, _) => await DownloadAndPrepareOfferedUpdateAsync();
@@ -193,10 +209,26 @@ internal static class Program
                 }
             };
 
-            webView.CoreWebView2.WebMessageReceived += (_, e) =>
+            webView.CoreWebView2.WebMessageReceived += async (_, e) =>
             {
                 // Never persist arbitrary page payloads, OAuth sessions or IPC arguments.
                 if (e.Source != webView.CoreWebView2.Source || !AgentWebViewBridge.Trusted(e.Source)) return;
+                try {
+                    using var message = JsonDocument.Parse(e.WebMessageAsJson);
+                    var root = message.RootElement;
+                    if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("type", out var type) && type.ValueKind == JsonValueKind.String) {
+                        if (type.GetString() == "desktop.update.query") {
+                            sidebarUpdateReady = true; updateBar.Visible = false;
+                            webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); return;
+                        }
+                        if (type.GetString() == "desktop.update.request") { await DownloadAndPrepareOfferedUpdateAsync(); return; }
+                        if (type.GetString() == "desktop.update.prepared") {
+                            if (root.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String && id.GetString() == updatePreparationId)
+                                updatePrepared?.TrySetResult(root.TryGetProperty("ok", out var ok) && ok.ValueKind == JsonValueKind.True);
+                            return;
+                        }
+                    }
+                } catch (JsonException) { return; }
                 var safe = PanelDiagnostics.Project(e.WebMessageAsJson);
                 if (safe is not null) WriteDiagnostic("panel-state", safe);
             };
@@ -214,6 +246,7 @@ internal static class Program
             webView.CoreWebView2.Navigate(PanelUrl);
             WriteDiagnostic("panel-navigation", new { url = PanelUrl });
             _ = CheckForUpdateAsync();
+            updateCheckTimer.Start();
         }
 
         private async Task RefreshWebShellIfNeededAsync()
@@ -250,14 +283,14 @@ internal static class Program
 
         private async Task CheckForUpdateAsync()
         {
-            if (checkingUpdate || File.Exists(PendingUpdatePath)) return;
+            if (checkingUpdate || downloadingUpdate || File.Exists(PendingUpdatePath)) return;
             checkingUpdate = true;
             try
             {
                 var manifest = await Http.GetFromJsonAsync<DesktopUpdateManifest>($"{UpdateManifestUrl}?t={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
                 WriteDiagnostic("update-manifest", new { installed = DesktopVersion, available = manifest?.Version });
                 if (manifest is null || !Version.TryParse(manifest.Version, out var available) || available <= Version.Parse(DesktopVersion)) return;
-                if (string.IsNullOrWhiteSpace(manifest.PackageUrl) || string.IsNullOrWhiteSpace(manifest.Sha256)) return;
+                if (!Uri.TryCreate(manifest.PackageUrl, UriKind.Absolute, out var packageUri) || packageUri.Scheme != "https" || packageUri.Host != PublicHost || packageUri.Port != 443 || packageUri.UserInfo.Length != 0 || !packageUri.AbsolutePath.StartsWith("/kamera/updates/", StringComparison.Ordinal) || manifest.Sha256?.Length != 64 || !manifest.Sha256.All(Uri.IsHexDigit)) return;
                 offeredUpdate = manifest;
                 BeginInvoke(() => ShowUpdateOffer(manifest.Version));
                 WriteDiagnostic("update-offered", new { manifest.Version });
@@ -272,7 +305,7 @@ internal static class Program
         {
             updateButton.Text = $"↻ Aktualizuj do wersji {version}";
             updateButton.Location = new Point(Math.Max(12, updateBar.ClientSize.Width - updateButton.Width - 16), 8);
-            updateBar.Visible = true;
+            PublishUpdateState("available", "Nowa wersja jest gotowa do pobrania.");
         }
 
         private async Task DownloadAndPrepareOfferedUpdateAsync()
@@ -280,6 +313,7 @@ internal static class Program
             if (downloadingUpdate || offeredUpdate is null) return;
             downloadingUpdate = true;
             var manifest = offeredUpdate;
+            if (MessageBox.Show(this, $"Pobrać i zainstalować wersję {manifest.Version}? Program najpierw zapisze bieżący fragment. Aktualizacja może spowodować krótką przerwę w nagrywaniu.", "Aktualizacja HOME SECURITY", MessageBoxButtons.YesNo, MessageBoxIcon.Information) != DialogResult.Yes) { downloadingUpdate = false; return; }
             updateButton.Enabled = false;
             updateButton.Text = "Pobieranie aktualizacji…";
             try
@@ -287,8 +321,28 @@ internal static class Program
                 Directory.CreateDirectory(UpdateRoot);
                 var packagePath = Path.Combine(UpdateRoot, $"HomeSecurityDesktop-{manifest.Version}.zip");
                 var temporaryPath = packagePath + ".download";
-                using (var source = await Http.GetStreamAsync(manifest.PackageUrl))
-                using (var target = File.Create(temporaryPath)) await source.CopyToAsync(target);
+                PublishUpdateState("downloading", "Pobieranie aktualizacji…");
+                updateProgress.Visible = true;
+                using (var response = await Http.GetAsync(manifest.PackageUrl, HttpCompletionOption.ResponseHeadersRead)) {
+                    using var downloadDeadline = new CancellationTokenSource(TimeSpan.FromMinutes(4));
+                    response.EnsureSuccessStatusCode();
+                    var total = response.Content.Headers.ContentLength;
+                    await using var source = await response.Content.ReadAsStreamAsync();
+                    await using var target = File.Create(temporaryPath);
+                    var buffer = new byte[65536]; long received = 0; var lastReport = Stopwatch.StartNew();
+                    int length;
+                    while ((length = await source.ReadAsync(buffer, downloadDeadline.Token)) != 0) {
+                        await target.WriteAsync(buffer.AsMemory(0, length), downloadDeadline.Token); received += length;
+                        if (lastReport.ElapsedMilliseconds < 150 && received != total) continue;
+                        lastReport.Restart();
+                        double? percent = total is > 0 ? Math.Min(100, 100.0 * received / total.Value) : null;
+                        updateProgress.Style = percent.HasValue ? ProgressBarStyle.Continuous : ProgressBarStyle.Marquee;
+                        if (percent.HasValue) updateProgress.Value = (int)percent.Value;
+                        PublishUpdateState("downloading", percent.HasValue ? $"Pobrano {percent.Value:0}%" : $"Pobrano {received / 1048576} MB", percent);
+                    }
+                    if (total.HasValue && received != total.Value) throw new InvalidDataException("Pobieranie nie jest kompletne.");
+                }
+                PublishUpdateState("verifying", "Sprawdzanie pakietu…");
                 string downloadedHash;
                 await using (var packageStream = File.OpenRead(temporaryPath))
                 {
@@ -301,17 +355,33 @@ internal static class Program
                     throw new InvalidDataException("Pobrany pakiet ma nieprawidłową sumę kontrolną.");
                 }
                 File.Move(temporaryPath, packagePath, true);
+                PublishUpdateState("preparing", "Zapisywanie bieżącego fragmentu nagrania…");
+                updatePreparationId = Guid.NewGuid().ToString();
+                updatePrepared = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { type = "desktop.update.prepare", id = updatePreparationId }));
+                bool prepared;
+                try { prepared = await updatePrepared.Task.WaitAsync(TimeSpan.FromSeconds(60)); }
+                catch (TimeoutException) { prepared = false; }
+                if (!prepared) {
+                    webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { type = "desktop.update.abort", id = updatePreparationId }));
+                    throw new InvalidDataException("Brak potwierdzenia bezpiecznego zapisu nagrania. Aktualizacja wstrzymana.");
+                }
                 File.WriteAllText(PendingUpdatePath, JsonSerializer.Serialize(new PendingUpdate(packagePath)));
                 WriteDiagnostic("update-ready", new { manifest.Version, packagePath });
                 RestartIntoPreparedUpdate(manifest.Version);
+                PublishUpdateState("installing", "Pakiet sprawdzony. Ponowne uruchamianie programu…");
             }
             catch (Exception ex)
             {
+                if (updatePreparationId is not null) {
+                    try { webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { type = "desktop.update.abort", id = updatePreparationId })); } catch { }
+                }
                 WriteDiagnostic("update-download-failed", new { manifest.Version, error = ex.Message });
                 updateButton.Enabled = true;
                 updateButton.Text = $"↻ Spróbuj ponownie: {manifest.Version}";
+                PublishUpdateState("error", "Aktualizacja nie została zainstalowana. " + ex.Message);
             }
-            finally { downloadingUpdate = false; }
+            finally { downloadingUpdate = false; updateProgress.Visible = false; updatePrepared = null; updatePreparationId = null; }
         }
 
         private void RestartIntoPreparedUpdate(string version)

@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFile} from 'node:fs/promises';
+const app=await readFile(new URL('../kamera/app.js',import.meta.url),'utf8');
+const native=await readFile(new URL('../desktop-client/Program.cs',import.meta.url),'utf8');
+const mobile=await readFile(new URL('../kamera/mobile.js',import.meta.url),'utf8');
+const prepare=app.slice(app.indexOf('  async function prepareUpdate()'),app.indexOf('  const gb ='));
+function setup(fail=false){const calls=[];const ctx=vm.createContext({Error,calls});vm.runInContext('let localSaveFailures=0, updateSource=null, source={camera:true}; async function stop(){calls.push("stop-recording");source=null;'+(fail?'localSaveFailures++;':'')+'} async function flush(done){await done;calls.push("saved");} async function resume(){calls.push("resume");}\n'+prepare+'\nglobalThis.prepare=prepareUpdate;globalThis.abort=abortUpdate;',ctx);return{ctx,calls};}
+test('update waits for recording save before readiness',async()=>{const s=setup();await s.ctx.prepare();assert.deepEqual(s.calls,['stop-recording','saved']);});
+test('failed final save blocks update and resumes recorder',async()=>{const s=setup(true);await assert.rejects(s.ctx.prepare());assert.deepEqual(s.calls,['stop-recording','saved','resume']);});
+test('aborted installation resumes recording',async()=>{const s=setup();await s.ctx.prepare();await s.ctx.abort();assert.equal(s.calls.at(-1),'resume');});
+test('native update requires hash and save acknowledgement before pending restart',()=>{const begin=native.indexOf('private async Task DownloadAndPrepareOfferedUpdateAsync');const code=native.slice(begin);assert.ok(code.indexOf('SHA256.HashDataAsync')<code.indexOf('updatePrepared.Task.WaitAsync'));assert.ok(code.indexOf('if (!prepared)')<code.indexOf('File.WriteAllText(PendingUpdatePath'));assert.ok(code.includes('HttpCompletionOption.ResponseHeadersRead'));assert.ok(code.includes('source.ReadAsync(buffer, downloadDeadline.Token)'));});
+test('phone recordings route contains host storage status and honest disabled controls',()=>{assert.match(mobile,/recordings: \["dvrCard", "dvrListCard", "mobileRecordingStorage"\]/);assert.ok(mobile.includes('id="mobileRecordingState"'));assert.ok(mobile.includes('disabled>Zmień folder na komputerze'));assert.ok(!mobile.includes('showDirectoryPicker'));});
