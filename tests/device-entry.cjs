@@ -6,26 +6,27 @@ const source = fs.readFileSync(path.join(__dirname, "../kamera/auth.js"), "utf8"
   .replace(/^import .*;\r?\n/gm, "").replace(/export /g, "");
 const storage = () => { const map = new Map(); return { getItem: k => map.get(k) ?? null, setItem: (k,v) => map.set(k,v), removeItem: k => map.delete(k) }; };
 function harness() {
-  const state = { security: { pin_hash: "existing" }, opened: 0, url: "", updated: null };
+  const state = { security: { pin_hash: "existing" }, opened: 0, url: "", updated: null, user: { id: "user-a" }, oauth: null, oauthError: null, consent: true };
   const steps = ["login", "profile", "device", "pin"].map(step => ({ hidden: true, dataset: { authStep: step } }));
   const nodes = new Map();
   const node = id => {
     if (!nodes.has(id)) nodes.set(id, { value: "", hidden: true, disabled: false, textContent: "", classList: { toggle() {}, remove() {} }, handlers: {}, addEventListener(type,fn) { this.handlers[type] = fn; }, querySelector() { return node("submit"); } });
+    if (id === "profileForm") for (const field of ["first_name","last_name","address_line","postal_code","phone","terms"]) nodes.get(id)[field] = node(`profile-${field}`);
     return nodes.get(id);
   };
   const client = {
-    auth: { getUser: async () => ({ data: { user: { id: "user-a" } } }), onAuthStateChange: fn => { state.authCallback = fn; } },
+    auth: { getUser: async () => ({ data: { user: state.user } }), signInWithOAuth: async args => {state.oauth = args; return {error:state.oauthError};}, onAuthStateChange: fn => { state.authCallback = fn; } },
     from: table => ({
       select() { return this; }, update(data) { state.updated = data; return this; },
       eq() { return this; },
-      maybeSingle: async () => ({ data: table === "user_profiles" ? { first_name: "A", last_name: "B", address_line: "X", postal_code: "00-000", preferred_device: "desktop" } : state.security }),
+      maybeSingle: async () => ({ data: table === "user_profiles" ? { first_name: "A", last_name: "B", address_line: "X", postal_code: "00-000", preferred_device: "desktop", privacy_accepted_at: state.consent ? "2026-10-16" : null, terms_accepted_at: state.consent ? "2026-10-16" : null } : state.security }),
       then(resolve) { return Promise.resolve({ error: null }).then(resolve); }
     })
   };
   const context = vm.createContext({
     window: { supabase: { createClient: () => client }, __openSecurePanel: () => state.opened++, addEventListener() {} },
     document: { getElementById: node, querySelectorAll: selector => selector === "[data-auth-step]" ? steps : [] },
-    location: { hash: "", search: "", href: "https://example.test/kamera/?view=desktop&auth=login", replace: url => { state.url = url; } },
+    location: { origin:"https://example.test", pathname:"/kamera/", hash: "", search: "", href: "https://example.test/kamera/?view=desktop&auth=login", replace: url => { state.url = url; } },
     sessionStorage: storage(), localStorage: storage(), URL, URLSearchParams, Date,
     SUPABASE_URL: "", SUPABASE_PUBLISHABLE_KEY: "", setTimeout: fn => fn(), crypto: globalThis.crypto,
   });
@@ -78,5 +79,32 @@ function harness() {
     assert.equal(classes.has(expected), true, search + " mode");
     assert.equal(classes.size, 1, "never mount both desktop and mobile");
   }
-  console.log("PASS: device choice, iPhone, Android, desktop, existing/new PIN, invalid choice, user binding, one-shot, expiry and initial layout.");
+  h = harness();
+  await h.node("googleLoginBtn").handlers.click();
+  assert.equal(h.state.oauth.provider, "google");
+  assert.equal(h.state.oauth.options.redirectTo, "https://example.test/kamera/");
+  assert.equal(h.state.oauth.options.scopes, "openid email profile");
+  assert.equal(h.state.opened, 0, "OAuth start must not bypass PIN");
+  await h.node("googleLoginBtn").handlers.click();
+  h = harness(); h.state.oauthError = {message:"Unsupported provider: provider is not enabled"};
+  await h.node("googleLoginBtn").handlers.click();
+  assert.equal(h.node("googleLoginBtn").disabled, false);
+  assert.match(h.node("authMessage").textContent, /nie jest jeszcze włączone/);
+  h = harness(); h.context.window.chrome = {webview:{}};
+  await h.node("googleLoginBtn").handlers.click();
+  assert.equal(h.state.oauth, null, "never send Google OAuth into embedded WebView2");
+  h = harness(); h.state.user = {id:"user-a", identities:[{provider:"google"}]};
+  await assert.rejects(h.run("currentAccountUser()"), /nie został potwierdzony/);
+  h.state.user.email_confirmed_at = "2026-10-16T10:00:00Z";
+  assert.equal((await h.run("currentAccountUser()")).id, "user-a");
+  h = harness(); h.state.consent = false;
+  await h.run("continueWithSession(true)");
+  assert.equal(h.steps.find(s => s.dataset.authStep === "profile").hidden, false);
+  assert.equal(h.node("profileForm").first_name.value, "A", "existing profile is retained");
+  assert.equal(h.state.opened, 0, "missing consent cannot enter panel");
+  assert.match(h.node("authMessage").textContent, /brakuje jedynie akceptacji/);
+  assert.equal(h.node("profileForm").terms.checked, undefined, "never accept terms automatically");
+  await h.node("profileForm").handlers.submit({preventDefault(){},currentTarget:h.node("profileForm")});
+  assert.match(h.node("authMessage").textContent, /Zaakceptuj/);
+  console.log("PASS: device/PIN routing and Google OAuth scopes, errors, embedded-browser guard, verified identity.");
 })().catch(error => { console.error(error); process.exitCode = 1; });

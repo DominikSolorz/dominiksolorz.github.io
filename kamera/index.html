@@ -50,7 +50,7 @@
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
-<link rel="stylesheet" href="style.css?v=179">
+<link rel="stylesheet" href="style.css?v=180">
 </head>
 <body>
 <!-- Publiczna strona główna. Panel kamery pojawia się dopiero po świadomym
@@ -76,6 +76,8 @@
 <form id="registerForm" data-auth-step="register" class="authForm" hidden><p class="authEyebrow">NOWE KONTO</p><h1>Załóż konto</h1><p>Wszystkie pola oznaczone gwiazdką są potrzebne do utworzenia konta.</p><div class="authGrid"><label>Imię *<input name="first_name" autocomplete="given-name" required></label><label>Nazwisko *<input name="last_name" autocomplete="family-name" required></label></div><label>Adres *<input name="address_line" autocomplete="street-address" required></label><div class="authGrid"><label>Kod pocztowy *<input name="postal_code" placeholder="00-000" autocomplete="postal-code" required></label><label>Telefon <input name="phone" type="tel" autocomplete="tel"></label></div><label>E-mail *<input name="email" type="email" autocomplete="email" required></label><div class="authGrid"><label>Hasło *<input name="password" type="password" autocomplete="new-password" required></label><label>Powtórz hasło *<input name="password_repeat" type="password" autocomplete="new-password" required></label></div><label class="authCheck"><input name="terms" type="checkbox" required><span>Akceptuję <a href="regulamin.html" target="_blank">Regulamin</a> i <a href="polityka-prywatnosci.html" target="_blank">Politykę prywatności</a>.</span></label><button class="authPrimary" type="submit">Utwórz konto i wyślij e-mail →</button><button class="authToLogin authTextBtn" type="button">Masz konto? Zaloguj się</button></form>
 <section data-auth-step="confirm" class="authForm" hidden><p class="authEyebrow">POTWIERDŹ KONTO</p><h1>Sprawdź e-mail</h1><p>Wysłaliśmy wiadomość potwierdzającą. Otwórz bezpieczny link w wiadomości albo przepisz kod weryfikacyjny, jeśli jest podany.</p><form id="verificationCodeForm" class="verificationCodeForm"><label>Kod weryfikacyjny (opcjonalnie)<input id="verificationCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" maxlength="8" placeholder="Kod z e-maila"></label><button class="authSecondary" type="submit">Potwierdź kod</button></form><div class="authNotice">Link lub kod są jednorazowe. Nie przekazuj ich innej osobie. Jeśli nie widzisz wiadomości, sprawdź Spam.</div><button id="resendConfirmation" class="authPrimary" type="button">Wyślij wiadomość ponownie</button><button class="authToLogin authTextBtn" type="button">Wróć do logowania</button></section>
     <form id="profileForm" data-auth-step="profile" class="authForm" hidden><p class="authEyebrow">DANE WŁAŚCICIELA</p><h1>Uzupełnij profil</h1><p>Dane są dostępne wyłącznie na Twoim koncie.</p><div class="authGrid"><label>Imię *<input name="first_name" required></label><label>Nazwisko *<input name="last_name" required></label></div><label>Adres *<input name="address_line" required></label><div class="authGrid"><label>Kod pocztowy *<input name="postal_code" placeholder="00-000" required></label><label>Telefon <input name="phone" type="tel"></label></div><button class="authPrimary" type="submit">Dalej →</button></form>
+    <label data-auth-step="profile" class="authCheck authGoogleTerms" hidden><input form="profileForm" name="terms" type="checkbox" required><span>Akceptuję <a href="regulamin.html" target="_blank" rel="noopener">Regulamin</a> i <a href="polityka-prywatnosci.html" target="_blank" rel="noopener">Politykę prywatności</a>.</span></label>
+    <div data-auth-step="login" class="authGoogleEntry"><span class="authDivider">lub</span><button id="googleLoginBtn" type="button" class="authGoogleButton"><span aria-hidden="true">G</span> Zaloguj przez Google</button><p>Potwierdź konto w Google. Dostęp do panelu nadal wymaga PIN-u.</p></div>
     <form id="deviceForm" data-auth-step="device" class="authForm" hidden>
       <p class="authEyebrow">KONTO → URZĄDZENIE → PIN → PANEL</p>
       <h1>Wybierz swój panel</h1>
@@ -495,8 +497,8 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="auth.js?v=8"></script>
-<script type="module" src="app.js?v=184"></script>
+<script type="module" src="auth.js?v=10"></script>
+<script type="module" src="app.js?v=185"></script>
 <script type="module" src="desktop.js?v=27"></script>
 <script type="module" src="mobile.js?v=10"></script>
 </body>

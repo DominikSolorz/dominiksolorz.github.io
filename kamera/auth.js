@@ -18,6 +18,33 @@ let pendingConfirmationEmail = "";
 const ENTRY_TICKET = "hs-device-entry-v1";
 let returnedWithEmailToken = location.hash.includes("access_token");
 let continuing = false;
+let googleLoginPending = false;
+
+async function signInWithGoogle() {
+  if (googleLoginPending) return;
+  // Google blocks embedded user agents. Never navigate WebView2 to Google login.
+  if (window.chrome?.webview) {
+    message("Logowanie Google otwórz w Chrome lub Edge. W programie Windows możesz nadal użyć e-maila i hasła. Bezpieczne przekazanie sesji do programu wymaga osobnego mostka.", true);
+    return;
+  }
+  googleLoginPending = true;
+  const button = $("googleLoginBtn");
+  if (button) button.disabled = true;
+  message("Przekierowuję do Google. Po potwierdzeniu konta nadal wymagany będzie PIN.");
+  try {
+    const { error } = await accountClient.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: callbackUrl(), scopes: "openid email profile", queryParams: { prompt: "select_account" } },
+    });
+    if (error) throw error;
+  } catch (error) {
+    message(explainAuthError(error), true);
+    googleLoginPending = false;
+    if (button) button.disabled = false;
+  }
+}
+
+$("googleLoginBtn")?.addEventListener("click", signInWithGoogle);
 function takeDeviceEntry(user) {
   let ticket = null;
   try { ticket = JSON.parse(sessionStorage.getItem(ENTRY_TICKET) || "null"); sessionStorage.removeItem(ENTRY_TICKET); } catch (_) {}
@@ -31,6 +58,8 @@ function explainAuthError(error) {
   const text = raw.toLowerCase();
   if (text.includes("invalid login credentials")) return "Nieprawidłowy e-mail lub hasło.";
   if (text.includes("email not confirmed")) return "Konto nie zostało jeszcze potwierdzone. Otwórz link wysłany e-mailem.";
+  if (text.includes("provider is not enabled") || text.includes("unsupported provider")) return "Logowanie Google nie jest jeszcze włączone w konfiguracji kont HOME SECURITY. Użyj e-maila i hasła.";
+  if (text.includes("access_denied")) return "Logowanie Google zostało anulowane albo dostęp nie został przyznany. Spróbuj ponownie lub użyj e-maila i hasła.";
   if (text.includes("redirect") || text.includes("redirect_to")) return "Link potwierdzający wymaga konfiguracji adresu powrotu. Konto nie zostało jeszcze utworzone.";
   if (text.includes("already registered") || text.includes("already been registered")) return "Ten adres ma już konto. Zaloguj się albo użyj odzyskiwania hasła.";
   if (text.includes("network") || text.includes("fetch")) return "Nie udało się połączyć z usługą kont. Sprawdź internet i spróbuj ponownie.";
@@ -44,7 +73,11 @@ async function hashText(value) {
 function randomSalt() { const bytes = crypto.getRandomValues(new Uint8Array(24)); return b64(bytes); }
 
 export async function currentAccountUser() {
-  const { data: { user } } = await accountClient.auth.getUser();
+  const { data: { user }, error } = await accountClient.auth.getUser();
+  if (error) throw error;
+  // Server-confirmed user, not user-editable metadata or the browser's token text.
+  const googleIdentity = user?.identities?.some(identity => identity.provider === "google");
+  if (googleIdentity && !user.email_confirmed_at) throw new Error("Adres e-mail konta Google nie został potwierdzony przez usługę logowania.");
   return user || null;
 }
 export async function accessRoleForCurrentUser() {
@@ -104,11 +137,17 @@ async function continueWithSession(deviceChosen = false) {
   const user = await currentAccountUser();
   if (!user) { section("login"); return; }
   const profile = await profileFor(user);
-  if (!profile || !profile.first_name || !profile.last_name || !profile.address_line || !profile.postal_code) {
+  const missingProfile = !profile || !profile.first_name || !profile.last_name || !profile.address_line || !profile.postal_code;
+  const missingConsent = !profile?.privacy_accepted_at || !profile?.terms_accepted_at;
+  if (missingProfile || missingConsent) {
     const form = $("profileForm"); const meta = user.user_metadata || {};
     form.first_name.value = profile?.first_name || meta.first_name || ""; form.last_name.value = profile?.last_name || meta.last_name || "";
     form.address_line.value = profile?.address_line || meta.address_line || ""; form.postal_code.value = profile?.postal_code || meta.postal_code || ""; form.phone.value = profile?.phone || meta.phone || "";
-    section("profile"); return;
+    section("profile");
+    message(missingProfile
+      ? "Konto zostało potwierdzone. Uzupełnij dane profilu i zaakceptuj dokumenty, aby przejść do wyboru urządzenia i PIN-u."
+      : "Logowanie powiodło się. Dane profilu są już zapisane; brakuje jedynie akceptacji Regulaminu i Polityki prywatności. Przeczytaj dokumenty, zaznacz zgodę i kliknij Dalej. Twój dotychczasowy PIN pozostaje bez zmian.");
+    return;
   }
   const security = await securityForCurrentUser();
   // Wybór dotyczy bieżącego urządzenia, nie ostatniego urządzenia konta.
@@ -177,7 +216,7 @@ $("verificationCodeForm")?.addEventListener("submit", async event => {
     await continueWithSession();
   } catch (error) { message(explainAuthError(error), true); }
 });
-$("profileForm")?.addEventListener("submit", async event => { event.preventDefault(); try { await saveProfile(event.currentTarget); section("device"); } catch (error) { message(error.message, true); } });
+$("profileForm")?.addEventListener("submit", async event => { event.preventDefault(); if (!event.currentTarget.terms.checked) return message("Zaakceptuj Regulamin i Politykę prywatności.", true); try { await saveProfile(event.currentTarget); section("device"); } catch (error) { message(error.message, true); } });
 document.querySelectorAll("[data-device]").forEach(button => button.addEventListener("click", () => {
   document.querySelectorAll("[data-device]").forEach(item => { const active = item === button; item.classList.toggle("selected", active); item.setAttribute("aria-pressed", String(active)); });
   $("deviceValue").value = button.dataset.device;
