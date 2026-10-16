@@ -26,6 +26,24 @@ until destination access has been secured and rechecked.
 
 ## Implementation
 
+### Dedicated HOME SECURITY project acceptance, 2026-10-16
+
+The Desktop client from project `intricate-abbey-511811-d3` was authorized through
+native Picker for integration `2d54d15d-2dd4-476b-9f1a-6b9c77ac48a1`. The real folder
+preflight passed and DPAPI credentials were saved. Harmless fixture upload job
+`f8f5869f-3684-4ff7-ac54-7457da58df34` succeeded on attempt 1, remote ID
+`1XGDefpE7JOVZ9NFtbVjMEOZIa_RM6yJz`. Independent connector metadata confirmed
+248 bytes in the expected parent folder. The existing DS MAIL integration was
+not overwritten and legacy recorder/Apps Script routing was not migrated.
+
+Initial folder metadata showed public `anyone`/`writer` access. A subsequent browser
+sharing retry succeeded: general access was changed to restricted, Google confirmed
+the update, and independent API readback returned only the owner permission.
+The current adapter does not enforce an automatic privacy gate; recheck destination
+permissions before private-footage use. Earlier public-access warnings below describe
+the historical test state, not the final permission readback on this date.
+
+
 Schema 4 preserves integrations and adds a separate drive_uploads queue. Jobs store
 integrationId, local file identity (path, size, MD5), folder, reserved remote ID,
 lease, attempts and safe error code. OAuth refresh credentials are DPAPI encrypted
