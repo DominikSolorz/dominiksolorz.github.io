@@ -11,7 +11,7 @@ namespace HomeSecurityDesktop;
 internal static class Program
 {
     private const string DesktopVersion = "1.3.4";
-    private const string WebPanelBuild = "185";
+    private const string WebPanelBuild = "186";
     // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
     // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
     // Desktop, który pozwala udostępnić kamerę i mikrofon.

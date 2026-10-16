@@ -49,7 +49,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "185"; // musi się zgadzać z version.json
+const VERSION = "186"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -441,9 +441,10 @@ const archive = (() => {
     pumping = true; clearTimeout(retryTimer);
     const skip = new Set();
     oversize.clear();
-    await cloud.version();
     const failed = (name, e) => { skip.add(name); lastError = `Nie udało się wysłać ${name} na Google Drive (${errText(e)}). Spróbuję ponownie.`; };
     try {
+      // A failed preflight must release pumping and schedule a retry too.
+      await cloud.version();
       for (;;) {
         const keys = await idb.qKeys();
         queued = keys.length; render();
@@ -452,7 +453,7 @@ const archive = (() => {
           if (skip.has(k)) continue;
           const it = await idb.qGet(k);
           const b = it?.blob || (it?.ref ? await recstore.blob(it.ref) : null) || (it?.diskRef ? await diskstore.load(it.diskRef) : null);
-          if (!b) { await idb.qDel(k); continue; } // nagranie zniknęło w pętli zapisu
+          if (!b) { failed(k, new Error("Brak dostępu do lokalnego pliku; zachowuję kolejkę. Przywróć dostęp do folderu archiwum.")); continue; }
           if (!cloud.big && b.size > MAX_UPLOAD) { skip.add(k); oversize.add(k); continue; }
           if (!data || b.size < data.size) { key = k; item = it; data = b; }
         }
@@ -666,6 +667,15 @@ const archive = (() => {
     while (pendingSaves.size) await Promise.allSettled([...pendingSaves]);
   }
 
+  async function sendCurrentFragment() {
+    const active = rec;
+    const done = active ? stopped.get(active) : Promise.resolve();
+    if (running && active) rotate(); // next segment starts first; camera remains live
+    await flush(done);
+    await pump();
+    return status();
+  }
+
   const gb = n => `${(n / 1073741824).toFixed(1)} GB`;
   function describe() {
     if (REC_MIME === null) return "Ta przeglądarka nie obsługuje nagrywania.";
@@ -783,7 +793,7 @@ const archive = (() => {
     return name;
   }
 
-  return { init, chooseDisk, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, flush, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
+  return { init, chooseDisk, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, flush, sendCurrentFragment, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
 })();
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
@@ -2025,7 +2035,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "87";
+  const SERVICE_WORKER_BUILD = "88";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2127,6 +2137,27 @@ for (const [id, d] of [["lightDown", -1], ["lightUp", 1]]) $(id).addEventListene
 $("mediaPick").addEventListener("change", e => executeControl("media-set", { media: e.target.value }).catch(error => toastMsg(error.message)));
 $("viewQuality").addEventListener("change", e => executeControl("quality-set", { q: e.target.value }).catch(error => toastMsg(error.message)));
 $("retentionDays").closest("label").hidden = false;
+$("driveAuto").checked = !!prefs.driveAuto;
+$("driveAuto").disabled = !CAN_MANAGE_CAMERA || !cloud.enabled;
+$("sendCurrentFragment").disabled = !CAN_MANAGE_CAMERA || !cloud.enabled;
+$("driveAuto").addEventListener("change", e => {
+  if (!CAN_MANAGE_CAMERA || !cloud.enabled) return;
+  prefs.driveAuto = e.target.checked; savePrefs();
+  $("driveBackupStatus").textContent = prefs.driveAuto
+    ? "Kopia Drive włączona dla kolejnych fragmentów. Zapis potwierdza dopiero weryfikacja pliku na Drive."
+    : "Automatyczna kopia Drive wyłączona. Nagrania lokalne pozostają bez zmian.";
+});
+$("sendCurrentFragment").addEventListener("click", async e => {
+  if (!CAN_MANAGE_CAMERA || !cloud.enabled) return;
+  if (!prefs.driveAuto) return toastMsg("Najpierw włącz automatyczną kopię Google Drive.");
+  const button = e.currentTarget; button.disabled = true;
+  try {
+    $("driveBackupStatus").textContent = "Domykam fragment i sprawdzam wysyłanie. Kamera pozostaje aktywna.";
+    const result = await archive.sendCurrentFragment();
+    $("driveBackupStatus").textContent = result.reason;
+  } catch (error) { $("driveBackupStatus").textContent = `Wysyłka niepotwierdzona: ${errText(error)}`; }
+  finally { button.disabled = false; }
+});
 for (const id of ["segmentMin", "retentionDays"]) {
   $(id).value = String(prefs[id]);
   $(id).addEventListener("change", e => { prefs[id] = Number(e.target.value); savePrefs(); });
