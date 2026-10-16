@@ -35,6 +35,7 @@ if (desktopRequested) {
     <nav class="desktopNav" aria-label="Moduły monitoringu">
       <button class="active" type="button" data-desktop-view="live"><i>▦</i><span><b>Pulpit</b><small>podgląd na żywo</small></span><kbd>1</kbd></button>
       <button type="button" data-desktop-view="controls"><i>◉</i><span><b>Sterowanie</b><small>zapis i tryb pracy</small></span><kbd>2</kbd></button>
+      <button type="button" data-desktop-view="events"><i>♧</i><span><b>Alarmy</b><small>zdarzenia z kamery</small></span><kbd>6</kbd></button>
       <button type="button" data-desktop-view="archive"><i>⏪</i><span><b>Nagrania</b><small>archiwum DVR i folder zapisu</small></span><kbd>3</kbd></button>
       <button type="button" data-desktop-view="settings"><i>◌</i><span><b>Ustawienia</b><small>obraz, dźwięk i zapis</small></span><kbd>4</kbd></button>
       <button type="button" data-desktop-view="diagnostics"><i>⌁</i><span><b>Diagnostyka</b><small>stan systemu</small></span><kbd>5</kbd></button>
@@ -45,7 +46,7 @@ if (desktopRequested) {
       <p><span class="capOk">●</span> Zoom cyfrowy</p>
       <p class="muted">Stan urządzeń znajdziesz w Diagnostyce.</p>
     </section>
-    <div class="desktopSidebarFoot"><span>Alt + 1–5 przełącza moduły</span><a href="./?panel=owner" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
+    <div class="desktopSidebarFoot"><span>Alt + 1–6 przełącza moduły</span><a href="./?panel=owner" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
   document.body.prepend(shell);
   const updateNotice = document.createElement("section");
   updateNotice.id = "desktopUpdateNotice"; updateNotice.className = "desktopUpdateNotice"; updateNotice.hidden = true;
@@ -114,6 +115,11 @@ if (desktopRequested) {
     eventsDrawer.open = true;
     eventCard.open = true;
   }
+  const eventsScreen = document.createElement("section");
+  eventsScreen.className = "desktopEventsScreen"; eventsScreen.hidden = true;
+  eventsScreen.setAttribute("aria-label", "Alarmy i zdarzenia");
+  eventsScreen.innerHTML = '<h2>Alarmy i zdarzenia</h2><p>Rzeczywiste wykrycia ruchu i dźwięku z kamery. Zmiana widoku nie zatrzymuje transmisji ani zapisu.</p>';
+  context.insertAdjacentElement("afterend", eventsScreen);
 
   // Na pulpicie operatora oś doby jest częścią głównego widoku, obok obrazu
   // i zdarzeń. Pełna lista plików pojawia się dopiero w module Archiwum DVR.
@@ -318,6 +324,11 @@ if (desktopRequested) {
     overview.hidden = view !== "live";
     settingsScreen.hidden = view !== "settings";
     controlsScreen.hidden = view !== "controls";
+    eventsScreen.hidden = view !== "events";
+    if (eventCard) {
+      (view === "events" ? eventsScreen : eventsDrawer).append(eventCard);
+      eventCard.hidden = false; eventCard.open = true;
+    }
     if (layout) layout.hidden = view !== "diagnostics";
     context.querySelector(".desktopContextActions").hidden = view !== "live";
     // Pulpit ma być roboczy: kamera, zdarzenia i oś czasu — bez dodatkowych
@@ -329,6 +340,7 @@ if (desktopRequested) {
     const labels = {
       live: ["Pulpit", "Monitoring domu"],
       controls: ["Sterowanie", "Sterowanie kamerą"],
+      events: ["Alarmy", "Alarmy i zdarzenia"],
       archive: ["Archiwum", "Nagrania DVR"],
       settings: ["Ustawienia", "Ustawienia kamery"],
       diagnostics: ["Diagnostyka", "Stan systemu"]
@@ -341,7 +353,7 @@ if (desktopRequested) {
     // Po opuszczeniu ustawień przywracamy komplet pól dla innych trybów
     // interfejsu; wybrana kategoria jest widoczna tylko w module Ustawienia.
     if (view === "settings") setSettingsGroup(activeSettingsGroup);
-    const target = { live: "stage", controls: "ctrlBar", settings: "setCard", archive: "dvrCard" }[view];
+    const target = { live: "stage", controls: "ctrlBar", events: "viewEventsCard", settings: "setCard", archive: "dvrCard" }[view];
     if (target) {
       main?.classList.remove("focus-live", "focus-controls", "focus-settings", "focus-archive");
       $(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -359,7 +371,7 @@ if (desktopRequested) {
     shell.querySelectorAll("[data-desktop-view]").forEach(button => button.classList.toggle("active", button.dataset.desktopView === view));
     openExistingView(view);
   };
-  const router = createRouter({ routes: ["live", "controls", "archive", "settings", "diagnostics"], render: renderRoute });
+  const router = createRouter({ routes: ["live", "controls", "events", "archive", "settings", "diagnostics"], render: renderRoute });
   const setActive = view => router.navigate(view);
   shell.querySelectorAll("[data-desktop-view]").forEach(button => button.addEventListener("click", () => setActive(button.dataset.desktopView)));
   document.addEventListener("hs-recordings-closed", () => setActive("live"));
@@ -400,7 +412,7 @@ if (desktopRequested) {
   const collapse = $("desktopCollapse");
   // Pierwsze uruchomienie pokazuje pełne opisy modułów. Zwinięcie paska
   // jest wyłącznie świadomą decyzją użytkownika, nie domyślnym stanem.
-  const collapsed = localStorage.getItem("home-security-desktop-sidebar") !== "expanded";
+  const collapsed = localStorage.getItem("home-security-desktop-sidebar") === "collapsed";
   document.documentElement.classList.toggle("desktopSidebarCollapsed", collapsed);
   const paintCollapse = () => {
     const isCollapsed = document.documentElement.classList.contains("desktopSidebarCollapsed");
@@ -439,14 +451,14 @@ if (desktopRequested) {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); $("desktopSearchInput")?.focus(); return; }
     if (event.key === "Escape") { setActive("live"); return; }
     if (event.ctrlKey || event.metaKey || event.target.matches("input,select,textarea")) return;
-    const view = { 1: "live", 2: "controls", 3: "archive", 4: "settings", 5: "diagnostics" }[event.key];
+    const view = { 1: "live", 2: "controls", 3: "archive", 4: "settings", 5: "diagnostics", 6: "events" }[event.key];
     if (view && (event.altKey || !event.shiftKey)) { event.preventDefault(); setActive(view); }
   });
 
   // Link z `view=settings` otwiera od razu właściwy ekran — jest przydatny
   // dla skrótu aplikacji i eliminuje ryzyko, że użytkownik zostanie na
   // starym pulpicie po aktualizacji. Bez parametru zachowujemy Pulpit.
-  const initialView = ["live", "controls", "archive", "settings", "diagnostics"].includes(routeParams.get("view"))
+  const initialView = ["live", "controls", "events", "archive", "settings", "diagnostics"].includes(routeParams.get("view"))
     ? routeParams.get("view")
     : "live";
   setActive(initialView);

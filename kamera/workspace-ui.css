@@ -1,0 +1,108 @@
+/* HOME SECURITY workspace 193. Presentation only: never owns camera lifecycle. */
+:root{--ui-bg:#0c0d10;--ui-surface:#17191e;--ui-raised:#20232a;--ui-line:#30343e;--ui-text:#f3f4f6;--ui-muted:#a5aab6;--ui-red:#dc2944;--ui-focus:#ff9baa;--bg:var(--ui-bg);--card:var(--ui-surface);--line:var(--ui-line);--text:var(--ui-text);--muted:var(--ui-muted);color-scheme:dark}
+html,body{background:var(--ui-bg);color:var(--ui-text);font-family:Segoe UI,system-ui,sans-serif}
+button,input,select,textarea{font-family:inherit}
+button,a,input,select,summary{ -webkit-tap-highlight-color:transparent }
+:where(button,a,input,select,textarea,summary):focus-visible{outline:3px solid var(--ui-focus)!important;outline-offset:3px;box-shadow:none!important}
+button:disabled{opacity:.48;cursor:not-allowed}
+button:not(:disabled){transition:background-color .15s,border-color .15s}
+.btn,.dvrBtn,.tool{border-radius:9px;min-height:40px;box-shadow:none;font-weight:600}
+.btn.primary,.authPrimary,.dvrBtn.on{background:#b92039;border-color:#e0445c}
+.btn.ghost,.dvrBtn,.tool{background:var(--ui-raised);border-color:var(--ui-line);color:var(--ui-text)}
+.btn:hover:not(:disabled),.dvrBtn:hover:not(:disabled){border-color:#a85a69}
+.card,.panel,.remoteFolderDialog{background:var(--ui-surface);border-color:var(--ui-line);box-shadow:none}
+.muted,.small{color:var(--ui-muted)}
+.dsPanelLogo{object-fit:contain;background:#fff;border-color:#ad914d}
+.topbar,.desktopMode .topbar{background:#101115;border-color:var(--ui-line);box-shadow:none;backdrop-filter:none}
+.desktopMode .desktopSidebar{background:#111216;border-color:var(--ui-line)}
+.desktopMode .desktopBrand{border-color:var(--ui-line);min-height:76px}
+.desktopMode .desktopBrand b{font-size:13px;letter-spacing:.035em}
+.desktopMode .desktopDevice{margin:16px 12px;background:#191b21;border:1px solid var(--ui-line);border-radius:10px}
+.desktopMode .desktopNav{padding:4px 10px;display:grid;gap:6px}
+.desktopMode .desktopNav button{min-height:56px;padding:10px 12px;border-radius:9px;border:1px solid transparent;background:transparent;color:var(--ui-muted);box-shadow:none}
+.desktopMode .desktopNav button:hover{background:#202229;color:#fff}
+.desktopMode .desktopNav button.active{background:#30171f;border-color:#68303d;box-shadow:inset 3px 0 var(--ui-red);color:#fff}
+.desktopMode .desktopNav button.active i{color:#ff7087}
+.desktopMode .desktopNav small{color:#9ca1ad;font-size:11px}
+.desktopMode .desktopNav i{font-style:normal;min-width:24px;font-size:21px}
+.desktopMode .desktopSidebarFoot,.desktopMode .desktopCapabilities{border-color:var(--ui-line);color:var(--ui-muted)}
+.desktopMode .desktopSearch{background:#1a1c22;border-color:var(--ui-line);border-radius:8px}
+.desktopMode .desktopContext h1{font-size:28px;letter-spacing:-.025em;color:var(--ui-text)}
+.desktopMode .desktopContext p{color:var(--ui-muted);font-size:12px}
+.desktopMode :is(.card,.panel,.desktopCameraTile,.desktopEventsDrawer,.desktopDeviceManager,.desktopControlsScreen,.desktopSettingsScreen){background:var(--ui-surface);border:1px solid var(--ui-line);box-shadow:none;border-radius:12px}
+.desktopMode .desktopTileMeta{background:#17191e;border-color:var(--ui-line);padding:12px 16px}
+.desktopMode .desktopTileMeta strong{font-size:14px}
+.desktopMode .desktopEventsDrawer{padding:16px}
+.desktopMode .desktopEventsDrawer summary{font-size:15px;color:#f1f2f5}
+.desktopMode .desktopControlsScreen{max-width:1120px;padding:24px}
+.desktopMode .desktopControlsScreen header{margin-bottom:24px}
+.desktopMode .desktopControlsScreen h2{margin:6px 0 10px;font-size:26px}
+.desktopMode .desktopControlsScreen header>p:last-child{color:var(--ui-muted);font-size:14px;line-height:1.6;max-width:70ch}
+.desktopMode .ctrl{min-height:60px;border-radius:10px;font-size:16px}
+.desktopMode #ctrlStart{background:#b92039;border-color:#e24960}
+.desktopMode #ctrlStop{background:#20232a;border-color:#585e6d}
+.desktopMode #ctrlRestart{background:#20232a;border-color:#585e6d}
+.desktopMode .modeList button{background:#1e2027;border-color:var(--ui-line);border-radius:10px}
+.desktopMode .desktopSettingsTabs{background:#111216;border-color:var(--ui-line);gap:6px;padding:10px}
+.desktopMode .desktopSettingsTabs button{border-radius:8px;color:var(--ui-muted);min-height:42px}
+.desktopMode .desktopSettingsTabs button.active{background:#351b24;border-color:#84374a;color:#fff}
+.desktopMode :is(.desktopSettingsGrid,.desktopSettingsFooter,.desktopSettingsControls>#setCard){background:var(--ui-surface);border-color:var(--ui-line)}
+.desktopMode :is(input,select,textarea){background:#101216;border:1px solid #414652;color:#f3f4f6;border-radius:8px;min-height:40px}
+.desktopMode input[type=checkbox]{min-height:initial;accent-color:var(--ui-red)}
+.desktopMode input[type=range]{accent-color:var(--ui-red);border:0}
+.desktopEventsScreen{padding:22px;border:1px solid var(--ui-line);border-radius:12px;background:var(--ui-surface)}
+.desktopEventsScreen h2{margin:0 0 10px;font-size:24px}.desktopEventsScreen>p{color:var(--ui-muted);line-height:1.6}
+.desktopEventsScreen #viewEventsCard{display:block!important;max-width:none;margin:20px 0 0}
+.desktopEventsScreen #viewEventsCard[hidden]{display:none!important}
+.desktopEventsScreen li{padding:14px;border-bottom:1px solid var(--ui-line)}
+.archiveModal{background:#0c0d10;backdrop-filter:none}
+.archiveModalHead,.archiveModalBody{background:var(--ui-bg);border-color:var(--ui-line)}
+.archiveModalHead{padding:18px 24px}.archiveModalHead h2{font-size:25px}.archiveHint{color:var(--ui-muted);line-height:1.5}
+.archiveClose{background:#22252d;border-color:#424856;border-radius:9px;min-height:42px}
+.archiveStorageSidebar{background:var(--ui-surface);border-color:var(--ui-line);border-radius:12px;padding:20px}
+.archiveStorageSidebar h2{font-size:19px}.archiveStorageSidebar .small{color:var(--ui-muted);font-size:12px}
+.archivePlaybackStage{border:1px solid var(--ui-line);border-radius:12px;overflow:hidden;background:#000}
+.dvrBar{background:#242832;border-color:#424856}.dvrSeg{background:#ac2942}
+.dvrTicks{color:#a5aab6}.dvrList li,.recList li{border-color:var(--ui-line)}
+.remoteFolderDialog{border-color:#4c5260;padding:24px;border-radius:14px}
+.remoteFolderPath{background:#101216;border:1px solid var(--ui-line);font-size:14px}
+.remoteFolderDialog :is(button,input){background:#22252d;border-color:#414754;color:#fff;border-radius:8px;min-height:44px;font-size:14px}
+.remoteFolderList button:hover{background:#303540;border-color:#91606c}
+.authCard,.pinCard,.bootCard{background:#17191e;border-color:#414652;box-shadow:0 20px 70px #0006;border-radius:18px}
+.lockScreen,.bootScreen{background:#0c0d10}.keypad button{background:#22252d;border-color:#414652;border-radius:12px}
+.keypad button:hover,.keypad button:active{background:#47212b;border-color:#db526b}
+.authForm input{background:#101216;border-color:#414652}.authForm h1{letter-spacing:-.025em}.bootSteps li{border-radius:8px}
+.mobileOwnerMode .mobileAppHeader,.mobileOwnerMode .mobileBottomNav{background:#111216;border-color:var(--ui-line)}
+.mobileOwnerMode .mobileAppHeader h1{font-size:25px;letter-spacing:-.025em}
+.mobileOwnerMode .card,.mobileOwnerMode .panel,.mobileOwnerMode #setCard{background:var(--ui-surface)!important;border-color:var(--ui-line)!important;border-radius:14px;padding:16px}
+.mobileOwnerMode .mobileSettingCategories button{background:#17191e;border-color:var(--ui-line);border-radius:12px;min-height:76px}
+.mobileOwnerMode .mobileSettingCategories button>b{background:#351b24;color:#ff859a;border-radius:12px}
+.mobileOwnerMode .mobileBottomNav button{min-height:50px;color:#a5aab6;border-radius:10px}
+.mobileOwnerMode .mobileBottomNav button.active{background:#351b24;border-color:#783448;color:#fff}
+.mobileOwnerMode .mobileRecordingStorage button{background:#22252d;border-color:#414652;color:#fff;min-height:44px}
+.mobileOwnerMode #watchPanel .tool{background:#22252d;border-color:var(--ui-line);min-height:44px}
+.mobileOwnerMode .mobileSettingsBack{background:#22252d;border-color:#414652;color:#fff}
+@media(min-width:1024px){
+ .desktopMode{--desktop-right-width:320px;--desktop-line:var(--ui-line)}
+ .desktopMode body{background:var(--ui-bg)}
+ .desktopMode .desktopOverview{grid-template-columns:minmax(0,1fr) var(--desktop-right-width);gap:20px}
+ .desktopMode .desktopLiveScene{height:clamp(360px,calc(100dvh - 210px),800px);min-height:360px}
+ .desktopMode .desktopCameraTile,.desktopMode .desktopCameraTile #stage{height:100%;min-height:0}
+ .desktopMode .desktopCameraTile #stage video{object-fit:contain;background:#000}
+ .desktopMode .desktopSettingsScreen{padding:24px}
+ .desktopMode .archiveWorkspace{padding:20px;gap:20px;grid-template-columns:minmax(0,1fr) minmax(300px,350px)}
+ .desktopSidebarCollapsed .desktopNav button{justify-content:center;padding:10px 6px}
+ .desktopSidebarCollapsed .desktopNav button i{font-size:23px}
+}
+@media(max-width:600px){
+ .remoteFolderDialog{box-sizing:border-box;width:calc(100% - 20px);padding:18px;max-height:calc(100dvh - 28px)}
+ .remoteFolderActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ .remoteFolderActions button{padding:9px 4px;font-size:12px}
+ .remoteFolderActions:has(input){grid-template-columns:minmax(0,1fr) auto}
+ .remoteFolderActions input{min-width:0;width:100%;box-sizing:border-box}
+ .remoteFolderList{max-height:30dvh}.remoteFolderDialog>button{width:100%;margin-top:8px}
+ .archiveModalHead{padding:14px;gap:12px;flex-wrap:wrap}.archiveModalHead h2{font-size:22px}.archiveWorkspace{gap:12px}
+ .archivePlaybackStage{min-height:180px}.archiveModalBody{padding:12px}
+ .mobileOwnerMode .mobileAppHeader{padding:14px 16px}.mobileOwnerMode #stage{border-color:#414652;border-radius:14px}
+}
+@media(prefers-reduced-motion:reduce){button:not(:disabled){transition:none}}
