@@ -1,7 +1,7 @@
 // Zmieniaj wersję tylko wtedy, gdy aktualizujemy powłokę aplikacji.
 // Dzięki temu zainstalowany panel nie otworzy przestarzałego index.html.
-const CACHE = "kamera-domowa-shell-v92";
-const SHELL = ["./", "./index.html", "./style.css?v=183", "./auth.js?v=10", "./app.js?v=190", "./diskstore.js?v=8", "./dvr-ui.js?v=101", "./remote-folder-ui.mjs", "./communication/folder-channel.mjs", "./desktop.js?v=29", "./mobile.js?v=12", "./core/store.mjs", "./core/router.mjs", "./core/peer-diagnostics.mjs", "./communication/commands.mjs", "./manifest.webmanifest?v=1", "./icons/kamera-192.svg", "./icons/kamera-512.svg", "./vendor/supabase.js?v=2.117.2"];
+const CACHE = "kamera-domowa-shell-v93";
+const SHELL = ["./", "./index.html", "./style.css?v=184", "./auth.js?v=10", "./app.js?v=191", "./diskstore.js?v=8", "./dvr-ui.js?v=101", "./remote-folder-ui.mjs", "./communication/folder-channel.mjs", "./communication/folder-readiness.mjs", "./desktop.js?v=29", "./mobile.js?v=12", "./core/store.mjs", "./core/router.mjs", "./core/peer-diagnostics.mjs", "./communication/commands.mjs", "./manifest.webmanifest?v=1", "./icons/kamera-192.svg", "./icons/kamera-512.svg", "./vendor/supabase.js?v=2.117.2"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));

@@ -19,6 +19,7 @@ import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
 import { createPeerDiagnostics } from "./core/peer-diagnostics.mjs";
 import { sealFolder, openFolder } from "./communication/folder-channel.mjs";
 import { createRemoteFolderPicker } from "./remote-folder-ui.mjs";
+import { requireFolderHost, hasLocalSaveError } from "./communication/folder-readiness.mjs";
 
 // Wejście PIN-em: z PIN-u powstaje klucz dostępu, a z niego tajna nazwa kanału sygnalizacji.
 // Supabase służy tylko do wymiany sygnałów WebRTC; obraz i dźwięk płyną peer-to-peer.
@@ -51,7 +52,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "190"; // musi się zgadzać z version.json
+const VERSION = "191"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1035,7 +1036,9 @@ function setCtrlState(s) {
   const mobileState = $("mobileRecordingState");
   if (mobileState) {
     const rec = Date.now() - (ctrlState.archiveReceivedAt || 0) <= OFFLINE_AFTER_MS ? ctrlState.archive : null;
-    mobileState.textContent = rec ? `${rec.recording ? "Komputer nagrywa." : "Zapis wstrzymany."} Folder: ${rec.folder || "nieustawiony"}. Zapisano: ${rec.saved || 0}. Kolejka Drive: ${rec.queued || 0}. Potwierdzono na Drive: ${rec.verifiedToDrive || 0}. ${rec.reason || ""}`
+    const saveError = hasLocalSaveError(rec);
+    mobileState.classList.toggle("storageError",saveError);
+    mobileState.textContent = rec ? `${saveError ? "UWAGA: BŁĄD ZAPISU — działająca kamera nie oznacza zapisanego pliku." : rec.recording ? "Komputer rejestruje obraz." : "Zapis wstrzymany."} Panel komputera: ${ctrlState.hostVersion || "nieznany"}. Folder: ${rec.folder || "nieustawiony"}. Zapisano: ${rec.saved || 0}. Kolejka Drive: ${rec.queued || 0}. Potwierdzono na Drive: ${rec.verifiedToDrive || 0}. ${rec.reason || ""}`
       : "Brak aktualnych informacji o folderze komputera. Połącz się z nadajnikiem.";
   }
 }
@@ -1638,7 +1641,7 @@ const viewer = (() => {
         diagRow(pc?.connectionState === "connected", pc?.connectionState === "connected" ? "Telefon połączony z kamerą" : "Telefon nie jest jeszcze połączony z kamerą"),
         diagRow(video.videoWidth > 0, video.videoWidth > 0 ? `Obraz dociera na ten ekran (${video.videoWidth}×${video.videoHeight})` : "Obraz jeszcze nie dotarł na ten ekran"),
       ]);
-      setCtrlState({ archive: sig.rec || null, recording: !!sig.rec?.recording, since: sig.rec?.since || 0, mode: sig.mode || "", until: sig.until || 0, skew: sig.now ? sig.now - Date.now() : 0, hasCam: !sig.camError, quality: sig.quality || "" });
+      setCtrlState({ hostVersion: sig.diag?.version || "", archive: sig.rec || null, recording: !!sig.rec?.recording, since: sig.rec?.since || 0, mode: sig.mode || "", until: sig.until || 0, skew: sig.now ? sig.now - Date.now() : 0, hasCam: !sig.camError, quality: sig.quality || "" });
       if (REC_QUALITY[sig.quality] && document.activeElement !== $("viewQuality")) $("viewQuality").value = sig.quality;
       if (MEDIA_LABEL[sig.media] && document.activeElement !== $("mediaPick")) $("mediaPick").value = sig.media;
       if (sig.light !== undefined && document.activeElement !== $("lightPick")) { $("lightPick").value = clampLight(sig.light); $("lightVal").textContent = LIGHT_LABEL[clampLight(sig.light)]; }
@@ -1811,7 +1814,10 @@ async function executeControl(name, args = {}) {
     ? requireCommandSuccess(await localCommands.execute(name, args))
     : viewer.requestControl(name, args);
 }
-const remoteFolderPicker = createRemoteFolderPicker({execute:executeControl,onSelected:result=>toastMsg(`Komputer potwierdził folder zapisu: ${result.name}`)});
+const remoteFolderPicker = createRemoteFolderPicker({execute:(name,args)=>{
+  if (prefs.role!=="send") requireFolderHost({version:ctrlState.hostVersion,receivedAt:ctrlState.archiveReceivedAt});
+  return executeControl(name,args);
+},onSelected:result=>toastMsg(`Komputer potwierdził folder zapisu: ${result.name}`)});
 document.addEventListener("click", event => {
   if (event.target.closest("#mobileChooseComputerFolder")) {
     if (!canControlCamera()) return toastMsg("Zaloguj się jako właściciel i odblokuj panel PIN-em.");
@@ -2110,7 +2116,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "92";
+  const SERVICE_WORKER_BUILD = "93";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {

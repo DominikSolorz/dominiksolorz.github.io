@@ -4,7 +4,7 @@ export function createRemoteFolderPicker({execute,onSelected=()=>{}}) {
   async function run(task) {
     if(busy)return;
     busy=true;dialog.setAttribute('aria-busy','true');
-    try {await task();} catch(error){status.textContent=error.uncertain?'Nie znam wyniku operacji. Sprawdź listę folderów przed ponowieniem.':error.message||'Komputer nie odpowiedział.';}
+    try {await task();} catch(error){if(choose?.disabled)title.textContent='Foldery niedostępne';status.textContent=error.uncertain?'Komputer nie potwierdził operacji. Może mieć starszą wersję panelu albo utracić połączenie. Nie ponawiaj tworzenia folderu bez sprawdzenia jego stanu.':error.message||'Komputer nie odpowiedział.';}
     finally{busy=false;dialog?.removeAttribute('aria-busy');}
   }
   let title,list,status,back,previous,next,choose,nameInput,create;
@@ -27,6 +27,7 @@ export function createRemoteFolderPicker({execute,onSelected=()=>{}}) {
     title=el('p','Łączenie z komputerem…');title.className='remoteFolderPath';
     status=el('p');status.setAttribute('role','status');list=el('div');list.className='remoteFolderList';
     back=el('button','↑ Folder wyżej');previous=el('button','← Poprzednie');next=el('button','Następne →');choose=el('button','Wybierz ten folder');choose.disabled=true;
+    back.disabled=previous.disabled=next.disabled=true;
     nameInput=el('input');nameInput.placeholder='Nazwa nowego folderu';nameInput.maxLength=100;nameInput.setAttribute('aria-label','Nazwa nowego folderu');
     create=el('button','Utwórz folder');create.disabled=true;
     const actions=el('div');actions.className='remoteFolderActions';actions.append(back,previous,next);
