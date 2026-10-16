@@ -12,8 +12,9 @@ public static class GoogleDriveAuthorization
     public const string Scope="https://www.googleapis.com/auth/drive.file";
     private static string Base64Url(byte[] bytes)=>Convert.ToBase64String(bytes).TrimEnd('=').Replace('+','-').Replace('/','_');
     // User consent occurs in the system browser, never in WebView2. No tokens in command arguments.
-    public static async Task Authorize(string clientJson,Guid integration,IntegrationCredentials store,CancellationToken cancellation,bool fullDrive=false)
+    public static async Task Authorize(string clientJson,Guid integration,IntegrationCredentials store,CancellationToken cancellation,bool fullDrive=false,string? pickFolder=null)
     {
+        if(pickFolder is not null) { GoogleDriveApi.ValidateId(pickFolder); if(fullDrive)throw new ArgumentException("Picker requires drive.file only."); }
         if(new FileInfo(clientJson).Length>16384) throw new DriveFailure("OAUTH_CLIENT_FILE_INVALID",true);
         using var config=JsonDocument.Parse(await File.ReadAllBytesAsync(clientJson,cancellation));
         var installed=config.RootElement.GetProperty("installed");
@@ -29,6 +30,7 @@ public static class GoogleDriveAuthorization
             var requestedScope=fullDrive?"https://www.googleapis.com/auth/drive":Scope;
             var query=new Dictionary<string,string> { ["client_id"]=clientId,["redirect_uri"]=redirect,["response_type"]="code",
                 ["scope"]=requestedScope,["code_challenge"]=challenge,["code_challenge_method"]="S256",["state"]=state,["access_type"]="offline",["prompt"]="consent" };
+            if(pickFolder is not null) AddPickerParameters(query,pickFolder);
             var url="https://accounts.google.com/o/oauth2/v2/auth?"+string.Join("&",query.Select(p=>Uri.EscapeDataString(p.Key)+"="+Uri.EscapeDataString(p.Value)));
             Process.Start(new ProcessStartInfo(url) { UseShellExecute=true });
             string? code=null;
@@ -49,6 +51,7 @@ public static class GoogleDriveAuthorization
                     var reply=Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\nCache-Control: no-store\r\nConnection: close\r\n\r\nHOME SECURITY: mozna zamknac te karte. Wynik autoryzacji pojawi sie w programie.");
                     await stream.WriteAsync(reply,ct);
                     if(values.ContainsKey("error")) throw new DriveFailure("OAUTH_CONSENT_DENIED",true);
+                    if(pickFolder is not null) ValidatePickedFolder(values.GetValueOrDefault("picked_file_ids"),pickFolder);
                     if(!values.TryGetValue("code",out code) || string.IsNullOrWhiteSpace(code)) throw new DriveFailure("OAUTH_CALLBACK_INVALID",true);
                 } catch(OperationCanceledException) when(!ct.IsCancellationRequested) { }
             }
@@ -64,5 +67,22 @@ public static class GoogleDriveAuthorization
             var secret=JsonSerializer.SerializeToUtf8Bytes(new DriveCredential(clientId,clientSecret,token));
             try { store.ConfigureDrive(integration,secret); } finally { CryptographicOperations.ZeroMemory(secret); }
         } finally { listener.Stop(); }
+    }
+    internal static void AddPickerParameters(Dictionary<string,string> query,string folder)
+    {
+        GoogleDriveApi.ValidateId(folder);
+        query["scope"]=Scope;
+        query["include_granted_scopes"]="false";
+        query["trigger_onepick"]="true";
+        query["prompt"]="consent";
+        query["allow_multiple"]="false";
+        query["allow_folder_selection"]="true";
+        query["mimetypes"]="application/vnd.google-apps.folder";
+        query["file_ids"]=folder;
+    }
+    internal static void ValidatePickedFolder(string? picked,string expected)
+    {
+        GoogleDriveApi.ValidateId(expected);
+        if(picked!=expected) throw new DriveFailure("PICKER_FOLDER_NOT_CONFIRMED",true);
     }
 }

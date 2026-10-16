@@ -9,6 +9,15 @@ static class DriveTests
 {
     public static async Task Run(Action<bool,string> check,string root)
     {
+        var picker=new Dictionary<string,string>();GoogleDriveAuthorization.AddPickerParameters(picker,"folder1");
+        check(picker["scope"]==GoogleDriveAuthorization.Scope && picker["include_granted_scopes"]=="false","desktop picker requests only drive.file");
+        check(picker["trigger_onepick"]=="true" && picker["allow_folder_selection"]=="true" && picker["file_ids"]=="folder1" && picker["allow_multiple"]=="false","desktop picker filters one expected folder");
+        GoogleDriveAuthorization.ValidatePickedFolder("folder1","folder1");
+        check(true,"matching picked folder accepted");
+        var wrongPick=false;try{GoogleDriveAuthorization.ValidatePickedFolder("folder2","folder1");}catch(DriveFailure){wrongPick=true;}
+        check(wrongPick,"different picked folder rejected before credential rotation");
+        var missingPick=false;try{GoogleDriveAuthorization.ValidatePickedFolder(null,"folder1");}catch(DriveFailure){missingPick=true;}
+        check(missingPick,"missing picker callback rejected");
         var db=new AgentDatabase(root); var creds=new IntegrationCredentials(db,Path.Combine(root,"secrets")); var integration=Guid.NewGuid();
         var secret=JsonSerializer.SerializeToUtf8Bytes(new DriveCredential("local-fixture.apps.googleusercontent.com","fake-client","fake-refresh"));
         try { creds.ConfigureDrive(integration,secret); } finally { CryptographicOperations.ZeroMemory(secret); }

@@ -11,6 +11,19 @@ public static class DriveNativeCommands
         using var stop=new CancellationTokenSource(); Console.CancelKeyPress+=(_,e)=>{e.Cancel=true;stop.Cancel();};
         try {
             switch(args[0]) {
+                case "--drive-pick-folder" when args.Length==4:
+                    var pickerIntegration=Guid.Parse(args[1]); var pickerFolder=GoogleDriveApi.ValidateId(args[3]);
+                    await GoogleDriveAuthorization.Authorize(Path.GetFullPath(args[2]),pickerIntegration,credentials,stop.Token,pickFolder:pickerFolder);
+                    using(var api=new GoogleDriveApi(credentials)) {
+                        await api.ValidateFolder(pickerIntegration,pickerFolder,stop.Token);
+                        db.SetState("drive."+pickerIntegration.ToString("N"),new { status="folder_verified",folderId=pickerFolder });
+                    }
+                    Console.WriteLine("Google Drive: picked folder confirmed by API; credentials saved using DPAPI."); break;
+                case "--drive-check-folder" when args.Length==3:
+                    using(var api=new GoogleDriveApi(credentials)) {
+                        await api.ValidateFolder(Guid.Parse(args[1]),args[2],stop.Token);
+                        Console.WriteLine("Google Drive: destination folder is accessible and writable.");
+                    } break;
                 case "--drive-authorize" when args.Length==3:
                     await GoogleDriveAuthorization.Authorize(Path.GetFullPath(args[2]),Guid.Parse(args[1]),credentials,stop.Token);
                     Console.WriteLine("Google Drive: authorization saved using DPAPI."); break;

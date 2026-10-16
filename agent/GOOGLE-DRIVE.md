@@ -61,8 +61,8 @@ credential revisions are retained, not garbage-collected in this iteration.
    email it here, or pass refresh tokens as command-line arguments.
 4. Default authorization requests drive.file, not all files. An existing folder
    URL alone does not grant this application access. With drive.file, the folder
-   must be app-authorized (for example through Google Picker); Picker UI is NOT
-   included here. Folder preflight blocks rather than broadening permission.
+   must be app-authorized. The native Google-hosted Picker is available through
+   --drive-pick-folder (see below). Folder preflight blocks rather than broadening permission.
 5. `--drive-authorize-full` is an explicit alternative for an existing folder. It
    grants ALL Drive access, not just that folder; it requires typing
    ALLOW_ALL_FILES locally and Google's consent. Do not use it without accepting
@@ -74,6 +74,32 @@ port, state validation, PKCE S256 and a five-minute timeout. Denied consent does
 not provision a credential. PIN and Apps Script tokens are not consulted.
 
 ## Native commands
+
+### Native desktop folder Picker
+
+Google's desktop/mobile Picker flow can be invoked directly in OAuth without an
+additional API key/web client. Enable Google Picker API in the same project first,
+reviewing its terms. The existing Desktop OAuth client and drive.file are reused.
+
+```powershell
+dotnet run --project agent/HomeSecurityAgent.csproj -- --drive-pick-folder <integration-guid> <absolute-client-json-path> 15c9XPFi55XkQnCjfW_cvDHqhEXo_M5V2
+```
+
+The system browser opens Google's consent and Picker. Only folders are shown,
+multi-select is disabled and file_ids filters the expected folder. State and
+PKCE remain enabled. A missing/different picked_file_ids callback is rejected
+before replacing credentials. Granted scopes are not accumulated. After exchange
+the agent verifies the selected folder via Drive API and stores non-secret
+folder_verified metadata. No full Drive scope, extra client, or API key is created.
+Cancelling leaves existing credentials unchanged. A failed post-exchange folder
+preflight does not mark the destination ready.
+
+Five new unit checks cover narrow parameters and accepted/rejected picked IDs.
+The browser flow still requires live acceptance; unit checks are not proof of
+folder access. Reference (desktop flow, updated 2026-10-12):
+https://developers.google.com/workspace/drive/picker/guides/desktop-mobile-picker
+
+### Other commands
 
 From the repository, after building the agent. Choose and keep one integration GUID:
 
