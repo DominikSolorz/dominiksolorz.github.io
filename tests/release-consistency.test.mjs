@@ -16,3 +16,13 @@ test('release manifest, runtime and HTML/SW agree', async () => {
   for (const source of [app,sw,access]) assert.ok(source.includes(auth));
   assert.ok(sw.includes(html.match(/style.css\?v=\d+/)[0]));
 });
+
+test('desktop runtime, project and installer version agree', async () => {
+  const sources = await Promise.all(['Program.cs','HomeSecurityDesktop.csproj','installer/HomeSecurityDesktop.iss']
+    .map(path => readFile(new URL('../desktop-client/' + path, import.meta.url), 'utf8')));
+  const version = sources[0].match(/DesktopVersion = "([\d.]+)"/)[1];
+  assert.ok(sources[1].includes(`<Version>${version}</Version>`));
+  assert.ok(sources[1].includes(`<FileVersion>${version}.0</FileVersion>`));
+  assert.ok(sources[2].includes(`AppVersion "${version}"`));
+  assert.ok(sources[2].includes(`publish-${version}`));
+});
