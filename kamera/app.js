@@ -10,7 +10,7 @@ import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
-import * as diskstore from "./diskstore.js?v=5";
+import * as diskstore from "./diskstore.js?v=6";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
 import { mountDvr } from "./dvr-ui.js?v=100";
 import { accountClient } from "./auth.js?v=10";
@@ -49,7 +49,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "186"; // musi się zgadzać z version.json
+const VERSION = "187"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -786,9 +786,10 @@ const archive = (() => {
     return disk.ready;
   }
 
-  async function chooseDisk() {
-    const name = await diskstore.choose();
+  async function chooseDisk(options) {
+    const name = await diskstore.choose(options);
     disk = { ...disk, selected: true, name, ready: true, error: "" };
+    await refreshLocal();
     render();
     return name;
   }
@@ -2035,7 +2036,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "88";
+  const SERVICE_WORKER_BUILD = "89";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2108,6 +2109,7 @@ document.querySelectorAll("#modeCard [data-mode]").forEach(b => b.addEventListen
 $("stopBtn").addEventListener("click", () => sender.stop());
 $("retryCameraBtn").addEventListener("click", () => sender.retryCamera());
 $("chooseArchiveDir").addEventListener("click", async () => {
+  if (!CAN_MANAGE_CAMERA) return toastMsg("Folder nagrań wybierasz na komputerze z kamerą.");
   const button = $("chooseArchiveDir"), old = button.textContent;
   button.disabled = true;
   if (archive.diskNeedsGrant) {
@@ -2122,6 +2124,16 @@ $("chooseArchiveDir").addEventListener("click", async () => {
   try { toastMsg(`Trwałe archiwum ustawione: ${await archive.chooseDisk()}`); }
   catch (e) { setStatus(`Folder archiwum nie został ustawiony: ${errText(e)}`); }
   finally { button.disabled = false; button.textContent = old; }
+});
+$("createArchiveDir").disabled = !CAN_MANAGE_CAMERA;
+$("createArchiveDir").addEventListener("click", async e => {
+  if (!CAN_MANAGE_CAMERA) return;
+  const name = $("newArchiveFolderName").value.trim();
+  if (!diskstore.validFolderName(name)) return toastMsg("Podaj poprawną nazwę nowego folderu, np. nagrania.");
+  const button = e.currentTarget; button.disabled = true;
+  try { toastMsg(`Folder archiwum utworzony lub wybrany: ${await archive.chooseDisk({ newFolder: name })}`); }
+  catch (error) { if (error.name !== "AbortError") setStatus(`Nie zmieniono archiwum: ${errText(error)}`); }
+  finally { button.disabled = false; }
 });
 // Jakość nagrań: wybór na komputerze albo z telefonu (polecenie „quality-set”). Stare nagrania kasuje pętla zapisu.
 for (const id of ["quality", "viewQuality"]) {

@@ -12,7 +12,7 @@ function open() {
   });
 }
 async function get(key) { const db = await open(); return new Promise((resolve, reject) => { const r = db.transaction(STORE).objectStore(STORE).get(key); r.onsuccess = () => resolve(r.result || null); r.onerror = () => reject(r.error); }); }
-async function put(key, value) { const db = await open(); return new Promise((resolve, reject) => { const r = db.transaction(STORE, "readwrite").objectStore(STORE).put(value, key); r.onsuccess = () => resolve(); r.onerror = () => reject(r.error); }); }
+async function put(key, value) { const db = await open(); return new Promise((resolve, reject) => { const t = db.transaction(STORE, "readwrite"); t.objectStore(STORE).put(value, key); t.oncomplete = () => resolve(); t.onerror = () => reject(t.error); t.onabort = () => reject(t.error || new Error("Nie zapisano wyboru folderu.")); }); }
 
 async function usable(handle, ask = false) {
   if (!handle) return false;
@@ -20,11 +20,20 @@ async function usable(handle, ask = false) {
   return state === "granted" || (ask && await handle.requestPermission({ mode: "readwrite" }) === "granted");
 }
 
-export async function choose() {
+export function validFolderName(name) {
+  return typeof name === "string" && name.length > 0 && name.length <= 100 &&
+    name === name.trim() && !/[<>:"/\\|?*\x00-\x1f]/.test(name) &&
+    !/[. ]$/.test(name) && !/^(\.|\.\.|CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\..*)?$/i.test(name);
+}
+
+export async function choose({ newFolder = null } = {}) {
+  if (newFolder !== null && !validFolderName(newFolder)) throw new Error("Podaj poprawną nazwę folderu, bez ścieżki i znaków specjalnych.");
   if (!window.showDirectoryPicker) throw new Error("Ta przeglądarka nie obsługuje zapisu do folderu. Użyj aktualnego Chrome lub Edge.");
-  const handle = await window.showDirectoryPicker({ mode: "readwrite" });
+  let handle = await window.showDirectoryPicker({ id: "home-security-archive", mode: "readwrite", startIn: "desktop" });
   if (!(await usable(handle, true))) throw new Error("Brak zgody na zapis do wybranego folderu.");
+  if (newFolder !== null) handle = await handle.getDirectoryHandle(newFolder, { create: true });
   await put("folder", handle);
+  handles.clear(); // Never reuse handles belonging to the previous archive location.
   return handle.name;
 }
 export async function status(ask = false) { const h = await get("folder"); return { selected: !!h, name: h && h.name ? h.name : "", ready: await usable(h, ask) }; }
@@ -32,11 +41,18 @@ export async function status(ask = false) { const h = await get("folder"); retur
 const handles = new Map();
 
 export async function save(name, blob) {
+  if (!REC_RE.test(name || "") || /[/\\]/.test(name)) throw new Error("Nieprawidłowa nazwa nagrania.");
   const h = await get("folder");
   if (!(await usable(h))) return false;
   const file = handles.get(name) || await h.getFileHandle(name, { create: true });
   const out = await file.createWritable();
-  await out.write(blob); await out.close();
+  try {
+    await out.write(blob); await out.close();
+    if ((await file.getFile()).size !== blob.size) throw new Error("Rozmiar zapisanego nagrania jest nieprawidłowy.");
+  } catch (error) {
+    try { await out.abort(); } catch { /* stream may already be closed */ }
+    throw error;
+  }
   handles.set(name, file);
   return true;
 }
