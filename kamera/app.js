@@ -53,7 +53,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "194"; // musi się zgadzać z version.json
+const VERSION = "195"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2130,7 +2130,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "96";
+  const SERVICE_WORKER_BUILD = "98";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {

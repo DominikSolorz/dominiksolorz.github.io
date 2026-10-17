@@ -4,8 +4,8 @@ import {readFile} from 'node:fs/promises';
 const read = name => readFile(new URL('../kamera/'+name,import.meta.url),'utf8');
 test('workspace stylesheet loads after legacy styles and is cached',async()=>{
  const [html,sw,css]=await Promise.all(['index.html','sw.js','workspace-ui.css'].map(read));
- assert.ok(html.indexOf('workspace-ui.css?v=2')>html.indexOf('style.css?v='));
- assert.ok(sw.includes('workspace-ui.css?v=2'));assert.ok(css.includes(':focus-visible'));
+ assert.ok(html.indexOf('workspace-ui.css?v=4')>html.indexOf('style.css?v='));
+ assert.ok(sw.includes('workspace-ui.css?v=4'));assert.ok(css.includes(':focus-visible'));
  assert.ok(css.includes('@media(max-width:600px)'));
 });
 test('events navigation reuses actual card rather than copying event data',async()=>{

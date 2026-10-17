@@ -7,7 +7,9 @@ test('release manifest, runtime and HTML/SW agree', async () => {
   const version = JSON.parse(manifest).version;
   assert.equal(app.match(/const VERSION = "(\d+)"/)[1], version);
   const desktop = await readFile(new URL('../desktop-client/Program.cs', import.meta.url), 'utf8');
-  assert.equal(desktop.match(/WebPanelBuild = "(\d+)"/)[1], version);
+  // Native cache-generation is a minimum shell revision, not a requirement to
+  // rebuild the installer for every independently deployed web/CSS revision.
+  assert.ok(Number(desktop.match(/WebPanelBuild = "(\d+)"/)[1]) <= Number(version));
   assert.ok(desktop.includes('ui_build=" + WebPanelBuild'));
   assert.ok(html.includes(`app.js?v=${version}`));
   assert.ok(sw.includes(`app.js?v=${version}`));
