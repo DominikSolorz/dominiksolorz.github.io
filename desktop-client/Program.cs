@@ -10,8 +10,8 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.3.5";
-    private const string WebPanelBuild = "193";
+    private const string DesktopVersion = "1.3.6";
+    private const string WebPanelBuild = "194";
     // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
     // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
     // Desktop, który pozwala udostępnić kamerę i mikrofon.
@@ -155,7 +155,8 @@ internal static class Program
             StartPosition = FormStartPosition.CenterScreen;
             WindowState = FormWindowState.Maximized;
             BackColor = Color.FromArgb(7, 11, 22);
-            Icon = SystemIcons.Shield;
+            var brandIconPath = Path.Combine(AppContext.BaseDirectory, "home-security.ico");
+            Icon = File.Exists(brandIconPath) ? new Icon(brandIconPath) : SystemIcons.Shield;
             FormBorderStyle = FormBorderStyle.Sizable;
             KeyPreview = true;
             updateBar.Controls.Add(updateButton);

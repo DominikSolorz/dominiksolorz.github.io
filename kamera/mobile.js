@@ -3,6 +3,7 @@
 // index.html wybiera tryb urządzenia przed narysowaniem strony. To obejmuje
 // aplikację instalowaną oraz zwykły Chrome na telefonie/tablecie.
 import { createRouter } from "./core/router.mjs";
+import { mountEventWorkspace, mountDiagnosticWorkspace } from "./workspace-panels.mjs?v=1";
 const isMobileOwnerApp = document.documentElement.classList.contains("mobileOwnerMode");
 
 if (isMobileOwnerApp) {
@@ -76,21 +77,24 @@ if (isMobileOwnerApp) {
 
   const views = {
     home: ["stage", "watchPanel"],
-    alerts: ["viewEventsCard"],
+    alerts: ["mobileEventsWorkspace"],
     recordings: ["dvrCard", "dvrListCard", "mobileRecordingStorage"],
-    settings: ["modeCard", "systemPanel", "setCard", "diagCard"]
+    settings: ["modeCard", "systemPanel", "setCard", "diagCard", "mobileDiagnosticWorkspace"]
   };
+  const eventsWorkspace=document.createElement("section");eventsWorkspace.id="mobileEventsWorkspace";eventsWorkspace.className="card mobileHidden";mountEventWorkspace(eventsWorkspace);
+  const diagnosticWorkspace=document.createElement("section");diagnosticWorkspace.id="mobileDiagnosticWorkspace";diagnosticWorkspace.className="card mobileHidden";mountDiagnosticWorkspace(diagnosticWorkspace);
+  document.querySelector(".mainCol")?.append(eventsWorkspace,diagnosticWorkspace);
   const recordingStorage = document.createElement("details");
   recordingStorage.id = "mobileRecordingStorage";
   recordingStorage.className = "card mobileRecordingStorage mobileHidden";
   recordingStorage.open = true;
   recordingStorage.innerHTML = `<summary>Zapis i kopia Drive</summary>
     <p id="mobileRecordingState" role="status">Oczekuję na stan komputera nagrywającego.</p>
-    <p class="muted small">Nagrania są zapisywane na komputerze z kamerą. Telefon nie wybiera folderu na jego dysku.</p>
+    <p class="muted small">Nagrania są zapisywane na komputerze z kamerą. Z telefonu zarządzasz miejscem wcześniej zatwierdzonym na komputerze.</p>
     <div id="mobileRecordingFolderControls"><button type="button" id="mobileChooseComputerFolder">📁 Wybierz folder komputera</button></div>
     <p class="muted small">Komputer musi być włączony. Widzisz miejsce wcześniej zatwierdzone w programie Windows; możesz otwierać podfoldery, tworzyć je i wybierać miejsce zapisu.</p>`;
   document.querySelector(".mainCol")?.append(recordingStorage);
-  const managed = [...new Set(Object.values(views).flat())];
+  const managed = [...new Set([...Object.values(views).flat(),"viewEventsCard"])];
 
   function renderView(view) {
     byId("mobilePageTitle").textContent = ({ home: "Dom", alerts: "Alarmy", recordings: "Nagrania", settings: "Ustawienia" })[view] || "Dom";

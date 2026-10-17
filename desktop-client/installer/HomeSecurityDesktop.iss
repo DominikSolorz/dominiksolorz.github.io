@@ -4,10 +4,10 @@
 ; użytkownika z %LOCALAPPDATA%\HomeSecurityDesktop podczas odinstalowania.
 
 #define AppName "HOME SECURITY Desktop"
-#define AppVersion "1.3.5"
+#define AppVersion "1.3.6"
 #define AppPublisher "HOME SECURITY"
 #define AppExeName "HomeSecurityDesktop.exe"
-#define PublishDir "..\publish-1.3.5"
+#define PublishDir "..\publish-1.3.6"
 
 [Setup]
 AppId={{6CC3B91C-0337-42B3-BAF8-B1AE10A5B1B8}
@@ -23,6 +23,10 @@ OutputBaseFilename=HOME-SECURITY-Desktop-Setup-{#AppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+WizardImageFile=brand\wizard.bmp
+WizardSmallImageFile=brand\wizard-small.bmp
+SetupIconFile=brand\home-security.ico
+UninstallDisplayIcon={app}\{#AppExeName}
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayName={#AppName}
 
@@ -43,6 +47,18 @@ Name: "desktopicon"; Description: "Utwórz skrót na pulpicie"; GroupDescription
 Filename: "{app}\{#AppExeName}"; Description: "Uruchom {#AppName}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+procedure InitializeWizard;
+begin
+  WizardForm.Font.Name := 'Segoe UI';
+  WizardForm.Color := $100D0C;
+  WizardForm.MainPanel.Color := $1E1917;
+  WizardForm.WizardSmallBitmapImage.BackColor := $1E1917;
+  WizardForm.PageNameLabel.Font.Color := $F6F4F3;
+  WizardForm.PageDescriptionLabel.Font.Color := $C5BAAF;
+  WizardForm.WelcomeLabel1.Font.Color := $4429DC;
+  WizardForm.FinishedHeadingLabel.Font.Color := $4429DC;
+end;
+
 procedure CurPageChanged(CurPageID: Integer);
 begin
   if CurPageID = wpSelectDir then

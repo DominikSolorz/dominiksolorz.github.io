@@ -2,6 +2,7 @@
 // Używa tego samego silnika transmisji, zapisu i archiwum co index.html.
 // Nie uruchamia kamery ani nie zmienia jej konfiguracji samodzielnie.
 import { createRouter } from "./core/router.mjs";
+import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=1";
 const isTransmitter = location.hash === "#nadaj";
 // Tryb urządzenia jest rozstrzygany raz, przed załadowaniem CSS w index.html.
 // Dzięki temu Chrome w telefonie i wersja instalowana PWA nie rozchodzą się
@@ -120,6 +121,13 @@ if (desktopRequested) {
   eventsScreen.setAttribute("aria-label", "Alarmy i zdarzenia");
   eventsScreen.innerHTML = '<h2>Alarmy i zdarzenia</h2><p>Rzeczywiste wykrycia ruchu i dźwięku z kamery. Zmiana widoku nie zatrzymuje transmisji ani zapisu.</p>';
   context.insertAdjacentElement("afterend", eventsScreen);
+  mountEventWorkspace(eventsScreen);
+  const diagnosticsScreen = document.createElement("section");
+  diagnosticsScreen.className = "desktopDiagnosticsScreen"; diagnosticsScreen.hidden = true;
+  diagnosticsScreen.setAttribute("aria-label", "Diagnostyka systemu");
+  mountDiagnosticWorkspace(diagnosticsScreen);
+  context.insertAdjacentElement("afterend", diagnosticsScreen);
+  if ($("diagCard")) diagnosticsScreen.append($("diagCard"));
 
   // Na pulpicie operatora oś doby jest częścią głównego widoku, obok obrazu
   // i zdarzeń. Pełna lista plików pojawia się dopiero w module Archiwum DVR.
@@ -210,9 +218,21 @@ if (desktopRequested) {
   if (ctrlBar) controlsScreen.append(ctrlBar);
   if (lockedControls) controlsScreen.append(lockedControls);
   if ($("modeCard")) controlsScreen.append($("modeCard"));
+  const controlWorkspace = document.createElement("div");controlWorkspace.className="controlWorkspace";
+  const controlPreview = document.createElement("section");controlPreview.className="controlPreview";
+  const previewVideo = document.createElement("video");previewVideo.muted=true;previewVideo.playsInline=true;previewVideo.autoplay=true;
+  previewVideo.setAttribute("aria-label","Podgląd aktywnej kamery");
+  const previewEmpty=document.createElement("p");previewEmpty.textContent="Oczekiwanie na obraz kamery. Uruchom podgląd przyciskiem Start.";
+  controlPreview.append(previewVideo,previewEmpty);
+  const controlDeviceDock=document.createElement("aside");controlDeviceDock.className="controlDeviceDock";
+  controlWorkspace.append(controlPreview,controlDeviceDock);controlsScreen.querySelector("header").after(controlWorkspace);
+  mirrorLivePreview($("video"),previewVideo,previewEmpty);
   controlDock.hidden = true;
   settingsScreen.querySelector(".desktopSettingsPreview").hidden = true;
   settingsScreen.querySelector(".desktopSettingsGrid").classList.add("settingsOnly");
+  const settingsHelp=document.createElement("aside");settingsHelp.className="settingsHelp";
+  settingsHelp.innerHTML='<h3>Pomoc</h3><p></p><small>Zmiana zakładki nie zatrzymuje kamery ani nagrywania. Dostępność ustawień zależy od urządzenia i uprawnień.</small>';
+  settingsScreen.querySelector(".desktopSettingsGrid").append(settingsHelp);
   settingsScreen.querySelector(".desktopSettingsFooter button").remove();
   const autoSaveNote = document.createElement("p");
   autoSaveNote.className = "muted small";
@@ -249,6 +269,7 @@ if (desktopRequested) {
   emptySettings.className = "desktopSettingsEmpty";
   const setSettingsGroup = group => {
     activeSettingsGroup = settingsGroups[group] ? group : "picture";
+    settingsHelp.querySelector("p").textContent=({picture:"Korekta podglądu zmienia wygląd obrazu na tym ekranie. Nie udaje sprzętowej regulacji obiektywu.",sound:"Wybierz obraz z dźwiękiem lub sam obraz. Mikrofon wymaga zgody na komputerze nadającym.",quality:"Wyższa jakość zwiększa rozmiar nagrań i obciążenie łącza. Faktyczne parametry odczytasz w Diagnostyce.",recording:"Harmonogram i długość segmentu dotyczą nowych nagrań. Zatrzymanie zapisu pozostawia podgląd na żywo.",detection:"Zdarzenia ruchu i dźwięku pojawią się w zakładce Alarmy. Nie są klasyfikacją osób ani pojazdów.",devices:"Podłącz urządzenie, wykryj je i wybierz z listy. Zmiana źródła wymaga dostępu do komputera.",access:"PIN odblokowuje panel. Dostęp do folderu oraz autoryzacja Google Drive są osobnymi zgodami.",application:"Program Windows działa bez Chrome. Aktualizacja jest pokazywana dopiero po wykryciu nowszej wersji."})[activeSettingsGroup]||"";
     if (activeSettingsGroup === "devices") settingsControls.append(deviceManager);
     const visible = new Set(settingsGroups[activeSettingsGroup].filter(Boolean));
     Object.values(settingsGroups).flat().filter(Boolean).forEach(row => { row.hidden = !visible.has(row); });
@@ -325,11 +346,10 @@ if (desktopRequested) {
     settingsScreen.hidden = view !== "settings";
     controlsScreen.hidden = view !== "controls";
     eventsScreen.hidden = view !== "events";
-    if (eventCard) {
-      (view === "events" ? eventsScreen : eventsDrawer).append(eventCard);
-      eventCard.hidden = false; eventCard.open = true;
-    }
-    if (layout) layout.hidden = view !== "diagnostics";
+    diagnosticsScreen.hidden = view !== "diagnostics";
+    if(view==="controls"){controlDeviceDock.append(deviceManager);deviceManager.hidden=false;}
+    if (eventCard) { eventsDrawer.append(eventCard); eventCard.open = true; }
+    if (layout) layout.hidden = true;
     context.querySelector(".desktopContextActions").hidden = view !== "live";
     // Pulpit ma być roboczy: kamera, zdarzenia i oś czasu — bez dodatkowych
     // kart diagnostycznych pod spodem. Ich dane są w module Diagnostyka.
@@ -353,7 +373,8 @@ if (desktopRequested) {
     // Po opuszczeniu ustawień przywracamy komplet pól dla innych trybów
     // interfejsu; wybrana kategoria jest widoczna tylko w module Ustawienia.
     if (view === "settings") setSettingsGroup(activeSettingsGroup);
-    const target = { live: "stage", controls: "ctrlBar", events: "viewEventsCard", settings: "setCard", archive: "dvrCard" }[view];
+    if(view==="events"){eventsScreen.scrollIntoView({block:"start"});return;}
+    const target = { live: "stage", controls: "ctrlBar", settings: "setCard", archive: "dvrCard" }[view];
     if (target) {
       main?.classList.remove("focus-live", "focus-controls", "focus-settings", "focus-archive");
       $(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -363,6 +384,7 @@ if (desktopRequested) {
     if (diag) { diag.hidden = false; diag.open = true; diag.scrollIntoView({ behavior: "smooth", block: "start" }); }
   };
   const renderRoute = view => {
+    if(view!=="archive"&&document.body.classList.contains("archiveOpen"))document.dispatchEvent(new Event("hs-close-recordings"));
     if (view === "archive") {
       shell.querySelectorAll("[data-desktop-view]").forEach(button => button.classList.toggle("active", button.dataset.desktopView === "archive"));
       document.dispatchEvent(new Event("hs-open-recordings"));

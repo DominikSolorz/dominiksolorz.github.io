@@ -8,14 +8,16 @@
     <AssemblyName>HomeSecurityDesktop</AssemblyName>
     <RootNamespace>HomeSecurityDesktop</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.3.5</Version>
-    <AssemblyVersion>1.3.5.0</AssemblyVersion>
-    <FileVersion>1.3.5.0</FileVersion>
+    <Version>1.3.6</Version>
+    <AssemblyVersion>1.3.6.0</AssemblyVersion>
+    <FileVersion>1.3.6.0</FileVersion>
+    <ApplicationIcon>installer/brand/home-security.ico</ApplicationIcon>
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="installer/brand/home-security.ico" Link="home-security.ico" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="AgentTestAssets/index.html" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="AgentTestAssets/untrusted.html" CopyToOutputDirectory="PreserveNewest" />
     <ProjectReference Include="../agent-client/HomeSecurity.Agent.Client.csproj" />

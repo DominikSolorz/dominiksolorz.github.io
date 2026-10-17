@@ -12,9 +12,10 @@ import * as recstore from "./recstore.js?v=77";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=9";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=101";
+import { mountDvr } from "./dvr-ui.js?v=102";
 import { accountClient } from "./auth.js?v=10";
 import { systemStore } from "./core/store.mjs";
+import { captureEventFrame } from "./workspace-panels.mjs?v=1";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
 import { createPeerDiagnostics } from "./core/peer-diagnostics.mjs";
 import { sealFolder, openFolder } from "./communication/folder-channel.mjs";
@@ -52,7 +53,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "193"; // musi się zgadzać z version.json
+const VERSION = "194"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -495,7 +496,7 @@ const archive = (() => {
   }
 
   let segEvents = null; // zdarzenia (ruch / dźwięk) w bieżącym pliku nagrania
-  function markEvent(ev) { segEvents?.push(ev); }
+  function markEvent(ev) { segEvents?.push({kind:ev.kind,at:ev.at}); }
 
   async function save(data, name, events, start, end) {
     // Długość nagrania wpisana od razu do pliku — przewijanie działa w każdym odtwarzaczu (telefon, WhatsApp, Windows).
@@ -726,6 +727,11 @@ const archive = (() => {
 
   function render() {
     systemStore.component("cloudQueue", { status: pumping ? "uploading" : queued ? "queued" : "idle", queued, verified: verifiedToDrive });
+    const previousStorage=systemStore.read("storage");
+    const storageState={status:disk.error?"error":disk.ready?"ready":disk.selected?"permission_required":"unselected",name:disk.name||"",message:disk.error||"",saved};
+    systemStore.component("storage",storageState);
+    if(previousStorage.status!==storageState.status||previousStorage.name!==storageState.name)systemStore.event({component:"storage",level:disk.error?"error":"info",message:disk.error||`Miejsce zapisu: ${disk.ready?disk.name:disk.selected?"wymagana zgoda":"nie wybrano folderu"}.`});
+    if(Number.isFinite(previousStorage.saved)&&saved>previousStorage.saved)systemStore.event({component:"storage",level:"info",message:`Potwierdzono lokalny zapis segmentu: ${lastName}`});
     $("recBadge").hidden = !running;
     $("archiveInfo").textContent = describe();
     const operational = $("opArchive");
@@ -911,6 +917,7 @@ let pcLibrary = null;
 const fmtClock = t => new Date(t).toLocaleTimeString("pl-PL");
 const recentEvents = [];
 function renderEvents(listId, items) {
+  systemStore.component("cameraEvents", {status:"available",items:items.slice(0,30)});
   const ul = $(listId);
   if (!ul) return;
   ul.replaceChildren(...(items.length ? items.map(e => Object.assign(document.createElement("li"), { textContent: `${fmtClock(e.at)} — ${EVENT_LABEL[e.kind] || e.kind}` }))
@@ -921,10 +928,12 @@ const detector = createDetector({
   getSoundEnabled: () => !!prefs.detectSound,
   onActivity: () => archive.activity(),
   onEvent: ev => {
+    const frame=captureEventFrame(video);if(frame)ev.thumbnail=frame;
     archive.markEvent(ev);
     sender.notifyViewers(ev);
     recentEvents.unshift(ev); recentEvents.length = Math.min(recentEvents.length, 30);
     renderEvents("pcEvents", recentEvents);
+    renderEvents("viewEvents", recentEvents);
   },
 });
 
@@ -1636,6 +1645,7 @@ const viewer = (() => {
     if (!["viewer-join", "viewer-leave"].includes(sig.type) && !(sig.type === "ice" && sig.from === "viewer")) lastSeen = Date.now();
     if (sig.type === "heartbeat") {
       if (sig.rec) showRecStatus(sig.rec);
+      if(sig.rec)systemStore.component("storage",{status:/InvalidBlob|Nie udało się zapisać/i.test(sig.rec.reason||"")?"error":sig.rec.folder&&sig.rec.folder!=="nieustawiony"?"ready":"unselected",name:sig.rec.folder||"",message:sig.rec.lastFile?`Ostatni plik: ${sig.rec.lastFile}`:""});
       if (sig.mode) applyMode(sig.mode, sig.until);
       if (sig.diag) renderDiag(sig.diag, [
         diagRow(pc?.connectionState === "connected", pc?.connectionState === "connected" ? "Telefon połączony z kamerą" : "Telefon nie jest jeszcze połączony z kamerą"),
@@ -2120,7 +2130,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "95";
+  const SERVICE_WORKER_BUILD = "96";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {

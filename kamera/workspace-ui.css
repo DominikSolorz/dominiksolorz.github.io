@@ -106,3 +106,44 @@ button:not(:disabled){transition:background-color .15s,border-color .15s}
  .mobileOwnerMode .mobileAppHeader{padding:14px 16px}.mobileOwnerMode #stage{border-color:#414652;border-radius:14px}
 }
 @media(prefers-reduced-motion:reduce){button:not(:disabled){transition:none}}
+/* Functional workspaces: actual telemetry, recorded events and file playback. */
+.desktopDiagnosticsScreen{padding:24px;border:1px solid var(--ui-line);border-radius:12px;background:var(--ui-surface)}
+.componentCards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:28px}
+.componentCard{padding:18px;border:1px solid var(--ui-line);border-radius:10px;background:#121419;min-width:0}
+.componentCard h3{font-size:14px;font-weight:600;margin:0 0 18px}.componentCard strong{font-size:14px;color:#b4bac5}.componentCard p{font-size:12px;color:var(--ui-muted);line-height:1.6;overflow-wrap:anywhere}
+.componentCard[data-state=track_live] strong,.componentCard[data-state=ready] strong,.componentCard[data-state=connected] strong,.componentCard[data-state=healthy] strong{color:#61d3a0}
+.componentCard[data-state=recording] strong{color:#ff7287}
+.componentCard[data-state=error] strong,.componentCard[data-state=auth_required] strong,.componentCard[data-state=failed] strong{color:#ff617b}
+.workspaceToolbar{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:18px 0}
+.workspaceToolbar label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ui-muted)}
+.workspaceToolbar :is(select,input[type=date]){padding:9px 12px;border:1px solid #414652;border-radius:8px;background:#121419;color:#fff;font:inherit;min-height:42px}
+.workspaceCheck{padding:11px 14px;background:#20232a;border:1px solid var(--ui-line);border-radius:8px}.workspaceCheck input{accent-color:var(--ui-red)}
+.workspaceTableWrap{width:100%;overflow:auto;border:1px solid var(--ui-line);border-radius:10px}.workspaceTable{width:100%;border-collapse:collapse;font-size:13px}.workspaceTable :is(th,td){padding:14px;text-align:left;border-bottom:1px solid var(--ui-line);vertical-align:top}.workspaceTable th{background:#20232a;font-weight:600;color:#bec4cf}.workspaceTable td:last-child{min-width:230px;overflow-wrap:anywhere}
+.eventWorkspace{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);gap:20px;align-items:start}
+.eventWorkspaceList{display:grid;gap:6px;max-height:65dvh;overflow:auto}.eventWorkspaceRow{display:flex;align-items:center;gap:14px;min-height:76px;padding:12px;border:1px solid var(--ui-line);background:#16181e;color:var(--ui-text);border-radius:8px;text-align:left;cursor:pointer}
+.eventWorkspaceRow.selected{background:#3e1c28;border-color:#a4324c}.eventWorkspaceRow>img{width:88px;height:52px;object-fit:cover;border-radius:6px}.eventWorkspaceRow>span:nth-last-child(2){flex:1}.eventWorkspaceRow small{display:block;color:var(--ui-muted);font-size:11px;margin-top:6px}.eventWorkspaceRow>span:last-child{font-size:11px;color:#c7a3ad}
+.eventKindIcon{display:grid;place-items:center;width:48px;height:48px;background:#351b24;color:#ff758c;border-radius:9px;font-size:25px}
+.eventWorkspaceDetail{border:1px solid var(--ui-line);background:#121419;border-radius:10px;padding:18px;position:sticky;top:20px}.eventWorkspaceDetail h3{margin:0 0 16px}.eventWorkspaceDetail img{width:100%;max-height:300px;object-fit:contain;background:#000;border-radius:8px}.eventWorkspaceDetail>p{line-height:1.6;color:var(--ui-muted)}.eventNoFrame,.workspaceEmpty{padding:25px 15px;border:1px dashed #414652;border-radius:8px;color:var(--ui-muted);font-size:13px}
+.controlWorkspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,320px);gap:20px;margin:20px 0}
+.controlPreview{display:grid;place-items:center;aspect-ratio:16/9;background:#000;border:1px solid var(--ui-line);border-radius:12px;overflow:hidden;position:relative}.controlPreview video{width:100%;height:100%;object-fit:contain}.controlPreview p{position:absolute;padding:24px;color:#b1b8c5;font-size:14px;text-align:center}
+.controlDeviceDock .desktopDeviceManager{margin:0;padding:18px}.controlDeviceDock .grid{grid-template-columns:1fr}.controlDeviceDock .row{flex-direction:column}.controlDeviceDock .btn{width:100%;white-space:normal}
+.settingsHelp{padding:22px;background:#121419;border:1px solid var(--ui-line);border-radius:10px;align-self:start}.settingsHelp h3{margin:0 0 20px}.settingsHelp p{line-height:1.7;color:#c6cbd5;font-size:14px}.settingsHelp small{color:var(--ui-muted);line-height:1.6;display:block}
+.dvrThumbnailStrip{display:flex;gap:8px;overflow-x:auto;padding:16px 0}.dvrThumbnailStrip[hidden]{display:none}.dvrThumbnail{position:relative;flex:0 0 128px;border:1px solid #414652;border-radius:8px;background:#111;padding:0;overflow:hidden;cursor:pointer;color:white}.dvrThumbnail img{display:block;width:128px;height:72px;object-fit:cover}.dvrThumbnail span{position:absolute;bottom:0;left:0;background:#000b;padding:3px 7px;font-size:12px}.dvrThumbnail:focus-visible{outline-offset:-3px}
+.recThumbnail{width:92px;height:54px;object-fit:cover;border-radius:7px;background:#20232a;flex-shrink:0}.recThumbnailEmpty{display:grid;place-items:center;color:#6f7788;font-size:28px}
+.mobileOwnerMode .eventWorkspace{grid-template-columns:1fr}.mobileOwnerMode .eventWorkspaceDetail{position:static}.mobileOwnerMode .eventWorkspaceList{max-height:48dvh}.mobileOwnerMode .workspaceToolbar{gap:8px}.mobileOwnerMode .workspaceToolbar label{font-size:12px}.mobileOwnerMode .eventWorkspaceRow{min-height:74px;padding:10px}.mobileOwnerMode .eventWorkspaceRow>img{width:64px;height:44px}
+.mobileOwnerMode .componentCards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mobileOwnerMode .componentCard{padding:12px}.mobileOwnerMode .workspaceTable{font-size:12px}.mobileOwnerMode .recThumbnail{width:68px;height:44px}
+.mobileOwnerMode #mobileDiagnosticWorkspace{display:none}.mobileOwnerMode[data-mobile-view=settings][data-mobile-settings=system] #mobileDiagnosticWorkspace:not(.mobileHidden){display:block}
+.mobileOwnerMode .mobileAppHeader #deviceLayoutBtn{width:auto;min-width:44px;min-height:44px;padding:8px 12px;border-radius:10px;background:#20232a;border-color:var(--ui-line)}
+.mobileOwnerMode .mobileAppHeader #deviceLayoutBtn b{font-size:11px}
+@media(min-width:1024px){
+ .desktopMode .desktopSettingsScreen{display:grid!important;grid-template-columns:190px minmax(0,1fr);gap:18px}.desktopMode .desktopSettingsScreen[hidden]{display:none!important}
+ .desktopMode .desktopSettingsHeader,.desktopMode .desktopSettingsFooter{grid-column:1/-1}
+ .desktopMode .desktopSettingsTabs{display:flex;flex-direction:column;align-items:stretch;align-self:start;margin:0;border-radius:10px}
+ .desktopMode .desktopSettingsTabs button{justify-content:flex-start;text-align:left;padding:12px}
+ .desktopMode .desktopSettingsGrid.settingsOnly{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:18px;border:0;padding:0;min-width:0}
+ .desktopMode .desktopSettingsControls{padding:0;min-width:0}
+ .desktopMode .archiveModal{left:var(--desktop-sidebar);padding:0;z-index:75}
+ .desktopMode .archiveModal .archiveModalHead{border-bottom:1px solid var(--ui-line)}
+}
+@media(min-width:1024px) and (max-width:1360px){.componentCards{grid-template-columns:repeat(3,minmax(0,1fr))}.desktopMode .desktopSettingsGrid.settingsOnly{grid-template-columns:minmax(0,1fr)}.settingsHelp{padding:16px}.eventWorkspace{grid-template-columns:minmax(0,1fr) minmax(240px,.8fr)}}
+@media(max-width:1023px){.controlWorkspace,.eventWorkspace{grid-template-columns:1fr}.componentCards{grid-template-columns:repeat(2,minmax(0,1fr))}.desktopDiagnosticsScreen{padding:16px}}
