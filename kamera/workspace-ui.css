@@ -153,6 +153,15 @@ button:not(:disabled){transition:background-color .15s,border-color .15s}
  body.mobileOwnerMode .mobileBottomNav{box-sizing:border-box;left:50%!important;right:auto!important;width:480px!important;max-width:100vw!important;transform:translateX(-50%)!important}
 }
 /* Audio never becomes a large floating panel over the camera. */
+.accountActions{display:flex;align-items:center;gap:8px}
+.accountActions button,.accountDialog button{min-height:42px;padding:10px 16px;border:1px solid #414652;border-radius:9px;background:#22252d;color:#f3f4f6;font:600 14px system-ui;cursor:pointer}
+.accountActions #lockBtn{display:inline-flex!important;width:auto!important;font-size:14px!important;background:#391820!important;border-color:#803045!important;color:#fff!important}
+.accountDialog{box-sizing:border-box;width:min(640px,calc(100vw - 32px));max-height:85dvh;overflow:auto;padding:28px;border:1px solid #414652;border-radius:16px;background:#17191e;color:#f3f4f6;box-shadow:0 24px 100px #0009}
+.accountDialog::backdrop{background:#000b;backdrop-filter:blur(5px)}
+.accountDialog h2{margin:0 0 10px;font-size:28px}.accountDialog p{color:#b3bac7;line-height:1.5}.accountDialog button{margin:12px 8px 0 0}
+.profileDetails{display:grid;grid-template-columns:1fr 1fr;gap:12px}.profileDetails>div{padding:14px;border:1px solid #30343e;background:#121419;border-radius:10px;min-width:0}.profileDetails dt{color:#b3bac7;font-size:12px;margin-bottom:7px}.profileDetails dd{margin:0;font-size:16px;overflow-wrap:anywhere}
+.mobileOwnerMode .mobileAppHeader{flex-wrap:wrap}.mobileOwnerMode .accountActions{flex-basis:100%;justify-content:flex-end}
+@media(max-width:600px){.profileDetails{grid-template-columns:1fr}.accountDialog{padding:20px}.accountActions button{padding:9px 12px}}
 #stage #audioHud{left:10px!important;right:auto!important;top:48px!important;bottom:auto!important;min-height:0!important;width:auto!important;max-width:220px!important;padding:4px!important;gap:6px!important;border:1px solid #414652!important;border-radius:10px!important;background:#14171de8!important;backdrop-filter:none!important}
 #stage #audioHud #soundBtn{display:grid!important;place-items:center;width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;padding:0!important;font-size:0!important;border:1px solid #414652!important;border-radius:8px!important;background:#252932!important}
 #stage #audioHud #soundBtn::after{content:'🔇';font-size:19px;line-height:1}
@@ -172,4 +181,5 @@ body:has(#publicHome:not([hidden])),#publicHome{background:#0c0d10!important}
 #publicHome :is(.publicPreview,.publicFeatures article,.publicSecurity,.publicRoles,.publicSteps li,.publicQuote,.publicContactTeaser){background:#17191e;border-color:#30343e;box-shadow:none}
 #publicHome :is(.publicLead,.publicFeatures p,.publicHint,.publicSteps p,.publicRoleTable span){color:#b3bac7}
 #publicHome .publicPreviewFrame{border-color:#414652}#publicHome .publicPreviewRows{color:#c1c7d2}
+#publicHome .publicLogo b{color:#e8bf68}#publicHome .publicHero{box-sizing:border-box;gap:32px}#publicHome .publicHero h1{font-weight:750;letter-spacing:-.04em}#publicHome .publicFeatures b{background:#351b24;color:#ff859a}#publicHome .publicPreviewFrame{background:#101217}#publicHome .publicMain{background:#0c0d10}
 @media(max-width:760px){#publicHome .publicMain{padding:28px 16px!important}#publicHome .publicHero{grid-template-columns:minmax(0,1fr)!important;padding:24px 18px;gap:24px}#publicHome .publicHero h1{font-size:38px}}

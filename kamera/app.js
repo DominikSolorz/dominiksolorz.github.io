@@ -14,6 +14,8 @@ import * as diskstore from "./diskstore.js?v=9";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
 import { mountDvr } from "./dvr-ui.js?v=102";
 import { accountClient } from "./auth.js?v=10";
+import { currentAccountUser } from "./auth.js?v=10";
+import { mountAccountUI } from "./account-ui.mjs?v=1";
 import { systemStore } from "./core/store.mjs";
 import { captureEventFrame } from "./workspace-panels.mjs?v=1";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
@@ -53,7 +55,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "195"; // musi się zgadzać z version.json
+const VERSION = "196"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2130,7 +2132,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "98";
+  const SERVICE_WORKER_BUILD = "99";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2144,7 +2146,6 @@ if ("serviceWorker" in navigator) {
     }).then(registration => registration.update()).catch(() => {});
   });
 }
-$("lockBtn").addEventListener("click", () => { if (confirm("Zablokować stronę na tym urządzeniu? Przy następnym wejściu trzeba będzie wpisać PIN.")) { sender.stop(); viewer.stop(); lock(); location.reload(); } });
 $("startBtn").addEventListener("click", () => sender.start());
 function setControlAction(text, kind = "") {
   const status = $("ctrlActionStatus");
@@ -2496,6 +2497,28 @@ if (RECEIVER_ONLY) {
   // ekranem; obraz pokaże wtedy czytelny stan oczekiwania.
   document.body.classList.remove("accessPending");
   $("app").hidden = false; $("lockBtn").hidden = false;
+  mountAccountUI({
+    loadProfile: async () => {
+      const user = await currentAccountUser();
+      if (!user) throw new Error("Sesja wygasła");
+      const { data, error } = await accountClient.from("user_profiles")
+        .select("first_name,last_name,phone,address_line,postal_code").eq("user_id", user.id).maybeSingle();
+      if (error) throw error;
+      return { user, profile: data };
+    },
+    logout: async () => {
+      const wasLive = sender.live;
+      try {
+        if (wasLive) await archive.prepareUpdate();
+        const { error } = await accountClient.auth.signOut({ scope: "local" });
+        if (error) throw error;
+      } catch (error) { if (wasLive) await archive.abortUpdate(); throw error; }
+      sender.stop(); viewer.stop(); lock(); ACCESS_KEY = null;
+      sessionStorage.removeItem("hs-device-entry-v1");
+      location.replace(`${location.origin}${location.pathname}?auth=login`);
+    },
+    onError: toastMsg,
+  });
   showPlaceholder("Przygotowuję podgląd kamery…");
   try {
     CHANNEL = await channelFor(ACCESS_KEY);
