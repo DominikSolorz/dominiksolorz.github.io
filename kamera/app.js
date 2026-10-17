@@ -4,8 +4,8 @@ const { createClient } = window.supabase;
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=34";
 import { b64, sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=23";
-import { requireAccess } from "./lock.js?v=18";
-import { channelFor, lock } from "./access.js?v=18";
+import { requireAccess } from "./lock.js?v=19";
+import { channelFor, lock } from "./access.js?v=19";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 import * as recstore from "./recstore.js?v=77";
@@ -13,9 +13,9 @@ import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=9";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
 import { mountDvr } from "./dvr-ui.js?v=102";
-import { accountClient } from "./auth.js?v=10";
-import { currentAccountUser } from "./auth.js?v=10";
-import { mountAccountUI } from "./account-ui.mjs?v=2";
+import { accountClient } from "./auth.js?v=11";
+import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=11";
+import { mountAccountUI } from "./account-ui.mjs?v=3";
 import { systemStore } from "./core/store.mjs";
 import { captureEventFrame } from "./workspace-panels.mjs?v=1";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
@@ -55,7 +55,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "197"; // musi się zgadzać z version.json
+const VERSION = "198"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2132,7 +2132,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "100";
+  const SERVICE_WORKER_BUILD = "101";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2498,6 +2498,12 @@ if (RECEIVER_ONLY) {
   document.body.classList.remove("accessPending");
   $("app").hidden = false; $("lockBtn").hidden = false;
   mountAccountUI({
+    requestReset: async expectedUserId => {
+      const user = await currentAccountUser();
+      if (!user || user.id !== expectedUserId) throw new Error("Sesja konta zmieniła się. Otwórz profil ponownie.");
+      await requestPasswordReset(user.email);
+    },
+    changePin: changeCurrentPin,
     loadProfile: async () => {
       const user = await currentAccountUser();
       if (!user) throw new Error("Sesja wygasła");

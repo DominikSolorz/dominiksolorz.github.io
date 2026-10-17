@@ -18,7 +18,7 @@ export function validateProfile(values) {
   return { ...data, phone: data.phone || null };
 }
 
-export function mountAccountUI({ loadProfile, saveProfile, logout, onError }) {
+export function mountAccountUI({ loadProfile, saveProfile, requestReset, changePin, logout, onError }) {
   const actions = document.createElement('div');
   actions.className = 'accountActions';
   const profileButton = document.createElement('button');
@@ -58,21 +58,52 @@ export function mountAccountUI({ loadProfile, saveProfile, logout, onError }) {
   form.append(save, cancel);
   const security = document.createElement('aside'); security.className = 'profileCard profileSecurity';
   const securityTitle = document.createElement('h3'); securityTitle.textContent = 'Bezpieczeństwo konta';
-  const securityText = document.createElement('p'); securityText.textContent = 'Hasło i PIN nie są wyświetlane. Ten formularz zmienia wyłącznie dane profilu — nie zmienia e-maila logowania, PIN-u ani połączenia Google Drive.';
+  const securityText = document.createElement('p'); securityText.textContent = 'Zmianę hasła potwierdzasz jednorazowym linkiem wysłanym na e-mail konta. Zmiana PIN-u wymaga obecnego PIN-u. Hasło i PIN nie są wyświetlane.';
   const continuity = document.createElement('p'); continuity.textContent = 'Przeglądanie i edycja profilu nie zatrzymują kamery ani nagrywania.';
   security.append(securityTitle, securityText, continuity);
+  const resetLink = document.createElement('button'); resetLink.type = 'button'; resetLink.textContent = 'Zmień hasło — wyślij link'; resetLink.disabled = true;
+  const pinButton = document.createElement('button'); pinButton.type = 'button'; pinButton.textContent = 'Zmień PIN'; pinButton.disabled = true;
+  const securityStatus = document.createElement('p'); securityStatus.setAttribute('role','status');
+  const pinForm = document.createElement('form'); pinForm.className = 'profilePinForm'; pinForm.hidden = true;
+  const pinInputs = {};
+  for (const [key,label] of [['current','Obecny PIN'],['next','Nowy PIN (4 lub 6 cyfr)'],['repeat','Powtórz nowy PIN']]) {
+    const field = document.createElement('label'); field.textContent = label;
+    const input = document.createElement('input'); input.type = 'password'; input.inputMode = 'numeric'; input.maxLength = 6; input.pattern = '(?:[0-9]{4}|[0-9]{6})'; input.required = true; input.autocomplete = key === 'current' ? 'current-password' : 'new-password'; input.name = key;
+    pinInputs[key] = input; field.append(input); pinForm.append(field);
+  }
+  const pinSave = document.createElement('button'); pinSave.type = 'submit'; pinSave.textContent = 'Zapisz nowy PIN';
+  const pinCancel = document.createElement('button'); pinCancel.type = 'button'; pinCancel.textContent = 'Anuluj zmianę PIN-u';
+  const clearPins = () => { for (const input of Object.values(pinInputs)) input.value = ''; pinForm.hidden = true; };
+  let securityBusy = false;
+  pinCancel.addEventListener('click',()=>{if(!securityBusy)clearPins();});
+  pinButton.addEventListener('click',()=>{if(!current || securityBusy)return;pinForm.hidden=false;securityStatus.textContent='Aktywne połączenia pozostaną otwarte. Nowy PIN będzie wymagany przy kolejnym odblokowaniu.';pinInputs.current.focus();});
+  resetLink.addEventListener('click',async()=>{
+    if(!current || securityBusy)return; securityBusy=true;resetLink.disabled=true;close.disabled=true;
+    try{await requestReset(current.user.id);securityStatus.textContent='Poproszono o link resetujący na adres konta. Sprawdź pocztę oraz Spam. Hasło nie zostało jeszcze zmienione.';}
+    catch(error){securityStatus.textContent=error.message || 'Nie udało się wysłać linku. Spróbuj później.';}
+    finally{securityBusy=false;resetLink.disabled=false;close.disabled=false;}
+  });
+  pinForm.addEventListener('submit',async event=>{
+    event.preventDefault();if(!current || securityBusy)return;
+    if(pinInputs.next.value!==pinInputs.repeat.value){securityStatus.textContent='Nowe numery PIN nie są identyczne.';return;}
+    securityBusy=true;pinSave.disabled=true;pinCancel.disabled=true;close.disabled=true;
+    try{await changePin(pinInputs.current.value,pinInputs.next.value,current.user.id);clearPins();securityStatus.textContent='Nowy PIN został zapisany. Kamera i połączenie Drive pozostają bez zmian.';}
+    catch(error){securityStatus.textContent=error.message || 'Nie potwierdzono zmiany PIN-u. Sprawdź połączenie.';}
+    finally{pinInputs.current.value='';pinInputs.next.value='';pinInputs.repeat.value='';securityBusy=false;pinSave.disabled=false;pinCancel.disabled=false;close.disabled=false;}
+  });
+  pinForm.append(pinSave,pinCancel);security.append(resetLink,pinButton,securityStatus,pinForm);
   card.append(subtitle, status, details, edit, form); content.append(card, security);
   dialog.append(hero, content); document.body.append(dialog);
   let current = null, saving = false;
   function endEdit() { form.hidden = true; details.hidden = false; edit.hidden = false; }
   function leave() {
-    if (saving) return;
+    if (saving || securityBusy) return;
     if (!form.hidden && !confirm('Odrzucić niezapisane zmiany profilu?')) return;
     dialog.close(); profileButton.focus();
   }
   close.addEventListener('click', leave);
   dialog.addEventListener('cancel', event => { event.preventDefault(); leave(); });
-  dialog.addEventListener('close', () => { ++request; details.replaceChildren(); status.textContent = ''; current = null; endEdit(); });
+  dialog.addEventListener('close', () => { ++request; details.replaceChildren(); status.textContent = ''; securityStatus.textContent = '';clearPins();current = null; endEdit(); });
   edit.addEventListener('click', () => {
     if (!current || saving) return;
     for (const [name,input] of Object.entries(inputs)) input.value = current.profile?.[name] || '';
@@ -106,12 +137,12 @@ export function mountAccountUI({ loadProfile, saveProfile, logout, onError }) {
     }
   }
   async function refreshProfile() {
-    if (saving) return;
-    const id = ++request; current = null; edit.disabled = true; endEdit(); details.replaceChildren(); status.textContent = 'Wczytuję dane konta…';
+    if (saving || securityBusy) return;
+    const id = ++request; current = null; edit.disabled = true; resetLink.disabled = true; pinButton.disabled = true; clearPins(); endEdit(); details.replaceChildren(); status.textContent = 'Wczytuję dane konta…';
     try {
       const { user, profile } = await loadProfile();
       if (id !== request || !dialog.open) return;
-      current = {user, profile}; renderProfile(current); edit.disabled = false;
+      current = {user, profile}; renderProfile(current); edit.disabled = false; resetLink.disabled = false; pinButton.disabled = false;
       status.textContent = profile ? '' : 'Brak zapisanych dodatkowych danych profilu.';
     } catch { if (id === request && dialog.open) status.textContent = 'Nie udało się pobrać danych. Sprawdź połączenie i spróbuj ponownie.'; }
   }

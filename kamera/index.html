@@ -51,7 +51,7 @@
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
 <link rel="stylesheet" href="style.css?v=184">
-<link rel="stylesheet" href="workspace-ui.css?v=6">
+<link rel="stylesheet" href="workspace-ui.css?v=7">
 </head>
 <body>
 <!-- Publiczna strona główna. Panel kamery pojawia się dopiero po świadomym
@@ -76,6 +76,9 @@
     <form id="loginForm" data-auth-step="login" class="authForm"><p class="authEyebrow">BEZPIECZNE WEJŚCIE</p><h1 id="authTitle">Zaloguj się</h1><p>Najpierw konto, później dodatkowy PIN do panelu.</p><label>E-mail<input name="email" type="email" autocomplete="email" required></label><label>Hasło<input name="password" type="password" autocomplete="current-password" required></label><button class="authPrimary" type="submit">Zaloguj się →</button><button id="authToRegister" class="authTextBtn" type="button">Nie masz konta? Zarejestruj się</button></form>
 <form id="registerForm" data-auth-step="register" class="authForm" hidden><p class="authEyebrow">NOWE KONTO</p><h1>Załóż konto</h1><p>Wszystkie pola oznaczone gwiazdką są potrzebne do utworzenia konta.</p><div class="authGrid"><label>Imię *<input name="first_name" autocomplete="given-name" required></label><label>Nazwisko *<input name="last_name" autocomplete="family-name" required></label></div><label>Adres *<input name="address_line" autocomplete="street-address" required></label><div class="authGrid"><label>Kod pocztowy *<input name="postal_code" placeholder="00-000" autocomplete="postal-code" required></label><label>Telefon <input name="phone" type="tel" autocomplete="tel"></label></div><label>E-mail *<input name="email" type="email" autocomplete="email" required></label><div class="authGrid"><label>Hasło *<input name="password" type="password" autocomplete="new-password" required></label><label>Powtórz hasło *<input name="password_repeat" type="password" autocomplete="new-password" required></label></div><label class="authCheck"><input name="terms" type="checkbox" required><span>Akceptuję <a href="regulamin.html" target="_blank">Regulamin</a> i <a href="polityka-prywatnosci.html" target="_blank">Politykę prywatności</a>.</span></label><button class="authPrimary" type="submit">Utwórz konto i wyślij e-mail →</button><button class="authToLogin authTextBtn" type="button">Masz konto? Zaloguj się</button></form>
 <section data-auth-step="confirm" class="authForm" hidden><p class="authEyebrow">POTWIERDŹ KONTO</p><h1>Sprawdź e-mail</h1><p>Wysłaliśmy wiadomość potwierdzającą. Otwórz bezpieczny link w wiadomości albo przepisz kod weryfikacyjny, jeśli jest podany.</p><form id="verificationCodeForm" class="verificationCodeForm"><label>Kod weryfikacyjny (opcjonalnie)<input id="verificationCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" maxlength="8" placeholder="Kod z e-maila"></label><button class="authSecondary" type="submit">Potwierdź kod</button></form><div class="authNotice">Link lub kod są jednorazowe. Nie przekazuj ich innej osobie. Jeśli nie widzisz wiadomości, sprawdź Spam.</div><button id="resendConfirmation" class="authPrimary" type="button">Wyślij wiadomość ponownie</button><button class="authToLogin authTextBtn" type="button">Wróć do logowania</button></section>
+    <button id="forgotPasswordBtn" data-auth-step="login" class="authTextBtn" type="button">Nie pamiętasz hasła? Zresetuj hasło</button>
+    <form id="forgotPasswordForm" data-auth-step="forgot-password" class="authForm" hidden><h1>Zresetuj hasło</h1><p>Wyślemy jednorazowy link na adres konta. Hasła nie zmienisz bez potwierdzenia linku.</p><label>E-mail<input name="email" type="email" autocomplete="email" required></label><button type="submit" class="authPrimary">Wyślij link resetujący</button><button type="button" class="authToLogin authTextBtn">Wróć do logowania</button></form>
+    <form id="resetPasswordForm" data-auth-step="reset-password" class="authForm" hidden><h1>Ustaw nowe hasło</h1><p>Wpisz nowe hasło dwukrotnie. Nie zmieniamy Twojego PIN-u.</p><label>Nowe hasło<input name="password" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></label><label>Powtórz nowe hasło<input name="password_repeat" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></label><button type="submit" class="authPrimary">Zapisz nowe hasło</button></form>
     <form id="profileForm" data-auth-step="profile" class="authForm" hidden><p class="authEyebrow">DANE WŁAŚCICIELA</p><h1>Uzupełnij profil</h1><p>Dane są dostępne wyłącznie na Twoim koncie.</p><div class="authGrid"><label>Imię *<input name="first_name" required></label><label>Nazwisko *<input name="last_name" required></label></div><label>Adres *<input name="address_line" required></label><div class="authGrid"><label>Kod pocztowy *<input name="postal_code" placeholder="00-000" required></label><label>Telefon <input name="phone" type="tel"></label></div><button class="authPrimary" type="submit">Dalej →</button></form>
     <label data-auth-step="profile" class="authCheck authGoogleTerms" hidden><input form="profileForm" name="terms" type="checkbox" required><span>Akceptuję <a href="regulamin.html" target="_blank" rel="noopener">Regulamin</a> i <a href="polityka-prywatnosci.html" target="_blank" rel="noopener">Politykę prywatności</a>.</span></label>
     <div data-auth-step="login" class="authGoogleEntry"><span class="authDivider">lub</span><button id="googleLoginBtn" type="button" class="authGoogleButton"><span aria-hidden="true">G</span> Zaloguj przez Google</button><p>Potwierdź konto w Google. Dostęp do panelu nadal wymaga PIN-u.</p></div>
@@ -99,7 +102,7 @@
   (() => {
     const p = new URLSearchParams(location.search);
     const isReceiver = /^cam-[a-f0-9]{32}$/.test(p.get("odbiorca") || "");
-    const authRoute = p.get("auth") === "register" ? "register" : p.get("auth") === "login" ? "login" : "";
+    const authRoute = ["register", "login", "forgot"].includes(p.get("auth")) ? p.get("auth") : "";
     const home = document.getElementById("publicHome");
     let enter, opened = false;
     // Boot ma wiedzieć, czy strona główna nadal jest świadomie oglądana.
@@ -127,7 +130,7 @@
     if (isReceiver) openPanel();
     else if (authRoute) {
       home.hidden = true;
-      window.__authReady.then(() => authRoute === "register" ? window.__showRegistration?.() : requestAccount());
+      window.__authReady.then(() => authRoute === "register" ? window.__showRegistration?.() : authRoute === "forgot" ? window.__showPasswordReset?.() : requestAccount());
     }
   })();
 </script>
@@ -511,8 +514,8 @@
 })();
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="auth.js?v=10"></script>
-<script type="module" src="app.js?v=197"></script>
+<script type="module" src="auth.js?v=11"></script>
+<script type="module" src="app.js?v=198"></script>
 <script type="module" src="desktop.js?v=31"></script>
 <script type="module" src="mobile.js?v=13"></script>
 </body>

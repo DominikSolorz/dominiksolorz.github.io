@@ -23,11 +23,11 @@ test('profile button fetches account, closes without engine action and logout ha
  }
  const root=new Element('body'), nav=new Element('nav'), logout=new Element('button');
  const oldDoc=globalThis.document,oldConfirm=globalThis.confirm;
- let loads=0,signouts=0,error='',saved=0,failSave=false;
+ let loads=0,signouts=0,error='',saved=0,failSave=false, resetFor=null, pinChange=null;
  try {
   globalThis.document={body:root,createElement:tag=>new Element(tag),getElementById:()=>logout,querySelector:s=>s==='.topbar .nav'?nav:null};
   globalThis.confirm=()=>true;
-  mountAccountUI({loadProfile:async()=>{loads++;return {user:{id:'owner',email:'own@example.invalid'},profile:{first_name:'<img src=x>'}};},saveProfile:async(values,id)=>{assert.equal(id,'owner');saved++;if(failSave)throw Error('offline');return {user:{id:'owner',email:'own@example.invalid'},profile:values};},logout:async()=>{signouts++;throw Error('offline');},onError:msg=>error=msg});
+  mountAccountUI({loadProfile:async()=>{loads++;return {user:{id:'owner',email:'own@example.invalid'},profile:{first_name:'<img src=x>'}};},saveProfile:async(values,id)=>{assert.equal(id,'owner');saved++;if(failSave)throw Error('offline');return {user:{id:'owner',email:'own@example.invalid'},profile:values};},requestReset:async id=>{resetFor=id;},changePin:async (...args)=>{pinChange=args;},logout:async()=>{signouts++;throw Error('offline');},onError:msg=>error=msg});
   nav.children[0].children[0].handlers.click(); await new Promise(resolve=>setImmediate(resolve));
   const dialog=root.children[0];assert.equal(dialog.open,true);assert.equal(loads,1);
   const all=n=>[n,...n.children.flatMap(all)];
@@ -38,6 +38,11 @@ test('profile button fetches account, closes without engine action and logout ha
   const form=all(dialog).find(n=>n.tag==='form');
   failSave=true;await form.handlers.submit({preventDefault(){}});assert.equal(form.hidden,false);assert.equal(fields[0].value,'Jan');
   failSave=false;await form.handlers.submit({preventDefault(){}});assert.equal(saved,2);assert.equal(form.hidden,true);assert.equal(details.children[0].children[1].textContent,'Jan');
+  await all(dialog).find(n=>n.textContent==='Zmień hasło — wyślij link').handlers.click();assert.equal(resetFor,'owner');
+  all(dialog).find(n=>n.textContent==='Zmień PIN').handlers.click();
+  const pinForm=all(dialog).find(n=>n.className==='profilePinForm');const pins=pinForm.children.filter(n=>n.tag==='label').map(n=>n.children[0]);
+  [pins[0].value,pins[1].value,pins[2].value]=['123456','987654','987654'];
+  await pinForm.handlers.submit({preventDefault(){}});assert.deepEqual(pinChange,['123456','987654','owner']);assert.ok(pins.every(n=>n.value===''));assert.equal(pinForm.hidden,true);
   all(dialog).find(n=>n.textContent==='Wróć do panelu').handlers.click();
   assert.equal(dialog.open,false);assert.equal(signouts,0);assert.equal(details.children.length,0);
   await logout.handlers.click();assert.equal(signouts,1);assert.equal(logout.disabled,false);assert.ok(error);

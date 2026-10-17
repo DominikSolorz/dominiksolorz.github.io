@@ -1,5 +1,6 @@
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=34";
 import { deriveKey, b64 } from "./pin.js?v=14";
+import { unlockSecurity, rotatedSecurity } from './account-security.mjs?v=1';
 
 const { createClient } = window.supabase;
 export const accountClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
@@ -16,7 +17,10 @@ const callbackUrl = () => `${location.origin}${location.pathname}`;
 const postCode = value => /^\d{2}-\d{3}$/.test(value);
 let pendingConfirmationEmail = "";
 const ENTRY_TICKET = "hs-device-entry-v1";
-let returnedWithEmailToken = location.hash.includes("access_token");
+const recoveryReturn = new URLSearchParams(location.hash.slice(1)).get('type') === 'recovery';
+let returnedWithEmailToken = !recoveryReturn && location.hash.includes("access_token");
+let recoveryUntil = 0, recoveryUserId = null, resetBusy = false;
+let resetRequestedAt = 0;
 let continuing = false;
 let googleLoginPending = false;
 
@@ -90,16 +94,35 @@ export async function accessRoleForCurrentUser() {
 export async function securityForCurrentUser() {
   const user = await currentAccountUser();
   if (!user) return null;
-  const { data, error } = await accountClient.from("user_security").select("pin_salt,pin_hash,failed_attempts,locked_until").eq("user_id", user.id).maybeSingle();
+  return securityFor(user);
+}
+async function securityFor(user) {
+  const { data, error } = await accountClient.from("user_security").select("pin_salt,pin_hash,pin_wrapped_access_key,failed_attempts,locked_until").eq("user_id", user.id).maybeSingle();
   if (error) throw error;
   return data || null;
 }
 export async function verifyAccountPin(pin) {
-  const security = await securityForCurrentUser();
-  if (!security || !/^\d{4,6}$/.test(String(pin))) return null;
-  if (security.locked_until && new Date(security.locked_until).getTime() > Date.now()) return null;
-  const key = await deriveKey(String(pin), security.pin_salt);
-  return (await hashText(key)) === security.pin_hash ? key : null;
+  const user = await currentAccountUser();
+  if (!user) return null;
+  const security = await securityFor(user);
+  return unlockSecurity(pin, security, user.id);
+}
+export async function changeCurrentPin(currentPin, nextPin, expectedUserId) {
+  const user = await currentAccountUser();
+  if (!user || user.id !== expectedUserId) throw new Error('Sesja konta zmieniła się. Otwórz profil ponownie.');
+  const security = await securityFor(user);
+  if (!security) throw new Error('Brak skonfigurowanego PIN-u.');
+  const values = await rotatedSecurity(currentPin,nextPin,security,user.id);
+  const {data,error} = await accountClient.from('user_security').update(values).eq('user_id',user.id).eq('pin_hash',security.pin_hash).select('user_id').single();
+  if (error || !data) throw new Error('Nie potwierdzono zmiany PIN-u. Otwórz profil ponownie i sprawdź bieżący PIN.');
+}
+export async function requestPasswordReset(email) {
+  const address = clean(email);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) throw new Error('Podaj poprawny adres e-mail.');
+  if (Date.now() - resetRequestedAt < 60000) throw new Error('Poczekaj minutę przed ponownym wysłaniem linku.');
+  const {error} = await accountClient.auth.resetPasswordForEmail(address,{redirectTo:callbackUrl()});
+  if (error) throw new Error(explainAuthError(error));
+  resetRequestedAt = Date.now();
 }
 
 async function savePin(pin) {
@@ -162,10 +185,11 @@ window.__ensureAccountReady = async () => {
   if (!user) throw new Error("Sesja konta wygasła. Zaloguj się ponownie.");
   return user;
 };
-window.__showAccount = async () => { $("authDialog").hidden = false; message(""); await continueWithSession(); };
+window.__showAccount = async () => { $("authDialog").hidden = false; message(""); if (recoveryUntil > Date.now()) { section('reset-password'); return; } if (recoveryReturn) { section('forgot-password'); message('Otwórz nowy link resetujący z wiadomości e-mail.',true); return; } await continueWithSession(); };
 // Osobny adres ?auth=register otwiera formularz niezależnie od skryptów strony głównej.
 // Pozwala to wkleić link bezpośrednio w przeglądarce lub aplikacji Windows.
 window.__showRegistration = async () => { $("authDialog").hidden = false; message(""); section("register"); };
+window.__showPasswordReset = () => { $('authDialog').hidden = false; message(''); section('forgot-password'); };
 
 window.addEventListener("hs-auth-request", () => window.__showAccount());
 
@@ -251,6 +275,13 @@ $("deviceForm")?.addEventListener("submit", async event => {
 $("pinSetupForm")?.addEventListener("submit", async event => { event.preventDefault(); const pin = $("setupPin").value, repeat = $("setupPinRepeat").value; if (!/^\d{4}$|^\d{6}$/.test(pin)) return message("PIN musi mieć dokładnie 4 albo 6 cyfr.", true); if (pin !== repeat) return message("Numery PIN nie są identyczne.", true); try { await savePin(pin); message("PIN zapisany. Otwieram bezpieczny panel…"); setTimeout(enterPanel, 280); } catch (error) { message(error.message, true); } });
 
 accountClient.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY' && session?.user) {
+    recoveryUntil = Date.now() + 10 * 60000; recoveryUserId = session.user.id;
+    returnedWithEmailToken = false;
+    $('publicHome').hidden = true; $('authDialog').hidden = false; section('reset-password');
+    message('Link został potwierdzony. Ustaw nowe hasło.'); return;
+  }
+  if (event === 'SIGNED_OUT') { recoveryUntil = 0; recoveryUserId = null; }
   const returnedFromEmail = event === "SIGNED_IN" && returnedWithEmailToken && !!session;
   let pendingEntry = false;
   try { pendingEntry = !!sessionStorage.getItem(ENTRY_TICKET); } catch (_) {}
@@ -262,6 +293,25 @@ accountClient.auth.onAuthStateChange((event, session) => {
       catch (error) { message(error.message, true); }
     }, 0);
   }
+});
+document.getElementById('forgotPasswordBtn')?.addEventListener('click',()=>{section('forgot-password');message('');});
+document.getElementById('forgotPasswordForm')?.addEventListener('submit',async event=>{
+  event.preventDefault(); const button=event.currentTarget.querySelector('button[type=submit]'); button.disabled=true;
+  try { await requestPasswordReset(event.currentTarget.elements.email.value); message('Jeśli dla tego adresu istnieje konto, otrzymasz link do ustawienia nowego hasła. Sprawdź też Spam.'); }
+  catch(error){message(error.message,true);} finally{button.disabled=false;}
+});
+document.getElementById('resetPasswordForm')?.addEventListener('submit',async event=>{
+  event.preventDefault();if(resetBusy)return;
+  const form=event.currentTarget, password=form.elements.password.value, repeat=form.elements.password_repeat.value;
+  if(!recoveryUserId || Date.now()>=recoveryUntil)return message('Link wygasł lub nie został potwierdzony. Poproś o nowy link.',true);
+  if(password.length<10 || password.length>128 || password!==repeat)return message('Wpisz dwa identyczne hasła o długości od 10 do 128 znaków.',true);
+  resetBusy=true;const button=form.querySelector('button[type=submit]');button.disabled=true;
+  try {
+    const user=await currentAccountUser(); if(!user || user.id!==recoveryUserId)throw new Error('Sesja odzyskiwania konta wygasła.');
+    const {error}=await accountClient.auth.updateUser({password});if(error)throw error;
+    recoveryUntil=0;recoveryUserId=null;form.reset();section('login');
+    message('Nowe hasło zostało zapisane. Wróć do logowania. PIN nie został zmieniony.');
+  }catch(error){message(explainAuthError(error),true);}finally{resetBusy=false;button.disabled=false;}
 });
 // Sygnalizuje stronie głównej, że kliknięcie „Zaloguj się” może już otworzyć okno.
 window.__authReadyResolve?.();
