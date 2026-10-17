@@ -16,6 +16,7 @@ import { mountDvr } from "./dvr-ui.js?v=102";
 import { accountClient } from "./auth.js?v=11";
 import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=11";
 import { mountAccountUI } from "./account-ui.mjs?v=3";
+import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { captureEventFrame } from "./workspace-panels.mjs?v=1";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
@@ -55,7 +56,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "198"; // musi się zgadzać z version.json
+const VERSION = "199"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -871,9 +872,9 @@ const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", pay
 
 // Polecenia zmieniające pracę komputera-kamery muszą być podpisane kluczem z PIN-u.
 // Link odbiorcy zawiera tylko nazwę kanału, dlatego nie wystarcza jako uprawnienie do sterowania.
-const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "light-set", "restart", "reload", "folder-browse", "folder-create", "folder-select", "folder-delete-empty"]);
+const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "audio-profile-set", "light-set", "restart", "reload", "folder-browse", "folder-create", "folder-select", "folder-delete-empty"]);
 const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}${sig.type === "light-set" ? `|L${clampLight(sig.light)}` : ""}${sig.type.startsWith("folder-") ? `|F${JSON.stringify(sig.folderEnvelope)}` : ""}`;
-const controlSignatureText = sig => controlText(sig) + (sig.commandId ? `|v1|${sig.commandId}|${sig.clientId}|${sig.expiresAt}` : "");
+const controlSignatureText = sig => controlText(sig) + (sig.type === 'audio-profile-set' ? `|A${sig.audioProfile}` : '') + (sig.commandId ? `|v1|${sig.commandId}|${sig.clientId}|${sig.expiresAt}` : "");
 async function signedOwnerControl(payload) {
   if (!ACCESS_KEY) return null;
   const ts = Date.now();
@@ -1169,7 +1170,7 @@ const sender = (() => {
         if (typeof sig.clientId !== "string" || sig.clientId.length > 80) return;
         const isFolder = sig.type.startsWith("folder-");
         const args = isFolder ? await openFolder(sig.folderEnvelope, ACCESS_KEY, sig.clientId, sig.commandId)
-          : { mode: sig.mode, minutes: sig.minutes, q: sig.q, media: sig.media, light: sig.light };
+          : { mode: sig.mode, minutes: sig.minutes, q: sig.q, media: sig.media, light: sig.light, audioProfile: sig.audioProfile };
         const result = await commandDispatcher.execute({ v: 1, id: sig.commandId, name: sig.type, args, expiresAt: sig.expiresAt }, sig.clientId);
         if (isFolder) {
           send(chan.channel, { type:"folder-result", clientId:sig.clientId, envelope:await sealFolder(result,ACCESS_KEY,sig.clientId,sig.commandId) });
@@ -1183,6 +1184,7 @@ const sender = (() => {
       if (sig.type === "mode-set") return setMode(sig.mode, sig.minutes);
       if (sig.type === "quality-set") return setQuality(sig.q);
       if (sig.type === "media-set") return setMedia(sig.media);
+      if (sig.type === 'audio-profile-set') return setAudioProfile(sig.audioProfile);
       if (sig.type === "light-set") return setLight(sig.light);
       if (sig.type === "restart") return restart();
       if (sig.type === "reload") return forceReload();
@@ -1204,8 +1206,8 @@ const sender = (() => {
     // Full HD 16:9, z preferencją 60 kl./s. "Ideal" oznacza, że słabsza
     // kamera może bezpiecznie wybrać niższą obsługiwaną płynność zamiast błędu.
     video: { width: { ideal: 1920 }, height: { ideal: 1080 }, aspectRatio: { ideal: 16 / 9 }, frameRate: { ideal: LIVE_FPS }, ...(deviceId ? { deviceId: { exact: deviceId } } : {}) },
-    // Mikrofon: tłumienie szumów, usuwanie echa i automatyczne wzmocnienie włączone (czysty, wyrównany dźwięk).
-    audio: prefs.audio ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true } : false,
+    // Avoid automatic gain pumping up steady background noise in the default profile.
+    audio: prefs.audio ? audioConstraints(prefs.audioProfile || 'clean') : false,
   });
   let cameraLight = "Jasność kamery: sprawdzam…";
   // Ustawienie 0 to prawdziwy automatyczny obraz kamery: bez ręcznego
@@ -1311,6 +1313,10 @@ const sender = (() => {
       camWaitSince = 0;
       if (!live) { s.getTracks().forEach(t => t.stop()); return false; }
       stream = s;
+      if (s.getAudioTracks().length) {
+        try { await setAudioProfile(prefs.audioProfile || 'clean'); }
+        catch(error) { if ($('audioProfileStatus')) $('audioProfileStatus').textContent=error.message; }
+      }
       lastCameraError = ""; $("retryCameraBtn").hidden = true;
       video.srcObject = s; video.muted = true;
       await video.play();
@@ -1370,6 +1376,15 @@ const sender = (() => {
     prefs.media = m; savePrefs(); applyMedia();
     if ($("mediaPick")) $("mediaPick").value = m;
     beat(); report();
+  }
+  async function setAudioProfile(profile) {
+    audioConstraints(profile);
+    const result=await applyAudioProfile(stream?.getAudioTracks()[0],profile,navigator.mediaDevices.getSupportedConstraints());
+    prefs.audioProfile=profile;savePrefs();
+    if($('audioProfilePick'))$('audioProfilePick').value=profile;
+    if($('audioProfileStatus'))$('audioProfileStatus').textContent=audioStatus(result);
+    systemStore.component('audioProcessing',{status:'configured',...result});
+    return result;
   }
 
   async function setMode(m, minutes) {
@@ -1592,7 +1607,7 @@ const sender = (() => {
     }).catch(() => {});
   }
 
-  return { start, stop, restart, forceReload, takeover, setMedia, setLight, applyMedia, retryCamera, switchCamera, listCameras, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; }, get hasCamera() { return !!stream?.getVideoTracks().some(track => track.readyState === "live"); } };
+return { setAudioProfile, start, stop, restart, forceReload, takeover, setMedia, setLight, applyMedia, retryCamera, switchCamera, listCameras, applyRecordingPlan, notifyViewers, setQuality, setMode, beat: () => beat(), get live() { return live; }, get hasCamera() { return !!stream?.getVideoTracks().some(track => track.readyState === "live"); } };
 })();
 
 // ---------- PODGLĄD (telefon) ----------
@@ -1818,6 +1833,7 @@ const commandDispatcher = new CommandDispatcher({ handlers: {
   },
   "quality-set": ({ q }) => { if (!REC_QUALITY[q]) throw new Error("Nieprawidłowa jakość."); return sender.setQuality(q); },
   "media-set": ({ media }) => { if (!MEDIA_LABEL[media]) throw new Error("Nieprawidłowe źródło."); return sender.setMedia(media); },
+  'audio-profile-set': ({audioProfile}) => sender.setAudioProfile(audioProfile),
   "light-set": ({ light }) => { if (!Number.isFinite(Number(light))) throw new Error("Nieprawidłowa jasność."); return sender.setLight(light); }
 } });
 const localCommands = new CommandClient({
@@ -2132,7 +2148,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "101";
+  const SERVICE_WORKER_BUILD = "102";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2256,6 +2272,12 @@ $("lightPick").addEventListener("input", e => { $("lightVal").textContent = LIGH
 $("lightPick").addEventListener("change", e => executeControl("light-set", { light: clampLight(e.target.value) }).catch(error => toastMsg(error.message)));
 for (const [id, d] of [["lightDown", -1], ["lightUp", 1]]) $(id).addEventListener("click", () => { $("lightPick").value = clampLight(Number($("lightPick").value) + d); $("lightPick").dispatchEvent(new Event("input")); $("lightPick").dispatchEvent(new Event("change")); });
 $("mediaPick").addEventListener("change", e => executeControl("media-set", { media: e.target.value }).catch(error => toastMsg(error.message)));
+$('audioProfilePick').addEventListener('change',async event=>{
+  const picker=event.target;picker.disabled=true;$('audioProfileStatus').textContent='Sprawdzam ustawienia mikrofonu na komputerze…';
+  try{const result=await executeControl('audio-profile-set',{audioProfile:picker.value});$('audioProfileStatus').textContent=audioStatus(result);}
+  catch(error){$('audioProfileStatus').textContent=error.message;}
+  finally{picker.disabled=false;}
+});
 $("viewQuality").addEventListener("change", e => executeControl("quality-set", { q: e.target.value }).catch(error => toastMsg(error.message)));
 $("retentionDays").closest("label").hidden = false;
 $("driveAuto").checked = !!prefs.driveAuto;

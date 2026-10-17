@@ -51,7 +51,7 @@
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
 <link rel="stylesheet" href="style.css?v=184">
-<link rel="stylesheet" href="workspace-ui.css?v=7">
+<link rel="stylesheet" href="workspace-ui.css?v=8">
 </head>
 <body>
 <!-- Publiczna strona główna. Panel kamery pojawia się dopiero po świadomym
@@ -335,7 +335,7 @@
             <option value="av">Obraz + dźwięk</option>
             <option value="v">Tylko obraz</option>
             <option value="a">Tylko dźwięk</option>
-          </select></label></div>
+          </select></label><label>Oczyszczanie mikrofonu<select id="audioProfilePick"><option value="clean">Odszumianie — bez podbijania szumu</option><option value="voice">Wyraźniejsza mowa — automatyczne wzmocnienie</option><option value="environment">Otoczenie — bez filtrów</option></select><small id="audioProfileStatus" role="status">Działa na mikrofonie komputera nadającego. Silne filtrowanie może wyciszać ciche odgłosy otoczenia.</small></label></div>
           <div class="setRow" id="ownerOnce"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><label>Czas zapisu jednorazowego<select id="onceMin">
             <option value="5">5 minut</option>
             <option value="15" selected>15 minut</option>
@@ -515,7 +515,7 @@
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=11"></script>
-<script type="module" src="app.js?v=198"></script>
+<script type="module" src="app.js?v=199"></script>
 <script type="module" src="desktop.js?v=31"></script>
 <script type="module" src="mobile.js?v=13"></script>
 </body>

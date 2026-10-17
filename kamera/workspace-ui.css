@@ -153,6 +153,7 @@ button:not(:disabled){transition:background-color .15s,border-color .15s}
  body.mobileOwnerMode .mobileBottomNav{box-sizing:border-box;left:50%!important;right:auto!important;width:480px!important;max-width:100vw!important;transform:translateX(-50%)!important}
 }
 /* Audio never becomes a large floating panel over the camera. */
+#ownerMedia{display:grid;grid-template-columns:26px minmax(0,1fr)}#ownerMedia>label:last-child{grid-column:2}#audioProfileStatus{display:block;white-space:normal;font-size:12px;line-height:1.5;margin-top:8px;color:#b3bac7}
 .accountActions{display:flex;align-items:center;gap:8px}
 .accountActions button,.accountDialog button{min-height:42px;padding:10px 16px;border:1px solid #414652;border-radius:9px;background:#22252d;color:#f3f4f6;font:600 14px system-ui;cursor:pointer}
 .accountActions #lockBtn{display:inline-flex!important;width:auto!important;font-size:14px!important;background:#391820!important;border-color:#803045!important;color:#fff!important}
