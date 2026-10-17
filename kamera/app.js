@@ -15,7 +15,7 @@ import { serve as serveRecordings, createClient as createRecClient } from "./rec
 import { mountDvr } from "./dvr-ui.js?v=102";
 import { accountClient } from "./auth.js?v=10";
 import { currentAccountUser } from "./auth.js?v=10";
-import { mountAccountUI } from "./account-ui.mjs?v=1";
+import { mountAccountUI } from "./account-ui.mjs?v=2";
 import { systemStore } from "./core/store.mjs";
 import { captureEventFrame } from "./workspace-panels.mjs?v=1";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
@@ -55,7 +55,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "196"; // musi się zgadzać z version.json
+const VERSION = "197"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2132,7 +2132,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "99";
+  const SERVICE_WORKER_BUILD = "100";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2504,6 +2504,15 @@ if (RECEIVER_ONLY) {
       const { data, error } = await accountClient.from("user_profiles")
         .select("first_name,last_name,phone,address_line,postal_code").eq("user_id", user.id).maybeSingle();
       if (error) throw error;
+      return { user, profile: data };
+    },
+    saveProfile: async (values, expectedUserId) => {
+      const user = await currentAccountUser();
+      if (!user || user.id !== expectedUserId) throw new Error("Sesja konta zmieniła się. Otwórz profil ponownie.");
+      const { data, error } = await accountClient.from("user_profiles")
+        .update({ ...values, display_name: `${values.first_name} ${values.last_name}`.slice(0,80), updated_at: new Date().toISOString() })
+        .eq("user_id", user.id).select("first_name,last_name,phone,address_line,postal_code").single();
+      if (error || !data) throw error || new Error("Nie potwierdzono zapisu.");
       return { user, profile: data };
     },
     logout: async () => {
