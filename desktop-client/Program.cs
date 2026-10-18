@@ -10,11 +10,11 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.3.6";
-    private const string WebPanelBuild = "194";
-    // Jedna kanoniczna powłoka: EXE oraz Chrome wyświetlają tę samą
-    // opublikowaną stronę. Tylko to EXE przekazuje do strony chroniony znacznik
-    // Desktop, który pozwala udostępnić kamerę i mikrofon.
+    private const string DesktopVersion = "1.4.0";
+    private const string WebPanelBuild = "202";
+    // Desktop serves its installed Panel bundle at the existing trusted origin.
+    // The website and installed UI can now be released independently without
+    // migrating the user's existing session, PIN or IndexedDB recordings.
     private const string PanelUrl = "https://dominiksolorz.github.io/kamera/?desktop=1&native=windows&host=computer&ui_build=" + WebPanelBuild;
     private const string PublicHost = "dominiksolorz.github.io";
     private const string UpdateManifestUrl = "https://dominiksolorz.github.io/kamera/desktop-update.json";
@@ -23,6 +23,12 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--bundle-test")
+        {
+            ApplicationConfiguration.Initialize();
+            Application.Run(new BundleTestWindow(Path.GetFullPath(args[1])));
+            return;
+        }
         if (args.Length >= 2 && args[0] == "--agent-bridge-test")
         {
             ApplicationConfiguration.Initialize();
@@ -187,8 +193,9 @@ internal static class Program
                 await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.__HOME_SECURITY_AGENT_BRIDGE__ = true;");
             }
             await RefreshWebShellIfNeededAsync();
+            new BundledPanel().Attach(webView.CoreWebView2);
             await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
-                "window.__HOME_SECURITY_DESKTOP__ = true; window.__HOME_SECURITY_DEVICE__ = 'windows';");
+                "window.__HOME_SECURITY_DESKTOP__ = true; window.__HOME_SECURITY_DEVICE__ = 'windows'; window.__HOME_SECURITY_BUNDLED_PANEL__ = true;");
             WriteDiagnostic("webview-ready", new { dataPath });
 
             var settings = webView.CoreWebView2.Settings;
@@ -245,7 +252,7 @@ internal static class Program
                 }
             };
             webView.CoreWebView2.Navigate(PanelUrl);
-            WriteDiagnostic("panel-navigation", new { url = PanelUrl });
+            WriteDiagnostic("panel-navigation", new { url = PanelUrl, source = "installed-bundle", version = DesktopVersion, installDirectory = AppContext.BaseDirectory });
             _ = CheckForUpdateAsync();
             updateCheckTimer.Start();
         }

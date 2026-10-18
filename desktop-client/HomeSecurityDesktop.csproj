@@ -8,15 +8,21 @@
     <AssemblyName>HomeSecurityDesktop</AssemblyName>
     <RootNamespace>HomeSecurityDesktop</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.3.6</Version>
-    <AssemblyVersion>1.3.6.0</AssemblyVersion>
-    <FileVersion>1.3.6.0</FileVersion>
+    <Version>1.4.0</Version>
+    <AssemblyVersion>1.4.0.0</AssemblyVersion>
+    <FileVersion>1.4.0.0</FileVersion>
     <ApplicationIcon>installer/brand/home-security.ico</ApplicationIcon>
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="../kamera/**/*" Exclude="../kamera/downloads/**/*;../kamera/updates/**/*;../kamera/**/*.gs;../kamera/**/*.bat;../kamera/**/*.vbs;../kamera/desktop-update.json">
+      <Link>Panel/%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
     <Content Include="installer/brand/home-security.ico" Link="home-security.ico" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="AgentTestAssets/index.html" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="AgentTestAssets/untrusted.html" CopyToOutputDirectory="PreserveNewest" />

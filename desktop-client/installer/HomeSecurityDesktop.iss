@@ -4,10 +4,10 @@
 ; użytkownika z %LOCALAPPDATA%\HomeSecurityDesktop podczas odinstalowania.
 
 #define AppName "HOME SECURITY Desktop"
-#define AppVersion "1.3.6"
+#define AppVersion "1.4.0"
 #define AppPublisher "HOME SECURITY"
 #define AppExeName "HomeSecurityDesktop.exe"
-#define PublishDir "..\publish-1.3.6"
+#define PublishDir "..\publish-1.4.0"
 
 [Setup]
 AppId={{6CC3B91C-0337-42B3-BAF8-B1AE10A5B1B8}
@@ -15,6 +15,8 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
 DefaultDirName={localappdata}\Programs\Home Security
+DisableDirPage=no
+UsePreviousAppDir=yes
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
@@ -37,8 +39,8 @@ Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "Utwórz skrót na pulpicie"; GroupDescription: "Skróty:"; Flags: unchecked

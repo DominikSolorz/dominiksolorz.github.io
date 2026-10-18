@@ -2,6 +2,11 @@
 
 Natywna aplikacja Windows dla panelu `HOME SECURITY Desktop`.
 
+Wydanie 1.4.0 dołącza interfejs w katalogu `Panel` instalacji zamiast pobierania
+go przy każdym uruchomieniu ze strony. Szczegóły i granice migracji:
+[INSTALLED-PANEL.md](INSTALLED-PANEL.md). Nowa paczka wymaga testu instalacji
+i pierwszego uruchomienia przed opublikowaniem jej do automatycznych aktualizacji.
+
 - Nie ma paska adresu ani kart przeglądarki.
 - Otwiera pełny ekran panelu bez paska adresu i kart; klawisz `F11` przełącza pełny ekran.
 - Komputer z tą aplikacją jest jedynym nadajnikiem kamery i miejscem lokalnego archiwum DVR.
@@ -12,7 +17,7 @@ Natywna aplikacja Windows dla panelu `HOME SECURITY Desktop`.
 
 Publikacja lokalna:
 
-Stan przygotowania, 2026-10-16: powłoka natywna wskazuje build panelu 185.
+Stan przygotowania, 2026-10-18: powłoka natywna zawiera build panelu 202.
 Test zgodności wydania sprawdza ten numer względem manifestu strony. Zmiana
 znacznika czyści tylko cache/service worker, nie sesję ani zapisane ustawienia.
 Nie oznacza to publikacji nowego instalatora ani zdalnego wdrożenia panelu.

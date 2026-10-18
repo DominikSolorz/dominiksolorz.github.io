@@ -2165,7 +2165,7 @@ installAppBtn.addEventListener("click", async () => {
   else installAppHint.textContent = "instalację można wykonać później z menu Chrome";
   deferredInstall = null;
 });
-if ("serviceWorker" in navigator) {
+if ("serviceWorker" in navigator && !window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
   const SERVICE_WORKER_BUILD = "105";
