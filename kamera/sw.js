@@ -1,7 +1,7 @@
 // Zmieniaj wersję tylko wtedy, gdy aktualizujemy powłokę aplikacji.
 // Dzięki temu zainstalowany panel nie otworzy przestarzałego index.html.
-const CACHE = "kamera-domowa-shell-v105";
-const SHELL = ["./", "./index.html", "./style.css?v=184", "./workspace-ui.css?v=9", "./workspace-panels.mjs?v=1", "./account-ui.mjs?v=3", "./auth.js?v=11", "./account-security.mjs?v=1", "./access.js?v=19", "./lock.js?v=19", "./app.js?v=202", "./audio-profile.mjs?v=1", "./diskstore.js?v=10", "./local-retention.mjs?v=1", "./dvr-ui.js?v=102", "./remote-folder-ui.mjs", "./communication/folder-channel.mjs", "./communication/folder-readiness.mjs", "./desktop.js?v=31", "./mobile.js?v=13", "./core/store.mjs", "./core/router.mjs", "./core/peer-diagnostics.mjs", "./communication/commands.mjs", "./manifest.webmanifest?v=1", "./icons/kamera-192.svg", "./icons/kamera-512.svg", "./vendor/supabase.js?v=2.117.2"];
+const CACHE = "kamera-domowa-shell-v106";
+const SHELL = ["./", "./index.html", "./style.css?v=184", "./workspace-ui.css?v=9", "./workspace-panels.mjs?v=1", "./account-ui.mjs?v=3", "./auth.js?v=11", "./account-security.mjs?v=1", "./access.js?v=19", "./lock.js?v=19", "./app.js?v=203", "./zoom.js?v=17", "./audio-profile.mjs?v=1", "./diskstore.js?v=10", "./local-retention.mjs?v=1", "./dvr-ui.js?v=102", "./remote-folder-ui.mjs", "./communication/folder-channel.mjs", "./communication/folder-readiness.mjs", "./desktop.js?v=31", "./mobile.js?v=13", "./core/store.mjs", "./core/router.mjs", "./core/peer-diagnostics.mjs", "./communication/commands.mjs", "./manifest.webmanifest?v=1", "./icons/kamera-192.svg", "./icons/kamera-512.svg", "./vendor/supabase.js?v=2.117.2"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));

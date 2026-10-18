@@ -7,7 +7,7 @@ import { mountLibrary } from "./library-ui.js?v=23";
 import { requireAccess } from "./lock.js?v=19";
 import { channelFor, lock } from "./access.js?v=19";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
-import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
+import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=17";
 import * as recstore from "./recstore.js?v=77";
 import { oldRecordingPlan } from "./local-retention.mjs?v=1";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
@@ -57,7 +57,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "202"; // musi się zgadzać z version.json
+const VERSION = "203"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1919,7 +1919,10 @@ const zoomUi = (() => {
     // Bez przybliżenia palec na obrazie przewija stronę; przy przybliżeniu — przesuwa kadr.
     $("stage").classList.toggle("zoomed", state.z > 1.01);
     $("zoomLabel").textContent = `${state.z.toFixed(1)}×`;
-    $("zoomHint").textContent = state.z <= 1.01 ? "" : hardware ? (state.z <= lossless + 0.05 ? "pełna jakość" : `pełna jakość do ${lossless.toFixed(1)}×`) : "zbliżenie podglądu";
+    $("zoomHint").textContent = state.z <= 1.01 ? "" : hardware ? (state.z <= lossless + 0.05 ? "pełna jakość" : `zoom cyfrowy — mniej szczegółów; pełna jakość do ${lossless.toFixed(1)}×`) : "zoom cyfrowy podglądu — mniej szczegółów";
+    $("zoomIn").disabled = state.z >= max;
+    $("zoomOut").disabled = state.z <= 1;
+    $("zoomMax").textContent = `Maks. ${max}×`;
     paintDigitalZoom();
   }
   function push() {
@@ -1937,7 +1940,8 @@ const zoomUi = (() => {
     // wspieranej kamerze wycina prawdziwy kadr po stronie nadajnika, a na
     // pozostałych bezpiecznie powiększa tylko lokalny widok.
     enabled = prefs.role !== "send";
-    lossless = sig.lossless || 1; max = sig.max || MAX_ZOOM;
+    lossless = sig.lossless || 1;
+    max = hardware ? Math.min(MAX_ZOOM, Math.max(1, Number(sig.max) || MAX_ZOOM)) : MAX_ZOOM;
     $("zoomBar").hidden = !enabled; $("stage").classList.toggle("zoomable", enabled);
     if (hardware && !pointers.size) state = normalize(sig);
     label();
@@ -1976,6 +1980,7 @@ const zoomUi = (() => {
   $("zoomIn").addEventListener("click", () => set({ ...state, z: Math.min(max, state.z * 1.25) }));
   $("zoomOut").addEventListener("click", () => set({ ...state, z: state.z / 1.25 }));
   $("zoomReset").addEventListener("click", () => set({ z: 1, cx: 0.5, cy: 0.5 }));
+  $("zoomMax").addEventListener("click", () => set({ ...state, z: max }));
   return { apply };
 })();
 
@@ -2168,7 +2173,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator && !window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "105";
+  const SERVICE_WORKER_BUILD = "106";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {

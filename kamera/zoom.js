@@ -3,7 +3,7 @@
 // Wycinanie przez VideoFrame.visibleRect (bez kopiowania), w tle (MediaStreamTrackProcessor/Generator).
 // Nagrania i wykrywanie ruchu dalej korzystają z pełnego kadru.
 
-export const MAX_ZOOM = 4;
+export const MAX_ZOOM = 16;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const even = v => Math.round(v / 2) * 2;
 
@@ -13,9 +13,10 @@ export function zoomSupported() {
 
 // Pilnuje, żeby kadr mieścił się w obrazie.
 export function normalize(s) {
-  const z = clamp(Number(s?.z) || 1, 1, MAX_ZOOM);
+  const finite = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+  const z = clamp(finite(s?.z, 1), 1, MAX_ZOOM);
   const half = 0.5 / z;
-  return { z, cx: clamp(Number(s?.cx) || 0.5, half, 1 - half), cy: clamp(Number(s?.cy) || 0.5, half, 1 - half) };
+  return { z, cx: clamp(finite(s?.cx, 0.5), half, 1 - half), cy: clamp(finite(s?.cy, 0.5), half, 1 - half) };
 }
 
 export function createZoomer(source, onFrameSize) {
@@ -36,7 +37,7 @@ export function createZoomer(source, onFrameSize) {
       const { value: frame, done } = await reader.read();
       if (done || stopped) { frame?.close(); break; }
       const r = frame.visibleRect;
-      const w = Math.min(r.width, even(r.width / state.z)), h = Math.min(r.height, even(r.height / state.z));
+      const w = Math.min(r.width, Math.max(2, even(r.width / state.z))), h = Math.min(r.height, Math.max(2, even(r.height / state.z)));
       const x = r.x + clamp(even(state.cx * r.width - w / 2), 0, r.width - w);
       const y = r.y + clamp(even(state.cy * r.height - h / 2), 0, r.height - h);
       let out;
