@@ -133,6 +133,7 @@ const handles = new Map();
 
 export async function save(name, blob) {
   if (!REC_RE.test(name || "") || /[/\\]/.test(name)) throw new Error("Nieprawidłowa nazwa nagrania.");
+  if (!Number.isSafeInteger(blob?.size) || blob.size <= 0) throw new Error("Pustego nagrania nie można potwierdzić jako zapisanego.");
   const h = await get("folder");
   if (!(await usable(h))) return false;
   const file = handles.get(name) || await h.getFileHandle(name, { create: true });

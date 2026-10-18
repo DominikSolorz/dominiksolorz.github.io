@@ -21,6 +21,9 @@ function setup() {
   return {ctx,folder,pick:f=>{picked=f;},selected:()=>ctx.values.get('folder')};
 }
 const name='kamera-2026-10-16_21-00-00.mp4';
+test('empty recordings are never confirmed',async()=>{const s=setup(),f=s.folder('nagrania');s.pick(f);await s.ctx.api.choose();await assert.rejects(s.ctx.api.save(name,{size:0}));assert.equal(f.files.has(name),false);});
+test('missing permission is not a confirmed folder write',async()=>{const s=setup();s.ctx.values.set('folder',s.folder('nagrania',{granted:false}));assert.equal(await s.ctx.api.save(name,{size:10}),false);});
+test('wrong size after closing a recording rejects confirmation',async()=>{const s=setup(),f=s.folder('nagrania');s.pick(f);await s.ctx.api.choose();f.files.set(name,{createWritable:async()=>({write:async()=>{},close:async()=>{},abort:async()=>{}}),getFile:async()=>({size:3})});await assert.rejects(s.ctx.api.save(name,{size:10}),/Rozmiar/);});
 test('user selects arbitrary local folder and saves verified file',async()=>{const s=setup(),f=s.folder('my-archive');s.pick(f);await s.ctx.api.choose();assert.equal(await s.ctx.api.save(name,{size:10}),true);assert.equal(s.selected(),f);});
 test('new subfolder is created only under user-selected parent',async()=>{const s=setup(),f=s.folder('D-drive');s.pick(f);await s.ctx.api.choose({newFolder:'nagrania'});assert.equal(s.selected(),f.children.get('nagrania'));});
 test('switching archive clears cached handles from old folder',async()=>{const s=setup(),a=s.folder('A'),b=s.folder('B');s.pick(a);await s.ctx.api.choose();await s.ctx.api.save(name,{size:10});s.pick(b);await s.ctx.api.choose();await s.ctx.api.save(name,{size:20});assert.equal((await a.files.get(name).getFile()).size,10);assert.equal((await b.files.get(name).getFile()).size,20);});

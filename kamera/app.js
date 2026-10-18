@@ -9,8 +9,9 @@ import { channelFor, lock } from "./access.js?v=19";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=16";
 import * as recstore from "./recstore.js?v=77";
+import { oldRecordingPlan } from "./local-retention.mjs?v=1";
 import { fixMp4Duration } from "./mp4fix.js?v=2";
-import * as diskstore from "./diskstore.js?v=9";
+import * as diskstore from "./diskstore.js?v=10";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
 import { mountDvr } from "./dvr-ui.js?v=102";
 import { accountClient } from "./auth.js?v=11";
@@ -56,7 +57,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "199"; // musi się zgadzać z version.json
+const VERSION = "200"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -370,6 +371,7 @@ const REC_AUDIO_BPS = 64000;
 
 const archive = (() => {
   let localSaveFailures = 0, updateSource = null;
+  let folderReceipt = null, folderWriteError = "";
   let source = null, recStream = null, running = false, rec = null, segTimer = null, clock = null;
   let recSince = 0, saved = 0, lastName = "", lastError = "", queued = 0, sentToDrive = 0, verifiedToDrive = 0, lastVerified = "", pumping = false, retryTimer = null, looped = 0;
   let local = { count: 0, bytes: 0, oldest: 0 }, free = Infinity, persisted = false;
@@ -507,11 +509,16 @@ const archive = (() => {
     let savedToDisk = false;
     try {
       savedToDisk = await diskstore.save(name, data);
-      if (savedToDisk) { disk.saved++; disk.ready = true; disk.error = ""; saved++; lastName = name; lastError = ""; }
+      if (savedToDisk) {
+        folderReceipt = { name, bytes: data.size, folder: disk.name, verifiedAt: Date.now() };
+        folderWriteError = "";
+        disk.saved++; disk.ready = true; disk.error = ""; saved++; lastName = name; lastError = "";
+      }
       else if (disk.selected) { disk.ready = false; disk.error = "Brak zgody na zapis do folderu. Wybierz folder ponownie."; }
     } catch (e) { disk.error = `Nie udało się zapisać do folderu: ${errText(e)}`; }
+    if (!savedToDisk) folderWriteError = disk.error || "Folder nie został wybrany. Brak potwierdzenia zapisu do folderu.";
     // Bez folderu archiwum (albo gdy zapis do niego się nie udał) nagranie trafia do pamięci strony —
-    // nigdy nie przepada. Każda 10-minutowa część istnieje tylko raz: w folderze albo w pamięci strony.
+    // To zapis zapasowy, który również może zawieść, np. przy pełnym dysku.
     if (!savedToDisk) {
       try {
         await recstore.put({ name, start, end, events: events || [], type: data.type, uploaded: false }, data);
@@ -726,7 +733,7 @@ const archive = (() => {
     return `${text}${disk.error ? ` ${disk.error}` : ""}${lastError ? ` ${lastError}` : ""}`;
   }
 
-  const status = () => ({ recording: running, since: running ? recSince : 0, reason: describe(), folder: disk.ready ? disk.name : "nieustawiony", lastFile: lastName, saved, queued, migrated: sentToDrive, verifiedToDrive, lastVerified });
+  const status = () => ({ recording: running, since: running ? recSince : 0, reason: describe(), folder: disk.ready ? disk.name : "nieustawiony", folderReceipt, folderWriteError, lastFile: lastName, saved, queued, migrated: sentToDrive, verifiedToDrive, lastVerified });
 
   function render() {
     systemStore.component("cloudQueue", { status: pumping ? "uploading" : queued ? "queued" : "idle", queued, verified: verifiedToDrive });
@@ -737,6 +744,15 @@ const archive = (() => {
     if(Number.isFinite(previousStorage.saved)&&saved>previousStorage.saved)systemStore.event({component:"storage",level:"info",message:`Potwierdzono lokalny zapis segmentu: ${lastName}`});
     $("recBadge").hidden = !running;
     $("archiveInfo").textContent = describe();
+    const confirmation = $("localSaveConfirmation");
+    if (confirmation) {
+      confirmation.textContent = folderWriteError
+        ? `BRAK POTWIERDZENIA BIEŻĄCEGO ZAPISU: ${folderWriteError}`
+        : folderReceipt
+          ? `Ostatni potwierdzony zapis do folderu „${folderReceipt.folder}”: ${folderReceipt.name} · ${folderReceipt.bytes.toLocaleString("pl-PL")} bajtów · ${new Date(folderReceipt.verifiedAt).toLocaleString("pl-PL")}. Sprawdzono rozmiar pliku po zamknięciu zapisu.`
+          : "Brak potwierdzonego pliku w tej sesji. REC oznacza przechwytywanie, nie potwierdzenie zapisu do folderu.";
+      confirmation.dataset.state = folderWriteError ? "error" : folderReceipt ? "verified" : "pending";
+    }
     const operational = $("opArchive");
     if (operational) operational.textContent = disk.ready ? `Dysk: ${diskFiles.count} pl.` : disk.selected ? "Przywróć dostęp" : "Wybierz folder";
     const btn = $("chooseArchiveDir");
@@ -2148,7 +2164,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "102";
+  const SERVICE_WORKER_BUILD = "103";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2240,6 +2256,31 @@ $("chooseArchiveDir").addEventListener("click", async () => {
   finally { button.disabled = false; button.textContent = old; }
 });
 $("createArchiveDir").disabled = !CAN_MANAGE_CAMERA;
+const deleteOldLocal = $("deleteOldLocalRecordings");
+if (deleteOldLocal) {
+  deleteOldLocal.disabled = !CAN_MANAGE_CAMERA;
+  deleteOldLocal.addEventListener("click", async () => {
+    if (!CAN_MANAGE_CAMERA || !canControlCamera()) return;
+    const output = $("oldLocalCleanupStatus");
+    deleteOldLocal.disabled = true;
+    let removed = 0;
+    try {
+      const plan = oldRecordingPlan(await recstore.list());
+      if (!plan.files.length) { output.textContent = "Brak lokalnych nagrań sprzed dzisiejszej północy w pamięci aplikacji."; return; }
+      if (!confirm(`Bezpowrotnie usunąć ${plan.files.length} nagrań sprzed dzisiejszej północy z pamięci aplikacji (${(plan.bytes / 1073741824).toFixed(2)} GB)? Dzisiejsze nagrania, folder archiwum i Google Drive pozostaną bez zmian.`)) return;
+      for (const file of plan.files) {
+        await recstore.remove(file.name);
+        removed++;
+        await idb.qDel(file.name);
+        output.textContent = `Usunięto ${removed} z ${plan.files.length} starych nagrań z pamięci aplikacji.`;
+      }
+      const remaining = new Set((await recstore.list()).map(file => file.name));
+      if (plan.files.some(file => remaining.has(file.name))) throw new Error("Nie potwierdzono usunięcia wszystkich wskazanych nagrań.");
+      output.textContent += " Sprawdzono, że nie ma ich już na liście lokalnej. Kamera nie została zatrzymana. System może zwolnić miejsce na dysku z opóźnieniem.";
+    } catch (error) { output.textContent = `Usunięto ${removed} plików. Operacja przerwana: ${errText(error)}`; }
+    finally { deleteOldLocal.disabled = false; }
+  });
+}
 for (const [id, removeEmpty] of [["disconnectArchiveDir", false], ["deleteEmptyArchiveDir", true]]) {
   $(id).disabled = !CAN_MANAGE_CAMERA;
   $(id).addEventListener("click", async e => {
