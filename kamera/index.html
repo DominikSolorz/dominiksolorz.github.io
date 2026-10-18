@@ -51,7 +51,7 @@
 <link rel="preconnect" href="https://ksacbcrzuwdahnmggfxg.supabase.co" crossorigin>
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
 <link rel="stylesheet" href="style.css?v=184">
-<link rel="stylesheet" href="workspace-ui.css?v=8">
+<link rel="stylesheet" href="workspace-ui.css?v=9">
 </head>
 <body>
 <!-- Publiczna strona główna. Panel kamery pojawia się dopiero po świadomym
@@ -301,7 +301,7 @@
           <span id="zoomLabel">1.0×</span>
           <button id="zoomIn" aria-label="Przybliż">+</button>
           <button id="zoomReset" class="soft" aria-label="Cały kadr">1×</button>
-          <small id="zoomHint"></small>
+          <small id="zoomHint"></small><small class="zoomWheelHelp">Kółko: przewijanie · Alt + kółko: zoom</small>
         </div>
         <button id="exitFull" class="exitFull" type="button" aria-label="Zamknij pełny ekran" hidden>✕</button>
         <button id="fitFull" class="fitFull" type="button" hidden>▣ Cały kadr</button>
@@ -520,7 +520,7 @@
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=11"></script>
-<script type="module" src="app.js?v=201"></script>
+<script type="module" src="app.js?v=202"></script>
 <script type="module" src="desktop.js?v=31"></script>
 <script type="module" src="mobile.js?v=13"></script>
 </body>

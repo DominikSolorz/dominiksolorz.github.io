@@ -182,6 +182,17 @@ button:not(:disabled){transition:background-color .15s,border-color .15s}
 #stage #audioHud #listenVolume{width:76px!important;max-width:76px!important;min-width:0!important;margin:0!important}
 #stage #audioHud #listenVolumeLabel{font-size:10px!important;min-width:28px!important}
 /* Public entry uses the same surfaces; legacy desktop layout never offsets it. */
+/* One vertical scroll surface for the whole archive, including storage tools.
+   Do not clip long columns or trap wheel events inside the recording list. */
+html{overflow-y:auto}
+.archiveModal{display:block;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;scrollbar-gutter:stable}
+.archiveModal>*{margin-inline:auto;box-sizing:border-box}
+.archiveModalHead{position:sticky;top:0;z-index:2}
+.archiveModal .archiveWorkspace{overflow:visible;min-height:0}
+.archiveModal .archiveModalBody{max-height:none;overflow:visible;min-height:0}
+.archiveModal .archiveModalBody>#dvrListCard{max-height:none;overflow:visible}
+.desktopMode .desktopSidebar{box-sizing:border-box;overflow-y:auto;overscroll-behavior-y:contain}
+.zoomWheelHelp{font-size:11px;color:var(--ui-muted)}
 body:has(#publicHome:not([hidden])),#publicHome{background:#0c0d10!important}
 #publicHome .publicMain{box-sizing:border-box;width:100%!important;margin:0 auto!important;max-width:1180px!important;padding:40px 24px!important}
 #publicHome .publicHomeBar{background:#101115;border-color:#30343e}
