@@ -442,7 +442,9 @@
         <p id="localSaveConfirmation" class="status" role="status" aria-live="polite">Brak potwierdzonego zapisu do folderu.</p>
         <button id="deleteOldLocalRecordings" class="btn ghost" type="button">Usuń stare nagrania z pamięci aplikacji</button>
         <p id="oldLocalCleanupStatus" class="status" role="status">Usuwanie dotyczy wyłącznie nagrań sprzed dzisiejszej północy. Nie usuwa dzisiejszych materiałów, plików z folderu ani Google Drive.</p>
-        <div class="row"><button class="btn primary" id="chooseArchiveDir">📁 Wybierz istniejący folder</button></div>
+        <p class="muted small">1. Wybierz miejsce na komputerze. 2. Zatwierdź folder i dostęp do zapisu. 3. Kolejne fragmenty zapiszą się tam automatycznie. Możesz wybrać Pulpit → nagrania lub inną lokalizację.</p>
+        <div class="row"><button class="btn primary" id="chooseArchiveDir" type="button" aria-describedby="archiveFolderSelectionStatus">📁 Wybierz folder na komputerze…</button><button class="btn" id="restoreArchiveDir" type="button" hidden>Przywróć dostęp do poprzedniego folderu</button></div>
+        <p id="archiveFolderSelectionStatus" class="status" role="status" aria-live="polite">Wybierz folder, do którego aplikacja ma automatycznie zapisywać nagrania.</p>
         <label>Nazwa nowego folderu <input id="newArchiveFolderName" value="nagrania" maxlength="100" autocomplete="off"></label>
         <button class="btn" id="createArchiveDir" type="button">📁 Utwórz folder w wybranym miejscu</button>
         <button class="btn ghost" id="disconnectArchiveDir" type="button">Odłącz folder — zachowaj pliki</button>
@@ -518,7 +520,7 @@
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=11"></script>
-<script type="module" src="app.js?v=200"></script>
+<script type="module" src="app.js?v=201"></script>
 <script type="module" src="desktop.js?v=31"></script>
 <script type="module" src="mobile.js?v=13"></script>
 </body>

@@ -57,7 +57,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "200"; // musi się zgadzać z version.json
+const VERSION = "201"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -756,7 +756,9 @@ const archive = (() => {
     const operational = $("opArchive");
     if (operational) operational.textContent = disk.ready ? `Dysk: ${diskFiles.count} pl.` : disk.selected ? "Przywróć dostęp" : "Wybierz folder";
     const btn = $("chooseArchiveDir");
-    if (btn && !btn.disabled) btn.textContent = disk.selected && !disk.ready ? `🔓 Przywróć dostęp do folderu „${disk.name}”` : "📁 Wybierz folder archiwum";
+    if (btn && !btn.disabled) btn.textContent = CAN_MANAGE_CAMERA ? "📁 Wybierz folder na komputerze…" : "📁 Wybierz folder komputera nadającego…";
+    const restore = $("restoreArchiveDir");
+    if (restore) restore.hidden = !CAN_MANAGE_CAMERA || !disk.selected || disk.ready;
   }
 
   // ----- Dla telefonu (kanał danych): nagrania z pamięci komputera -----
@@ -2164,7 +2166,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "103";
+  const SERVICE_WORKER_BUILD = "104";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2241,19 +2243,28 @@ $("chooseArchiveDir").addEventListener("click", async () => {
     return remoteFolderPicker.open();
   }
   const button = $("chooseArchiveDir"), old = button.textContent;
+  const output = $("archiveFolderSelectionStatus");
   button.disabled = true;
-  if (archive.diskNeedsGrant) {
-    button.textContent = "Czekam na zgodę Chrome…";
-    let ok = false;
-    try { ok = await archive.regrantDisk(); } catch { /* brak zgody — poniżej wybór folderu od nowa */ }
-    button.disabled = false;
-    if (ok) { button.textContent = "📁 Wybierz folder archiwum"; toastMsg("Dostęp do folderu przywrócony — nagrania znów zapisują się na dysku."); return; }
-    button.disabled = true;
-  }
   button.textContent = "Otwieram wybór folderu…";
-  try { toastMsg(`Trwałe archiwum ustawione: ${await archive.chooseDisk()}`); }
-  catch (e) { setStatus(`Folder archiwum nie został ustawiony: ${errText(e)}`); }
+  output.textContent = "W oknie systemowym wybierz folder na tym komputerze i zatwierdź dostęp do zapisu. Dla Pulpitu wybierz folder nagrania.";
+  // No asynchronous permission checks before the picker: keep this click's activation.
+  try {
+    const name = await archive.chooseDisk();
+    output.textContent = `Wybrany folder: „${name}”. Sprawdzono możliwość zapisu. Kolejne fragmenty będą zapisywane automatycznie w tym folderze. Dotychczasowe nagrania nie zostały przeniesione.`;
+    toastMsg(`Folder nagrań ustawiony: ${name}`);
+  }
+  catch (e) { output.textContent = e.name === "AbortError" ? "Anulowano wybór. Poprzednia lokalizacja pozostaje bez zmian." : `Nie ustawiono folderu: ${errText(e)}. Kliknij ponownie „Wybierz folder na komputerze”.`; }
   finally { button.disabled = false; button.textContent = old; }
+});
+$("restoreArchiveDir").addEventListener("click", async e => {
+  if (!CAN_MANAGE_CAMERA) return;
+  const button = e.currentTarget, output = $("archiveFolderSelectionStatus");
+  button.disabled = true;
+  try {
+    const ok = await archive.regrantDisk();
+    output.textContent = ok ? "Dostęp do poprzedniego folderu przywrócony. Automatyczny zapis jest dostępny." : "Nie przywrócono dostępu. Kliknij „Wybierz folder na komputerze” i wskaż lokalizację ponownie.";
+  } catch (e) { output.textContent = `Nie przywrócono dostępu: ${errText(e)}. Wybierz folder ponownie.`; }
+  finally { button.disabled = false; }
 });
 $("createArchiveDir").disabled = !CAN_MANAGE_CAMERA;
 const deleteOldLocal = $("deleteOldLocalRecordings");
@@ -2297,8 +2308,10 @@ $("createArchiveDir").addEventListener("click", async e => {
   const name = $("newArchiveFolderName").value.trim();
   if (!diskstore.validFolderName(name)) return toastMsg("Podaj poprawną nazwę nowego folderu, np. nagrania.");
   const button = e.currentTarget; button.disabled = true;
-  try { toastMsg(`Folder archiwum utworzony lub wybrany: ${await archive.chooseDisk({ newFolder: name })}`); }
-  catch (error) { if (error.name !== "AbortError") setStatus(`Nie zmieniono archiwum: ${errText(error)}`); }
+  const output = $("archiveFolderSelectionStatus");
+  output.textContent = `Wybierz folder nadrzędny, np. Pulpit. W nim zostanie utworzony lub wybrany folder „${name}”.`;
+  try { const selected = await archive.chooseDisk({ newFolder: name }); output.textContent = `Folder zapisu „${selected}” ustawiony. Sprawdzono możliwość zapisu. Kolejne fragmenty trafią tam automatycznie.`; toastMsg(`Folder archiwum: ${selected}`); }
+  catch (error) { output.textContent = error.name === "AbortError" ? "Anulowano tworzenie folderu. Poprzednia lokalizacja pozostaje bez zmian." : `Nie zmieniono archiwum: ${errText(error)}`; }
   finally { button.disabled = false; }
 });
 // Jakość nagrań: wybór na komputerze albo z telefonu (polecenie „quality-set”). Stare nagrania kasuje pętla zapisu.
