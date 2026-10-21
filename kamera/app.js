@@ -19,7 +19,9 @@ import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./au
 import { mountAccountUI } from "./account-ui.mjs?v=3";
 import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
-import { captureEventFrame } from "./workspace-panels.mjs?v=1";
+import { NativeAgentClient } from "./communication/native-agent-client.mjs";
+import { createAgentTelemetry } from "./communication/agent-telemetry.mjs?v=1";
+import { captureEventFrame } from "./workspace-panels.mjs?v=2";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
 import { createPeerDiagnostics } from "./core/peer-diagnostics.mjs";
 import { sealFolder, openFolder } from "./communication/folder-channel.mjs";
@@ -57,7 +59,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "204"; // musi się zgadzać z version.json
+const VERSION = "205"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2173,7 +2175,7 @@ installAppBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator && !window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "108";
+  const SERVICE_WORKER_BUILD = "109";
   window.addEventListener("load", () => {
     let refreshedAfterWorkerChange = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -2575,6 +2577,10 @@ if (RECEIVER_ONLY) {
   showViewer();
 } else {
   ACCESS_KEY = await requireAccess();
+  if (window.__HOME_SECURITY_AGENT_BRIDGE__ && window.chrome?.webview) {
+    const agentTelemetry = createAgentTelemetry({client:new NativeAgentClient(),store:systemStore});
+    window.addEventListener('pagehide', () => agentTelemetry.dispose(), {once:true});
+  }
   // Pulpit ma pojawić się natychmiast po poprawnym PIN-ie. Obliczenie kanału
   // lub późniejsze łączenie sieciowe nie może zostawić użytkownika z pustym
   // ekranem; obraz pokaże wtedy czytelny stan oczekiwania.

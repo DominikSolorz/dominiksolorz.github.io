@@ -3,7 +3,7 @@
 // index.html wybiera tryb urządzenia przed narysowaniem strony. To obejmuje
 // aplikację instalowaną oraz zwykły Chrome na telefonie/tablecie.
 import { createRouter } from "./core/router.mjs";
-import { mountEventWorkspace, mountDiagnosticWorkspace } from "./workspace-panels.mjs?v=1";
+import { mountEventWorkspace, mountDiagnosticWorkspace } from "./workspace-panels.mjs?v=2";
 const isMobileOwnerApp = document.documentElement.classList.contains("mobileOwnerMode");
 
 if (isMobileOwnerApp) {

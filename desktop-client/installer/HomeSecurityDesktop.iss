@@ -4,10 +4,13 @@
 ; użytkownika z %LOCALAPPDATA%\HomeSecurityDesktop podczas odinstalowania.
 
 #define AppName "HOME SECURITY Desktop"
-#define AppVersion "1.4.1"
+#define AppVersion "1.4.2"
 #define AppPublisher "HOME SECURITY"
 #define AppExeName "HomeSecurityDesktop.exe"
-#define PublishDir "..\publish-1.4.1"
+#define PublishDir "..\publish-1.4.2"
+#if !FileExists(PublishDir + "\Agent\" + AppVersion + "\HomeSecurityAgent.exe")
+  #error "Run build-release.ps1 first: native agent is required."
+#endif
 
 [Setup]
 AppId={{6CC3B91C-0337-42B3-BAF8-B1AE10A5B1B8}

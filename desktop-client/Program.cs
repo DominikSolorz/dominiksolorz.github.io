@@ -10,8 +10,8 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.4.1";
-    private const string WebPanelBuild = "204";
+    private const string DesktopVersion = "1.4.2";
+    private const string WebPanelBuild = "205";
     // Desktop serves its installed Panel bundle at the existing trusted origin.
     // The website and installed UI can now be released independently without
     // migrating the user's existing session, PIN or IndexedDB recordings.
@@ -23,6 +23,21 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--agent-health-test")
+        {
+            using var runtime = new AgentRuntime();
+            var ready = runtime.EnsureStartedAsync().GetAwaiter().GetResult();
+            var client = new HomeSecurity.Agent.Client.AgentCommandClient();
+            var empty = HomeSecurity.Agent.Contracts.AgentProtocol.Element(new { });
+            var ping = client.ExecuteAsync("agent.ping", empty).GetAwaiter().GetResult();
+            var snapshot = client.ExecuteAsync("system.snapshot", empty).GetAwaiter().GetResult();
+            File.WriteAllText(Path.GetFullPath(args[1]), JsonSerializer.Serialize(new {
+                ok = ready && ping.Status == "succeeded" && snapshot.Status == "succeeded",
+                ping = ping.Status, snapshot = snapshot.Status,
+                mediaEngine = ping.Result?.GetProperty("mediaEngine").GetString()
+            }));
+            return;
+        }
         if (args.Length == 2 && args[0] == "--bundle-test")
         {
             ApplicationConfiguration.Initialize();
@@ -137,6 +152,7 @@ internal static class Program
         private readonly Button updateButton = new() { AutoSize = true, Anchor = AnchorStyles.Top | AnchorStyles.Right, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(190, 27, 50), ForeColor = Color.White, Font = new Font("Segoe UI", 10F, FontStyle.Bold), Text = "↻ Aktualizacja", UseVisualStyleBackColor = false };
         private bool checkingUpdate;
         private AgentWebViewBridge? agentBridge;
+        private readonly AgentRuntime agentRuntime = new();
         private bool downloadingUpdate;
         private DesktopUpdateManifest? offeredUpdate;
         private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 15 * 60 * 1000 };
@@ -168,7 +184,7 @@ internal static class Program
             updateBar.Controls.Add(updateButton);
             updateBar.Controls.Add(updateProgress);
             updateCheckTimer.Tick += async (_, _) => await CheckForUpdateAsync();
-            FormClosed += (_, _) => updateCheckTimer.Dispose();
+            FormClosed += (_, _) => { updateCheckTimer.Dispose(); agentRuntime.Dispose(); };
             updateBar.Resize += (_, _) => updateButton.Location = new Point(Math.Max(12, updateBar.ClientSize.Width - updateButton.Width - 16), 8);
             updateButton.FlatAppearance.BorderColor = Color.FromArgb(255, 112, 128);
             updateButton.Click += async (_, _) => await DownloadAndPrepareOfferedUpdateAsync();
@@ -185,13 +201,12 @@ internal static class Program
                 DataRoot, "WebView");
             var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: dataPath);
             await webView.EnsureCoreWebView2Async(environment);
-            // Włączane wyłącznie dla testów nowej architektury; nie uruchamia agenta ani kamery.
-            if (Environment.GetEnvironmentVariable("HOME_SECURITY_AGENT_BRIDGE") == "1")
-            {
-                agentBridge = new AgentWebViewBridge(webView.CoreWebView2);
-                FormClosed += (_, _) => agentBridge?.Dispose();
-                await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.__HOME_SECURITY_AGENT_BRIDGE__ = true;");
-            }
+            // Only the existing strict read-only protocol is exposed. Media and
+            // secrets remain inaccessible to arbitrary page messages.
+            agentRuntime.StartMonitoring();
+            agentBridge = new AgentWebViewBridge(webView.CoreWebView2);
+            FormClosed += (_, _) => agentBridge?.Dispose();
+            await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.__HOME_SECURITY_AGENT_BRIDGE__ = true;");
             await RefreshWebShellIfNeededAsync();
             new BundledPanel().Attach(webView.CoreWebView2);
             await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(

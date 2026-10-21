@@ -16,14 +16,15 @@ export function diagnosticCards(snapshot,now=Date.now()) {
   {name:'Nagrywanie',state:recording.status,detail:recording.lastFile?`Ostatni plik: ${recording.lastFile}`:'Nie potwierdzono zamkniętego pliku.'},
   {name:'Folder lokalny',state:storage.status,detail:storage.message||storage.name||'Oczekiwanie na stan komputera.'},
   {name:'WebRTC',state:rtc.status,detail:rtc.route||'Brak potwierdzonej ścieżki połączenia.'},
-  {name:'Google Drive',state:cloud.status,detail:cloud.message||'Brak aktualnej odpowiedzi usługi chmury.'}
+  {name:'Google Drive',state:cloud.status,detail:cloud.message||'Brak aktualnej odpowiedzi usługi chmury.'},
+  {name:'Agent Windows',state:read('agent',300000).status,detail:read('agent',300000).message||'Brak połączenia z agentem na tym urządzeniu.'}
  ];
 }
 const stateLabels={unknown:'Nieznany',stale:'Dane nieaktualne',track_live:'Ścieżka aktywna',recording:'Nagrywa',idle:'Zatrzymany',waiting:'Oczekiwanie',disabled:'Wyłączony',error:'Błąd',ready:'Dostęp potwierdzony',permission_required:'Wymaga zgody',unselected:'Nie wybrano',healthy:'Usługa odpowiedziała',auth_required:'Wymaga logowania',degraded:'Ostrzeżenie',connected:'Połączony',connecting:'Łączenie',new:'Oczekiwanie',failed:'Błąd połączenia',disconnected:'Rozłączony',closed:'Zamknięty'};
 export function mountDiagnosticWorkspace(container,{store=systemStore}={}) {
  const cards=node('div',null,'componentCards'),toolbar=node('div',null,'workspaceToolbar');
  const label=node('label','Filtr dziennika '),filter=node('select');filter.setAttribute('aria-label','Komponent dziennika');
- for(const [value,text] of [['','Wszystkie komponenty'],['webrtc','WebRTC'],['capture','Kamera'],['storage','Zapis'],['cloudAccess','Google Drive']]){const o=node('option',text);o.value=value;filter.append(o);}label.append(filter);toolbar.append(label);
+ for(const [value,text] of [['','Wszystkie komponenty'],['webrtc','WebRTC'],['capture','Kamera'],['storage','Zapis'],['cloudAccess','Google Drive'],['agent','Agent Windows']]){const o=node('option',text);o.value=value;filter.append(o);}label.append(filter);toolbar.append(label);
  const table=node('table',null,'workspaceTable'),head=node('thead'),row=node('tr');['Czas','Komponent','Poziom','Opis'].forEach(t=>row.append(node('th',t)));head.append(row);const body=node('tbody');table.append(head,body);
  const wrap=node('div',null,'workspaceTableWrap');wrap.append(table);container.append(cards,node('h2','Dziennik zdarzeń'),toolbar,wrap);
  let latest=store.snapshot();

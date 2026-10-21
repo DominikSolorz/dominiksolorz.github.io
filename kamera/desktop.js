@@ -2,7 +2,7 @@
 // Używa tego samego silnika transmisji, zapisu i archiwum co index.html.
 // Nie uruchamia kamery ani nie zmienia jej konfiguracji samodzielnie.
 import { createRouter } from "./core/router.mjs";
-import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=1";
+import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=2";
 const isTransmitter = location.hash === "#nadaj";
 // Tryb urządzenia jest rozstrzygany raz, przed załadowaniem CSS w index.html.
 // Dzięki temu Chrome w telefonie i wersja instalowana PWA nie rozchodzą się
