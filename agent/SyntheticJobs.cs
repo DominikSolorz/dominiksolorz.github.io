@@ -7,7 +7,7 @@ namespace HomeSecurity.Agent;
 public sealed record JobLease(Guid Id, string InputName, string Token, int Attempt);
 
 // Native-only queue. No mutating command is exposed to web content.
-public sealed class SyntheticJobs(AgentDatabase database)
+public sealed class SyntheticJobs(AgentDatabase database, Func<DateTimeOffset>? clock = null)
 {
     public void Enqueue(Guid id, string inputName, int maxAttempts = 3)
     {
@@ -24,8 +24,9 @@ public sealed class SyntheticJobs(AgentDatabase database)
         if (Convert.ToInt64(c.ExecuteScalar()) >= 10000) throw new JournalCapacityException();
         c.CommandText = "INSERT INTO jobs(id,fingerprint,input_name,status,max_attempts,next_at_ms,created_at_ms,updated_at_ms) VALUES($id,$fp,$name,'queued',$max,$now,$now,$now)";
         c.Parameters.AddWithValue("$fp", fingerprint); c.Parameters.AddWithValue("$name", inputName);
-        c.Parameters.AddWithValue("$max", maxAttempts); c.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-        c.ExecuteNonQuery(); History(db, tx, id, "queued", null, DateTimeOffset.UtcNow); tx.Commit();
+        var enqueuedAt = clock?.Invoke() ?? DateTimeOffset.UtcNow;
+        c.Parameters.AddWithValue("$max", maxAttempts); c.Parameters.AddWithValue("$now", enqueuedAt.ToUnixTimeMilliseconds());
+        c.ExecuteNonQuery(); History(db, tx, id, "queued", null, enqueuedAt); tx.Commit();
     }
 
     public JobLease? Claim(DateTimeOffset now)

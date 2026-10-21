@@ -42,9 +42,10 @@ try
     var expired = await dispatcher.ExecuteAsync(new(1, Guid.NewGuid(), "agent.ping", empty, DateTimeOffset.UtcNow.AddSeconds(-1)), CancellationToken.None);
     Check(expired.Status == "rejected", "expired command rejected");
 
-    using (var malformed = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly))
+    using (var malformed = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous))
     {
         await malformed.ConnectAsync(2000);
+        Check(AgentCommandClient.IsExpectedOwner(malformed.GetAccessControl().GetOwner(typeof(System.Security.Principal.SecurityIdentifier)), testUser), "oversized-frame test pipe owner verified");
         var header = new byte[4]; BinaryPrimitives.WriteInt32LittleEndian(header, AgentProtocol.MaxFrameBytes + 1);
         await malformed.WriteAsync(header); await malformed.FlushAsync();
     }

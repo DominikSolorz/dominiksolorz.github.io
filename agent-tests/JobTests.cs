@@ -6,9 +6,9 @@ static class JobTests
 {
     public static async Task RunAsync(Action<bool,string> check, string root)
     {
-        var db = new AgentDatabase(root); var jobs = new SyntheticJobs(db);
+        var now = DateTimeOffset.UtcNow;
+        var db = new AgentDatabase(root); var jobs = new SyntheticJobs(db, () => now);
         var worker = new SyntheticFileWorker(jobs, root);
-        var now = DateTimeOffset.UtcNow.AddSeconds(1);
         var id = Guid.NewGuid(); jobs.Enqueue(id, "fixture.txt"); jobs.Enqueue(id, "fixture.txt");
         check(jobs.Status(id) == "queued", "durable enqueue and duplicate ID");
         var conflict = false; try { jobs.Enqueue(id, "other.txt"); } catch (InvalidOperationException) { conflict = true; }
