@@ -2194,7 +2194,7 @@ if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   if(document.readyState==='complete')checkWebUpdate();
   else window.addEventListener('load',checkWebUpdate,{once:true});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkWebUpdate();});
-  window.addEventListener('pagehide',()=>webUpdates.dispose(),{once:true});
+  window.addEventListener('pagehide',event=>{if(!event.persisted)webUpdates.dispose();});
 }
 $("startBtn").addEventListener("click", () => sender.start());
 function setControlAction(text, kind = "") {

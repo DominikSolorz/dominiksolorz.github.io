@@ -3,11 +3,13 @@ export function createWebUpdates({serviceWorker, build, onState, prepareReload=a
   let registration=null, busy=false, available=false, disposed=false;
   let controlled=!!serviceWorker?.controller, lastCheck=-Infinity;
   const cleanups=[];
+  const watched=new WeakSet();
   const emit=(status,message)=>{if(!disposed)onState({status,message,build});};
   const ready=()=>{available=true;emit('available','Nowa wersja jest gotowa. Kliknij, aby ją wczytać.');};
   function listen(target,name,handler){target.addEventListener(name,handler);cleanups.push(()=>target.removeEventListener(name,handler));}
   function watch(worker){
-    if(!worker)return;
+    if(!worker||watched.has(worker))return;
+    watched.add(worker);
     const changed=()=>{
       if(worker.state==='installed'&&controlled)ready();
       else if(worker.state==='installing')emit('downloading','Pobieranie aktualizacji…');
@@ -42,7 +44,7 @@ export function createWebUpdates({serviceWorker, build, onState, prepareReload=a
     finally {busy=false;}
   }
   if(serviceWorker)listen(serviceWorker,'controllerchange',()=>{
-    if(!controlled){controlled=true;return;} // First installation is not an update.
+    if(!controlled){controlled=true;emit('current','Panel gotowy — aktualizacje są włączone.');return;}
     ready(); // Never reload a live transmitter merely because a worker activated.
   });
   return {check,apply,get available(){return available;},dispose(){disposed=true;cleanups.forEach(fn=>fn());}};

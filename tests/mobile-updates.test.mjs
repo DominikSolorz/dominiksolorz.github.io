@@ -38,7 +38,7 @@ test('Android PWA update never reloads or stops camera automatically',async()=>{
 });
 test('first PWA installation is not a new-version notification',async()=>{
  const x=setup({controlled:false});await x.manager.check();x.worker.dispatchEvent(new Event('controllerchange'));
- assert.equal(x.manager.available,false);assert.ok(!x.calls.includes('reload'));x.manager.dispose();
+ assert.equal(x.manager.available,false);assert.ok(!x.calls.includes('reload'));assert.equal(x.states.at(-1).status,'current');x.manager.dispose();
 });
 test('explicit update waits for confirmed recording finalization',async()=>{
  let finish;const order=[];const x=setup({prepare:()=>new Promise(r=>{order.push('prepare');finish=r;})});
