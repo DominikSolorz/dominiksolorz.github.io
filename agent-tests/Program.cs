@@ -7,6 +7,11 @@ using HomeSecurity.Agent.Contracts;
 
 var count = 0;
 void Check(bool condition, string name) { if (!condition) throw new Exception("FAIL: " + name); Console.WriteLine("PASS: " + name); count++; }
+using var testIdentity = System.Security.Principal.WindowsIdentity.GetCurrent();
+var testUser = testIdentity.User!;
+Check(AgentCommandClient.IsExpectedOwner(testUser, testUser), "pipe owner matches actual user SID");
+Check(!AgentCommandClient.IsExpectedOwner(new System.Security.Principal.SecurityIdentifier(System.Security.Principal.WellKnownSidType.NetworkSid, null), testUser), "foreign pipe owner rejected");
+Check(!AgentCommandClient.IsExpectedOwner(null, testUser), "missing pipe owner rejected");
 var projected = HomeSecurityDesktop.PanelDiagnostics.Project("{\"type\":\"camera-state\",\"role\":\"transmitter\",\"live\":true,\"access_token\":\"test-secret\",\"cameraError\":\"test-secret\"}");
 Check(projected is not null && !System.Text.Json.JsonSerializer.Serialize(projected).Contains("test-secret"), "page diagnostics exclude arbitrary secrets");
 Check(HomeSecurityDesktop.PanelDiagnostics.Project("{\"type\":\"auth.session\",\"access_token\":\"test-secret\"}") is null, "auth messages never logged");
@@ -25,7 +30,7 @@ try
     var empty = AgentProtocol.Element(new { });
     var id = Guid.NewGuid();
     var ping = await client.ExecuteAsync("agent.ping", empty, id);
-    Check(ping.Status == "succeeded", "real Named Pipe ping");
+    Check(ping.Status == "succeeded", "real Named Pipe ping (" + ping.Status + ":" + ping.Code + ")");
     Check((await client.ExecuteAsync("agent.ping", empty, id)).Status == "succeeded", "durable deduplication");
     Check((await client.ExecuteAsync("system.snapshot", empty, id)).Code == "ID_CONFLICT", "conflicting ID rejected");
     Check((await client.ExecuteAsync("secret.read", AgentProtocol.Element(new { id = "drive" }))).Status == "rejected", "secret commands not exposed");
