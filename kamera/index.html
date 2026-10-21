@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kamera domowa">
+<script src="core/client-layout.js?v=1"></script>
 <script>
   const routeParams = new URLSearchParams(location.search);
   const desktopParam = routeParams.get("desktop");
@@ -20,8 +21,6 @@
   try { savedUiMode = localStorage.getItem("hs-ui-mode") || ""; } catch (_) { /* tryb prywatny */ }
   const requestedUiMode = routeParams.get("ui");
   const nativeWindowsApp = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview;
-  const selectedUiMode = requestedUiMode === "phone" || requestedUiMode === "computer"
-    ? requestedUiMode : nativeWindowsApp ? "computer" : savedUiMode;
   // Nadajnik ma zawsze pozostać lekką, osobną aplikacją Chrome.
   const isTransmitter = location.hash === "#nadaj";
   const requestedView = routeParams.get("view");
@@ -35,12 +34,16 @@
   // Zwykły Chrome na telefonie/tablecie dostaje pełny układ Mobile bez
   // dodatkowego parametru. "view=desktop" pozostaje świadomym wyjątkiem
   // do testów; stary "desktop=1" nie rozwija już panelu na telefonie.
-  const isMobileApp = selectedUiMode === "phone" || (!nativeWindowsApp && ((mobileBrowser && requestedUiMode !== "computer" && requestedView !== "desktop") || (selectedUiMode !== "computer" && requestedView !== "desktop" && (mobileRequested || compactScreen))));
-  if (isMobileApp) {
+  const clientLayout = HomeSecurityLayout.resolve({ native: nativeWindowsApp,
+    transmitter: isTransmitter, ui: requestedUiMode, view: requestedView,
+    legacyMobile: mobileRequested, saved: savedUiMode, mobile: mobileBrowser, compact: compactScreen });
+  document.documentElement.dataset.clientMode = clientLayout;
+  document.documentElement.dataset.clientRuntime = nativeWindowsApp ? "windows" : "web";
+  if (clientLayout === "mobile") {
     document.documentElement.classList.add("mobileOwnerMode");
     document.documentElement.dataset.clientMode = "mobile";
   }
-  if (!isTransmitter && !isMobileApp && (selectedUiMode === "computer" || requestedView === "desktop" || desktopParam === "1" || matchMedia("(min-width: 1024px)").matches)) {
+  if (clientLayout === "desktop") {
     document.documentElement.classList.add("desktopMode");
     document.documentElement.dataset.clientMode = "desktop";
   }
@@ -52,6 +55,7 @@
 <link rel="preload" href="vendor/supabase.js?v=2.117.2" as="script">
 <link rel="stylesheet" href="style.css?v=184">
 <link rel="stylesheet" href="workspace-ui.css?v=9">
+<link rel="stylesheet" href="interface-theme.css?v=1">
 </head>
 <body>
 <!-- Publiczna strona główna. Panel kamery pojawia się dopiero po świadomym
@@ -521,7 +525,7 @@
 </script>
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=11"></script>
-<script type="module" src="app.js?v=203"></script>
+<script type="module" src="app.js?v=204"></script>
 <script type="module" src="desktop.js?v=31"></script>
 <script type="module" src="mobile.js?v=13"></script>
 </body>

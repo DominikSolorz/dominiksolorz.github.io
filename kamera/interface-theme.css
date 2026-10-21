@@ -1,0 +1,75 @@
+/* Adaptation of the supplied HOME SECURITY design. Presentation only.
+   Access control, routing, media ownership and telemetry remain unchanged. */
+:root {
+  --ui-bg:#050914; --ui-surface:#0d192b; --ui-raised:#14243a;
+  --ui-line:#2b4059; --ui-text:#eef6ff; --ui-muted:#afc2d8;
+  --ui-focus:#39e6d3; --ui-accent:#39e6d3;
+  --bg:var(--ui-bg); --card:var(--ui-surface);
+  --line:var(--ui-line); --text:var(--ui-text); --muted:var(--ui-muted);
+}
+body {
+  background:radial-gradient(ellipse at 15% 0%,#10324b 0,transparent 50%),var(--ui-bg);
+  min-height:100dvh;
+}
+*,*::before,*::after { box-sizing:border-box; }
+:is(.card,.panel,.desktopEventsScreen,.desktopDiagnosticsScreen,.archiveStorageSidebar) {
+  border-radius:18px; border-color:var(--ui-line); background:var(--ui-surface);
+}
+:is(.desktopMode .topbar,.desktopMode .desktopSidebar,.mobileOwnerMode .mobileAppHeader,.mobileOwnerMode .mobileBottomNav) {
+  background:#081426; border-color:var(--ui-line);
+}
+.desktopMode :is(.desktopCameraTile,.desktopEventsDrawer,.desktopDeviceManager,.desktopControlsScreen,.desktopSettingsScreen) {
+  background:var(--ui-surface); border-color:var(--ui-line); border-radius:18px;
+}
+.desktopMode :is(.desktopTileMeta,.desktopSettingsGrid,.desktopSettingsFooter,.desktopSettingsControls>#setCard) {
+  background:var(--ui-surface); border-color:var(--ui-line);
+}
+.desktopMode .desktopNav button.active,
+.desktopMode .desktopSettingsTabs button.active,
+.mobileOwnerMode .mobileBottomNav button.active {
+  background:#12343f; border-color:#39e6d380; color:#eafffc;
+  box-shadow:inset 3px 0 var(--ui-accent);
+}
+.desktopMode .desktopNav button.active i { color:var(--ui-accent); }
+.desktopMode :is(.desktopSearch,.desktopDevice,.desktopSettingsTabs),
+.mobileOwnerMode .mobileSettingCategories button,
+.mobileOwnerMode .mobileSettingsBack {
+  background:#0b1728; border-color:var(--ui-line); color:var(--ui-text);
+}
+.mobileOwnerMode .mobileSettingCategories button>b { background:#15343f;color:var(--ui-accent); }
+.mobileOwnerMode :is(.card,.panel,#setCard) {
+  background:var(--ui-surface)!important; border-color:var(--ui-line)!important;
+  border-radius:18px;
+}
+.btn.primary,.authPrimary,.dvrBtn.on,.desktopMode #ctrlStart {
+  background:#167768; border-color:#39e6d3; color:#fff;
+}
+/* Stop remains recognisable and distinct from start; disabled states stay intact. */
+.desktopMode #ctrlStop { background:#412330;border-color:#b4667c; }
+:is(.btn.ghost,.dvrBtn,.tool,.archiveClose,.remoteFolderDialog button) {
+  background:var(--ui-raised); border-color:var(--ui-line); color:var(--ui-text);
+}
+:is(.authCard,.pinCard,.bootCard,.accountDialog,.remoteFolderDialog) {
+  background:#0d192b; border-color:#3d566f; border-radius:22px;
+  box-shadow:0 24px 80px #0008;
+}
+:is(.authForm input,.desktopMode input,.desktopMode select,.desktopMode textarea) {
+  background:#081426; border-color:#3d566f; color:var(--ui-text);
+}
+.archiveModal,.archiveModalHead,.archiveModalBody { background:var(--ui-bg); }
+.archivePlaybackStage { background:#000;border-color:var(--ui-line); }
+/* Never stretch/crop a surveillance frame to imitate a decorative mockup. */
+#stage video { object-fit:contain; }
+.desktopMode .desktopContext h1 { letter-spacing:-.035em; }
+@media(max-width:760px) {
+  .mobileOwnerMode .mobileAppHeader { gap:12px;padding:14px 16px; }
+  .mobileOwnerMode .mobileAppHeader h1 { font-size:24px; }
+  .mobileOwnerMode .mobileBottomNav { padding-bottom:max(8px,env(safe-area-inset-bottom)); }
+  .mobileOwnerMode .mobileSettingCategories button { min-height:76px; }
+  .mobileOwnerMode :is(.card,.panel,#setCard) { min-width:0;max-width:100%; }
+  .mobileOwnerMode #app { padding-bottom:calc(100px + env(safe-area-inset-bottom)); }
+  .mobileOwnerMode #stage { min-width:0;max-width:100%; }
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after { scroll-behavior:auto!important;transition:none!important; }
+}
