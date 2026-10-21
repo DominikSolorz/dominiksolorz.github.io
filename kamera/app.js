@@ -19,6 +19,7 @@ import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./au
 import { mountAccountUI } from "./account-ui.mjs?v=3";
 import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
+import { createWebUpdates } from "./core/web-updates.mjs?v=1";
 import { NativeAgentClient } from "./communication/native-agent-client.mjs";
 import { createAgentTelemetry } from "./communication/agent-telemetry.mjs?v=1";
 import { captureEventFrame } from "./workspace-panels.mjs?v=2";
@@ -59,7 +60,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "205"; // musi się zgadzać z version.json
+const VERSION = "206"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2172,22 +2173,28 @@ installAppBtn.addEventListener("click", async () => {
   else installAppHint.textContent = "instalację można wykonać później z menu Chrome";
   deferredInstall = null;
 });
-if ("serviceWorker" in navigator && !window.__HOME_SECURITY_BUNDLED_PANEL__) {
+if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "109";
-  window.addEventListener("load", () => {
-    let refreshedAfterWorkerChange = false;
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (refreshedAfterWorkerChange) return;
-      refreshedAfterWorkerChange = true;
-      window.location.reload();
+  const SERVICE_WORKER_BUILD = "110";
+  let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
+  const paintWebUpdate=()=>{
+    document.querySelectorAll('[data-web-update]').forEach(button=>{
+      button.textContent=webUpdates.available?'Wczytaj aktualizację':'Sprawdź aktualizację';
+      button.disabled=['checking','applying','downloading','unsupported'].includes(webUpdateState.status);
     });
-    navigator.serviceWorker.register(`./sw.js?v=${SERVICE_WORKER_BUILD}`, {
-      scope: "./",
-      updateViaCache: "none"
-    }).then(registration => registration.update()).catch(() => {});
-  });
+    const output=$('mobileUpdateStatus');if(output)output.textContent=webUpdateState.message;
+  };
+  const webUpdates=createWebUpdates({serviceWorker:navigator.serviceWorker,build:SERVICE_WORKER_BUILD,
+    onState:state=>{webUpdateState=state;paintWebUpdate();},
+    prepareReload:()=>archive.prepareUpdate(),abortReload:()=>archive.abortUpdate(),reload:()=>location.reload()});
+  document.addEventListener('hs-web-update-ui-ready',paintWebUpdate);
+  document.addEventListener('hs-check-web-update',()=>{void(webUpdates.available?webUpdates.apply():webUpdates.check());});
+  const checkWebUpdate=()=>{void webUpdates.check({background:true});};
+  if(document.readyState==='complete')checkWebUpdate();
+  else window.addEventListener('load',checkWebUpdate,{once:true});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkWebUpdate();});
+  window.addEventListener('pagehide',()=>webUpdates.dispose(),{once:true});
 }
 $("startBtn").addEventListener("click", () => sender.start());
 function setControlAction(text, kind = "") {

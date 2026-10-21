@@ -45,6 +45,10 @@ body {
   background:#167768; border-color:#39e6d3; color:#fff;
 }
 /* Stop remains recognisable and distinct from start; disabled states stay intact. */
+.mobileOwnerMode .mobileAppHeader>.mobileRelease{display:flex;align-items:center;gap:8px;flex:1 0 100%;flex-wrap:wrap;min-width:0;padding-top:8px;border-top:1px solid var(--ui-line)}
+.mobileRelease small{color:var(--ui-muted);font-size:11px}
+.mobileRelease button{margin-left:auto;min-height:40px;border:1px solid var(--ui-line);border-radius:9px;background:var(--ui-raised);color:var(--ui-text);padding:7px 10px;font-size:12px}
+.mobileRelease [role=status]{flex-basis:100%;color:var(--ui-muted);font-size:11px;line-height:1.4;overflow-wrap:anywhere}
 .desktopMode #ctrlStop { background:#412330;border-color:#b4667c; }
 :is(.btn.ghost,.dvrBtn,.tool,.archiveClose,.remoteFolderDialog button) {
   background:var(--ui-raised); border-color:var(--ui-line); color:var(--ui-text);

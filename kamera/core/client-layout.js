@@ -1,5 +1,10 @@
 /* Layout only. Never grants owner access or starts a media device. */
 (() => {
+  function detectPlatform({userAgent='',maxTouchPoints=0}={}) {
+    if(/Android/i.test(userAgent))return 'android';
+    if(/iPhone|iPad|iPod/i.test(userAgent)||(/Macintosh/i.test(userAgent)&&maxTouchPoints>1))return 'ios';
+    return 'unknown';
+  }
   function resolveClientLayout({ native = false, transmitter = false, ui = '', view = '', legacyMobile = false, saved = '', mobile = false, compact = false } = {}) {
     // A transmitter must never mount an operator shell. The installed Windows
     // client remains desktop even when its window is narrow or a phone URL is used.
@@ -13,5 +18,5 @@
     if (saved === 'computer') return 'desktop';
     return mobile || compact ? 'mobile' : 'desktop';
   }
-  globalThis.HomeSecurityLayout = Object.freeze({ resolve: resolveClientLayout });
+  globalThis.HomeSecurityLayout = Object.freeze({ resolve: resolveClientLayout, detectPlatform });
 })();

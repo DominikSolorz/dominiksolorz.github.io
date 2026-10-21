@@ -5,7 +5,7 @@
   "description": "Prywatny podgląd domu, nagrania i sterowanie komputerem-kamerą.",
   "lang": "pl",
   "dir": "ltr",
-  "start_url": "./?panel=owner&app=android",
+  "start_url": "./?panel=owner&ui=phone",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
@@ -17,7 +17,7 @@
     {"src":"icons/kamera-512.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}
   ],
   "shortcuts": [
-    {"name":"Podgląd na żywo","short_name":"Na żywo","url":"./?panel=owner&app=android","icons":[{"src":"icons/kamera-192.svg","sizes":"192x192"}]},
-    {"name":"Nagrania DVR","short_name":"Nagrania","url":"./nagrania.html?wroc=nagrania","icons":[{"src":"icons/kamera-192.svg","sizes":"192x192"}]}
+    {"name":"Podgląd na żywo","short_name":"Na żywo","url":"./?panel=owner&ui=phone&mobileView=home","icons":[{"src":"icons/kamera-192.svg","sizes":"192x192"}]},
+    {"name":"Nagrania DVR","short_name":"Nagrania","url":"./?panel=owner&ui=phone&mobileView=recordings","icons":[{"src":"icons/kamera-192.svg","sizes":"192x192"}]}
   ]
 }

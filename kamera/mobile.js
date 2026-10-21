@@ -15,8 +15,14 @@ if (isMobileOwnerApp) {
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
     <img class="mobileBrandLogo" src="assets/ds-logo.jpg" alt="DS"><div><h1 id="mobilePageTitle">Dom</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
-    <button id="deviceLayoutBtn" type="button" aria-label="Zmień układ urządzenia"><span>▣</span><b>Telefon</b></button>`;
+    <button id="deviceLayoutBtn" type="button" aria-label="Zmień układ urządzenia"><span>▣</span><b>Telefon</b></button>
+    <div class="mobileRelease"><small id="mobileBuild"></small><button type="button" data-web-update>Sprawdź aktualizację</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span></div>`;
   app?.insertBefore(mobileHeader, app.firstChild);
+  const platformName=({android:'Android',ios:'iPhone / iPad'})[document.documentElement.dataset.phonePlatform]||'Telefon';
+  byId('deviceLayoutBtn').querySelector('b').textContent=platformName;
+  byId('mobileBuild').textContent=`Panel ${document.querySelector('meta[name="home-security-build"]')?.content||'—'} · ${platformName}`;
+  mobileHeader.querySelector('[data-web-update]').addEventListener('click',()=>document.dispatchEvent(new Event('hs-check-web-update')));
+  document.dispatchEvent(new Event('hs-web-update-ui-ready'));
 
   const nav = document.createElement("nav");
   nav.className = "mobileBottomNav";
@@ -142,5 +148,7 @@ if (isMobileOwnerApp) {
   // Powrót z archiwum lub ustawień nie może wyrzucać użytkownika na początek.
   let initialView = "home";
   try { initialView = sessionStorage.getItem("hs-mobile-view") || "home"; } catch (_) { /* tryb prywatny */ }
+  const requestedMobileView=new URLSearchParams(location.search).get('mobileView');
+  if(Object.hasOwn(views,requestedMobileView))initialView=requestedMobileView;
   setTimeout(() => setView(views[initialView] ? initialView : "home"), 350);
 }
