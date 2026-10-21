@@ -43,10 +43,21 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Prepare bounded static distribution
+        shell: bash
+        run: |
+          mkdir -p _site
+          rsync -a --exclude='.git/' --exclude='_site/' --exclude='kamera/updates/*.zip' ./ _site/
+          mkdir -p _site/kamera/updates
+          current=$(node -p 'JSON.parse(require("fs").readFileSync("kamera/desktop-update.json","utf8")).version')
+          cp "kamera/updates/HomeSecurityDesktop-${current}-win-x64.zip" _site/kamera/updates/
+          # Keep the previous verified release as a rollback package. Older
+          # binaries remain in Git, not in the size-limited Pages artifact.
+          cp kamera/updates/HomeSecurityDesktop-1.4.3-win-x64.zip _site/kamera/updates/
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
