@@ -29,6 +29,8 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
   stage.append(playback, frame);
   const progressBadge = el("div", { className: "badge dvrBadge", hidden: true });
   stage.append(progressBadge);
+  const latestButton=el('button',{className:'archivePlayLatest',type:'button',textContent:'Odtwórz ostatnie nagranie',hidden:true,onclick:()=>{const latest=files.filter(f=>!f.recording).at(-1);if(latest){latestButton.hidden=true;cursor=latest.start;play(latest,0,true);}}});
+  stage.append(latestButton);
 
   let day = dayKey(new Date()), files = [], now = Date.now(), zoom = "day", cursor = null, playing = null, refreshTimer = null;
   const cache = new Map(); // nazwa → Blob (ostatnie 3 pliki)
@@ -62,13 +64,13 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
     progressBadge.hidden = false; progressBadge.textContent = "Wybierz nagranie lub dzień. Otwarcie archiwum nie zmienia stanu kamery ani zapisu.";
     refresh().then(() => {
       const latest = files.filter(f => !f.recording).at(-1);
-      if (latest) play(latest, 0, true);
+      if (latest) {latestButton.hidden=false;progressBadge.hidden=false;progressBadge.textContent='Archiwum gotowe. Wybierz nagranie — plik zostanie wczytany dopiero po naciśnięciu odtwarzania.';}
       else { progressBadge.hidden = false; progressBadge.textContent = "Brak zamkniętych nagrań z wybranego dnia. Wybierz inny dzień."; }
     });
   }
   function closeArchive() {
     if (!archiveModal) return;
-    goLive(); progressBadge.hidden = true; stage.hidden = true;
+    goLive(); progressBadge.hidden = true; latestButton.hidden=true;stage.hidden = true;
     restoreStage.replaceWith(stage); restoreDvr.replaceWith(root);
     if (listRoot && restoreList) restoreList.replaceWith(listRoot);
     if (restoreStorage) { restoreStorage.replaceWith(document.getElementById("archiveStoragePanel")); restoreStorage = null; }
@@ -206,6 +208,7 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
 
   async function play(f, offsetMs = 0, paused = false) {
     if (!f) return;
+    latestButton.hidden=true;
     if (f.recording) { toast("Ten fragment jeszcze się nagrywa — będzie do obejrzenia po zamknięciu pliku (co 10 min). Pokazuję obraz na żywo."); return goLive(); }
     if (!f.local) {
       // Plik z Google Drive: odtwarzacz Google. Przewijanie w obrębie pliku — suwakiem odtwarzacza.

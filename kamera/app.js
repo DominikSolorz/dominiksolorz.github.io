@@ -2053,6 +2053,7 @@ document.addEventListener('click',event=>{
 // otrzymuje sterowanie dopiero po lokalnym wpisaniu PIN-u, z którego powstaje
 // ACCESS_KEY używany do podpisania każdego polecenia dla komputera-kamery.
 function canControlCamera() {
+  if(RECEIVER_ONLY)return false;
   return CAN_MANAGE_CAMERA || (OWNER_PANEL && !RECEIVER_ONLY && !!ACCESS_KEY);
 }
 function applyControlVisibility() {

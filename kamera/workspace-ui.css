@@ -248,3 +248,5 @@ body:has(#publicHome:not([hidden])),#publicHome{background:#0c0d10!important}
 .archiveModal .dvrBar{background:#20232b!important;border-color:#424652!important}.archiveModal .dvrSeg{background:#a52a43!important}.archiveModal .lgRec{background:#b52b46!important}
 
 .archiveModal #dvrCard .dvrBar{background:#20232b!important;border-color:#424652!important}.archiveModal #dvrCard .dvrSeg{background:#a52a43!important}
+.archivePlaybackStage{position:relative}.archivePlayLatest{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);max-width:85%;padding:14px 22px;border:1px solid #ed4564;border-radius:9px;background:#c42140;color:#fff;font:600 15px system-ui;cursor:pointer;z-index:3}.archivePlayLatest[hidden]{display:none!important}
+.archivePlaybackStage .archivePlayLatest{z-index:20}.archivePlaybackStage .dvrBadge{pointer-events:none;max-width:calc(100% - 48px);white-space:normal}
