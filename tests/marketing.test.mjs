@@ -47,6 +47,8 @@ test('contact composer does not fake server delivery or upload visitor data',asy
  assert.ok(js.includes('nie została wysłana'));assert.ok(js.includes('mailto:goldservicepoland@gmail.com'));
  assert.ok(!/fetch\(|XMLHttpRequest|form\.submit\(|sendBeacon/.test(js));
  assert.ok(js.includes("preview.hidden=true"));assert.ok(!js.includes('innerHTML'));
+ assert.ok(html.includes('action="mailto:goldservicepoland@gmail.com"'));assert.ok(html.includes('id="mktPrepareMessage" type="submit" disabled'));
+ assert.ok(js.includes("querySelector('#mktPrepareMessage').disabled=false"));
 });
 test('marketing distinguishes available features from incomplete integrations and app-store releases',async()=>{
  const html=await read('o-systemie.html');

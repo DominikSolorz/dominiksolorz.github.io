@@ -25,6 +25,7 @@
 .mktActions{display:flex;gap:12px;flex-wrap:wrap}
 .mktButton{display:inline-flex;align-items:center;justify-content:center;gap:30px;border:1px solid var(--m-red);border-radius:7px;padding:15px 21px;background:var(--m-red);color:#fff!important;font-size:13px;font-weight:750;min-height:48px;line-height:1.35;transition:background .15s,transform .15s;cursor:pointer;font-family:inherit;text-align:center}
 .mktButton:hover{background:#c51f38;transform:translateY(-1px)}
+.mktButton:disabled{opacity:.5;cursor:wait;transform:none}
 .mktButtonQuiet{background:transparent;border-color:#3d414d;color:var(--m-text)!important;gap:12px}
 .mktButtonQuiet:hover{background:#20232b}
 .mktFine{font-size:11px;color:var(--m-muted);margin:17px 0 0;line-height:1.7}

@@ -20,4 +20,6 @@ if(form){
     try{await navigator.clipboard.writeText(output.value);result.textContent='Treść skopiowana. Wklej ją do wiadomości na goldservicepoland@gmail.com. Nie wysłano wiadomości automatycznie.';}
     catch{result.textContent='Nie udało się skopiować automatycznie. Zaznacz i skopiuj treść z pola poniżej.';output.focus();output.select();}
   });
+  // Enable submission only after the local-only handlers are installed.
+  document.querySelector('#mktPrepareMessage').disabled=false;
 }
