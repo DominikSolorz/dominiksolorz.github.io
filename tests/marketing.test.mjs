@@ -41,14 +41,13 @@ test('login links from every public page target the real panel, not the current 
   for(const match of links){const target=new URL(match[1],new URL(page,base));assert.equal(target.pathname,base.pathname,page);}
  }
 });
-test('contact composer does not fake server delivery or upload visitor data',async()=>{
+test('contact form sends to its backend and requires a confirmed receipt',async()=>{
  const [html,js]=await Promise.all(['pomoc.html','marketing-contact.js'].map(read));
- assert.ok(html.includes('Formularz nie wysyła danych na serwer'));
- assert.ok(js.includes('nie została wysłana'));assert.ok(js.includes('mailto:goldservicepoland@gmail.com'));
- assert.ok(!/fetch\(|XMLHttpRequest|form\.submit\(|sendBeacon/.test(js));
- assert.ok(js.includes("preview.hidden=true"));assert.ok(!js.includes('innerHTML'));
- assert.ok(html.includes('action="mailto:goldservicepoland@gmail.com"'));assert.ok(html.includes('id="mktPrepareMessage" type="submit" disabled'));
- assert.ok(js.includes("querySelector('#mktPrepareMessage').disabled=false"));
+ assert.ok(html.includes('Wyślij wiadomość'));assert.ok(!html.includes('Przygotuj wiadomość'));
+ assert.ok(js.includes('fetch(form.action'));assert.ok(js.includes("receipt.status!=='sent'"));assert.ok(js.includes('receipt.requestId!==payload.requestId'));
+ assert.ok(!js.includes('innerHTML'));assert.ok(!js.includes('mailto:'));
+ assert.ok(html.includes('functions/v1/home-contact'));assert.ok(html.includes('id="mktSendMessage" type="submit" disabled'));
+ assert.ok(html.includes('name="surname"'));assert.ok(html.includes('name="consent"'));assert.ok(js.includes('submit.disabled=false'));
 });
 test('marketing distinguishes available features from incomplete integrations and app-store releases',async()=>{
  const html=await read('o-systemie.html');

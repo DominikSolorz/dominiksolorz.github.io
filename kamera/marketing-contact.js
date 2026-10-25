@@ -1,38 +1,46 @@
-// Local composition only. Never claims delivery or sends a visitor's data to a server.
+// A receipt is displayed only after the server confirms MailApp accepted the message.
 const form=document.querySelector('#mktContactForm');
 if(form){
-  const result=document.querySelector('#mktContactResult');
-  const preview=document.querySelector('#mktContactPreview');
-  const output=document.querySelector('#mktPreparedMessage');
-  const link=document.querySelector('#mktOpenEmail');
-  form.addEventListener('submit',event=>{
-    event.preventDefault();if(!form.reportValidity())return;
-    const value=name=>String(form.elements.namedItem(name).value||'').trim();
-    if(value('message').length<10){result.textContent='Opisz sprawę w co najmniej 10 znakach.';return;}
-    const subject='HOME SECURITY — '+value('topic');
-    const body=['Temat: '+value('topic'),'Imię: '+(value('name')||'nie podano'),'Adres do odpowiedzi: '+value('email'),'','Opis sprawy:',value('message')].join('\r\n');
-    output.value=subject+'\r\n\r\n'+body;
-    link.href='mailto:goldservicepoland@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
-    preview.hidden=false;result.textContent='Wiadomość jest przygotowana, ale nie została wysłana. Otwórz ją w swojej poczcie lub skopiuj treść.';
+  const result=document.querySelector('#mktContactResult'),submit=document.querySelector('#mktSendMessage'),fields=document.querySelector('#mktContactFields');
+  let busy=false,receiptState=null;
+  const value=name=>String(form.elements.namedItem(name).value||'').trim();
+  const show=(text,state)=>{result.textContent=text;result.dataset.state=state;};
+  async function requestId(payload){
+    const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(payload)));
+    const fingerprint=Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');
+    let previous=receiptState;try{previous=JSON.parse(sessionStorage.getItem('hs-contact-receipt')||'null')||previous;}catch{}
+    if(previous?.fingerprint===fingerprint && Date.now()-previous.created<172800000)return previous.id;
+    const id=crypto.randomUUID();
+    receiptState={id,fingerprint,created:Date.now()};
+    try{sessionStorage.setItem('hs-contact-receipt',JSON.stringify(receiptState));}catch{}
+    return id;
+  }
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();if(busy||!form.reportValidity())return;
+    const payload={name:value('name'),surname:value('surname'),email:value('email'),topic:value('topic'),message:value('message'),website:value('website'),consent:form.elements.namedItem('consent').checked};
+    if(payload.message.length<10){show('Opisz sprawę w co najmniej 10 znakach.','error');return;}
+    if(/sk-(?:live|proj)-[A-Za-z0-9_-]{12,}/.test(payload.message)){show('Usuń klucz API z treści. Nie wysyłaj sekretów w formularzu.','error');return;}
+    busy=true;submit.disabled=true;fields.disabled=true;submit.textContent='Wysyłanie…';show('Wysyłanie wiadomości do administratora…','sending');
+    try{
+      payload.requestId=await requestId(payload);
+      const response=await fetch(form.action,{method:'POST',credentials:'omit',referrerPolicy:'no-referrer',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(35000)});
+      const receipt=await response.json();
+      if(!response.ok||receipt.ok!==true||receipt.status!=='sent'||receipt.requestId!==payload.requestId)throw Error(receipt.error||'delivery_unconfirmed');
+      submit.textContent='Wysłano ✓';
+      show('Wiadomość została wysłana do administratora. Odpowiemy na podany adres e-mail. Numer zgłoszenia: '+receipt.requestId,'sent');
+    }catch(error){
+      submit.disabled=false;submit.textContent='Spróbuj ponownie →';
+      show(error.message==='rate_limited'?'Za dużo wiadomości w krótkim czasie. Odczekaj minutę i ponów wysyłkę. Jeśli limit dzienny został osiągnięty, napisz bezpośrednio na goldservicepoland@gmail.com.':'Nie udało się potwierdzić wysłania. Treść została zachowana. Ponów bez zmiany treści — ten sam numer zgłoszenia chroni przed podwójną wysyłką. Możesz też napisać na goldservicepoland@gmail.com.','error');
+    }finally{busy=false;fields.disabled=false;}
   });
-  form.addEventListener('input',()=>{preview.hidden=true;link.removeAttribute('href');output.value='';result.textContent='';});
-  document.querySelector('#mktCopyMessage').addEventListener('click',async()=>{
-    try{await navigator.clipboard.writeText(output.value);result.textContent='Treść skopiowana. Wklej ją do wiadomości na goldservicepoland@gmail.com. Nie wysłano wiadomości automatycznie.';}
-    catch{result.textContent='Nie udało się skopiować automatycznie. Zaznacz i skopiuj treść z pola poniżej.';output.focus();output.select();}
-  });
-  // Enable submission only after the local-only handlers are installed.
-  document.querySelector('#mktPrepareMessage').disabled=false;
-}
-
-// Explicit handoff remains a draft until the visitor sends the contact form.
-if(form){
+  form.addEventListener('input',()=>{if(!busy){submit.disabled=false;submit.textContent='Wyślij wiadomość →';show('','idle');}});
   try{
-    const key='home-security-support-handoff';
-    const raw=sessionStorage.getItem(key);sessionStorage.removeItem(key);
-    if(raw){const data=JSON.parse(raw);if(Date.now()-data.created<1800000 && typeof data.message==='string'){
-      form.elements.namedItem('topic').value='Pomoc techniczna';
-      form.elements.namedItem('message').value=data.message.slice(0,3800);
-      document.querySelector('#mktContactResult').textContent='Opis z czatu został przeniesiony. Sprawdź treść i uzupełnij adres do odpowiedzi. Wiadomość nie została jeszcze wysłana.';
+    const key='home-security-support-handoff',raw=sessionStorage.getItem(key);sessionStorage.removeItem(key);
+    if(raw){const data=JSON.parse(raw);if(Date.now()-data.created<1800000&&typeof data.message==='string'){
+      const topic=/konto|logowani/i.test(data.topic)?'Konto i dostęp':/mikrofon|kamera/i.test(data.topic)?'Kamera i dźwięk':/nagran|folder|drive/i.test(data.topic)?'Nagrania i Google Drive':'Pomoc techniczna';
+      form.elements.namedItem('topic').value=topic;form.elements.namedItem('message').value=data.message.slice(0,3800);
+      show('Opis z czatu został przeniesiony. Uzupełnij dane, sprawdź treść i kliknij „Wyślij wiadomość”.','idle');
     }}
   }catch{}
+  submit.disabled=false;
 }

@@ -25,7 +25,7 @@ Provider documentation: https://you.bot/docs/create-task and https://you.bot/doc
 - At most 24 KB request body, 12 alternating user/assistant messages, 2,000 characters/message and 12,000 total. Visitors cannot select a model, provider endpoint, system role or tools. No camera, file-system or account actions are exposed.
 - Conversation content is not persisted in our backend or explicitly logged. Supabase infrastructure and you.bot have their own logging/data policies. Visitor consent and privacy links explain the external processing. Rendering uses text nodes, never provider-supplied HTML.
 - Escalation is advice and a contact-form handoff, not an emergency response service or guaranteed detection of every serious issue. The visitor can always ask for the administrator.
-- Contact handoff uses tab session storage, consumed on the contact page, ignored after 30 minutes, never placed in a URL. The contact form remains the existing local email composer: automatic server-side mail delivery is NOT part of this release and must not be claimed. No mail credentials are available in this module.
+- Contact handoff uses tab session storage, consumed on the contact page, ignored after 30 minutes, never placed in a URL. The contact form now submits to the separate `home-contact` Edge Function and Google MailApp relay, with an explicit server receipt and duplicate protection. See `HOME-CONTACT.md`. This chat module still has no mail credentials or direct mail-sending capability.
 
 ## Verification
 

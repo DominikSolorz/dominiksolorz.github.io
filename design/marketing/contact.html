@@ -1,0 +1,22 @@
+<main id="mkt-content" class="mktPageMain">
+  <p class="mktBreadcrumb"><a href="o-systemie.html">Strona główna</a> / Kontakt</p>
+  <p class="mktEyebrow">KONTAKT I POMOC</p><h1 class="mktPageTitle">Napisz do nas.<br>Jesteśmy po Twojej stronie.</h1>
+  <p class="mktPageLead">Opisz swoje pytanie lub problem. Formularz wyśle wiadomość bezpośrednio do administratora HOME SECURITY — bez otwierania Twojej poczty.</p>
+  <div class="mktContactLayout"><section><h2>Bezpośredni kontakt</h2><p><a class="mktTextLink" href="mailto:goldservicepoland@gmail.com">goldservicepoland@gmail.com ↗</a></p><p>Nie podawaj hasła, PIN-u, kodów weryfikacyjnych ani tokenów. Przy problemie technicznym opisz urządzenie i komunikat błędu.</p>
+    <div class="mktContactReasons"><article><h3>Konfiguracja i urządzenia</h3><p>Kamera, mikrofon, telefon i pierwsze uruchomienie.</p></article><article><h3>Nagrania i archiwum</h3><p>Folder lokalny, odtwarzanie i kopia Google Drive.</p></article><article><h3>Produkt i współpraca</h3><p>Możliwości programu, wymagania i dalszy rozwój.</p></article></div>
+  </section><form id="mktContactForm" class="mktContactForm" action="https://ksacbcrzuwdahnmggfxg.supabase.co/functions/v1/home-contact" method="post">
+    <h2>Wyślij wiadomość</h2><p class="mktFine">Wypełnij formularz i kliknij „Wyślij wiadomość”. Potwierdzenie pojawi się tutaj po odpowiedzi serwera.</p>
+    <fieldset id="mktContactFields" style="border:0;padding:0;margin:0;min-width:0;display:grid;gap:18px">
+      <label>Imię<input name="name" autocomplete="given-name" maxlength="80" required></label>
+      <label>Nazwisko<input name="surname" autocomplete="family-name" maxlength="80" required></label>
+      <label>Twój e-mail<input name="email" type="email" autocomplete="email" maxlength="254" required placeholder="Adres, na który możemy odpowiedzieć"></label>
+      <label>Temat<select name="topic"><option>Pomoc techniczna</option><option>Konto i dostęp</option><option>Kamera i dźwięk</option><option>Nagrania i Google Drive</option><option>Produkt i współpraca</option><option>Prywatność i dokumenty</option></select></label>
+      <label>Wiadomość<textarea name="message" rows="6" minlength="10" maxlength="4000" required placeholder="Opisz sprawę. Podaj urządzenie i komunikat błędu, jeśli wystąpił."></textarea></label>
+      <label class="mktContactTrap" aria-hidden="true" style="position:absolute;left:-10000px">Zostaw puste<input name="website" tabindex="-1" autocomplete="off"></label>
+      <label class="mktContactConsent" style="display:block;font-size:13px;line-height:1.55"><input name="consent" type="checkbox" required style="display:inline-block;width:18px;height:18px;margin:0 8px 0 0;padding:0;vertical-align:middle;accent-color:#d91b3e"> Zgadzam się na przetworzenie podanych danych w celu obsługi zgłoszenia. <a href="polityka-prywatnosci.html">Polityka prywatności</a>.</label>
+    </fieldset>
+    <button class="mktButton" id="mktSendMessage" type="submit" disabled>Wyślij wiadomość →</button>
+    <output id="mktContactResult" role="status" aria-live="polite" style="display:block;margin-top:16px;overflow-wrap:anywhere"></output>
+    <noscript><p>Wysyłka formularza wymaga JavaScriptu. Możesz też napisać bezpośrednio na goldservicepoland@gmail.com.</p></noscript>
+  </form></div>
+</main>
