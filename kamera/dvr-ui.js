@@ -5,18 +5,20 @@
 // Pliki pobierane są z komputera przez kanał danych WebRTC (recproto.js) — działa też na internecie komórkowym.
 import { fixMp4Duration } from "./mp4fix.js?v=2";
 import {validThumbnail,captureEventFrame} from "./workspace-panels.mjs?v=1";
+import {localDayRange,previousLocalDay} from './recording-time.mjs?v=1';
+import {confirmRecordingDeletion} from './recording-actions.mjs?v=2';
 const pad = n => String(n).padStart(2, "0");
 const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const hm = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 const hms = t => { const d = new Date(t); return `${hm(t)}:${pad(d.getSeconds())}`; };
-const mb = n => `${(n / 1048576).toFixed(1)} MB`;
+const mb = n => n>=1073741824?`${(n/1073741824).toFixed(2)} GB`:`${(n / 1048576).toFixed(1)} MB`;
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids.filter(k => k !== null && k !== undefined && k !== "")); return e; };
 const DAY_MS = 86400000;
 
 const nameTime = n => { const m = /(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})/.exec(n || ""); return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : 0; };
 const SEG_MS = 600000;
 
-export function mountDvr({ client, drive, allowUpload = true, root, listRoot = null, stage: liveStage, toast, onState = () => {} }) {
+export function mountDvr({ client, drive, allowUpload = true, removeRecording=null, canRemove=()=>false, root, listRoot = null, stage: liveStage, toast, onState = () => {} }) {
   // Odtwarzacz ma własny kontener. Nigdy nie przenosi i nie modyfikuje liveVideo.
   const stage = el("div", { className: "stage archivePlaybackStage", hidden: true });
   root.before(stage);
@@ -42,7 +44,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     stage.before(restoreStage); root.before(restoreDvr);
     if (listRoot) { restoreList = document.createComment("kamera-dvr-list"); listRoot.before(restoreList); }
     const closeBtn = el("button", { className: "archiveClose", type: "button", textContent: "← Wróć do kamery na żywo", onclick: () => closeArchive() });
-    const hint = el("p", { className: "archiveHint", textContent: "Przeciągnij wskaźnik po osi doby. Niebieskie odcinki to dostępne nagrania; ● NA ŻYWO wraca do bieżącej kamery." });
+    const hint = el("p", { className: "archiveHint", textContent: "Wybierz dzień i nagranie. Kolorowe odcinki na osi czasu oznaczają dostępny zapis. Kamera i nagrywanie działają niezależnie od tego widoku." });
     const body = el("div", { className: "archiveModalBody" });
     body.append(stage, root);
     if (listRoot) body.append(listRoot);
@@ -100,7 +102,7 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
   const thumbnailStrip=el("div",{className:"dvrThumbnailStrip",ariaLabel:"Klatki zapisanych nagrań"});
   const jump = sec => el("button", { className: "dvrBtn", textContent: sec < 0 ? `− ${-sec / 60} min` : `+ ${sec / 60} min`, onclick: () => seekTo((cursor ?? now) + sec * 1000) });
   const todayBtn = el("button", { className: "dvrBtn", textContent: "Dziś", onclick: () => setDay(dayKey(new Date())) });
-  const yestBtn = el("button", { className: "dvrBtn", textContent: "Wczoraj", onclick: () => setDay(dayKey(new Date(Date.now() - DAY_MS))) });
+  const yestBtn = el("button", { className: "dvrBtn", textContent: "Wczoraj", onclick: () => setDay(dayKey(previousLocalDay())) });
 
   root.replaceChildren(
     el("div", { className: "dvrTop" },
@@ -127,12 +129,13 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
   } else root.append(el("details", { className: "libDay dvrLibBox" }, el("summary", {}, el("b", { textContent: "📼 Lista nagrań dnia" })), lib));
 
   // ----- zakres paska -----
-  const dayStart = () => { const [y, m, d] = day.split("-").map(Number); return new Date(y, m - 1, d).getTime(); };
+  const dayStart = () => localDayRange(day)[0];
   function range() {
     const s = dayStart();
-    if (zoom === "day") return [s, s + DAY_MS];
-    const c = cursor ?? Math.min(now, s + DAY_MS - 1);
-    const from = Math.max(s, Math.min(c - 1800000, s + DAY_MS - 3600000));
+    const end=localDayRange(day)[1];
+    if (zoom === "day") return [s, end];
+    const c = cursor ?? Math.min(now, end - 1);
+    const from = Math.max(s, Math.min(c - 1800000, end - 3600000));
     return [from, from + 3600000];
   }
   const pct = (t, [a, b]) => `${Math.max(0, Math.min(100, (100 * (t - a)) / (b - a)))}%`;
@@ -156,14 +159,18 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     nowEl.hidden = !(now >= r[0] && now <= r[1]); nowEl.style.left = pct(now, r);
     cursorEl.hidden = cursor === null; if (cursor !== null) cursorEl.style.left = pct(cursor, r);
     const compact = document.documentElement.classList.contains("mobileOwnerMode");
-    const n = compact ? (zoom === "day" ? 4 : 3) : (zoom === "day" ? 12 : 6), step = (r[1] - r[0]) / n;
-    ticks.replaceChildren(...Array.from({ length: n + 1 }, (_, i) => el("span", { textContent: hm(r[0] + i * step), style: `left:${(100 * i) / n}%` })));
+    const narrow=compact||(bar.clientWidth||600)<480;
+    const n = narrow ? (zoom === "day" ? 4 : 3) : (zoom === "day" ? 6 : 6), step = (r[1] - r[0]) / n;
+    ticks.replaceChildren(...Array.from({ length: n + 1 }, (_, i) => {
+      const time=zoom==='day'?+new Date(new Date(r[0]).setHours(i*24/n,0,0,0)):r[0]+i*step;
+      return el("span", { textContent:zoom==='day'&&i===n?'24:00':hm(time), style:`left:${100*(time-r[0])/(r[1]-r[0])}%` });
+    }));
     timeLabel.textContent = cursor === null ? "● na żywo" : `▶ ${hms(cursor)}`;
     const at = cursor ?? now, show = at >= r[0] && at <= r[1];
     posLabel.hidden = !show; posLabel.style.left = pct(at, r); posLabel.textContent = cursor === null ? hm(now) : hms(cursor);
     posLabel.classList.toggle("play", cursor !== null);
     const today = dayKey(new Date());
-    todayBtn.classList.toggle("on", day === today); yestBtn.classList.toggle("on", day === dayKey(new Date(Date.now() - DAY_MS)));
+    todayBtn.classList.toggle("on", day === today); yestBtn.classList.toggle("on", day === dayKey(previousLocalDay()));
     liveBtn.classList.toggle("on", cursor === null && day === today);
   }
 
@@ -288,6 +295,22 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
     catch (e) { toast(`Nie udało się zlecić wysłania: ${e.message || e}`); }
   }
 
+  const removing=new Set();
+  async function removeFile(f) {
+    if(!f.local||!removeRecording||!canRemove()||removing.has(f.name))return;
+    const warning=dayKey(new Date(f.start))===dayKey(new Date())?' To dzisiejszy materiał. Jeżeli nie ma jeszcze potwierdzonej kopii w Drive, możesz go utracić.':'';
+    if(!await confirmRecordingDeletion(`Nagranie ${hms(f.start)}–${hms(f.end)} (${mb(f.size||0)}) zostanie usunięte z dostępnego archiwum tego komputera. Kopia na Google Drive pozostaje bez zmian.${warning}`))return;
+    if(!canRemove())return toast('Panel został zablokowany. Otwórz go ponownie przed usuwaniem.');
+    removing.add(f.name);drawLib();
+    try {
+      const receipt=await removeRecording(f.name);
+      if(receipt?.deleted!==true)throw Error('Komputer nie potwierdził usunięcia.');
+      cache.delete(f.name);thumbnails.delete(f.name);if(playing?.name===f.name)goLive();
+      await refresh();toast('Usunięto nagranie z dostępnego archiwum komputera. Kopii Google Drive nie usunięto.');
+    }catch(error){toast(`Nie udało się usunąć: ${error.message||error}`);}
+    finally{removing.delete(f.name);drawLib();}
+  }
+
   function drawLib() {
     const real = files.filter(f => !f.recording).slice().reverse();
     listCount.textContent = real.length ? `${real.length} plików` : "";
@@ -297,15 +320,16 @@ export function mountDvr({ client, drive, allowUpload = true, root, listRoot = n
       const min = Math.max(1, Math.round((f.end - f.start) / 60000));
       const playIt = () => { cursor = f.start; play(f); if (window.innerWidth < 1100) window.scrollTo({ top: 0, behavior: "smooth" }); };
       return el("li", { className: playing && playing.name === f.name ? "on" : "" },
-        thumbnailFor(f)?el("img",{className:"recThumbnail",src:thumbnailFor(f),alt:`Klatka nagrania ${hm(f.start)}`}):el("span",{className:"recThumbnail recThumbnailEmpty",textContent:"▷",title:"Klatka pojawi się po otwarciu nagrania"}),
-        el("button", { className: "recPlay", title: "Odtwórz", textContent: "▶", onclick: playIt }),
+        el('button',{className:'recPlay recPreview',type:'button',ariaLabel:`Odtwórz nagranie ${hms(f.start)}`,onclick:playIt},thumbnailFor(f)?el("img",{className:"recThumbnail",src:thumbnailFor(f),alt:`Klatka nagrania ${hm(f.start)}`}):el("span",{className:"recThumbnail recThumbnailEmpty",textContent:"▶",title:"Klatka pojawi się po otwarciu nagrania"})),
+        el('div',{className:'recDetails'},
         el("button", { className: "recTimes", onclick: playIt },
           el("b", { textContent: `${hms(f.start)} – ${hms(f.end)}` }),
           el("small", { textContent: [`${min} min`, f.size ? mb(f.size) : "", ruch ? `🏃${ruch}` : "", dzwiek ? `🔊${dzwiek}` : "", f.uploaded || !f.local ? "☁️" : ""].filter(Boolean).join(" · ") })),
         el("span", { className: "recActs" },
-          el("button", { className: "recIcon", title: "Pobierz", textContent: "⬇", onclick: () => save(f) }),
-          el("button", { className: "recIcon", title: "Udostępnij", textContent: "📤", onclick: () => share(f) }),
-          allowUpload && f.local && !f.uploaded ? el("button", { className: "recIcon", title: "Prześlij do Google Drive", textContent: "☁️", onclick: () => toDrive(f) }) : null));
+          el("button", { className: "recIcon", title: "Pobierz plik nagrania", textContent: "Pobierz", onclick: () => save(f) }),
+          el("button", { className: "recIcon", title: "Wyślij plik przez menu udostępniania urządzenia; gdy niedostępne, pobierz plik", textContent: "Wyślij", onclick: () => share(f) }),
+          allowUpload && f.local && !f.uploaded ? el("button", { className: "recIcon", title: "Prześlij do Google Drive", textContent: "Google Drive", onclick: () => toDrive(f) }) : null,
+          f.local&&removeRecording&&canRemove()?el('button',{className:'recIcon recDelete',type:'button',textContent:removing.has(f.name)?'Usuwanie…':'Usuń',disabled:removing.has(f.name),onclick:()=>removeFile(f)}):null)));
     })));
   }
 

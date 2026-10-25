@@ -130,6 +130,8 @@ export async function deleteEmptyCreatedFolder() {
 export async function status(ask = false) { const h = await get("folder"); return { selected: !!h, name: h && h.name ? h.name : "", ready: await usable(h, ask) }; }
 // Nazwa pliku → uchwyt (także w podfolderach dni/godzin), uzupełniane przy każdym przeglądaniu folderu.
 const handles = new Map();
+const recordingParents = new Map();
+const duplicateRecordingNames = new Set();
 
 export async function save(name, blob) {
   if (!REC_RE.test(name || "") || /[/\\]/.test(name)) throw new Error("Nieprawidłowa nazwa nagrania.");
@@ -175,12 +177,29 @@ export async function remove(name) {
   }
 }
 
+// Explicit per-recording owner action; unlike background cleanup, errors are reported.
+export async function removeRecording(name) {
+  if(!REC_RE.test(name||'')||/[\\/]/.test(name))throw new Error('Nieprawidłowa nazwa nagrania.');
+  const root=await get('folder');
+  if(!(await usable(root)))throw new Error('Przywróć dostęp do folderu przed usuwaniem pliku.');
+  await list();
+  if(duplicateRecordingNames.has(name))throw new Error('W archiwum jest kilka plików o tej nazwie. Wskaż dokładny folder przed usuwaniem.');
+  const parent=recordingParents.get(name);
+  if(!parent)throw new Error('Nie odnaleziono tego pliku w wybranym archiwum.');
+  await parent.removeEntry(name,{recursive:false});
+  try {await parent.getFileHandle(name);throw new Error('Plik nadal istnieje.');}
+  catch(error){if(error.name!=='NotFoundError')throw error;}
+  handles.delete(name);recordingParents.delete(name);return true;
+}
+
 // Nagrania kamery: „kamera-RRRR-MM-DD_GG-MM-SS.mp4”, także z telefonu („kamera-telefon-…”) i kopie („… (1).mp4”).
 const REC_RE = /^kamera-.*\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}.*\.(webm|mp4)$/i;
 
 // Lista plików na dysku — razem z podfolderami (np. 2026-10-01/14-00 z Google Drive), do 3 poziomów.
 // Pozwala stronie i telefonowi pokazać wszystkie nagrania z folderu, także po wyczyszczeniu pamięci przeglądarki.
 export async function list() {
+  recordingParents.clear();
+  duplicateRecordingNames.clear();
   const h = await get("folder");
   if (!(await usable(h))) return [];
   const out = [], seen = new Set();
@@ -192,8 +211,9 @@ export async function list() {
       if (next.done) break;
       const name = next.value[0], entry = next.value[1];
       if (entry.kind === "directory") { if (depth < 3) await walk(entry, depth + 1); continue; }
-      if (!REC_RE.test(name) || seen.has(name)) continue;
-      try { const f = await entry.getFile(); if (!f.size) continue; seen.add(name); handles.set(name, entry); out.push(f); }
+      if (!REC_RE.test(name)) continue;
+      if(seen.has(name)){duplicateRecordingNames.add(name);continue;}
+      try { const f = await entry.getFile(); if (!f.size) continue; seen.add(name); handles.set(name, entry); recordingParents.set(name,dir); out.push(f); }
       catch { /* plik mógł zostać zmieniony poza stroną */ }
     }
   }

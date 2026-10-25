@@ -208,3 +208,43 @@ body:has(#publicHome:not([hidden])),#publicHome{background:#0c0d10!important}
 #publicHome .publicPreviewFrame{border-color:#414652}#publicHome .publicPreviewRows{color:#c1c7d2}
 #publicHome .publicLogo b{color:#e8bf68}#publicHome .publicHero{box-sizing:border-box;gap:32px}#publicHome .publicHero h1{font-weight:750;letter-spacing:-.04em}#publicHome .publicFeatures b{background:#351b24;color:#ff859a}#publicHome .publicPreviewFrame{background:#101217}#publicHome .publicMain{background:#0c0d10}
 @media(max-width:760px){#publicHome .publicMain{padding:28px 16px!important}#publicHome .publicHero{grid-template-columns:minmax(0,1fr)!important;padding:24px 18px;gap:24px}#publicHome .publicHero h1{font-size:38px}}
+
+/* Recordings: one readable media column plus a separate storage sidebar. */
+.archiveModal .archiveWorkspace{display:grid;grid-template-columns:minmax(0,1fr) 300px;align-items:start;padding:20px;gap:20px;max-width:1600px}
+.archiveModal .archiveModalBody{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"camera" "dvr" "list";gap:18px;border:0;padding:0;min-width:0;width:100%;background:transparent}
+.archiveModal .archiveModalBody>.stage{width:100%;min-height:0;max-height:62vh;aspect-ratio:16/9;grid-area:camera}
+.archiveModal .archiveModalBody>#dvrCard{grid-area:dvr;min-width:0;padding:18px;box-sizing:border-box}
+.archiveModal .archiveModalBody>#dvrListCard{grid-area:list;min-width:0;padding:18px;box-sizing:border-box;overflow:visible}
+.archiveModal #dvrListCard .libList,.archiveModal #dvrListCard .recList{overflow:visible;max-height:none;min-width:0;width:100%;box-sizing:border-box}
+.recList{list-style:none;padding:0;margin:0}
+.recList li{display:grid;grid-template-columns:128px minmax(0,1fr);align-items:center;gap:18px;padding:16px 0;min-width:0;border-bottom:1px solid var(--ui-line)}
+.recList li.on{background:#291820;outline:1px solid #823449;border-radius:10px;padding-inline:12px}
+.recPreview.recPlay{display:block;position:relative;width:128px;height:76px;min-height:0;padding:0;border:1px solid #414652;border-radius:8px;overflow:hidden;background:#101216;color:#fff}
+.recPreview .recThumbnail{display:block;width:100%;height:100%;min-width:0;object-fit:cover;border:0;border-radius:0}
+.recPreview .recThumbnailEmpty{display:grid;place-items:center;color:#c4c8d0;font-size:24px;background:#20242c}
+.recDetails{min-width:0;display:grid;gap:12px}.recDetails .recTimes{display:block;width:100%;padding:0;text-align:left;min-height:0}
+.recDetails .recTimes b{font-size:15px;line-height:1.5;overflow-wrap:normal;font-variant-numeric:tabular-nums}.recDetails .recTimes small{font-size:12px;line-height:1.6;color:var(--ui-muted)}
+.recActs{display:flex;flex-wrap:wrap;gap:8px;min-width:0}.recActs .recIcon{font:600 12px system-ui;min-height:36px;min-width:64px;width:auto;height:auto;padding:8px 12px;background:#242730;border:1px solid #424652;border-radius:7px;color:#f4f4f6}
+.recActs .recDelete{color:#ff91a2;border-color:#743344;background:#2a171e}.recActs button:disabled{opacity:.55;cursor:wait}
+.archiveModal .dvrCtrls,.archiveModal .dvrFoot,.archiveModal .dvrLegend{display:flex;flex-wrap:wrap;gap:10px;min-width:0}.archiveModal .dvrDate{min-width:145px;max-width:100%;box-sizing:border-box}
+.archiveModal .dvrTicks{margin-inline:18px}.archiveModal .dvrTicks>span:first-child{transform:none}.archiveModal .dvrTicks>span:last-child{transform:translateX(-100%)}
+.archiveModal .archiveStorageSidebar{padding:18px;width:100%;min-width:0;box-sizing:border-box;position:sticky;top:110px}
+.archiveStorageSidebar #archiveStoragePanel>h2{font-size:19px;margin:0 0 18px}.archiveStorageSidebar :is(button,.btn){box-sizing:border-box;width:100%;margin:0 0 10px;padding:11px 12px;font-size:13px;white-space:normal;text-align:center;line-height:1.5}
+.archiveStorageSidebar .status{font-size:12px;line-height:1.65;overflow-wrap:anywhere}.archiveStorageSidebar label{font-size:13px}.archiveStorageSidebar input:not([type=checkbox]){box-sizing:border-box;width:100%;min-width:0}
+.archiveAdvanced{border-top:1px solid var(--ui-line);padding-top:14px;margin-top:14px}.archiveAdvanced summary{cursor:pointer;font-weight:600;font-size:13px;padding:6px 0 14px}.nativeDrivePanel{padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid var(--ui-line)}
+.nativeDrivePanel h3{margin:0 0 12px;font-size:16px}.nativeDrivePanel [data-state=error]{border-color:#ab3b50}.nativeDrivePanel [data-state=uploading]{border-color:#627eac}.nativeDrivePanel[hidden]{display:none}
+.recordingsRedirect{max-width:700px;margin:10vh auto;padding:24px}
+@media(max-width:1100px){.archiveModal .archiveWorkspace{grid-template-columns:minmax(0,1fr)}.archiveModal .archiveStorageSidebar{position:static}.archiveModal .archiveModalHead{position:static}.archiveModalHead .archiveClose{width:auto}}
+@media(max-width:600px){.archiveModal .archiveWorkspace{padding:12px;gap:14px}.archiveModal .archiveModalBody>#dvrCard,.archiveModal .archiveModalBody>#dvrListCard{padding:14px}.recList li{grid-template-columns:88px minmax(0,1fr);gap:12px}.recPreview.recPlay{width:88px;height:64px}.recDetails .recTimes b{font-size:13px}.recActs{gap:6px}.recActs .recIcon{padding:8px;min-width:58px;font-size:11px}.archiveModal .archiveModalBody>.stage{max-height:45vh;min-height:0}.archiveModal .dvrBtn{font-size:12px;padding:9px 10px}.archiveModal .archiveModalHead{padding:16px}.archiveModalHead h2{font-size:22px}}
+
+.archiveModal .archivePlaybackStage::before,.archiveModal .archivePlaybackStage::after{display:none!important}
+.archiveModal :is(#dvrCard,#dvrListCard){background:var(--ui-surface)!important;border-color:var(--ui-line)!important}
+.archiveModal .status{background:#191d25!important;border-color:#3c424e!important;box-shadow:none!important}
+.archiveModal .dvrInfo{line-height:1.6}.archiveModal .panelHead h2{font-size:19px}
+
+.recordingDeleteDialog{box-sizing:border-box;width:min(520px,calc(100% - 32px));max-height:calc(100dvh - 32px);overflow-y:auto;padding:26px;border:1px solid #6d3946;border-radius:14px;background:#17191f;color:#f5f5f7;box-shadow:0 20px 90px #0009;font:15px system-ui}
+.recordingDeleteDialog::backdrop{background:#000b}.recordingDeleteDialog h2{margin:0 0 16px;font-size:23px}.recordingDeleteDialog p{line-height:1.7;color:#c3c8d1}.recordingDeleteDialog label{display:flex;align-items:flex-start;gap:10px;margin:22px 0;font-size:14px;line-height:1.6}.recordingDeleteDialog input{width:18px;height:18px;min-width:18px;margin-top:3px;accent-color:#cf2948}.recordingDeleteActions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}.recordingDeleteActions button{padding:11px 18px;min-height:44px;border:1px solid #434957;border-radius:8px;background:#292d37;color:#fff;font:600 14px system-ui}.recordingDeleteActions .danger{background:#bd203d;border-color:#df415d}.recordingDeleteActions button:disabled{opacity:.4;cursor:not-allowed}
+
+.archiveModal .dvrBar{background:#20232b!important;border-color:#424652!important}.archiveModal .dvrSeg{background:#a52a43!important}.archiveModal .lgRec{background:#b52b46!important}
+
+.archiveModal #dvrCard .dvrBar{background:#20232b!important;border-color:#424652!important}.archiveModal #dvrCard .dvrSeg{background:#a52a43!important}

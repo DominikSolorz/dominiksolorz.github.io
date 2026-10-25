@@ -10,10 +10,12 @@ import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=17";
 import * as recstore from "./recstore.js?v=77";
 import { oldRecordingPlan } from "./local-retention.mjs?v=1";
+import { createRecordingDeletion } from "./recording-actions.mjs?v=2";
+import { mountNativeDriveUI, nativeDriveSummary } from './native-drive-ui.mjs?v=2';
 import { fixMp4Duration } from "./mp4fix.js?v=2";
-import * as diskstore from "./diskstore.js?v=10";
+import * as diskstore from "./diskstore.js?v=11";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=102";
+import { mountDvr } from "./dvr-ui.js?v=104";
 import { accountClient } from "./auth.js?v=11";
 import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=11";
 import { mountAccountUI } from "./account-ui.mjs?v=3";
@@ -21,7 +23,7 @@ import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profil
 import { systemStore } from "./core/store.mjs";
 import { createWebUpdates } from "./core/web-updates.mjs?v=1";
 import { NativeAgentClient } from "./communication/native-agent-client.mjs";
-import { createAgentTelemetry } from "./communication/agent-telemetry.mjs?v=1";
+import { createAgentTelemetry } from "./communication/agent-telemetry.mjs?v=2";
 import { captureEventFrame } from "./workspace-panels.mjs?v=2";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
 import { createPeerDiagnostics } from "./core/peer-diagnostics.mjs";
@@ -60,7 +62,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "206"; // musi się zgadzać z version.json
+const VERSION = "207"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -69,6 +71,7 @@ const localRecClient = {
   days: () => archive.local.days(),
   list: day => archive.local.list(day),
   upload: name => archive.local.upload(name),
+  remove: name => executeControl('recording-delete',{recordingName:name}),
   get: async name => { const f = await archive.local.file(name); if (!f) throw new Error("nie ma takiego nagrania"); return f; },
 };
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
@@ -504,7 +507,7 @@ const archive = (() => {
   }
 
   let segEvents = null; // zdarzenia (ruch / dźwięk) w bieżącym pliku nagrania
-  function markEvent(ev) { segEvents?.push({kind:ev.kind,at:ev.at}); }
+  function markEvent(ev) { segEvents?.push({kind:ev.kind,at:ev.at,...(ev.thumbnail?{thumbnail:ev.thumbnail}:{})}); }
 
   async function save(data, name, events, start, end) {
     // Długość nagrania wpisana od razu do pliku — przewijanie działa w każdym odtwarzaczu (telefon, WhatsApp, Windows).
@@ -524,7 +527,7 @@ const archive = (() => {
     // To zapis zapasowy, który również może zawieść, np. przy pełnym dysku.
     if (!savedToDisk) {
       try {
-        await recstore.put({ name, start, end, events: events || [], type: data.type, uploaded: false }, data);
+        await recstore.put({ name, start, end, events: events || [], thumbnail:captureEventFrame(video), type: data.type, uploaded: false }, data);
         saved++; lastName = name; lastError = "";
       } catch (e) { localSaveFailures++; lastError = `Nie udało się zapisać ${name}: ${errText(e)}`; }
     }
@@ -766,7 +769,7 @@ const archive = (() => {
 
   // ----- Dla telefonu (kanał danych): nagrania z pamięci komputera -----
   const dayOf = t => { const d = new Date(t); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
-  const brief = m => ({ name: m.name, start: m.start, end: m.end, size: m.size, type: m.type, uploaded: !!m.uploaded, events: m.events || [] });
+  const brief = m => ({ name: m.name, start: m.start, end: m.end, size: m.size, type: m.type, uploaded: !!m.uploaded, thumbnail:m.thumbnail, events: m.events || [] });
   const diskBrief = f => { const start = nameTime(f.name) || f.lastModified; return { name: f.name, start, end: start + 600000, size: f.size, type: f.type, uploaded: false, events: [] }; };
   async function savedFiles() {
     const files = new Map((await recstore.list()).map(m => [m.name, brief(m)]));
@@ -792,6 +795,7 @@ const archive = (() => {
       return onDisk ? { blob: onDisk, meta: { name, size: onDisk.size, type: onDisk.type, start: nameTime(name), end: nameTime(name) + 600000, events: [] } } : null;
     },
     upload: requestUpload,
+    remove: createRecordingDeletion({meta:recstore.meta,diskFile:diskstore.load,removeApp:recstore.remove,removeDisk:diskstore.removeRecording,removeQueued:name=>idb.qDel(name),refresh:refreshLocal}),
   };
 
   async function localHours(day) {
@@ -893,8 +897,8 @@ const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", pay
 
 // Polecenia zmieniające pracę komputera-kamery muszą być podpisane kluczem z PIN-u.
 // Link odbiorcy zawiera tylko nazwę kanału, dlatego nie wystarcza jako uprawnienie do sterowania.
-const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "audio-profile-set", "light-set", "restart", "reload", "folder-browse", "folder-create", "folder-select", "folder-delete-empty"]);
-const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}${sig.type === "light-set" ? `|L${clampLight(sig.light)}` : ""}${sig.type.startsWith("folder-") ? `|F${JSON.stringify(sig.folderEnvelope)}` : ""}`;
+const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "audio-profile-set", "light-set", "restart", "reload", "folder-browse", "folder-create", "folder-select", "folder-delete-empty", "recording-delete"]);
+const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}${sig.type === "light-set" ? `|L${clampLight(sig.light)}` : ""}${(sig.type.startsWith("folder-") || sig.type === "recording-delete") ? `|F${JSON.stringify(sig.folderEnvelope)}` : ""}`;
 const controlSignatureText = sig => controlText(sig) + (sig.type === 'audio-profile-set' ? `|A${sig.audioProfile}` : '') + (sig.commandId ? `|v1|${sig.commandId}|${sig.clientId}|${sig.expiresAt}` : "");
 async function signedOwnerControl(payload) {
   if (!ACCESS_KEY) return null;
@@ -1189,7 +1193,7 @@ const sender = (() => {
       if (!(await validOwnerControl(sig))) return;
       if (sig.commandId) {
         if (typeof sig.clientId !== "string" || sig.clientId.length > 80) return;
-        const isFolder = sig.type.startsWith("folder-");
+        const isFolder = (sig.type.startsWith("folder-") || sig.type === "recording-delete");
         const args = isFolder ? await openFolder(sig.folderEnvelope, ACCESS_KEY, sig.clientId, sig.commandId)
           : { mode: sig.mode, minutes: sig.minutes, q: sig.q, media: sig.media, light: sig.light, audioProfile: sig.audioProfile };
         const result = await commandDispatcher.execute({ v: 1, id: sig.commandId, name: sig.type, args, expiresAt: sig.expiresAt }, sig.clientId);
@@ -1581,7 +1585,7 @@ const sender = (() => {
       mic: a ? (a.label || "mikrofon") : "", micOn: !!a && a.enabled && a.readyState === "live", recording: r.recording, lastFile: r.lastFile,
       quality: recQuality().short, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem(), light: cameraLight, webrtc: webRtcDiagnostics.snapshot() };
   }
-  const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, light: clampLight(prefs.light), lightSw, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, visible: document.visibilityState === "visible", diag: diag() }), reportNativePanelState({ role: "transmitter", live: !!stream, cameraError: camProblem(), recording: archive.status().recording, camera: diag().cam, resolution: `${diag().w || 0}x${diag().h || 0}`, fps: diag().fps || 0 }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream, quality: prefs.recQuality }));
+  const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", nativeDrive: nativeDriveSummary(systemStore.snapshot().components.nativeDrive), rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, light: clampLight(prefs.light), lightSw, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, visible: document.visibilityState === "visible", diag: diag() }), reportNativePanelState({ role: "transmitter", live: !!stream, cameraError: camProblem(), recording: archive.status().recording, camera: diag().cam, resolution: `${diag().w || 0}x${diag().h || 0}`, fps: diag().fps || 0 }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream, quality: prefs.recQuality }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
   function setQuality(q) {
     if (!REC_QUALITY[q]) return;
@@ -1637,7 +1641,7 @@ const viewer = (() => {
   const commandClient = new CommandClient({
     send: async command => {
       if (!chan.channel) throw new Error("Brak połączenia z nadajnikiem.");
-      const args = command.name.startsWith("folder-") ? {folderEnvelope:await sealFolder(command.args,ACCESS_KEY,viewerId,command.id)} : command.args;
+      const args = (command.name.startsWith("folder-") || command.name === "recording-delete") ? {folderEnvelope:await sealFolder(command.args,ACCESS_KEY,viewerId,command.id)} : command.args;
       const payload = await signedOwnerControl({ type: command.name, ...args,
         commandId: command.id, clientId: viewerId, expiresAt: command.expiresAt });
       if (!payload) throw new Error("Panel jest zablokowany.");
@@ -1689,6 +1693,7 @@ const viewer = (() => {
         diagRow(pc?.connectionState === "connected", pc?.connectionState === "connected" ? "Telefon połączony z kamerą" : "Telefon nie jest jeszcze połączony z kamerą"),
         diagRow(video.videoWidth > 0, video.videoWidth > 0 ? `Obraz dociera na ten ekran (${video.videoWidth}×${video.videoHeight})` : "Obraz jeszcze nie dotarł na ten ekran"),
       ]);
+      if(sig.nativeDrive)systemStore.component("nativeDrive",nativeDriveSummary(sig.nativeDrive));
       setCtrlState({ hostVersion: sig.diag?.version || "", archive: sig.rec || null, recording: !!sig.rec?.recording, since: sig.rec?.since || 0, mode: sig.mode || "", until: sig.until || 0, skew: sig.now ? sig.now - Date.now() : 0, hasCam: !sig.camError, quality: sig.quality || "" });
       if (REC_QUALITY[sig.quality] && document.activeElement !== $("viewQuality")) $("viewQuality").value = sig.quality;
       if (MEDIA_LABEL[sig.media] && document.activeElement !== $("mediaPick")) $("mediaPick").value = sig.media;
@@ -1822,6 +1827,10 @@ function requireCommandSuccess(result) {
   throw error;
 }
 const commandDispatcher = new CommandDispatcher({ handlers: {
+  'recording-delete': async ({recordingName})=>{
+    if(!CAN_MANAGE_CAMERA)throw new Error('Usunięcie wykonuje wyłącznie komputer z archiwum.');
+    return archive.local.remove(recordingName);
+  },
   "folder-browse": async ({folderPath,folderOffset=0}) => {
     if (!CAN_MANAGE_CAMERA) throw new Error("Wybór folderu wymaga programu Windows na komputerze z kamerą.");
     return diskstore.browseFolders(folderPath,folderOffset);
@@ -2000,7 +2009,7 @@ function showSender() {
   // Jedna kolumna: kamera, oś czasu, Start/Stop/Restart, sterowanie — ustawienia na dole.
   // Nowe pliki wysyłają się same i mają kolejkę ponawiania, więc ręczny przycisk
   // uploadu nie jest potrzebny ani nie może tworzyć mylącego drugiego obiegu.
-  dvr ??= mountDvr({ client: localRecClient, drive: cloud.enabled ? { day: archive.listDay } : null, allowUpload: false, root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
+  dvr ??= mountDvr({ client: localRecClient, drive: null, allowUpload: false, removeRecording:name=>executeControl('recording-delete',{recordingName:name}), canRemove:()=>canControlCamera(), root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
   $("dvrCard").hidden = false;
   dvr.start();
   $("roleBtn").textContent = "Wyłącz nadawanie na tym komputerze (tylko oglądaj)";
@@ -2036,6 +2045,10 @@ function toastMsg(text) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 6000);
 }
 let dvr = null;
+document.addEventListener('click',event=>{
+  if(event.target.closest?.('a[href="nagrania.html"]')&&dvr&&ACCESS_KEY){event.preventDefault();document.dispatchEvent(new Event('hs-open-recordings'));}
+  if(event.target.closest?.('a.navLink[href="./"]')&&dvr&&ACCESS_KEY){event.preventDefault();dvr.closeArchive();dvr.goLive();document.dispatchEvent(new Event('hs-recordings-closed'));}
+});
 // Link odbiorcy pozostaje zawsze wyłącznie do oglądania. Panel właściciela
 // otrzymuje sterowanie dopiero po lokalnym wpisaniu PIN-u, z którego powstaje
 // ACCESS_KEY używany do podpisania każdego polecenia dla komputera-kamery.
@@ -2055,7 +2068,7 @@ function applyControlVisibility() {
 function showViewer() {
   $("sendPanel").hidden = true; $("watchPanel").hidden = false; $("viewEventsCard").hidden = false; $("layout").classList.remove("sender");
   // Oś czasu i biblioteka pokazują nagrania zapisane na stronie (nie z Google Drive).
-  dvr ??= mountDvr({ client: recClient, drive: !RECEIVER_ONLY && cloud.enabled ? { day: archive.listDay } : null, allowUpload: false, root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
+  dvr ??= mountDvr({ client: recClient, drive: null, allowUpload: false, removeRecording:name=>executeControl('recording-delete',{recordingName:name}), canRemove:()=>canControlCamera(), root: $("dvrCard"), listRoot: $("dvrListCard"), stage: $("stage"), liveVideo: video, toast: toastMsg, onState: playback => { viewingArchive = playback; paintSystemPanel(); } });
   recClient.onopen = () => dvr.refresh();
   $("dvrCard").hidden = false;
   dvr.start();
@@ -2176,7 +2189,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "115";
+  const SERVICE_WORKER_BUILD = "116";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2584,10 +2597,16 @@ if (RECEIVER_ONLY) {
   showViewer();
 } else {
   ACCESS_KEY = await requireAccess();
+  const drivePanel=$('nativeDrivePanel');drivePanel.hidden=false;
+  let refreshDrive=null;
   if (window.__HOME_SECURITY_AGENT_BRIDGE__ && window.chrome?.webview) {
     const agentTelemetry = createAgentTelemetry({client:new NativeAgentClient(),store:systemStore});
+    refreshDrive=()=>agentTelemetry.poll();
     window.addEventListener('pagehide', () => agentTelemetry.dispose(), {once:true});
   }
+  if(MOBILE_OWNER_APP&&$('mobileRecordingStorage'))$('mobileRecordingStorage').prepend(drivePanel);
+  const disposeDrive=mountNativeDriveUI({root:drivePanel,store:systemStore,refresh:refreshDrive});
+  window.addEventListener('pagehide',disposeDrive,{once:true});
   // Pulpit ma pojawić się natychmiast po poprawnym PIN-ie. Obliczenie kanału
   // lub późniejsze łączenie sieciowe nie może zostawić użytkownika z pustym
   // ekranem; obraz pokaże wtedy czytelny stan oczekiwania.
@@ -2633,12 +2652,12 @@ if (RECEIVER_ONLY) {
   showPlaceholder("Przygotowuję podgląd kamery…");
   try {
     CHANNEL = await channelFor(ACCESS_KEY);
-    if (new URLSearchParams(location.search).get("wroc") === "nagrania") location.replace("nagrania.html");
     if (prefs.role === "send") showSender();
     else {
       showViewer();
       if (OWNER_PANEL && !MOBILE_OWNER_APP) toastMsg("Panel właściciela: sterujesz komputerem-kamerą po wpisaniu PIN-u. Link odbiorcy nadal daje tylko podgląd.");
     }
+    if(new URLSearchParams(location.search).get('section')==='recordings'||new URLSearchParams(location.search).get('wroc')==='nagrania')document.dispatchEvent(new Event('hs-open-recordings'));
   } catch (error) {
     const detail = errText(error);
     showPlaceholder("Panel jest otwarty, ale nie udało się przygotować połączenia z kamerą. Otwórz Diagnostykę albo uruchom ponownie aplikację.");

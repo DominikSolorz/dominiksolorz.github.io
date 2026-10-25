@@ -7,7 +7,7 @@ const source = (await readFile(new URL('../kamera/diskstore.js',import.meta.url)
 function setup() {
   let picked=null;
   const ctx=vm.createContext({Map,Set,Error,crypto:webcrypto,window:{showDirectoryPicker:async()=>{if(picked instanceof Error) throw picked; return picked;}}});
-  vm.runInContext(source+'\n globalThis.values=new Map(); globalThis.api={choose,save,validFolderName,disconnect,deleteEmptyCreatedFolder,browseFolders,selectRemoteFolder,createRemoteFolder,deleteRemoteEmptyFolder}; get=async k=>values.get(k); put=async(k,v)=>{values.set(k,v);};',ctx);
+  vm.runInContext(source+'\n globalThis.values=new Map(); globalThis.api={choose,save,list,removeRecording,validFolderName,disconnect,deleteEmptyCreatedFolder,browseFolders,selectRemoteFolder,createRemoteFolder,deleteRemoteEmptyFolder}; get=async k=>values.get(k); put=async(k,v)=>{values.set(k,v);};',ctx);
   function folder(name,{sizeMismatch=false,granted=true}={}) {
     const files=new Map(), children=new Map();
     return {name,kind:'directory',files,children,queryPermission:async()=>granted?'granted':'denied',requestPermission:async()=>granted?'granted':'denied',
@@ -16,11 +16,14 @@ function setup() {
       entries:()=>[...files,...children][Symbol.iterator](),
       removeEntry:async(child,options)=>{assert.equal(options.recursive,false);if(files.has(child)){files.delete(child);return;}const target=children.get(child);if(target.files.size||target.children.size)throw Error('not empty');children.delete(child);},
       getDirectoryHandle:async(child,options)=>{if(!children.has(child)){if(!options?.create){const e=new Error('missing');e.name='NotFoundError';throw e;}children.set(child,folder(child));}return children.get(child);},
-      getFileHandle:async(file,options)=>{if(!files.has(file)) {if(!options?.create){const e=new Error('missing');e.name='NotFoundError';throw e;}let size=0; files.set(file,{getFile:async()=>({size:sizeMismatch?0:size}),createWritable:async()=>({write:async blob=>{size=typeof blob==='string'?blob.length:blob.size;},close:async()=>{},abort:async()=>{}})});} return files.get(file);}};
+      getFileHandle:async(file,options)=>{if(!files.has(file)) {if(!options?.create){const e=new Error('missing');e.name='NotFoundError';throw e;}let size=0; files.set(file,{getFile:async()=>({name:file,size:sizeMismatch?0:size}),createWritable:async()=>({write:async blob=>{size=typeof blob==='string'?blob.length:blob.size;},close:async()=>{},abort:async()=>{}})});} return files.get(file);}};
   }
   return {ctx,folder,pick:f=>{picked=f;},selected:()=>ctx.values.get('folder')};
 }
 const name='kamera-2026-10-16_21-00-00.mp4';
+test('explicit recording delete removes exactly one selected file',async()=>{const s=setup(),f=s.folder('archive');s.pick(f);await s.ctx.api.choose();await s.ctx.api.save(name,{size:10});const other='kamera-2026-10-16_21-10-00.mp4';await s.ctx.api.save(other,{size:11});assert.equal(await s.ctx.api.removeRecording(name),true);assert.equal(f.files.has(name),false);assert.equal(f.files.has(other),true);});
+test('recording delete after switching folders never uses a parent cached from old archive',async()=>{const s=setup(),a=s.folder('A'),b=s.folder('B');s.pick(a);await s.ctx.api.choose();await s.ctx.api.save(name,{size:10});await s.ctx.api.list();s.pick(b);await s.ctx.api.choose();await assert.rejects(s.ctx.api.removeRecording(name));assert.equal(a.files.has(name),true);assert.equal(b.files.size,0);});
+test('recording deletion refuses revoked folder permission and arbitrary paths',async()=>{const s=setup(),f=s.folder('A');s.pick(f);await s.ctx.api.choose();await s.ctx.api.save(name,{size:10});f.queryPermission=async()=>'denied';await assert.rejects(s.ctx.api.removeRecording(name));await assert.rejects(s.ctx.api.removeRecording('../'+name));assert.equal(f.files.has(name),true);});
 test('empty recordings are never confirmed',async()=>{const s=setup(),f=s.folder('nagrania');s.pick(f);await s.ctx.api.choose();await assert.rejects(s.ctx.api.save(name,{size:0}));assert.equal(f.files.has(name),false);});
 test('missing permission is not a confirmed folder write',async()=>{const s=setup();s.ctx.values.set('folder',s.folder('nagrania',{granted:false}));assert.equal(await s.ctx.api.save(name,{size:10}),false);});
 test('wrong size after closing a recording rejects confirmation',async()=>{const s=setup(),f=s.folder('nagrania');s.pick(f);await s.ctx.api.choose();f.files.set(name,{createWritable:async()=>({write:async()=>{},close:async()=>{},abort:async()=>{}}),getFile:async()=>({size:3})});await assert.rejects(s.ctx.api.save(name,{size:10}),/Rozmiar/);});

@@ -37,6 +37,21 @@ if(config.RecoveryFolder is not null) {
 }
 DateTimeOffset nextPreflight=DateTimeOffset.MinValue;
 bool ready=false;
+var monitorBusy=0;
+using var monitor=new Timer(_=>{
+ if(Interlocked.Exchange(ref monitorBusy,1)!=0)return;
+ try {
+  using var connection=Open();using var command=connection.CreateCommand();
+  command.CommandText="SELECT status,COUNT(*) FROM drive_uploads WHERE integration_id=$i AND folder_id=$f AND name LIKE 'kamera-%' GROUP BY status";
+  command.Parameters.AddWithValue("$i",config.IntegrationId.ToString());command.Parameters.AddWithValue("$f",config.DriveFolderId);
+  var counts=new Dictionary<string,long>();using(var reader=command.ExecuteReader())while(reader.Read())counts[reader.GetString(0)]=reader.GetInt64(1);
+  command.CommandText="SELECT code FROM drive_uploads WHERE integration_id=$i AND folder_id=$f AND name LIKE 'kamera-%' AND status IN ('blocked','failed') ORDER BY updated_ms DESC LIMIT 1";
+  var failure=command.ExecuteScalar() as string;
+  var status=failure=="GOOGLE_REAUTH_REQUIRED"?"auth_required":failure is not null?"degraded":counts.GetValueOrDefault("running")>0?"uploading":counts.GetValueOrDefault("queued")+counts.GetValueOrDefault("retry_wait")>0?"queued":Volatile.Read(ref ready)?"ready":"checking";
+  db.SetState("drive.sync",new{status,counts,error=failure,folder=root,driveFolderId=config.DriveFolderId,updatedAt=DateTimeOffset.UtcNow,localFilesDeleted=false});
+ }catch(Exception error) when(error is IOException or SqliteException or UnauthorizedAccessException){ /* Telemetry cannot abort uploads. */ }
+ finally{Volatile.Write(ref monitorBusy,0);}
+},null,TimeSpan.Zero,TimeSpan.FromSeconds(5));
 using var stop=new CancellationTokenSource();
 Console.CancelKeyPress+=(_,e)=>{e.Cancel=true;stop.Cancel();};
 while(!stop.IsCancellationRequested) {

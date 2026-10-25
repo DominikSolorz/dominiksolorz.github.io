@@ -1,0 +1,13 @@
+# HOME SECURITY Desktop 1.4.8 / web panel 207
+
+Recordings use a wide player, calendar/timeline and full-width recording rows in one main column. Storage tools occupy a separate right sidebar on large screens and move below on smaller screens. Advanced folder/legacy integration controls are collapsed. Rows have text actions: download, share/send via the device, and owner-only local deletion. Device sharing falls back to downloading when file sharing is unavailable; it is not an email delivery API or a manual Drive-upload receipt.
+
+Deletion names one exact recording, requires acknowledgement in an in-app dialog, waits for an explicit host receipt, and leaves Drive copies unchanged. Signed remote owner commands encrypt the filename using the existing authenticated envelope; the receiver-only link gets no delete action. Paths, revoked folder access, stale cached parents and ambiguous duplicate filenames fail closed. No real recording was deleted during acceptance: interactive deletion used clearly marked synthetic fixtures and storage tests used isolated fakes.
+
+Header navigation opens the existing DVR view without leaving the capture document. The obsolete separate archive page forwards to the same owner panel. The Google embedded-folder iframe is removed; a deliberately clicked, strictly validated Drive-folder link opens externally in the default browser. OAuth/PIN/capture state are not altered by viewing that folder.
+
+The calendar uses local calendar midnights, including 23-hour spring days and the 25-hour 2026-10-25 day in Europe/Warsaw. Late recordings are no longer clamped outside that day's range. New cached recordings retain an actual frame; existing thumbnails remain lazy and appear after playback rather than fetching every multi-GiB recording in the background.
+
+Native Drive status comes from the independent uploader's persisted heartbeat and actual SQLite job states. Missing/stale telemetry is unknown, never success. Public phone heartbeats omit local paths and credentials. The independent uploader remains active during this UI release.
+
+Validation: 173 frontend checks; isolated native suite including external-link validation; WebView2 bundle probe checks every required asset, contact/support and recording controls. The generated installer and hash-checked ZIP contain the same reviewed frontend sources. Interactive desktop/390px browser review used a synthetic video, checked no horizontal overflow, and verified cancel versus confirmed single-item deletion. These fixtures are excluded from release artifacts.

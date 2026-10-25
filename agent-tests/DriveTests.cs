@@ -9,6 +9,9 @@ static class DriveTests
 {
     public static async Task Run(Action<bool,string> check,string root)
     {
+        check(HomeSecurityDesktop.ExternalLinks.IsDriveFolder("https://drive.google.com/drive/folders/15c9XPFi55XkQnCjfW_cvDHqhEXo_M5V2"),"native owner click can open the real Drive folder outside blocked iframe");
+        check(!HomeSecurityDesktop.ExternalLinks.IsDriveFolder("https://drive.google.com.evil.test/drive/folders/abcdefghijk"),"Drive external opener rejects lookalike hosts");
+        check(!HomeSecurityDesktop.ExternalLinks.IsDriveFolder("file:///C:/Windows/System32/cmd.exe")&&!HomeSecurityDesktop.ExternalLinks.IsDriveFolder("https://attacker@drive.google.com/drive/folders/abcdefghijk"),"Drive external opener rejects local executables and URL credentials");
         var picker=new Dictionary<string,string>();GoogleDriveAuthorization.AddPickerParameters(picker,"folder1");
         check(picker["scope"]==GoogleDriveAuthorization.Scope && picker["include_granted_scopes"]=="false","desktop picker requests only drive.file");
         check(picker["trigger_onepick"]=="true" && picker["allow_folder_selection"]=="true" && picker["file_ids"]=="folder1" && picker["allow_multiple"]=="false","desktop picker filters one expected folder");

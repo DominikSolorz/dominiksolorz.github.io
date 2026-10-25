@@ -25,6 +25,10 @@ test('unconfirmed snapshot is degraded, not healthy',async()=>{
  const x=setup(async name=>({status:name==='agent.ping'?'succeeded':'unknown'}));await settle();
  assert.equal(x.store.read('agent').status,'degraded');x.monitor.dispose();
 });
+test('Drive telemetry uses persisted native component heartbeat and preserves counts',async()=>{
+ const updatedAt=new Date().toISOString();const x=setup(async name=>name==='agent.ping'?{status:'succeeded',result:{mediaEngine:'not_implemented'}}:{status:'succeeded',result:{components:{'drive.sync':{state:{status:'uploading',counts:{succeeded:1,running:1}},updatedAt}}}});
+ await settle();assert.equal(x.store.read('nativeDrive').counts.succeeded,1);assert.equal(x.store.read('nativeDrive').updatedAt,updatedAt);assert.equal(x.store.read('capture').status,'unknown');x.monitor.dispose();
+});
 test('late reply after disposal never updates state',async()=>{
  let resolve;const x=setup(()=>new Promise(r=>{resolve=r;}));x.monitor.dispose();
  resolve({status:'succeeded'});await settle();assert.equal(x.store.read('agent').status,'unknown');

@@ -27,14 +27,16 @@ internal sealed class BundleTestWindow : Form
                 {
                     if (new Uri(e.Request.Uri).AbsolutePath != "/kamera/__bundle_probe.html") return;
                     const string html = """
-                    <!doctype html><title>Bundle probe</title><script>
+                    <!doctype html><meta charset="utf-8"><title>Bundle probe</title><script>
                     (async()=>{try{
-                      const files=['index.html','app.js','workspace-ui.css','interface-theme.css','core/client-layout.js','vendor/supabase.js','assets/ds-logo.jpg','o-systemie.html','support.css','support-entry.mjs','support-view.mjs','pomoc.html','marketing-contact.js'];
+                      const files=['index.html','app.js','workspace-ui.css','interface-theme.css','core/client-layout.js','vendor/supabase.js','assets/ds-logo.jpg','o-systemie.html','support.css','support-entry.mjs','support-view.mjs','pomoc.html','marketing-contact.js','recording-actions.mjs','native-drive-ui.mjs','dvr-ui.js','diskstore.js'];
                       const checks=[];
                       for(const name of files){const r=await fetch(name);const b=await r.arrayBuffer();checks.push({name,status:r.status,bytes:b.byteLength});}
                       const missing=await fetch('__missing_bundle_file__.js');
                       const contact=await (await fetch('pomoc.html')).text();
                       const contactReady=contact.includes('id="mktSendMessage"')&&contact.includes('/functions/v1/home-contact')&&!contact.includes('Przygotuj wiadomość');
+                      const dvr=await(await fetch('dvr-ui.js')).text();const archive=await(await fetch('nagrania.html')).text();
+                      const recordingsReady=dvr.includes('textContent: "Wyślij"')&&dvr.includes("'Usuń'")&&!archive.includes('iframe')&&archive.includes('section=recordings');
                       const home=document.createElement('section');home.id='publicHome';document.body.append(home);
                       await import('./support-entry.mjs?v=1');
                       const launcher=home.querySelector('.hsSupportLauncher');launcher?.click();
@@ -42,11 +44,11 @@ internal sealed class BundleTestWindow : Form
                       while(!home.querySelector('#hsSupportDialog')?.open && Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,25));
                       const supportMounted=!!home.querySelector('#hsSupportDialog')?.open;
                       const topics=home.querySelectorAll('#hsSupportTopic option').length;
-                      window.chrome.webview.postMessage({ok:checks.every(x=>x.status===200&&x.bytes>0)&&missing.status===404&&supportMounted&&topics===6&&contactReady,checks,missing:missing.status,supportMounted,topics,contactReady});
+                      window.chrome.webview.postMessage({ok:checks.every(x=>x.status===200&&x.bytes>0)&&missing.status===404&&supportMounted&&topics===6&&contactReady&&recordingsReady,checks,missing:missing.status,supportMounted,topics,contactReady,recordingsReady});
                     }catch(e){window.chrome.webview.postMessage({ok:false,error:String(e)});}})();
                     </script>
                     """;
-                    e.Response = web.Environment.CreateWebResourceResponse(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(html)), 200, "OK", "Content-Type: text/html");
+                    e.Response = web.Environment.CreateWebResourceResponse(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(html)), 200, "OK", "Content-Type: text/html; charset=utf-8");
                 };
                 var completed = new TaskCompletionSource<string>();
                 web.WebMessageReceived += (_, e) =>

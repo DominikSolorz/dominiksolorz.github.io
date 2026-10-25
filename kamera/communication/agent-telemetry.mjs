@@ -13,6 +13,8 @@ export function createAgentTelemetry({client, store, interval = setInterval, can
       } else {
         const snapshot = await client.execute('system.snapshot');
         if (disposed) return;
+        const drive=snapshot.result?.components?.['drive.sync'];
+        if(snapshot.status==='succeeded'&&drive?.state)store.component('nativeDrive',{...drive.state,updatedAt:drive.updatedAt});
         telemetry = {status:snapshot.status === 'succeeded' ? 'healthy' : 'degraded',
           mediaEngine:ping.result?.mediaEngine || 'unknown',
           message:snapshot.status !== 'succeeded' ? 'Agent odpowiada, ale nie potwierdził odczytu stanu.' :

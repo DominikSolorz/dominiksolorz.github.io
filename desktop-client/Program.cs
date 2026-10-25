@@ -10,8 +10,8 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.4.7";
-    private const string WebPanelBuild = "206";
+    private const string DesktopVersion = "1.4.8";
+    private const string WebPanelBuild = "207";
     // Desktop serves its installed Panel bundle at the existing trusted origin.
     // The website and installed UI can now be released independently without
     // migrating the user's existing session, PIN or IndexedDB recordings.
@@ -257,7 +257,12 @@ internal static class Program
             };
             webView.CoreWebView2.ProcessFailed += (_, e) => WriteDiagnostic("webview-process-failed", new { reason = e.Reason.ToString(), kind = e.ProcessFailedKind.ToString() });
 
-            webView.CoreWebView2.NewWindowRequested += (_, e) => e.Handled = true;
+            webView.CoreWebView2.NewWindowRequested += (_, e) => {
+                e.Handled=true;
+                if(!e.IsUserInitiated||!AgentWebViewBridge.Trusted(webView.CoreWebView2.Source)||!ExternalLinks.IsDriveFolder(e.Uri))return;
+                try{Process.Start(new ProcessStartInfo(e.Uri){UseShellExecute=true});}
+                catch(Exception error) when(error is System.ComponentModel.Win32Exception or InvalidOperationException){WriteDiagnostic("external-drive-open-failed",new{code="BROWSER_UNAVAILABLE"});}
+            };
             webView.CoreWebView2.NavigationStarting += (_, e) =>
             {
                 if (!Uri.TryCreate(e.Uri, UriKind.Absolute, out var uri) ||
