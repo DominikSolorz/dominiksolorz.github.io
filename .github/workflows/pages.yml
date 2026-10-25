@@ -53,7 +53,7 @@ jobs:
           cp "kamera/updates/HomeSecurityDesktop-${current}-win-x64.zip" _site/kamera/updates/
           # Keep the previous verified release as a rollback package. Older
           # binaries remain in Git, not in the size-limited Pages artifact.
-          cp kamera/updates/HomeSecurityDesktop-1.4.3-win-x64.zip _site/kamera/updates/
+          cp kamera/updates/HomeSecurityDesktop-1.4.4-win-x64.zip _site/kamera/updates/
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:

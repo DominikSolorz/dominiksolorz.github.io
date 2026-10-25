@@ -1,4 +1,8 @@
 /* HOME SECURITY workspace 193. Presentation only: never owns camera lifecycle. */
+/* Do not mix operator controls with the public landing page or the PIN gate. */
+body.accessPending>.topbar,body:has(#publicHome:not([hidden]))>.topbar{display:none!important}
+.desktopMode .desktopTopStatus.warning{color:#ffd083}
+.desktopMode .desktopTopStatus.warning i{background:#f2ac42;box-shadow:none}
 :root{--ui-bg:#0c0d10;--ui-surface:#17191e;--ui-raised:#20232a;--ui-line:#30343e;--ui-text:#f3f4f6;--ui-muted:#a5aab6;--ui-red:#dc2944;--ui-focus:#ff9baa;--bg:var(--ui-bg);--card:var(--ui-surface);--line:var(--ui-line);--text:var(--ui-text);--muted:var(--ui-muted);color-scheme:dark}
 html,body{background:var(--ui-bg);color:var(--ui-text);font-family:Segoe UI,system-ui,sans-serif}
 button,input,select,textarea{font-family:inherit}

@@ -2,6 +2,8 @@
 // Używa tego samego silnika transmisji, zapisu i archiwum co index.html.
 // Nie uruchamia kamery ani nie zmienia jej konfiguracji samodzielnie.
 import { createRouter } from "./core/router.mjs";
+import { systemStore } from "./core/store.mjs";
+import { operatorStatus } from "./core/operator-status.mjs?v=1";
 import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=2";
 const isTransmitter = location.hash === "#nadaj";
 // Tryb urządzenia jest rozstrzygany raz, przed załadowaniem CSS w index.html.
@@ -412,8 +414,10 @@ if (desktopRequested) {
     if ($("desktopSummaryCamera")) $("desktopSummaryCamera").textContent = `${count} aktywna${count === 1 ? "" : "e"}`;
     if ($("desktopSummaryStatus")) $("desktopSummaryStatus").textContent = isLive ? "System online" : "Oczekiwanie na transmisję";
     if ($("desktopSummaryRecording")) $("desktopSummaryRecording").textContent = mode?.textContent?.trim() || "Brak danych";
-    if ($("desktopTopStatusText")) $("desktopTopStatusText").textContent = isLive ? "System online" : "System offline";
-    desktopTopStatus.classList.toggle("live", Boolean(isLive));
+    const operation=operatorStatus({isLive,recording:systemStore.read('recording',45000),storage:systemStore.read('storage',90000)});
+    if ($("desktopTopStatusText")) $("desktopTopStatusText").textContent = operation.text;
+    desktopTopStatus.classList.toggle("live", operation.severity==='active');
+    desktopTopStatus.classList.toggle("warning", operation.severity==='warning');
     const settingsState = $("desktopSettingsLiveState");
     if (settingsState) { settingsState.textContent = isLive ? "● Na żywo" : "● oczekiwanie"; settingsState.classList.toggle("live", Boolean(isLive)); }
     const mediaSettings = document.querySelector("#video")?.srcObject?.getVideoTracks?.()[0]?.getSettings?.() || {};
@@ -430,6 +434,9 @@ if (desktopRequested) {
     subtree: true, characterData: true, childList: true, attributes: true, attributeFilter: ["class"]
   }));
   sync();
+  const stopStatusUpdates=systemStore.subscribe(sync);
+  const statusFreshnessTimer=setInterval(sync,15000);
+  window.addEventListener('pagehide',event=>{if(!event.persisted){stopStatusUpdates();clearInterval(statusFreshnessTimer);statusObserver.disconnect();}});
 
   const collapse = $("desktopCollapse");
   // Pierwsze uruchomienie pokazuje pełne opisy modułów. Zwinięcie paska
