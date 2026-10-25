@@ -29,11 +29,18 @@ internal sealed class BundleTestWindow : Form
                     const string html = """
                     <!doctype html><title>Bundle probe</title><script>
                     (async()=>{try{
-                      const files=['index.html','app.js','workspace-ui.css','interface-theme.css','core/client-layout.js','vendor/supabase.js','assets/ds-logo.jpg'];
+                      const files=['index.html','app.js','workspace-ui.css','interface-theme.css','core/client-layout.js','vendor/supabase.js','assets/ds-logo.jpg','o-systemie.html','support.css','support-entry.mjs','support-view.mjs','pomoc.html','marketing-contact.js'];
                       const checks=[];
                       for(const name of files){const r=await fetch(name);const b=await r.arrayBuffer();checks.push({name,status:r.status,bytes:b.byteLength});}
                       const missing=await fetch('__missing_bundle_file__.js');
-                      window.chrome.webview.postMessage({ok:checks.every(x=>x.status===200&&x.bytes>0)&&missing.status===404,checks,missing:missing.status});
+                      const home=document.createElement('section');home.id='publicHome';document.body.append(home);
+                      await import('./support-entry.mjs?v=1');
+                      const launcher=home.querySelector('.hsSupportLauncher');launcher?.click();
+                      const deadline=Date.now()+5000;
+                      while(!home.querySelector('#hsSupportDialog')?.open && Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,25));
+                      const supportMounted=!!home.querySelector('#hsSupportDialog')?.open;
+                      const topics=home.querySelectorAll('#hsSupportTopic option').length;
+                      window.chrome.webview.postMessage({ok:checks.every(x=>x.status===200&&x.bytes>0)&&missing.status===404&&supportMounted&&topics===6,checks,missing:missing.status,supportMounted,topics});
                     }catch(e){window.chrome.webview.postMessage({ok:false,error:String(e)});}})();
                     </script>
                     """;

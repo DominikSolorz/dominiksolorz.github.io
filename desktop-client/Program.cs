@@ -10,7 +10,7 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.4.5";
+    private const string DesktopVersion = "1.4.6";
     private const string WebPanelBuild = "206";
     // Desktop serves its installed Panel bundle at the existing trusted origin.
     // The website and installed UI can now be released independently without
@@ -279,7 +279,10 @@ internal static class Program
                 var installedBuild = File.Exists(WebShellMarkerPath)
                     ? File.ReadAllText(WebShellMarkerPath).Trim()
                     : string.Empty;
-                if (installedBuild == WebPanelBuild) return;
+                // Native releases may update bundled HTML/CSS without changing
+                // the live recorder's web protocol version. Include both values.
+                var installedShell = DesktopVersion + ":" + WebPanelBuild;
+                if (installedBuild == installedShell) return;
 
                 // Usuwamy wyłącznie pamięć powłoki strony i service worker.
                 // Sesja użytkownika, PIN i pozostałe ustawienia nie są kasowane.
@@ -288,7 +291,7 @@ internal static class Program
                     "Storage.clearDataForOrigin",
                     "{\"origin\":\"https://dominiksolorz.github.io\",\"storageTypes\":\"cache_storage,service_workers\"}");
                 Directory.CreateDirectory(DataRoot);
-                File.WriteAllText(WebShellMarkerPath, WebPanelBuild);
+                File.WriteAllText(WebShellMarkerPath, installedShell);
                 WriteDiagnostic("web-shell-cache-cleared", new { build = WebPanelBuild });
             }
             catch (Exception ex)

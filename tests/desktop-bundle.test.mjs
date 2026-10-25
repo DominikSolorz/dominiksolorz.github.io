@@ -17,3 +17,13 @@ test('desktop bundle is installed separately from browser updates', async () => 
   assert.ok(installer.includes('UsePreviousAppDir=yes'));
   assert.ok(!installer.includes('[UninstallDelete]'));
 });
+
+test('native shell cache changes with desktop release while retaining account and recording storage',async()=>{
+  const host=await read('desktop-client/Program.cs');
+  assert.ok(host.includes('var installedShell = DesktopVersion + ":" + WebPanelBuild'));
+  assert.ok(host.includes('installedBuild == installedShell'));
+  assert.ok(host.includes('File.WriteAllText(WebShellMarkerPath, installedShell)'));
+  const clear=host.match(/Storage.clearDataForOrigin[\s\S]*?\);/)[0];
+  assert.ok(clear.includes('cache_storage,service_workers'));
+  assert.ok(!/indexeddb|local_storage|cookies|all"/i.test(clear));
+});
