@@ -15,17 +15,19 @@ public sealed class DriveUploadQueue(AgentDatabase database)
             if((d.Attributes&FileAttributes.ReparsePoint)!=0) throw new IOException("Reparse directory rejected.");
         if((File.GetAttributes(path)&FileAttributes.ReparsePoint)!=0) throw new IOException("Reparse file rejected.");
         var f=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);
-        if(f.Length is <=0 or > 1024L*1024*1024) { f.Dispose(); throw new ArgumentException("File must be 1 byte to 1 GiB."); }
+        if(f.Length is <=0 or > 16L*1024*1024*1024) { f.Dispose(); throw new ArgumentException("File must be 1 byte to 16 GiB."); }
         return f;
     }
-    public Guid Enqueue(Guid integration,string path,string folder)
+    public Guid Enqueue(Guid integration,string path,string folder,string? recordingName=null)
     {
         GoogleDriveApi.ValidateId(folder); path=System.IO.Path.GetFullPath(path);
+        var name=recordingName??System.IO.Path.GetFileName(path);
+        if(string.IsNullOrWhiteSpace(name)||name.Length>240||System.IO.Path.GetFileName(name)!=name||name.IndexOfAny(System.IO.Path.GetInvalidFileNameChars())>=0)throw new ArgumentException("Invalid recording filename.");
         using var input=OpenInput(path); var md5=Convert.ToHexString(MD5.HashData(input)); var id=Guid.NewGuid();
         using var db=database.Open(); using var c=db.CreateCommand();
         c.CommandText="INSERT INTO drive_uploads(id,integration_id,path,folder_id,name,size,md5,status,next_ms,updated_ms) VALUES($id,$integration,$path,$folder,$name,$size,$md5,'queued',$now,$now)";
         c.Parameters.AddWithValue("$id",id.ToString()); c.Parameters.AddWithValue("$integration",integration.ToString());
-        c.Parameters.AddWithValue("$path",path); c.Parameters.AddWithValue("$folder",folder); c.Parameters.AddWithValue("$name",System.IO.Path.GetFileName(path));
+        c.Parameters.AddWithValue("$path",path); c.Parameters.AddWithValue("$folder",folder); c.Parameters.AddWithValue("$name",name);
         c.Parameters.AddWithValue("$size",input.Length); c.Parameters.AddWithValue("$md5",md5); c.Parameters.AddWithValue("$now",DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
         c.ExecuteNonQuery(); return id;
     }

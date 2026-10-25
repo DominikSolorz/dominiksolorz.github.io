@@ -31,6 +31,8 @@ jobs:
         run: dotnet run --project agent-tests/HomeSecurity.Agent.Tests.csproj -c Release -- --process-crash agent/bin/Release/net10.0-windows/HomeSecurityAgent.dll
       - name: Desktop compilation
         run: dotnet build desktop-client/HomeSecurityDesktop.csproj -c Release
+      - name: Independent Drive uploader compilation
+        run: dotnet build drive-sync/HomeSecurity.DriveSync.csproj -c Release
   deploy:
     needs: verify
     environment:

@@ -154,6 +154,19 @@ public sealed class GoogleDriveApi : IDisposable
         return last+1;
     }
     // Session URI is a bearer-like capability: DPAPI only, never SQLite or logs.
+    // Safe operator telemetry: returns an acknowledged offset, never a session URI or token.
+    public async Task<long?> AcknowledgedBytes(DriveUpload job,CancellationToken ct)
+    {
+        var session=LoadSession(job);if(session is null)return null;
+        using var response=await Send(job.IntegrationId,()=>{
+            var request=new HttpRequestMessage(HttpMethod.Put,session);request.Content=new ByteArrayContent([]);
+            request.Content.Headers.TryAddWithoutValidation("Content-Range","bytes */"+job.Size);return request;
+        },ct);
+        if((int)response.StatusCode==308)return Offset(response,job.Size);
+        if(response.IsSuccessStatusCode)return job.Size;
+        if(response.StatusCode==HttpStatusCode.NotFound)return null;
+        await Ensure(response,ct);return null;
+    }
     // Lost responses query the existing session; an expired session restarts with the SAME reserved ID.
     public async Task Upload(DriveUpload job,FileStream file,Action renew,CancellationToken ct)
     {
@@ -185,7 +198,8 @@ public sealed class GoogleDriveApi : IDisposable
         session=ValidateSession(start.Headers.Location?.ToString()??"");
         SaveSession(job,session);
         }
-        var buffer=new byte[1024*1024];
+        // Multiples of Google's 256-KiB upload unit; bounded memory even for multi-GiB recordings.
+        var buffer=new byte[8*1024*1024];
         while(offset<job.Size) {
             renew(); file.Position=offset; var count=(int)Math.Min(buffer.Length,job.Size-offset);
             await file.ReadExactlyAsync(buffer.AsMemory(0,count),ct);

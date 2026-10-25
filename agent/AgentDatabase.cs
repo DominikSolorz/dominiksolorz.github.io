@@ -7,7 +7,7 @@ namespace HomeSecurity.Agent;
 public sealed partial class AgentDatabase
 {
     private readonly string connectionString;
-    public AgentDatabase(string directory)
+    public AgentDatabase(string directory, bool recoverInterrupted = true)
     {
         PrivateDirectory.Create(directory);
         connectionString = new SqliteConnectionStringBuilder {
@@ -15,6 +15,7 @@ public sealed partial class AgentDatabase
             Pooling = false, DefaultTimeout = 5 }.ToString();
         using var db = Open();
         Migrate(db);
+        if (!recoverInterrupted) return;
         using var recovery = db.CreateCommand();
         recovery.CommandText = "UPDATE commands SET status='unknown', updated_at=$now WHERE status='executing'";
         recovery.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O")); recovery.ExecuteNonQuery();

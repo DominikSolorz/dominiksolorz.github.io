@@ -55,17 +55,25 @@ static class DriveTests
         using var http401=new Server { UnauthorizedOnce=true }; using var retryApi=new GoogleDriveApi(fresh,http401);
         await retryApi.GenerateId(integration,CancellationToken.None);
         check(http401.TokenCalls==2,"401 refreshes access token once");
-        var resumePath=Path.Combine(root,"resume.bin");await File.WriteAllBytesAsync(resumePath,RandomNumberGenerator.GetBytes(1024*1024+99));
+        var largeInput=Path.Combine(root,"large-input.bin");
+        using(var sparse=new FileStream(largeInput,FileMode.Create,FileAccess.Write,FileShare.None))sparse.SetLength(2L*1024*1024*1024+17);
+        using(var readable=DriveUploadQueue.OpenInput(largeInput))check(readable.Length>int.MaxValue,"multi-GiB recording opens without loading it into memory");
+        var invalidName=false;try{queue.Enqueue(integration,path,"folder1","../escape.mp4");}catch(ArgumentException){invalidName=true;}
+        check(invalidName,"recovered recording display name cannot contain a path");
+        var resumePath=Path.Combine(root,"resume.bin");await File.WriteAllBytesAsync(resumePath,RandomNumberGenerator.GetBytes(8*1024*1024+99));
         var resumeJob=queue.Enqueue(integration,resumePath,"folder1");var interrupted=new Server{LoseFirstChunk=true};
         using var beforeRestart=new GoogleDriveApi(fresh,interrupted,Path.Combine(root,"sessions"));
         await new DriveUploadWorker(queue,beforeRestart).RunOne();
         check(queue.Status(resumeJob)=="retry_wait","partial chunk response loss retains retryable job");
+        var progressDetails=JsonSerializer.SerializeToElement(queue.Details(resumeJob));
+        var progressJob=new DriveUpload(resumeJob,integration,resumePath,"folder1","resume.bin",new FileInfo(resumePath).Length,"",progressDetails.GetProperty("remoteId").GetString(),"",1);
+        check(await beforeRestart.AcknowledgedBytes(progressJob,CancellationToken.None)==8L*1024*1024,"operator progress comes from Google acknowledged byte range");
         c.CommandText="UPDATE drive_uploads SET next_ms=0 WHERE id=$id";c.Parameters["$id"].Value=resumeJob.ToString();c.ExecuteNonQuery();
         using var afterRestart=new GoogleDriveApi(fresh,interrupted,Path.Combine(root,"sessions"));
         await new DriveUploadWorker(queue,afterRestart).RunOne();
         // The final response is deliberately lost too; reconcile it on the next attempt.
         c.ExecuteNonQuery();await new DriveUploadWorker(queue,afterRestart).RunOne();
-        check(queue.Status(resumeJob)=="succeeded"&&interrupted.Creates==1&&interrupted.StatusQueries==1,"DPAPI session resumes at server offset after adapter restart");
+        check(queue.Status(resumeJob)=="succeeded"&&interrupted.Creates==1&&interrupted.StatusQueries==2,"DPAPI session resumes at server offset after adapter restart");
     }
     private sealed class Server : HttpMessageHandler
     {
