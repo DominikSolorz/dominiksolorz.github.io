@@ -1,0 +1,22 @@
+#publicHome .hsSupportLauncher{position:fixed;right:24px;bottom:max(24px,env(safe-area-inset-bottom));z-index:1000;border:1px solid #ff526e;border-radius:28px;background:#d9193e;color:white;box-shadow:0 8px 35px #0009;padding:15px 23px;font:700 16px system-ui;cursor:pointer}
+#publicHome .hsSupportLauncher:focus-visible,#publicHome .hsSupportDialog :focus-visible{outline:3px solid #f2bc5f;outline-offset:3px}
+#publicHome .hsSupportDialog{position:fixed;inset:auto 24px 92px auto;margin:0;width:min(400px,calc(100vw - 32px));max-width:none;max-height:min(720px,calc(100dvh - 120px));padding:0;border:1px solid #393b47;border-radius:20px;background:#13151c;color:#f4f5f8;box-shadow:0 24px 90px #000a;font:14px/1.5 system-ui;overflow:auto}
+#publicHome .hsSupportDialog::backdrop{background:#0005}
+#publicHome .hsSupportHeader{position:sticky;top:0;background:#191b24;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;z-index:1;border-bottom:1px solid #343640}
+#publicHome .hsSupportHeader strong{font-size:16px}#publicHome .hsSupportHeader small{display:block;color:#b7bbc9;font-size:12px;margin-top:3px}
+#publicHome .hsSupportClose{background:transparent;border:0;color:#fff;font-size:28px;cursor:pointer;padding:0 8px}
+#publicHome .hsSupportBody{padding:18px 20px}#publicHome .hsSupportIntro{font-size:20px;font-weight:700;margin:0 0 14px}
+#publicHome .hsSupportLabel{display:block;font-size:13px;font-weight:600;margin-bottom:12px}
+#publicHome .hsSupportDialog select,#publicHome .hsSupportDialog textarea{display:block;box-sizing:border-box;width:100%;background:#0c0e14;border:1px solid #494c59;border-radius:9px;color:#fff;padding:11px;font:14px system-ui;margin-top:7px;resize:vertical}
+#publicHome .hsSupportMessages{max-height:245px;overflow:auto;overflow-wrap:anywhere;overscroll-behavior:contain}
+#publicHome .hsSupportMessage{background:#242733;border-radius:12px;padding:12px;margin:10px 20px 10px 0;white-space:pre-wrap}
+#publicHome .hsSupportMessage.user{background:#54192a;margin:10px 0 10px 20px}
+#publicHome .hsSupportNotice,#publicHome .hsSupportFine{color:#b7bbc9;font-size:12px}
+#publicHome .hsSupportConsent{display:block;color:#d4d6df;font-size:12px;margin:12px 0}#publicHome .hsSupportConsent input{accent-color:#de2046;vertical-align:middle}
+#publicHome .hsSupportConsent a{color:#eaa9b8}
+#publicHome .hsSupportForm button,#publicHome .hsSupportHandoff{box-sizing:border-box;width:100%;padding:12px;border-radius:9px;border:1px solid #db294b;background:#d91b3e;color:#fff;font:600 14px system-ui;cursor:pointer}
+#publicHome .hsSupportHandoff{background:transparent;border-color:#636675;margin-top:12px}#publicHome .hsSupportStatus{font-size:13px;color:#f5ca85;overflow-wrap:anywhere}
+#publicHome .hsSupportDialog button:disabled{opacity:.55;cursor:wait}
+@media(max-width:520px){#publicHome .hsSupportLauncher{right:16px;bottom:max(16px,env(safe-area-inset-bottom))}#publicHome .hsSupportDialog{inset:auto 8px max(8px,env(safe-area-inset-bottom)) 8px;width:auto;max-height:calc(100dvh - 24px);border-radius:16px}#publicHome .hsSupportBody{padding:16px}#publicHome .hsSupportMessages{max-height:30dvh}}
+
+#publicHome .hsSupportDialog[open]{display:flex;flex-direction:column}#publicHome .hsSupportBody{overflow:auto;overscroll-behavior:contain}#publicHome .hsSupportHeader,#publicHome .hsSupportFooter{flex-shrink:0}#publicHome .hsSupportFooter{padding:0 20px 12px;background:#191b24;border-top:1px solid #343640}#publicHome .hsSupportFooter .hsSupportFine{margin:7px 0 0}

@@ -23,3 +23,16 @@ if(form){
   // Enable submission only after the local-only handlers are installed.
   document.querySelector('#mktPrepareMessage').disabled=false;
 }
+
+// Explicit handoff remains a draft until the visitor sends the contact form.
+if(form){
+  try{
+    const key='home-security-support-handoff';
+    const raw=sessionStorage.getItem(key);sessionStorage.removeItem(key);
+    if(raw){const data=JSON.parse(raw);if(Date.now()-data.created<1800000 && typeof data.message==='string'){
+      form.elements.namedItem('topic').value='Pomoc techniczna';
+      form.elements.namedItem('message').value=data.message.slice(0,3800);
+      document.querySelector('#mktContactResult').textContent='Opis z czatu został przeniesiony. Sprawdź treść i uzupełnij adres do odpowiedzi. Wiadomość nie została jeszcze wysłana.';
+    }}
+  }catch{}
+}

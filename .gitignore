@@ -10,3 +10,8 @@ agent-contracts/bin/
 agent-contracts/obj/
 agent-tests/bin/
 agent-tests/obj/
+
+# Local server credentials must never enter the static Pages distribution.
+.env
+.env.local
+supabase/functions/.env
