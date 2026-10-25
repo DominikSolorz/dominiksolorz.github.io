@@ -1,11 +1,11 @@
 // Zmieniaj wersję tylko wtedy, gdy aktualizujemy powłokę aplikacji.
 // Dzięki temu zainstalowany panel nie otworzy przestarzałego index.html.
-const CACHE = "kamera-domowa-shell-v112";
+const CACHE = "kamera-domowa-shell-v113";
 const SHELL = ["./", "./index.html", "./style.css?v=184", "./workspace-ui.css?v=10", "./workspace-panels.mjs?v=2", "./account-ui.mjs?v=3", "./auth.js?v=11", "./account-security.mjs?v=1", "./access.js?v=19", "./lock.js?v=19", "./app.js?v=206", "./zoom.js?v=17", "./audio-profile.mjs?v=1", "./diskstore.js?v=10", "./local-retention.mjs?v=1", "./dvr-ui.js?v=102", "./remote-folder-ui.mjs", "./communication/folder-channel.mjs", "./communication/folder-readiness.mjs", "./desktop.js?v=33", "./mobile.js?v=15", "./core/store.mjs", "./core/router.mjs", "./core/peer-diagnostics.mjs", "./communication/commands.mjs", "./manifest.webmanifest?v=2", "./icons/kamera-192.svg", "./icons/kamera-512.svg", "./vendor/supabase.js?v=2.117.2"];
 
 SHELL.push("./interface-theme.css?v=2", "./core/client-layout.js?v=2", "./core/web-updates.mjs?v=1", "./core/operator-status.mjs?v=1", "./communication/agent-telemetry.mjs?v=1", "./communication/native-agent-client.mjs");
 self.addEventListener("install", event => {
-  SHELL.push("./marketing.css?v=1", "./marketing-contact.js?v=1");
+  SHELL.push("./marketing.css?v=2", "./marketing-contact.js?v=2");
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", event => {

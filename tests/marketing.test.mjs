@@ -15,7 +15,7 @@ test('landing page includes actual product depth, not dead section buttons',asyn
  const html=await read('index.html');
  for(const id of ['mozliwosci','jak-dziala','specyfikacja','stan-projektu','poradniki','faq'])assert.ok(html.includes('id="'+id+'"'));
  assert.equal((html.match(/id="authDialog"/g)||[]).length,1);assert.equal((html.match(/id="app"/g)||[]).length,1);
- assert.ok(html.includes('marketing.css?v=1'));assert.ok(html.includes('id="publicHome"'));
+ assert.ok(html.includes('marketing.css?v=2'));assert.ok(html.includes('id="publicHome"'));
 });
 test('public articles and brochure do not load recorder or account runtime',async()=>{
  for(const page of pages){const html=await read(page);assert.ok(!/src="(?:\.\.\/)?(?:app|auth|desktop|mobile)\.js/.test(html),page);assert.ok(html.includes('lang="pl"'));assert.ok(html.includes('rel="canonical"'));assert.ok(html.includes('name="description"'));}
@@ -60,4 +60,10 @@ test('public downloads match the current installer release',async()=>{
   const html=await read(page);const links=[...html.matchAll(/downloads\/HOME-SECURITY-Desktop-Setup-([\d.]+)\.exe/g)];
   assert.ok(links.length>0);for(const link of links)assert.equal(link[1],version);
  }
+});
+test('cached marketing asset versions match every generated page',async()=>{
+ const sw=await read('sw.js');const index=await read('index.html');
+ const css=index.match(/marketing\.css\?v=\d+/)[0];assert.ok(sw.includes('./'+css));
+ for(const page of pages)assert.ok((await read(page)).includes(css),page);
+ const contact=(await read('pomoc.html')).match(/marketing-contact\.js\?v=\d+/)[0];assert.ok(sw.includes('./'+contact));
 });
