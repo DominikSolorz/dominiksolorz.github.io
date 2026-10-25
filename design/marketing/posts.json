@@ -1,0 +1,5 @@
+[
+  {"slug":"pierwsze-uruchomienie","title":"Pierwsze uruchomienie: od instalacji do własnego panelu","description":"Jak przygotować komputer, konto, PIN, kamerę i folder nagrań w HOME SECURITY. Lista sprawdzeń przed rozpoczęciem monitoringu.","category":"Pierwsze kroki","number":"01","art":"mktArtSetup"},
+  {"slug":"zapis-lokalny-i-drive","title":"Zapis lokalny a Google Drive. Dwa różne potwierdzenia","description":"Kamera na żywo, lokalny plik i kopia w Google Drive to trzy różne stany. Sprawdź, jak nie pomylić ich w swoim archiwum.","category":"Nagrania i kopie","number":"02","art":"mktArtStorage"},
+  {"slug":"diagnostyka-monitoringu","title":"Obraz jest, a nagrania brak? Sprawdź właściwy komponent","description":"Jak odczytywać diagnostykę kamery, harmonogramu, folderu, WebRTC i chmury, aby szukać przyczyny problemu we właściwym miejscu.","category":"Pomoc techniczna","number":"03","art":"mktArtDiagnostics"}
+]

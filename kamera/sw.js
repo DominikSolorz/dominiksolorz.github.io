@@ -1,10 +1,11 @@
 // Zmieniaj wersję tylko wtedy, gdy aktualizujemy powłokę aplikacji.
 // Dzięki temu zainstalowany panel nie otworzy przestarzałego index.html.
-const CACHE = "kamera-domowa-shell-v111";
+const CACHE = "kamera-domowa-shell-v112";
 const SHELL = ["./", "./index.html", "./style.css?v=184", "./workspace-ui.css?v=10", "./workspace-panels.mjs?v=2", "./account-ui.mjs?v=3", "./auth.js?v=11", "./account-security.mjs?v=1", "./access.js?v=19", "./lock.js?v=19", "./app.js?v=206", "./zoom.js?v=17", "./audio-profile.mjs?v=1", "./diskstore.js?v=10", "./local-retention.mjs?v=1", "./dvr-ui.js?v=102", "./remote-folder-ui.mjs", "./communication/folder-channel.mjs", "./communication/folder-readiness.mjs", "./desktop.js?v=33", "./mobile.js?v=15", "./core/store.mjs", "./core/router.mjs", "./core/peer-diagnostics.mjs", "./communication/commands.mjs", "./manifest.webmanifest?v=2", "./icons/kamera-192.svg", "./icons/kamera-512.svg", "./vendor/supabase.js?v=2.117.2"];
 
 SHELL.push("./interface-theme.css?v=2", "./core/client-layout.js?v=2", "./core/web-updates.mjs?v=1", "./core/operator-status.mjs?v=1", "./communication/agent-telemetry.mjs?v=1", "./communication/native-agent-client.mjs");
 self.addEventListener("install", event => {
+  SHELL.push("./marketing.css?v=1", "./marketing-contact.js?v=1");
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", event => {
@@ -18,7 +19,19 @@ self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
   if (event.request.mode === "navigate") {
-    event.respondWith(fetch(event.request).then(response => { const copy = response.clone(); caches.open(CACHE).then(cache => cache.put("./index.html", copy)); return response; }).catch(() => caches.match("./index.html")));
+    const panelPath = new URL("./", self.location.href).pathname;
+    const panelNavigation = url.pathname === panelPath || url.pathname === panelPath + "index.html";
+    const pageKey = panelNavigation ? "./index.html" : url.origin + url.pathname;
+    event.respondWith(fetch(event.request).then(async response => {
+      if (response.ok && response.headers.get("content-type")?.includes("text/html")) {
+        try { const cache = await caches.open(CACHE); await cache.put(pageKey, response.clone()); } catch { /* A full cache must not hide a working network response. */ }
+      }
+      return response;
+    }).catch(async () => {
+      const cached = await caches.match(pageKey);
+      if (cached) return cached;
+      return new Response('<!doctype html><html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Brak połączenia — HOME SECURITY</title><h1>Ta strona nie jest dostępna offline</h1><p>Połącz się z internetem i spróbuj ponownie.</p><a href="' + panelPath + '">Wróć do HOME SECURITY</a></html>', {status:503,headers:{"Content-Type":"text/html; charset=utf-8"}});
+    }));
     return;
   }
   event.respondWith(caches.match(event.request).then(hit => hit || fetch(event.request).then(response => { if (response.ok && url.pathname.includes("/kamera/")) { const copy = response.clone(); caches.open(CACHE).then(cache => cache.put(event.request, copy)); } return response; })));
