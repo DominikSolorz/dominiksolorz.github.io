@@ -3,6 +3,7 @@
 // index.html wybiera tryb urządzenia przed narysowaniem strony. To obejmuje
 // aplikację instalowaną oraz zwykły Chrome na telefonie/tablecie.
 import { createRouter } from "./core/router.mjs";
+import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { mountEventWorkspace, mountDiagnosticWorkspace } from "./workspace-panels.mjs?v=2";
 const isMobileOwnerApp = document.documentElement.classList.contains("mobileOwnerMode");
 
@@ -87,6 +88,7 @@ if (isMobileOwnerApp) {
     recordings: ["dvrCard", "dvrListCard", "mobileRecordingStorage"],
     settings: ["modeCard", "systemPanel", "setCard", "diagCard", "mobileDiagnosticWorkspace"]
   };
+  const viewMemory=createViewMemory({key:'hs-mobile-view-v2',routes:Object.keys(views),fallback:'home'});
   const eventsWorkspace=document.createElement("section");eventsWorkspace.id="mobileEventsWorkspace";eventsWorkspace.className="card mobileHidden";mountEventWorkspace(eventsWorkspace);
   const diagnosticWorkspace=document.createElement("section");diagnosticWorkspace.id="mobileDiagnosticWorkspace";diagnosticWorkspace.className="card mobileHidden";mountDiagnosticWorkspace(diagnosticWorkspace);
   document.querySelector(".mainCol")?.append(eventsWorkspace,diagnosticWorkspace);
@@ -121,6 +123,7 @@ if (isMobileOwnerApp) {
       button.setAttribute("aria-current", active ? "page" : "false");
     });
     try { sessionStorage.setItem("hs-mobile-view", view); } catch (_) { /* tryb prywatny */ }
+    viewMemory.save(view);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -150,9 +153,9 @@ if (isMobileOwnerApp) {
   new MutationObserver(updateStatus).observe(topStatus || document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] });
   updateStatus();
   // Powrót z archiwum lub ustawień nie może wyrzucać użytkownika na początek.
-  let initialView = "home";
-  try { initialView = sessionStorage.getItem("hs-mobile-view") || "home"; } catch (_) { /* tryb prywatny */ }
+  let legacyView = "home";
+  try { legacyView = sessionStorage.getItem("hs-mobile-view") || "home"; } catch (_) { /* tryb prywatny */ }
   const requestedMobileView=new URLSearchParams(location.search).get('mobileView');
-  if(Object.hasOwn(views,requestedMobileView))initialView=requestedMobileView;
+  const initialView=viewMemory.read(requestedMobileView,legacyView);
   setTimeout(() => setView(views[initialView] ? initialView : "home"), 350);
 }

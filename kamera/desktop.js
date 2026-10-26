@@ -2,6 +2,7 @@
 // Używa tego samego silnika transmisji, zapisu i archiwum co index.html.
 // Nie uruchamia kamery ani nie zmienia jej konfiguracji samodzielnie.
 import { createRouter } from "./core/router.mjs";
+import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { operatorStatus } from "./core/operator-status.mjs?v=1";
 import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=2";
@@ -385,7 +386,9 @@ if (desktopRequested) {
     const diag = $("diagCard");
     if (diag) { diag.hidden = false; diag.open = true; diag.scrollIntoView({ behavior: "smooth", block: "start" }); }
   };
+  const viewMemory=createViewMemory({key:'hs-desktop-view-v1',routes:['live','controls','events','archive','settings','diagnostics'],fallback:'live'});
   const renderRoute = view => {
+    viewMemory.save(view);
     if(view!=="archive"&&document.body.classList.contains("archiveOpen"))document.dispatchEvent(new Event("hs-close-recordings"));
     if (view === "archive") {
       shell.querySelectorAll("[data-desktop-view]").forEach(button => button.classList.toggle("active", button.dataset.desktopView === "archive"));
@@ -397,6 +400,7 @@ if (desktopRequested) {
   };
   const router = createRouter({ routes: ["live", "controls", "events", "archive", "settings", "diagnostics"], render: renderRoute });
   const setActive = view => router.navigate(view);
+  document.addEventListener('hs-panel-ready',()=>{if(router.current==='archive')document.dispatchEvent(new Event('hs-open-recordings'));});
   shell.querySelectorAll("[data-desktop-view]").forEach(button => button.addEventListener("click", () => setActive(button.dataset.desktopView)));
   document.addEventListener("hs-recordings-closed", () => setActive("live"));
   shell.querySelectorAll("[data-desktop-view]").forEach(button => { button.title = button.querySelector("b").textContent; });
@@ -487,8 +491,6 @@ if (desktopRequested) {
   // Link z `view=settings` otwiera od razu właściwy ekran — jest przydatny
   // dla skrótu aplikacji i eliminuje ryzyko, że użytkownik zostanie na
   // starym pulpicie po aktualizacji. Bez parametru zachowujemy Pulpit.
-  const initialView = ["live", "controls", "events", "archive", "settings", "diagnostics"].includes(routeParams.get("view"))
-    ? routeParams.get("view")
-    : "live";
+  const initialView = viewMemory.read(routeParams.get('view'));
   setActive(initialView);
 }

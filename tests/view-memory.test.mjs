@@ -1,0 +1,10 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {createViewMemory} from '../kamera/core/view-memory.mjs';
+const setup=()=>{const map=new Map();return {map,options:{key:'views',routes:['home','recordings','settings'],fallback:'home',storage:()=>({getItem:k=>map.get(k),setItem:(k,v)=>map.set(k,v)})}};};
+test('last view survives a fresh panel instance',()=>{const {map,options}=setup();createViewMemory(options).save('recordings');assert.equal(createViewMemory(options).read(),'recordings');assert.deepEqual([...map],[['views','recordings']]);});
+test('explicit valid link takes precedence over remembered view',()=>{const {options}=setup();const m=createViewMemory(options);m.save('settings');assert.equal(m.read('recordings'),'recordings');});
+test('unknown routes and command-shaped values are never persisted',()=>{const {map,options}=setup();const m=createViewMemory(options);for(const v of ['stop','camera.off','../recordings',null])assert.equal(m.save(v),false);assert.equal(map.size,0);});
+test('corrupted saved view falls back safely',()=>{const {map,options}=setup();map.set('views','stop');assert.equal(createViewMemory(options).read(),'home');});
+test('blocked local storage does not prevent navigation',()=>{const m=createViewMemory({key:'v',routes:['home','recordings'],fallback:'home',storage:()=>{throw Error('denied');}});assert.equal(m.read(),'home');assert.equal(m.save('recordings'),false);assert.equal(m.read('recordings'),'recordings');});
+test('previous tab-session preference migrates without storing access data',()=>{const {options}=setup();assert.equal(createViewMemory(options).read(null,'settings'),'settings');});
+test('desktop and phone keep independent last views',()=>{const {options}=setup();const a=createViewMemory({...options,key:'phone'}),b=createViewMemory({...options,key:'desktop'});a.save('settings');b.save('recordings');assert.equal(a.read(),'settings');assert.equal(b.read(),'recordings');});
