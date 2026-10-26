@@ -1,3 +1,4 @@
+import {contactIdentity} from './identity.mjs';
 export const CONTACT_TOPICS=['Pomoc techniczna','Konto i dostęp','Kamera i dźwięk','Nagrania i Google Drive','Produkt i współpraca','Prywatność i dokumenty'];
 export function validateContact(body){
   if(!body||typeof body!=='object'||body.consent!==true||!CONTACT_TOPICS.includes(body.topic)||!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(body.requestId||'')||body.website)throw Error('invalid_request');
@@ -7,7 +8,7 @@ export function validateContact(body){
 }
 export async function signTicket(ticket,secret,issuedAt){
   const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
-  const canonical=JSON.stringify([ticket.requestId,ticket.name,ticket.surname,ticket.email,ticket.topic,ticket.message,ticket.consent]);
+  const values=[ticket.requestId,ticket.name,ticket.surname,ticket.email,ticket.topic,ticket.message,ticket.consent];if(ticket.identity)values.push([ticket.identity.verified,ticket.identity.avatarMime||'',ticket.identity.avatarBase64||'']);const canonical=JSON.stringify(values);
   const signature=await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(canonical+'\n'+issuedAt));
   return Array.from(new Uint8Array(signature),b=>b.toString(16).padStart(2,'0')).join('');
 }
@@ -16,7 +17,7 @@ export function contactHandler({getConfig,fetcher=fetch,now=Date.now}){
     const origin=request.headers.get('Origin'),headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Vary':'Origin','X-Content-Type-Options':'nosniff'};
     const json=(body,status=200)=>Response.json(body,{status,headers});
     if(origin!=='https://dominiksolorz.github.io')return json({error:'origin_denied'},403);
-    Object.assign(headers,{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'content-type'});
+    Object.assign(headers,{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'content-type, authorization'});
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
     if(request.method!=='POST')return json({error:'method_not_allowed'},405);
     try{
@@ -27,6 +28,7 @@ export function contactHandler({getConfig,fetcher=fetch,now=Date.now}){
       let ticket;try{ticket=validateContact(JSON.parse(new TextDecoder().decode(bytes)));}catch{return json({error:'invalid_request'},400);}
       const config=getConfig();
       if(!config?.secret||!/^[a-f0-9]{64}$/.test(config.secret)||!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(config.url||''))return json({error:'contact_unavailable'},503);
+      const identity=await contactIdentity(request,ticket,config,fetcher);if(identity)Object.assign(ticket,identity);
       const issuedAt=now(),signature=await signTicket(ticket,config.secret,issuedAt);
       const response=await fetcher(config.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket,issuedAt,signature}),signal:AbortSignal.timeout(25000),redirect:'follow'});
       if(!response.ok)return json({error:'delivery_unconfirmed',requestId:ticket.requestId},503);

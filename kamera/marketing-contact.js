@@ -23,7 +23,17 @@ if(form){
     busy=true;submit.disabled=true;fields.disabled=true;submit.textContent='Wysyłanie…';show('Wysyłanie wiadomości do administratora…','sending');
     try{
       payload.requestId=await requestId(payload);
-      const response=await fetch(form.action,{method:'POST',credentials:'omit',referrerPolicy:'no-referrer',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(35000)});
+      const headers={'Content-Type':'application/json'};
+      if(globalThis.supabase?.createClient){
+        try{
+          const {SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY}=await import('./config.js?v=34');
+          if(form.action!==SUPABASE_URL+'/functions/v1/home-contact')throw Error('invalid_endpoint');
+          const client=globalThis.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{autoRefreshToken:false,detectSessionInUrl:false}});
+          let timer;let data;try{({data}=await Promise.race([client.auth.getSession(),new Promise(resolve=>{timer=setTimeout(()=>resolve({data:{session:null}}),2500);})]));}finally{clearTimeout(timer);}
+          if(data.session?.access_token)headers.Authorization='Bearer '+data.session.access_token;
+        }catch{} // Guests and expired sessions can still send a normal contact request.
+      }
+      const response=await fetch(form.action,{method:'POST',credentials:'omit',referrerPolicy:'no-referrer',headers,body:JSON.stringify(payload),signal:AbortSignal.timeout(45000)});
       const receipt=await response.json();
       if(!response.ok||receipt.ok!==true||receipt.status!=='sent'||receipt.requestId!==payload.requestId)throw Error(receipt.error||'delivery_unconfirmed');
       submit.textContent='Wysłano ✓';
