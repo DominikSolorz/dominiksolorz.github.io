@@ -31,7 +31,7 @@ export function contactHandler({getConfig,fetcher=fetch,now=Date.now}){
       const response=await fetcher(config.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket,issuedAt,signature}),signal:AbortSignal.timeout(25000),redirect:'follow'});
       if(!response.ok)return json({error:'delivery_unconfirmed',requestId:ticket.requestId},503);
       const result=await response.json();
-      if(result.ok===true&&result.status==='sent'&&result.requestId===ticket.requestId)return json({ok:true,status:'sent',requestId:ticket.requestId});
+      if(result.ok===true&&result.status==='sent'&&result.requestId===ticket.requestId)return json({ok:true,status:'sent',requestId:ticket.requestId,ticketNumber:'HS-'+ticket.requestId.slice(0,8).toUpperCase(),copyStatus:['sent','unknown','not_sent'].includes(result.copyStatus)?result.copyStatus:'not_sent'});
       console.warn('contact-relay-result',JSON.stringify({status:response.status,code:['unauthorized','invalid_request','conflict','rate_limited','service_unavailable','delivery_unknown'].includes(result.error)?result.error:'invalid_reply'}));
       if(result.error==='rate_limited')return json({error:'rate_limited'},429);
       if(result.error==='conflict')return json({error:'conflict'},409);

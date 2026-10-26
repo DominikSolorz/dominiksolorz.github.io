@@ -27,7 +27,9 @@ if(form){
       const receipt=await response.json();
       if(!response.ok||receipt.ok!==true||receipt.status!=='sent'||receipt.requestId!==payload.requestId)throw Error(receipt.error||'delivery_unconfirmed');
       submit.textContent='Wysłano ✓';
-      show('Wiadomość została wysłana do administratora. Odpowiemy na podany adres e-mail. Numer zgłoszenia: '+receipt.requestId,'sent');
+      const number=receipt.ticketNumber||'HS-'+receipt.requestId.slice(0,8).toUpperCase();
+      const copy=receipt.copyStatus==='sent'?' Potwierdzenie i kopia wiadomości zostały wysłane na '+payload.email+'. Sprawdź także Spam.':' Nie udało się potwierdzić wysyłki kopii na Twój adres. Zgłoszenie dotarło do administratora — nie wysyłaj go ponownie.';
+      show('Zgłoszenie '+number+' zostało przyjęte. Odpowiemy na podany adres e-mail.'+copy,'sent');
     }catch(error){
       submit.disabled=false;submit.textContent='Spróbuj ponownie →';
       show(error.message==='rate_limited'?'Za dużo wiadomości w krótkim czasie. Odczekaj minutę i ponów wysyłkę. Jeśli limit dzienny został osiągnięty, napisz bezpośrednio na goldservicepoland@gmail.com.':'Nie udało się potwierdzić wysłania. Treść została zachowana. Ponów bez zmiany treści — ten sam numer zgłoszenia chroni przed podwójną wysyłką. Możesz też napisać na goldservicepoland@gmail.com.','error');

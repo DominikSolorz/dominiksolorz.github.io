@@ -32,18 +32,24 @@ test('missing relay, forbidden origins and unconfirmed upstream never claim sent
  }
 });
 const mailSource=await readFile(new URL('../supabase/contact-mailer.gs',import.meta.url),'utf8');
-function mailRuntime(throwOnSend=false){
+function mailRuntime(throwOnSend=false,quota=100){
  const props=new Map([['CONTACT_RELAY_SECRET',secret]]);let sends=[];
  const properties={getProperty:k=>props.get(k)||null,setProperty:(k,v)=>props.set(k,v),getProperties:()=>Object.fromEntries(props),deleteProperty:k=>props.delete(k)};
- const context={PropertiesService:{getScriptProperties:()=>properties},LockService:{getScriptLock:()=>({waitLock(){},hasLock:()=>true,releaseLock(){}})},MailApp:{getRemainingDailyQuota:()=>100,sendEmail:message=>{sends.push(message);if(throwOnSend)throw Error('uncertain');}},Utilities:{Charset:{UTF_8:'utf-8'},DigestAlgorithm:{SHA_256:'sha256'},computeDigest:(algorithm,text)=>[...createHash('sha256').update(text).digest()],computeHmacSha256Signature:(text,key)=>[...createHmac('sha256',key).update(text).digest()]},ContentService:{MimeType:{JSON:'json'},createTextOutput:text=>({setMimeType:()=>JSON.parse(text)})}};
+ const context={PropertiesService:{getScriptProperties:()=>properties},LockService:{getScriptLock:()=>({waitLock(){},hasLock:()=>true,releaseLock(){}})},MailApp:{getRemainingDailyQuota:()=>quota,sendEmail:message=>{sends.push(message);if(throwOnSend===true||throwOnSend===sends.length)throw Error('uncertain');}},Utilities:{base64Decode:text=>[...Buffer.from(text,'base64')],newBlob:(bytes,type,name)=>({bytes,type,name}),Charset:{UTF_8:'utf-8'},DigestAlgorithm:{SHA_256:'sha256'},computeDigest:(algorithm,text)=>[...createHash('sha256').update(text).digest()],computeHmacSha256Signature:(text,key)=>[...createHmac('sha256',key).update(text).digest()]},ContentService:{MimeType:{JSON:'json'},createTextOutput:text=>({setMimeType:()=>JSON.parse(text)})}};
  vm.createContext(context);vm.runInContext(mailSource,context);return {context,sends,props};
 }
 async function envelope(value=ticket){const issuedAt=Date.now();return {ticket:value,issuedAt,signature:await signTicket(value,secret,issuedAt)};}
-test('Apps Script sends only to owner, sets reply-to and deduplicates repeat UUID',async()=>{
+test('copy failure preserves successful owner delivery and never resends either message',async()=>{
+ const r=mailRuntime(2),event={postData:{contents:JSON.stringify(await envelope())}};
+ const first=r.context.doPost(event);assert.equal(first.status,'sent');assert.equal(first.copyStatus,'unknown');assert.equal(r.context.doPost(event).copyStatus,'unknown');assert.equal(r.sends.length,2);
+});
+test('quota reserves both recipients before sending anything',async()=>{const r=mailRuntime(false,1);assert.equal(r.context.doPost({postData:{contents:JSON.stringify(await envelope())}}).error,'rate_limited');assert.equal(r.sends.length,0);});
+test('mail templates escape all visitor HTML and keep readable text and stable case number',()=>{const r=mailRuntime(),value={...ticket,name:'<img src=x>',message:'<script>alert(1)</script>\nDruga linia & opis'};for(const kind of ['owner','copy']){const m=r.context.contactMail(value,kind,Date.now());assert.doesNotMatch(m.htmlBody,/<script>|<img src=x>/);assert.match(m.htmlBody,/&lt;script&gt;/);assert.match(m.htmlBody,/<br>Druga linia &amp; opis/);assert.match(m.subject,/HS-ABCDE123/);assert.ok(m.body.includes(value.message));}});
+test('Apps Script sends owner report and sender copy with separate reply-to and deduplicates both',async()=>{
  const runtime=mailRuntime(),body=await envelope();const event={postData:{contents:JSON.stringify(body)}};
- assert.equal(runtime.context.doPost(event).status,'sent');assert.equal(runtime.context.doPost(event).status,'sent');assert.equal(runtime.sends.length,1);
- assert.equal(runtime.sends[0].to,'goldservicepoland@gmail.com');assert.equal(runtime.sends[0].replyTo,ticket.email);
- const changed=await envelope({...ticket,message:'Inna treść tego samego numeru.'});assert.equal(runtime.context.doPost({postData:{contents:JSON.stringify(changed)}}).error,'conflict');assert.equal(runtime.sends.length,1);
+ assert.equal(runtime.context.doPost(event).status,'sent');assert.equal(runtime.context.doPost(event).status,'sent');assert.equal(runtime.sends.length,2);
+ assert.equal(runtime.sends[0].to,'goldservicepoland@gmail.com');assert.equal(runtime.sends[0].replyTo,ticket.email);assert.equal(runtime.sends[1].to,ticket.email);assert.equal(runtime.sends[1].replyTo,'goldservicepoland@gmail.com');assert.ok(runtime.sends.every(m=>m.htmlBody.includes('cid:hslogo')&&m.inlineImages.hslogo.type==='image/jpeg'));assert.match(runtime.sends[1].body,/Kopia Twojej wiadomości/);
+ const changed=await envelope({...ticket,message:'Inna treść tego samego numeru.'});assert.equal(runtime.context.doPost({postData:{contents:JSON.stringify(changed)}}).error,'conflict');assert.equal(runtime.sends.length,2);
 });
 test('Apps Script rejects bad signature and never automatically retries uncertain delivery',async()=>{
  const runtime=mailRuntime(true),body=await envelope();
@@ -59,5 +65,5 @@ test('contact frontend preserves entered values and reuses request ID on a retry
   const body=JSON.parse(options.body);sent.push(body);return nextReply==='fail'?Response.json({error:'delivery_unconfirmed'},{status:503}):Response.json({ok:true,status:'sent',requestId:body.requestId});
  }};vm.createContext(context);vm.runInContext(await readFile(new URL('../kamera/marketing-contact.js',import.meta.url),'utf8'),context);
  await listeners.submit({preventDefault(){}});assert.equal(result.dataset.state,'error');assert.equal(elements.message.value,ticket.message);assert.equal(submit.disabled,false);
- nextReply='sent';await listeners.submit({preventDefault(){}});assert.equal(sent[0].requestId,sent[1].requestId);assert.equal(result.dataset.state,'sent');assert.equal(submit.disabled,true);assert.ok(result.textContent.includes(sent[1].requestId));
+ nextReply='sent';await listeners.submit({preventDefault(){}});assert.equal(sent[0].requestId,sent[1].requestId);assert.equal(result.dataset.state,'sent');assert.equal(submit.disabled,true);assert.ok(result.textContent.includes('HS-'+sent[1].requestId.slice(0,8).toUpperCase()));
 });
