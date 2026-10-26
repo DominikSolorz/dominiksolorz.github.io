@@ -28,7 +28,7 @@ if(form){
         try{
           const {SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY}=await import('./config.js?v=34');
           if(form.action!==SUPABASE_URL+'/functions/v1/home-contact')throw Error('invalid_endpoint');
-          const client=globalThis.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{autoRefreshToken:false,detectSessionInUrl:false}});
+          const client=globalThis.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{autoRefreshToken:false,detectSessionInUrl:false,storageKey:"home-security-account-v1"}});
           let timer;let data;try{({data}=await Promise.race([client.auth.getSession(),new Promise(resolve=>{timer=setTimeout(()=>resolve({data:{session:null}}),2500);})]));}finally{clearTimeout(timer);}
           if(data.session?.access_token)headers.Authorization='Bearer '+data.session.access_token;
         }catch{} // Guests and expired sessions can still send a normal contact request.
