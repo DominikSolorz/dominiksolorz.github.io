@@ -94,8 +94,9 @@ if (isMobileOwnerApp) {
   recordingStorage.id = "mobileRecordingStorage";
   recordingStorage.className = "card mobileRecordingStorage mobileHidden";
   recordingStorage.open = true;
-  recordingStorage.innerHTML = `<summary>Zapis i kopia Drive</summary>
+    recordingStorage.innerHTML = `<summary>Zapis na komputerze</summary>
     <p id="mobileRecordingState" role="status">Oczekuję na stan komputera nagrywającego.</p>
+    <details class="localRecordingDetails"><summary>Szczegóły zapisu i diagnostyka</summary><p id="mobileRecordingDetails"></p><p class="muted small">Starsza kolejka w szczegółach pochodzi z panelu komputera. Aktualny status niezależnego wysyłania pokazuje osobna karta Google Drive powyżej.</p></details>
     <p class="muted small">Nagrania są zapisywane na komputerze z kamerą. Z telefonu zarządzasz miejscem wcześniej zatwierdzonym na komputerze.</p>
     <div id="mobileRecordingFolderControls"><button type="button" id="mobileChooseComputerFolder">📁 Wybierz folder komputera</button></div>
     <p class="muted small">Komputer musi być włączony. Widzisz miejsce wcześniej zatwierdzone w programie Windows; możesz otwierać podfoldery, tworzyć je i wybierać miejsce zapisu.</p>`;

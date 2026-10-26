@@ -11,11 +11,12 @@ import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=17";
 import * as recstore from "./recstore.js?v=77";
 import { oldRecordingPlan } from "./local-retention.mjs?v=1";
 import { createRecordingDeletion } from "./recording-actions.mjs?v=2";
+import { localRecordingView } from './recording-view-state.mjs?v=1';
 import { mountNativeDriveUI, nativeDriveSummary } from './native-drive-ui.mjs?v=2';
 import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=11";
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=104";
+import { mountDvr } from "./dvr-ui.js?v=105";
 import { accountClient } from "./auth.js?v=11";
 import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=11";
 import { mountAccountUI } from "./account-ui.mjs?v=3";
@@ -62,7 +63,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "207"; // musi się zgadzać z version.json
+const VERSION = "208"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1075,8 +1076,9 @@ function setCtrlState(s) {
     const rec = Date.now() - (ctrlState.archiveReceivedAt || 0) <= OFFLINE_AFTER_MS ? ctrlState.archive : null;
     const saveError = hasLocalSaveError(rec);
     mobileState.classList.toggle("storageError",saveError);
-    mobileState.textContent = rec ? `${saveError ? "UWAGA: BŁĄD ZAPISU — działająca kamera nie oznacza zapisanego pliku." : rec.recording ? "Komputer rejestruje obraz." : "Zapis wstrzymany."} Panel komputera: ${ctrlState.hostVersion || "nieznany"}. Folder: ${rec.folder || "nieustawiony"}. Zapisano: ${rec.saved || 0}. Kolejka Drive: ${rec.queued || 0}. Potwierdzono na Drive: ${rec.verifiedToDrive || 0}. ${rec.reason || ""}`
-      : "Brak aktualnych informacji o folderze komputera. Połącz się z nadajnikiem.";
+    const view=localRecordingView(rec,{saveError});
+    mobileState.textContent=view.text;
+    if($('mobileRecordingDetails'))$('mobileRecordingDetails').textContent=view.details;
   }
 }
 setInterval(() => { if (ctrlState.archive && Date.now() - (ctrlState.archiveReceivedAt || 0) > OFFLINE_AFTER_MS) setCtrlState({ archive: null }); }, 15000);
@@ -2190,7 +2192,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "116";
+  const SERVICE_WORKER_BUILD = "117";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{

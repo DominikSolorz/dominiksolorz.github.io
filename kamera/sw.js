@@ -1,9 +1,9 @@
 // Zmieniaj wersję tylko wtedy, gdy aktualizujemy powłokę aplikacji.
 // Dzięki temu zainstalowany panel nie otworzy przestarzałego index.html.
-const CACHE = "kamera-domowa-shell-v116";
-const SHELL = ["./", "./index.html", "./style.css?v=184", "./workspace-ui.css?v=13", "./workspace-panels.mjs?v=2", "./account-ui.mjs?v=3", "./auth.js?v=11", "./account-security.mjs?v=1", "./access.js?v=19", "./lock.js?v=19", "./app.js?v=207", "./zoom.js?v=17", "./audio-profile.mjs?v=1", "./diskstore.js?v=11", "./local-retention.mjs?v=1", "./dvr-ui.js?v=104", "./remote-folder-ui.mjs", "./communication/folder-channel.mjs", "./communication/folder-readiness.mjs", "./desktop.js?v=33", "./mobile.js?v=15", "./core/store.mjs", "./core/router.mjs", "./core/peer-diagnostics.mjs", "./communication/commands.mjs", "./manifest.webmanifest?v=2", "./icons/kamera-192.svg", "./icons/kamera-512.svg", "./vendor/supabase.js?v=2.117.2"];
+const CACHE = "kamera-domowa-shell-v117";
+const SHELL = ["./", "./index.html", "./style.css?v=184", "./workspace-ui.css?v=13", "./workspace-panels.mjs?v=2", "./account-ui.mjs?v=3", "./auth.js?v=11", "./account-security.mjs?v=1", "./access.js?v=19", "./lock.js?v=19", "./app.js?v=208", "./zoom.js?v=17", "./audio-profile.mjs?v=1", "./diskstore.js?v=11", "./local-retention.mjs?v=1", "./dvr-ui.js?v=105", "./remote-folder-ui.mjs", "./communication/folder-channel.mjs", "./communication/folder-readiness.mjs", "./desktop.js?v=33", "./mobile.js?v=16", "./core/store.mjs", "./core/router.mjs", "./core/peer-diagnostics.mjs", "./communication/commands.mjs", "./manifest.webmanifest?v=2", "./icons/kamera-192.svg", "./icons/kamera-512.svg", "./vendor/supabase.js?v=2.117.2"];
 
-SHELL.push("./recording-time.mjs?v=1", "./recording-actions.mjs?v=2", "./native-drive-ui.mjs?v=2", "./interface-theme.css?v=2", "./core/client-layout.js?v=2", "./core/web-updates.mjs?v=1", "./core/operator-status.mjs?v=1", "./communication/agent-telemetry.mjs?v=2", "./communication/native-agent-client.mjs");
+SHELL.push("./recording-view-state.mjs?v=1", "./recording-time.mjs?v=1", "./recording-actions.mjs?v=2", "./native-drive-ui.mjs?v=2", "./interface-theme.css?v=2", "./core/client-layout.js?v=2", "./core/web-updates.mjs?v=1", "./core/operator-status.mjs?v=1", "./communication/agent-telemetry.mjs?v=2", "./communication/native-agent-client.mjs");
 self.addEventListener("install", event => {
   SHELL.push("./marketing.css?v=2", "./marketing-contact.js?v=4");
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));

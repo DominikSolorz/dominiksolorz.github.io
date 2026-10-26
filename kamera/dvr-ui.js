@@ -7,6 +7,7 @@ import { fixMp4Duration } from "./mp4fix.js?v=2";
 import {validThumbnail,captureEventFrame} from "./workspace-panels.mjs?v=1";
 import {localDayRange,previousLocalDay} from './recording-time.mjs?v=1';
 import {confirmRecordingDeletion} from './recording-actions.mjs?v=2';
+import {archiveEmptyText} from './recording-view-state.mjs?v=1';
 const pad = n => String(n).padStart(2, "0");
 const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const hm = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
@@ -35,6 +36,7 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
   let day = dayKey(new Date()), files = [], now = Date.now(), zoom = "day", cursor = null, playing = null, refreshTimer = null;
   const cache = new Map(); // nazwa → Blob (ostatnie 3 pliki)
   const thumbnails = new Map(); // bounded decoded frames; no background video downloads
+  let archiveReadState={connected:false};
   let archiveModal = null, restoreStage = null, restoreDvr = null, restoreList = null, restoreStorage = null;
 
   // Prawy klik na obrazie otwiera pełne archiwum. To te same działające elementy,
@@ -317,7 +319,7 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
   function drawLib() {
     const real = files.filter(f => !f.recording).slice().reverse();
     listCount.textContent = real.length ? `${real.length} plików` : "";
-    if (!real.length) return lib.replaceChildren(el("p", { className: "muted small", textContent: "Brak nagrań w tym dniu." }));
+    if (!real.length) return lib.replaceChildren(el("p", { className: "muted small", textContent: archiveEmptyText(archiveReadState) }));
     lib.replaceChildren(el("ul", { className: "recList" }, ...real.map(f => {
       const ruch = (f.events || []).filter(e => e.kind === "ruch").length, dzwiek = (f.events || []).filter(e => e.kind === "dzwiek").length;
       const min = Math.max(1, Math.round((f.end - f.start) / 60000));
@@ -339,10 +341,10 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
 
   // Nagrania dnia: z Google Drive (przechowywanie) + jeszcze niewysłane z komputera-kamery.
   async function refresh() {
-    let driveErr = null;
+    let driveErr = null, localFailed=false;
     const [dr, lr] = await Promise.all([
       drive ? drive.day(day).catch(e => { driveErr = e; return null; }) : null,
-      client.connected ? client.list(day).catch(() => null) : null,
+      client.connected ? client.list(day).catch(() => {localFailed=true;return null;}) : null,
     ]);
     const map = new Map();
     for (const h of dr?.hours || dr || []) for (const f of h.files || []) {
@@ -361,9 +363,10 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
     files.forEach((f, i) => { if (!f.local && !f.recording && files[i + 1]) f.end = Math.min(f.end, files[i + 1].start); });
     now = lr?.now || Date.now();
     const total = files.filter(f => !f.recording);
+    archiveReadState={connected:client.connected,localFailed,driveFailed:!!driveErr,hasOpenSegment:files.some(f=>f.recording)};
     info.textContent = (total.length
       ? `${total.length} nagrań z tego dnia (od ${hm(total[0].start)}). Przeciągnij po pasku, aby przewinąć, albo dotknij 🏃/🔊.`
-      : driveErr ? "Nie udało się sprawdzić archiwum Google Drive." : "Brak nagrań z tego dnia.") + (driveErr ? ` Błąd dostępu: ${driveErr.message || driveErr}. Sprawdź połączenie z archiwum w konfiguracji nadajnika.` : "");
+      : archiveEmptyText({connected:client.connected,localFailed,driveFailed:!!driveErr,hasOpenSegment:files.some(f=>f.recording)})) + (driveErr ? ` Błąd dostępu: ${driveErr.message || driveErr}. Sprawdź połączenie z archiwum w konfiguracji nadajnika.` : "");
     draw(); drawLib();drawThumbnails();
   }
 
