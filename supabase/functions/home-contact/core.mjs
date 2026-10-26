@@ -8,7 +8,7 @@ export function validateContact(body){
 }
 export async function signTicket(ticket,secret,issuedAt){
   const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
-  const values=[ticket.requestId,ticket.name,ticket.surname,ticket.email,ticket.topic,ticket.message,ticket.consent];if(ticket.identity)values.push([ticket.identity.verified,ticket.identity.avatarMime||'',ticket.identity.avatarBase64||'']);const canonical=JSON.stringify(values);
+  const values=[ticket.requestId,ticket.name,ticket.surname,ticket.email,ticket.topic,ticket.message,ticket.consent];if(ticket.identity){const identity=[ticket.identity.verified,ticket.identity.avatarMime||'',ticket.identity.avatarBase64||''];if(ticket.identity.inputDigest)identity.push(ticket.identity.inputDigest);values.push(identity);}const canonical=JSON.stringify(values);
   const signature=await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(canonical+'\n'+issuedAt));
   return Array.from(new Uint8Array(signature),b=>b.toString(16).padStart(2,'0')).join('');
 }
@@ -28,7 +28,7 @@ export function contactHandler({getConfig,fetcher=fetch,now=Date.now}){
       let ticket;try{ticket=validateContact(JSON.parse(new TextDecoder().decode(bytes)));}catch{return json({error:'invalid_request'},400);}
       const config=getConfig();
       if(!config?.secret||!/^[a-f0-9]{64}$/.test(config.secret)||!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(config.url||''))return json({error:'contact_unavailable'},503);
-      const identity=await contactIdentity(request,ticket,config,fetcher);if(identity)Object.assign(ticket,identity);
+      const identity=await contactIdentity(request,ticket,config,fetcher);if(identity){const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([ticket.requestId,ticket.name,ticket.surname,ticket.email,ticket.topic,ticket.message,ticket.consent])));identity.identity.inputDigest=Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');Object.assign(ticket,identity);}
       const issuedAt=now(),signature=await signTicket(ticket,config.secret,issuedAt);
       const response=await fetcher(config.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket,issuedAt,signature}),signal:AbortSignal.timeout(25000),redirect:'follow'});
       if(!response.ok)return json({error:'delivery_unconfirmed',requestId:ticket.requestId},503);

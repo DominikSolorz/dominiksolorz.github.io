@@ -1,6 +1,6 @@
 // Separate Apps Script project: HOME SECURITY Contact. No Drive or inbox access.
 // CONTACT_RELAY_SECRET is configured in Script Properties, never in source.
-function doGet() { return contactJson({service:'home-security-contact',version:6,ready:!!PropertiesService.getScriptProperties().getProperty('CONTACT_RELAY_SECRET'),serverTime:Date.now()}); }
+function doGet() { return contactJson({service:'home-security-contact',version:7,ready:!!PropertiesService.getScriptProperties().getProperty('CONTACT_RELAY_SECRET'),serverTime:Date.now()}); }
 function doPost(e) {
   var lock=LockService.getScriptLock();
   try {
@@ -9,14 +9,14 @@ function doPost(e) {
     var envelope=JSON.parse(raw),ticket=envelope.ticket;
     var props=PropertiesService.getScriptProperties(),secret=props.getProperty('CONTACT_RELAY_SECRET');
     if(!secret || !ticket || !Number.isSafeInteger(envelope.issuedAt) || Math.abs(Date.now()-envelope.issuedAt)>300000)return contactJson({ok:false,error:'unauthorized',reason:!secret?'not_configured':!ticket?'missing_ticket':!Number.isSafeInteger(envelope.issuedAt)?'invalid_time':'expired'});
-    var values=[ticket.requestId,ticket.name,ticket.surname,ticket.email,ticket.topic,ticket.message,ticket.consent];if(ticket.identity)values.push([ticket.identity.verified,ticket.identity.avatarMime||'',ticket.identity.avatarBase64||'']);var canonical=JSON.stringify(values);
+    var values=[ticket.requestId,ticket.name,ticket.surname,ticket.email,ticket.topic,ticket.message,ticket.consent];if(ticket.identity){var identityValues=[ticket.identity.verified,ticket.identity.avatarMime||'',ticket.identity.avatarBase64||''];if(ticket.identity.inputDigest)identityValues.push(ticket.identity.inputDigest);values.push(identityValues);}var canonical=JSON.stringify(values);
     var expected=Utilities.computeHmacSha256Signature(canonical+'\n'+envelope.issuedAt,secret,Utilities.Charset.UTF_8).map(function(b){return ((b+256)%256).toString(16).padStart(2,'0');}).join('');
     if(typeof envelope.signature!=='string'||envelope.signature.length!==expected.length)return contactJson({ok:false,error:'unauthorized',reason:'invalid_signature_format'});
     var diff=0;for(var i=0;i<expected.length;i++)diff|=expected.charCodeAt(i)^envelope.signature.charCodeAt(i);
     if(diff)return contactJson({ok:false,error:'unauthorized',reason:'signature_mismatch'});
     if(!/^[a-f0-9-]{36}$/.test(ticket.requestId)||ticket.consent!==true||typeof ticket.name!=='string'||typeof ticket.surname!=='string'||typeof ticket.email!=='string'||typeof ticket.topic!=='string'||typeof ticket.message!=='string')return contactJson({ok:false,error:'invalid_request'});
     if(ticket.name.length>80||ticket.surname.length>80||ticket.email.length>254||ticket.topic.length>100||ticket.message.length<10||ticket.message.length>4000||!ticket.name.trim()||!ticket.surname.trim()||/[\r\n]/.test(ticket.email+ticket.name+ticket.surname+ticket.topic)||!/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(ticket.email))return contactJson({ok:false,error:'invalid_request'});
-    var digest=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,canonical,Utilities.Charset.UTF_8).map(function(b){return ((b+256)%256).toString(16).padStart(2,'0');}).join('');
+    var dedupCanonical=JSON.stringify(values.slice(0,7));var digest=ticket.identity&&/^[a-f0-9]{64}$/.test(ticket.identity.inputDigest||'')?ticket.identity.inputDigest:(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,dedupCanonical,Utilities.Charset.UTF_8).map(function(b){return ((b+256)%256).toString(16).padStart(2,'0');}).join(''));
     lock.waitLock(5000);
     var now=Date.now(),all=props.getProperties();
     Object.keys(all).forEach(function(k){if(k.indexOf('ticket:')===0){try{if(JSON.parse(all[k]).expires<now)props.deleteProperty(k);}catch(_){}}});
