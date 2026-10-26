@@ -39,6 +39,7 @@ function mailRuntime(throwOnSend=false,quota=100){
  vm.createContext(context);vm.runInContext(mailSource,context);return {context,sends,props};
 }
 async function envelope(value=ticket){const issuedAt=Date.now();return {ticket:value,issuedAt,signature:await signTicket(value,secret,issuedAt)};}
+test('both mail variants keep the applicant left and project identity right without invented registration data',()=>{const r=mailRuntime();for(const kind of ['owner','copy']){const m=r.context.contactMail(ticket,kind,Date.now());assert.match(m.htmlBody,/ZGŁASZAJĄCY \/ TWOJE DANE/);assert.match(m.htmlBody,/ADRESAT \/ DS HOME SECURITY/);assert.match(m.htmlBody,/Dominik Solorz — twórca projektu/);assert.match(m.htmlBody,/Inicjały zgłaszającego/);assert.doesNotMatch(m.htmlBody,/sp\. z o\.o\.|NIP:|KRS:|REGON:/);}});
 test('copy failure preserves successful owner delivery and never resends either message',async()=>{
  const r=mailRuntime(2),event={postData:{contents:JSON.stringify(await envelope())}};
  const first=r.context.doPost(event);assert.equal(first.status,'sent');assert.equal(first.copyStatus,'unknown');assert.equal(r.context.doPost(event).copyStatus,'unknown');assert.equal(r.sends.length,2);
