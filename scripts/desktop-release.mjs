@@ -43,7 +43,7 @@ async function main(command){
   if(command==='prepare'){
     const old=manifest.version,version=nextVersion(old);
     for(const path of ['desktop-client/Program.cs','desktop-client/HomeSecurityDesktop.csproj','desktop-client/installer/HomeSecurityDesktop.iss','desktop-client/build-release.ps1','design/marketing/home.html','kamera/index.html','scripts/verify-live-marketing.mjs']){
-      let source=await readFile(path,'utf8');
+      let source=(await readFile(path,'utf8')).replaceAll('\r\n','\n');
       if(!source.includes(old))throw Error(`Missing release version in ${path}`);
       source=source.replaceAll(old,version);
       if(path==='desktop-client/Program.cs'){
