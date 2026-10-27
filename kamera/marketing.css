@@ -246,12 +246,12 @@
 .mktVisualActions .mktButton{flex-shrink:0}
 .mktVisualActions .mktTextLink{text-decoration:underline;text-decoration-color:#706273;text-underline-offset:4px}
 /* Readability: the former 6–9px labels were too small on phones. */
-.mktBrand small{font-size:10px;letter-spacing:.12em}
+.mktBrand small{font-size:11px;letter-spacing:.12em}
 .mktEyebrow,.mktFeatureNumber,.mktPostCategory,.mktBadge,.mktImageLabel{font-size:11px;letter-spacing:.11em}
 .mktFine{font-size:12px}
 .mktCopyright{font-size:12px!important}
 .mktDemoBottom,.mktDemoEyebrow,.mktDemoSide>p,.mktDecisionOptions article>span,.mktAiExample>span{font-size:11px}
-.mktHeader nav a,.mktFooter nav a{display:inline-flex;align-items:center;min-height:36px}
+.mktHeader nav a,.mktFooter nav a{display:inline-flex;align-items:center;min-height:40px}
 .mktSite :is(.mktButton,.mktLogin,.mktTextLink),.marketingPage :is(.mktButton,.mktLogin,.mktTextLink){text-underline-offset:4px}
 @media(max-width:1050px){.mktVisualLayout{gap:35px}.mktVisualImage{min-height:0}}
 @media(max-width:700px){
@@ -266,10 +266,12 @@
  .mktVisualActions{align-items:stretch;flex-direction:column;gap:14px}
  .mktVisualActions .mktButton{width:100%}
  .mktVisualActions .mktTextLink{align-self:flex-start}
- .mktBrand small{font-size:9px;letter-spacing:.1em}
+ .mktBrand small{font-size:11px;letter-spacing:.1em}
  .mktHero .mktEyebrow,.mktEyebrow{font-size:11px}
  .mktPostCategory,.mktFeatureNumber,.mktBadge,.mktImageLabel{font-size:11px}
  .mktCapabilityStrip span{font-size:12px}
+ .mktSpecs>div{font-size:14px}
+ .mktDemoSide small,.mktPostArt i{font-size:11px}
  .mktHeader nav{font-size:13px}
  .mktLogin{font-size:13px;min-height:44px}
  .mktButton{font-size:14px;min-height:48px}
