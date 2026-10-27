@@ -46,9 +46,8 @@ if (desktopRequested) {
     </nav>
     <section class="desktopCapabilities" aria-label="Możliwości urządzenia">
       <h2>Urządzenie</h2>
-      <p><span class="capOk">●</span> Podgląd, zapis i DVR</p>
-      <p><span class="capOk">●</span> Zoom cyfrowy</p>
-      <p class="muted">Stan urządzeń znajdziesz w Diagnostyce.</p>
+      <p>Stan kamery, zapisu i sieci odczytasz w Diagnostyce.</p>
+      <p class="muted">Podgląd obrazu nie potwierdza zapisanego nagrania.</p>
     </section>
     <div class="desktopSidebarFoot"><span>Alt + 1–6 przełącza moduły</span><a href="./?panel=owner" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
   document.body.prepend(shell);
@@ -165,9 +164,9 @@ if (desktopRequested) {
   summary.setAttribute("aria-label", "Stan systemu");
   summary.innerHTML = `
     <article><span class="desktopSummaryIcon">◈</span><div><b>System</b><strong id="desktopSummaryStatus">Sprawdzam…</strong><small>stan połączenia</small></div></article>
-    <article><span class="desktopSummaryIcon">▣</span><div><b>Kamery</b><strong id="desktopSummaryCamera">1 aktywna</strong><small>kolejne urządzenia można dodać</small></div></article>
+    <article><span class="desktopSummaryIcon">▣</span><div><b>Kamery</b><strong id="desktopSummaryCamera">Sprawdzam…</strong><small>liczba urządzeń z telemetrii</small></div></article>
     <article><span class="desktopSummaryIcon">◉</span><div><b>Nagrania</b><strong id="desktopSummaryRecording">Sprawdzam…</strong><small>status zapisu i DVR</small></div></article>
-    <article><span class="desktopSummaryIcon">⌁</span><div><b>Tryb ochrony</b><strong>Gotowy</strong><small>wykrywanie ruchu i dźwięku</small></div></article>`;
+    <article><span class="desktopSummaryIcon">⌁</span><div><b>Zdarzenia</b><strong>Sprawdź alarmy</strong><small>stan w module Alarmy</small></div></article>`;
   overview.insertAdjacentElement("afterend", summary);
 
   // Ustawienia są osobnym ekranem desktopowym, a nie kartą pozostawioną pod
@@ -391,11 +390,11 @@ if (desktopRequested) {
     viewMemory.save(view);
     if(view!=="archive"&&document.body.classList.contains("archiveOpen"))document.dispatchEvent(new Event("hs-close-recordings"));
     if (view === "archive") {
-      shell.querySelectorAll("[data-desktop-view]").forEach(button => button.classList.toggle("active", button.dataset.desktopView === "archive"));
+      shell.querySelectorAll("[data-desktop-view]").forEach(button => { const active = button.dataset.desktopView === "archive"; button.classList.toggle("active", active); if (active) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current"); });
       document.dispatchEvent(new Event("hs-open-recordings"));
       return;
     }
-    shell.querySelectorAll("[data-desktop-view]").forEach(button => button.classList.toggle("active", button.dataset.desktopView === view));
+    shell.querySelectorAll("[data-desktop-view]").forEach(button => { const active = button.dataset.desktopView === view; button.classList.toggle("active", active); if (active) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current"); });
     openExistingView(view);
   };
   const router = createRouter({ routes: ["live", "controls", "events", "archive", "settings", "diagnostics"], render: renderRoute });
