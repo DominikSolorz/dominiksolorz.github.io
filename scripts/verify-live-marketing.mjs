@@ -1,9 +1,10 @@
 // Post-deploy checks against the public GitHub Pages domain. Does not log in, send mail or access cameras.
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 
 const origin='https://dominiksolorz.github.io';
 const root=origin+'/kamera/';
-const expectedBuild='221';
+const expectedBuild=JSON.parse(await readFile(new URL('../kamera/version.json',import.meta.url),'utf8')).version;
 const timeoutMs=18000;
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const get=async(path,{method='GET'}={})=>{

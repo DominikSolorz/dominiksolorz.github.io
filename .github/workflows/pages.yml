@@ -25,12 +25,12 @@ jobs:
           sparse-checkout: |
             /*
             !/kamera/updates/**
-            /kamera/updates/HomeSecurityDesktop-1.4.11-win-x64.zip
             !/kamera/downloads/**
-            /kamera/downloads/HOME-SECURITY-Desktop-Setup-1.4.11.exe
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Fetch and verify current release from the exact source commit
+        run: node scripts/desktop-release.mjs fetch
       - name: Generate consistent public marketing pages
         run: node scripts/build-marketing.mjs
       - name: Frontend regression tests
@@ -77,8 +77,12 @@ jobs:
           sparse-checkout: |
             /*
             !/kamera/updates/**
-            /kamera/updates/HomeSecurityDesktop-1.4.11-win-x64.zip
-            /kamera/updates/HomeSecurityDesktop-1.4.7-win-x64.zip
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch current release and rollback package
+        run: node scripts/desktop-release.mjs fetch --rollback
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:

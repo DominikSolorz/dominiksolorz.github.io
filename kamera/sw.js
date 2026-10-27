@@ -18,6 +18,11 @@ self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+  // Release metadata must never be frozen by the offline asset cache.
+  if (/\/(?:desktop-update|version)\.json$/.test(url.pathname)) {
+    event.respondWith(fetch(event.request, {cache: 'no-store'}));
+    return;
+  }
   if (event.request.mode === "navigate") {
     const panelPath = new URL("./", self.location.href).pathname;
     const panelNavigation = url.pathname === panelPath || url.pathname === panelPath + "index.html";

@@ -1,0 +1,103 @@
+name: Check and publish current Windows installer
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/desktop-scheduled-release.yml']
+  schedule:
+    - cron: '23 2,8,14,20 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: stable-windows-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - id: plan
+        name: Detect application changes without generating duplicate releases
+        run: node scripts/desktop-release.mjs plan
+      - uses: actions/setup-dotnet@v4
+        if: steps.plan.outputs.changed == 'true'
+        with:
+          dotnet-version: '10.0.x'
+      - name: Prepare matching native and public download versions
+        if: steps.plan.outputs.changed == 'true'
+        run: node scripts/desktop-release.mjs prepare
+      - name: Test agent and crash recovery before building
+        if: steps.plan.outputs.changed == 'true'
+        shell: pwsh
+        run: |
+          dotnet run --project agent-tests/HomeSecurity.Agent.Tests.csproj -c Release -- --process-crash agent/bin/Release/net10.0-windows/HomeSecurityAgent.dll
+          if($LASTEXITCODE -ne 0){throw 'Agent or crash tests failed'}
+      - name: Build Windows application, agent, ZIP and installer
+        if: steps.plan.outputs.changed == 'true'
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./desktop-client/build-release.ps1 -Version $env:RELEASE_VERSION
+          if($LASTEXITCODE -ne 0){throw 'Native publish failed'}
+          New-Item -ItemType Directory -Force kamera/updates,kamera/downloads | Out-Null
+          Compress-Archive -Path "desktop-client/publish-$env:RELEASE_VERSION/*" -DestinationPath "kamera/updates/HomeSecurityDesktop-$env:RELEASE_VERSION-win-x64.zip" -CompressionLevel Optimal
+          $iscc=Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6/ISCC.exe'
+          if(-not (Test-Path $iscc)){choco install innosetup -y --no-progress; if($LASTEXITCODE -ne 0){throw 'Installer compiler unavailable'}}
+          & $iscc desktop-client/installer/HomeSecurityDesktop.iss
+          if($LASTEXITCODE -ne 0){throw 'Installer build failed'}
+          Copy-Item "desktop-client/installer-output/HOME-SECURITY-Desktop-Setup-$env:RELEASE_VERSION.exe" "kamera/downloads/HOME-SECURITY-Desktop-Setup-$env:RELEASE_VERSION.exe"
+          git restore -- agent/packages.lock.json
+          if($LASTEXITCODE -ne 0){throw 'Cannot restore the source dependency lock'}
+          node scripts/desktop-release.mjs finish
+          if($LASTEXITCODE -ne 0){throw 'Manifest generation failed'}
+      - name: Validate exact release files and frontend
+        if: steps.plan.outputs.changed == 'true'
+        shell: pwsh
+        run: |
+          node --test tests/*.test.mjs
+          if($LASTEXITCODE -ne 0){throw 'Release tests failed; nothing is published'}
+          node scripts/build-marketing.mjs --check
+          if($LASTEXITCODE -ne 0){throw 'Public download pages are inconsistent'}
+      - name: Publish tested release atomically and trigger website deployment
+        if: steps.plan.outputs.changed == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          $ErrorActionPreference='Stop'
+          git fetch origin main
+          if($LASTEXITCODE -ne 0){throw 'Cannot verify main'}
+          if((git rev-parse origin/main) -ne $env:GITHUB_SHA){throw 'Main changed during build. Keep current release; retry at next check.'}
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --sparse -- desktop-client/Program.cs desktop-client/HomeSecurityDesktop.csproj desktop-client/installer/HomeSecurityDesktop.iss desktop-client/build-release.ps1 design/marketing/home.html kamera/index.html kamera/o-systemie.html kamera/blog kamera/galeria.html kamera/pomoc.html kamera/sitemap.xml scripts/verify-live-marketing.mjs kamera/desktop-update.json "kamera/updates/HomeSecurityDesktop-$env:RELEASE_VERSION-win-x64.zip" "kamera/downloads/HOME-SECURITY-Desktop-Setup-$env:RELEASE_VERSION.exe"
+          if($LASTEXITCODE -ne 0){throw 'Cannot stage release'}
+          git commit -m "Publish tested Windows installer $env:RELEASE_VERSION and matching download links"
+          if($LASTEXITCODE -ne 0){throw 'Cannot commit release'}
+          git push origin HEAD:main
+          if($LASTEXITCODE -ne 0){throw 'Release not published'}
+          # Token-created commits do not trigger push workflows. Dispatch explicitly.
+          gh workflow run pages.yml --ref main --repo $env:GITHUB_REPOSITORY
+          if($LASTEXITCODE -ne 0){throw 'Release committed, but website dispatch failed: rerun Pages deployment'}
+      - name: Unchanged release
+        if: steps.plan.outputs.changed != 'true'
+        run: Write-Output 'Current installer already matches the application. No rebuild or website change needed.'

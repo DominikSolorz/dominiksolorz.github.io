@@ -78,5 +78,5 @@ test('the deployed-site audit checks real pages without submitting forms',async(
  assert.ok(script.includes('HOME-SECURITY-Desktop-Setup-'+release+'.exe'));
  assert.ok(!script.includes("method:'POST'"));
  assert.ok(!script.includes('submit()'));
- assert.ok(script.includes("const expectedBuild='"+JSON.parse(manifest).version+"'"));
+ assert.ok(script.includes("../kamera/version.json"));
 });
