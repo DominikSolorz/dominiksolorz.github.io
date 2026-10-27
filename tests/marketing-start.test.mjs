@@ -55,10 +55,10 @@ test('marketing guided checklist is responsive and safely cached with the new re
  assert.ok(css.includes('mktSetupItem:focus-within'));
  assert.ok(sw.includes('./marketing-start.css?v=1'));
  assert.ok(sw.includes('./marketing-start.mjs?v=1'));
- assert.ok(sw.includes('kamera-domowa-shell-v129'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "129"'));
- assert.equal(JSON.parse(version).version,'219');
- assert.ok(app.includes('const VERSION = "219"'));
+ assert.ok(sw.includes('kamera-domowa-shell-v130'));
+ assert.ok(app.includes('SERVICE_WORKER_BUILD = "130"'));
+ assert.equal(JSON.parse(version).version,'220');
+ assert.ok(app.includes('const VERSION = "220"'));
 });
 
 test('legal documents never send visitors from Back to a login page',async()=>{

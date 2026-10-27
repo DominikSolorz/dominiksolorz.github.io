@@ -1,0 +1,89 @@
+name: Build HOME SECURITY Desktop 220 UI preview
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'kamera/interface-concept.css'
+      - 'kamera/desktop.js'
+      - 'kamera/index.html'
+      - 'kamera/app.js'
+      - 'desktop-client/Program.cs'
+      - '.github/workflows/desktop-ui-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  desktop-preview:
+    name: Real Windows WebView2 preview (no production auto-update)
+    runs-on: windows-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify interface contract before packaging
+        shell: pwsh
+        run: |
+          node --test tests/desktop-concept-220.test.mjs tests/workspace-ui.test.mjs tests/owner-theme.test.mjs tests/release-consistency.test.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'Interface regression tests failed.' }
+      - name: Build genuine Windows desktop and companion agent
+        shell: pwsh
+        run: |
+          & "$PWD/desktop-client/build-release.ps1" -Version '1.4.8'
+          if ($LASTEXITCODE -ne 0) { throw 'Windows release publish failed.' }
+      - name: Package preview, never overwrite public auto-updater
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $output = Join-Path $PWD 'desktop-client/publish-1.4.8'
+          $required = @(
+            'HomeSecurityDesktop.exe',
+            'Panel/index.html',
+            'Panel/interface-concept.css',
+            'Panel/desktop.js',
+            'Agent/1.4.8/HomeSecurityAgent.exe'
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path -LiteralPath (Join-Path $output $file))) { throw "Missing desktop file: $file" }
+          }
+          $html = Get-Content -Raw (Join-Path $output 'Panel/index.html')
+          $css = Get-Content -Raw (Join-Path $output 'Panel/interface-concept.css')
+          if (-not $html.Contains('interface-concept.css?v=1')) { throw 'Preview is missing real UI concept stylesheet.' }
+          if (-not $html.Contains('home-security-build" content="220"')) { throw 'Preview is not running UI build 220.' }
+          if (-not $css.Contains('.desktopCameraTile')) { throw 'Real camera component is not styled.' }
+          @'
+          HOME SECURITY Desktop — niezależny pakiet testowy UI 220
+          Interfejs: projekt 193 zastosowany do prawdziwego panelu Windows / WebView2.
+          Wersja binarna: 1.4.8 (preview z nowym pakietem panelu 220).
+          UWAGA: To nie jest oficjalny instalator ani automatyczna aktualizacja.
+          Nie zastępuj plików działającego instalatora i nie uruchamiaj obok aktywnego nagrywania.
+          Testuj na osobnym komputerze lub koncie Windows bez prywatnych nagrań.
+          Aby sprawdzić wygląd, rozpakuj całą paczkę i uruchom HomeSecurityDesktop.exe.
+          Potwierdź PIN, źródło kamery, uprawnienia folderu, nowy plik i jego odtworzenie.
+          Test pakietu nie dowodzi fizycznego zapisu z konkretnej kamery.
+          Program może korzystać z istniejącego profilu danych użytkownika.
+          Informacje o wydaniu oficjalnym: https://dominiksolorz.github.io/kamera/o-systemie.html
+          '@ | Set-Content -LiteralPath (Join-Path $output 'PRZECZYTAJ-PRZED-TESTEM.txt') -Encoding utf8
+          $zip = Join-Path $PWD 'HomeSecurityDesktop-UI220-preview-win-x64.zip'
+          Compress-Archive -Path (Join-Path $output '*') -DestinationPath $zip -CompressionLevel Optimal
+          if (-not (Test-Path -LiteralPath $zip)) { throw 'Preview zip was not created.' }
+          $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash
+          Write-Host "PREVIEW SHA-256: $hash"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "HOME SECURITY Desktop UI220 preview (NOT an automatic release)."
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "SHA-256: $hash"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Test on a separate Windows account/computer. Do not replace the active camera installation."
+      - uses: actions/upload-artifact@v4
+        with:
+          name: home-security-desktop-ui220-preview-win-x64
+          path: HomeSecurityDesktop-UI220-preview-win-x64.zip
+          if-no-files-found: error
+          retention-days: 14
