@@ -92,12 +92,12 @@ test('PWA, runtime and public pages have matching motion asset and build version
  const [sw,app,version,index]=await Promise.all([
   'kamera/sw.js','kamera/app.js','kamera/version.json','kamera/index.html'].map(read));
  for(const asset of ['marketing-motion.css?v=1','marketing-motion.mjs?v=1'])assert.ok(sw.includes('./'+asset));
- assert.ok(sw.includes('kamera-domowa-shell-v127'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "127"'));
- assert.ok(app.includes('const VERSION = "217"'));
- assert.equal(JSON.parse(version).version,'217');
- assert.ok(index.includes('home-security-build" content="217"'));
- assert.ok(index.includes('app.js?v=217'));
+ assert.ok(sw.includes('kamera-domowa-shell-v128'));
+ assert.ok(app.includes('SERVICE_WORKER_BUILD = "128"'));
+ assert.ok(app.includes('const VERSION = "218"'));
+ assert.equal(JSON.parse(version).version,'218');
+ assert.ok(index.includes('home-security-build" content="218"'));
+ assert.ok(index.includes('app.js?v=218'));
 });
 
 
