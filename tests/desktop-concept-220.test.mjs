@@ -34,7 +34,7 @@ test('the styling applies to all real operator screens and is not a fake screens
   assert.ok(css.includes('[data-state='+status+']'),'real diagnostic state not styled: '+status);
  }
  assert.ok(css.includes('object-fit:contain'));
- assert.ok(css.includes('filter:none'));
+ assert.ok(!css.includes('filter:none'),'visual mode controls may apply user-selected camera filters');
  assert.ok(css.includes('#stage video'));
  assert.ok(!css.includes('01-pulpit.png'),'must not substitute a mockup for camera frames');
  assert.ok(!css.includes('07-telefon.png'),'must not substitute a mockup for real mobile owner panel');
