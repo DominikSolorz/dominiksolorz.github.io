@@ -98,3 +98,24 @@
 .marketingPage .mktArticle a:hover{color:#ffe2b7}
 @media(max-width:700px){#publicHome.mktSite .mktBackToTop{left:13px;right:auto}.marketingPage .mktContactForm label{font-size:14px}}
 @media(prefers-reduced-motion:reduce){.marketingPage .mktContactReasons article:hover{transform:none}}
+
+
+/* Authentication presentation only: no change to validation, requests, or step routing. */
+#authDialog:not([hidden]) .authBackdrop{animation:mktBackdropIn .24s ease both}
+#authDialog:not([hidden]) .authCard{animation:mktAuthCardIn .34s var(--mkt-ease,cubic-bezier(.22,1,.36,1)) both}
+#authDialog:not([hidden]) [data-auth-step].authForm:not([hidden]){animation:mktAuthStepIn .28s ease both}
+#authDialog :is(.authPrimary,.authSecondary,.authGoogleButton,.authTextBtn,.authClose){
+  transition:transform .2s ease,filter .2s ease,border-color .2s ease,background-color .2s ease
+}
+#authDialog :is(.authPrimary,.authSecondary,.authGoogleButton):not(:disabled):active{transform:scale(.985)}
+#authDialog :is(.authPrimary,.authSecondary,.authGoogleButton):not(:disabled):hover{filter:brightness(1.09)}
+#authDialog .authTextBtn:hover{text-decoration:underline;text-underline-offset:4px}
+@keyframes mktBackdropIn{from{opacity:0}to{opacity:1}}
+@keyframes mktAuthCardIn{from{opacity:0;transform:translateY(12px) scale(.992)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes mktAuthStepIn{from{opacity:.5;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){
+  #authDialog:not([hidden]) .authBackdrop,
+  #authDialog:not([hidden]) .authCard,
+  #authDialog:not([hidden]) [data-auth-step].authForm:not([hidden]){animation:none!important}
+  #authDialog :is(.authPrimary,.authSecondary,.authGoogleButton,.authTextBtn,.authClose){transition:none!important;transform:none!important}
+}
