@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 const origin='https://dominiksolorz.github.io';
 const root=origin+'/kamera/';
-const expectedBuild='220';
+const expectedBuild='221';
 const timeoutMs=18000;
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const get=async(path,{method='GET'}={})=>{
