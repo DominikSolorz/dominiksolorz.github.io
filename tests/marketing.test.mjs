@@ -15,7 +15,7 @@ test('landing page includes actual product depth, not dead section buttons',asyn
  const html=await read('index.html');
  for(const id of ['mozliwosci','jak-dziala','specyfikacja','stan-projektu','poradniki','faq'])assert.ok(html.includes('id="'+id+'"'));
  assert.equal((html.match(/id="authDialog"/g)||[]).length,1);assert.equal((html.match(/id="app"/g)||[]).length,1);
- assert.ok(html.includes('marketing.css?v=4'));assert.ok(html.includes('id="publicHome"'));
+ assert.ok(html.includes('marketing.css?v=5'));assert.ok(html.includes('id="publicHome"'));
 });
 test('public articles and brochure do not load recorder or account runtime',async()=>{
  for(const page of pages){const html=await read(page);assert.ok(!/src="(?:\.\.\/)?(?:app|auth|desktop|mobile)\.js/.test(html),page);assert.ok(html.includes('lang="pl"'));assert.ok(html.includes('rel="canonical"'));assert.ok(html.includes('name="description"'));}
