@@ -1,4 +1,6 @@
 /* Real camera workspace; no sample footage or simulated recording indicators. */
+.desktopMode .desktopOverview:has(.cameraWorkspace:not([data-count="1"])){grid-template-columns:minmax(0,1fr);grid-template-areas:"scene" "events" "actions";max-width:none}
+.desktopMode .desktopOverview:has(.cameraWorkspace:not([data-count="1"])) .desktopEventsDrawer{max-height:240px;overflow:auto}
 .desktopMode .desktopLiveScene.cameraWorkspace{display:flex;flex-direction:column;height:auto!important;min-height:480px;min-width:0;background:#0b0e14;border:1px solid #292e39;border-radius:12px;overflow:hidden}
 .cameraWorkspaceToolbar{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:19px 20px;border-bottom:1px solid #292e39;background:#11151d}
 .cameraEyebrow{font:600 10px/1.4 system-ui;letter-spacing:.16em;color:#cfaf73}.cameraWorkspaceToolbar h2{margin:3px 0 4px;color:#f6f7fb;font:650 22px/1.2 system-ui}.cameraCounter{font:12px/1.5 system-ui;color:#a7afbd}

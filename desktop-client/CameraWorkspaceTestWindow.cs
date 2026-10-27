@@ -34,13 +34,13 @@ internal sealed class CameraWorkspaceTestWindow : Form
                     if (new Uri(e.Request.Uri).AbsolutePath != "/kamera/__camera_workspace_probe.html") return;
                     const string html = """
                     <!doctype html><html lang="pl" class="desktopMode"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-                    <link rel="stylesheet" href="style.css?v=184"><link rel="stylesheet" href="workspace-ui.css?v=13"><link rel="stylesheet" href="interface-theme.css?v=3"><link rel="stylesheet" href="interface-concept.css?v=2"><link rel="stylesheet" href="camera-workspace.css?v=1">
+                    <link rel="stylesheet" href="style.css?v=184"><link rel="stylesheet" href="workspace-ui.css?v=13"><link rel="stylesheet" href="interface-theme.css?v=3"><link rel="stylesheet" href="interface-concept.css?v=2"><link rel="stylesheet" href="camera-workspace.css?v=2">
                     <body class="desktopMode"><aside class="desktopSidebar"><div class="desktopBrand"><img src="assets/ds-logo.jpg" width="45" height="50" alt="DS"><span><b>HOME SECURITY</b><small>DESKTOP · TEST UI</small></span></div><nav class="desktopNav"><button class="active">▦ Pulpit</button><button>◉ Sterowanie</button><button>♧ Alarmy</button><button>▷ Nagrania</button><button>⚙ Ustawienia</button><button>⌁ Diagnostyka</button></nav></aside>
-                    <main id="app" style="margin-left:var(--desktop-sidebar);padding:22px;max-width:none;width:auto"><p style="font:12px system-ui;color:#cfaf73">TEST RZECZYWISTEGO KOMPONENTU · ŻADNE ŹRÓDŁO NIE JEST POŁĄCZONE</p><h1 style="font:650 29px system-ui;color:#f5f6f9;margin:0 0 20px">Pulpit monitoringu</h1><section class="desktopLiveScene" id="cameraRoot"></section></main>
+                    <main id="app" style="margin-left:var(--desktop-sidebar);padding:22px;max-width:none;width:auto"><p style="font:12px system-ui;color:#cfaf73">TEST RZECZYWISTEGO KOMPONENTU · ŻADNE ŹRÓDŁO NIE JEST POŁĄCZONE</p><h1 style="font:650 29px system-ui;color:#f5f6f9;margin:0 0 20px">Pulpit monitoringu</h1><section class="desktopOverview"><section class="desktopLiveScene" id="cameraRoot"></section><details class="desktopEventsDrawer"><summary>Zdarzenia · brak połączonych źródeł testowych</summary></details></section></main>
                     <script type="module">
                     try {
-                      const {createCameraCatalog}=await import('./core/camera-catalog.mjs?v=1');
-                      const {mountCameraWorkspace}=await import('./camera-workspace.mjs?v=1');
+                      const {createCameraCatalog}=await import('./core/camera-catalog.mjs?v=2');
+                      const {mountCameraWorkspace}=await import('./camera-workspace.mjs?v=2');
                       const rows=new Map(),storage={getItem:k=>rows.get(k)||null,setItem:(k,v)=>rows.set(k,v)};
                       const ownerId='00000000-0000-4000-8000-000000000001';
                       const catalog=createCameraCatalog({storage,ownerId});

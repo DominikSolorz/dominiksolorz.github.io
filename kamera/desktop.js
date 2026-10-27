@@ -5,7 +5,7 @@ import { createRouter } from "./core/router.mjs";
 import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { operatorStatus } from "./core/operator-status.mjs?v=1";
-import { mountCameraWorkspace } from './camera-workspace.mjs?v=1';
+import { mountCameraWorkspace } from './camera-workspace.mjs?v=2';
 import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=2";
 const isTransmitter = location.hash === "#nadaj";
 // Tryb urządzenia jest rozstrzygany raz, przed załadowaniem CSS w index.html.

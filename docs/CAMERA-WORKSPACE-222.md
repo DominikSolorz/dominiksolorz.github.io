@@ -1,4 +1,4 @@
-# Real camera workspace — web build 222
+# Real camera workspace — web build 223
 
 ## Delivered
 
@@ -54,3 +54,4 @@ catalogue/permissions remain separate work. The production UI states this scope.
 
 This is an implemented preview-management stage, not certification of a
 commercial 50-camera recorder. Marketing and product support must reflect this.
+

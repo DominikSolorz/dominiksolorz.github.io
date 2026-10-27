@@ -1,5 +1,5 @@
-import {createCameraCatalog,createCameraConnections,cameraColumns} from './core/camera-catalog.mjs?v=1';
-import {cameraSourceAdapters} from './core/camera-sources.mjs?v=1';
+import {createCameraCatalog,createCameraConnections,cameraColumns} from './core/camera-catalog.mjs?v=2';
+import {cameraSourceAdapters} from './core/camera-sources.mjs?v=2';
 
 export function mountCameraWorkspace({root,primaryTile,primaryVideo,ownerId,storage=localStorage,native=false,mediaDevices=navigator.mediaDevices,onState=()=>{}}){
   const catalog=createCameraCatalog({storage,ownerId});

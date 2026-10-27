@@ -1,12 +1,13 @@
 // Camera configuration and connection ownership. No DOM, recorder or primary camera.
 const kinds=new Set(['system','whep','mjpeg']);
+const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 export function cameraConfig(input){
   if(!input||typeof input!=='object'||!kinds.has(input.kind))throw Error('Wybierz obsługiwany sposób połączenia.');
   const name=String(input.name||'').trim(),location=String(input.location||'').trim();
   if(!name||name.length>64||location.length>100||/[\x00-\x1f]/.test(name+location))throw Error('Podaj nazwę kamery do 64 znaków.');
   const result={id:input.id||crypto.randomUUID(),kind:input.kind,name,location};
   result.fit=input.fit||'contain';if(!['contain','cover'].includes(result.fit))throw Error('Wybierz dopasowanie obrazu.');
-  if(!/^[a-f0-9-]{36}$/i.test(result.id))throw Error('Nieprawidłowy identyfikator kamery.');
+  if(!uuid.test(result.id))throw Error('Nieprawidłowy identyfikator kamery.');result.id=result.id.toLowerCase();
   if(input.kind==='system'){
     if(typeof input.deviceId!=='string'||!input.deviceId||input.deviceId.length>512)throw Error('Wybierz urządzenie z listy.');
     result.deviceId=input.deviceId;
@@ -22,7 +23,7 @@ export function cameraConfig(input){
 }
 const sourceKey=c=>c.kind==='system'?`system:${c.deviceId}`:`${c.kind}:${c.url}`;
 export function createCameraCatalog({storage,ownerId,maxCameras=128,makeId=()=>crypto.randomUUID()}){
-  if(!/^[a-f0-9-]{36}$/i.test(ownerId||''))throw Error('Zaloguj się na swoje konto przed konfiguracją kamer.');
+  if(!uuid.test(ownerId||''))throw Error('Zaloguj się na swoje konto przed konfiguracją kamer.');
   const key=`home-security-cameras:v1:${ownerId}`;
   let cameras=[];
   const saved=storage.getItem(key);
@@ -30,6 +31,7 @@ export function createCameraCatalog({storage,ownerId,maxCameras=128,makeId=()=>c
     try{
       const envelope=JSON.parse(saved);
       if(envelope.v!==1||!Array.isArray(envelope.cameras)||envelope.cameras.length>maxCameras)throw Error();
+      if(envelope.cameras.some(c=>!c||typeof c.id!=='string'||!uuid.test(c.id)))throw Error();
       cameras=envelope.cameras.map(cameraConfig);
       if(new Set(cameras.map(c=>c.id)).size!==cameras.length||new Set(cameras.map(sourceKey)).size!==cameras.length)throw Error();
     }catch{throw Error('Zapis konfiguracji kamer jest nieprawidłowy. Zachowano go bez zmian.');}
