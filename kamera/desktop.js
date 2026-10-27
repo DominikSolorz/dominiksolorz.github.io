@@ -53,15 +53,16 @@ if (desktopRequested) {
   document.body.prepend(shell);
   const updateNotice = document.createElement("section");
   updateNotice.id = "desktopUpdateNotice"; updateNotice.className = "desktopUpdateNotice"; updateNotice.hidden = true;
-  updateNotice.innerHTML = '<button type="button" id="desktopUpdateAction">↻ Dostępna aktualizacja</button><progress id="desktopUpdateProgress" max="100" hidden></progress><small id="desktopUpdateStatus" role="status"></small>';
-  shell.append(updateNotice);
+  updateNotice.innerHTML = '<button type="button" id="desktopUpdateAction" aria-label="Zaktualizuj program HOME SECURITY">↻ Zaktualizuj</button><progress id="desktopUpdateProgress" max="100" hidden></progress><small id="desktopUpdateStatus" role="status" aria-live="polite"></small>';
+  // Always show the available native update inside the LEFT navigation rail.
+  shell.insertBefore(updateNotice, shell.querySelector('.desktopNav'));
   $("desktopUpdateAction").addEventListener("click", () => window.chrome?.webview?.postMessage({ type: "desktop.update.request" }));
   window.chrome?.webview?.addEventListener("message", event => {
     const state = event.data;
     if (state?.type !== "desktop.update.state") return;
     updateNotice.hidden = state.status === "none";
     $("desktopUpdateAction").disabled = !["available", "error"].includes(state.status);
-    $("desktopUpdateAction").textContent = state.status === "available" ? `↻ Aktualizuj do ${state.version}` : "↻ Aktualizacja programu";
+    $("desktopUpdateAction").textContent = state.status === "available" ? `↻ Zaktualizuj do ${state.version}` : state.status === "error" ? "↻ Spróbuj ponownie" : "↻ Aktualizacja programu";
     $("desktopUpdateStatus").textContent = state.message || "";
     const progress = $("desktopUpdateProgress"); progress.hidden = state.status !== "downloading";
     if (Number.isFinite(state.percent)) progress.value = Math.max(0, Math.min(100, state.percent));
