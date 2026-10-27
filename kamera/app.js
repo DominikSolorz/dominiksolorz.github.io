@@ -22,7 +22,7 @@ import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./au
 import { mountAccountUI } from "./account-ui.mjs?v=3";
 import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
-import { createWebUpdates } from "./core/web-updates.mjs?v=2";
+import { createWebUpdates } from "./core/web-updates.mjs?v=3";
 import { NativeAgentClient } from "./communication/native-agent-client.mjs";
 import { createAgentTelemetry } from "./communication/agent-telemetry.mjs?v=2";
 import { captureEventFrame } from "./workspace-panels.mjs?v=2";
