@@ -47,33 +47,36 @@ jobs:
       - name: Build genuine Windows desktop and companion agent
         shell: pwsh
         run: |
-          & "$PWD/desktop-client/build-release.ps1" -Version '1.4.8'
+          $nativeVersion=([regex]::Match((Get-Content -Raw 'desktop-client/Program.cs'),'DesktopVersion = "([0-9.]+)"')).Groups[1].Value
+          if(-not $nativeVersion){throw 'Native desktop version is missing'}
+          & "$PWD/desktop-client/build-release.ps1" -Version $nativeVersion
           if ($LASTEXITCODE -ne 0) { throw 'Windows release publish failed.' }
       - name: Package preview, never overwrite public auto-updater
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $output = Join-Path $PWD 'desktop-client/publish-1.4.8'
+          $nativeVersion=([regex]::Match((Get-Content -Raw 'desktop-client/Program.cs'),'DesktopVersion = "([0-9.]+)"')).Groups[1].Value
+          $output = Join-Path $PWD ('desktop-client/publish-' + $nativeVersion)
           $required = @(
             'HomeSecurityDesktop.exe',
             'Panel/index.html',
             'Panel/interface-concept.css',
             'Panel/desktop.js',
-            'Agent/1.4.8/HomeSecurityAgent.exe'
+            ('Agent/' + $nativeVersion + '/HomeSecurityAgent.exe')
           )
           foreach ($file in $required) {
             if (-not (Test-Path -LiteralPath (Join-Path $output $file))) { throw "Missing desktop file: $file" }
           }
           $html = Get-Content -Raw (Join-Path $output 'Panel/index.html')
           $css = Get-Content -Raw (Join-Path $output 'Panel/interface-concept.css')
-          if (-not $html.Contains('interface-concept.css?v=1')) { throw 'Preview is missing real UI concept stylesheet.' }
+          if (-not $html.Contains('interface-concept.css?v=2')) { throw 'Preview is missing real UI concept stylesheet.' }
           $webBuild=(Get-Content -Raw 'kamera/version.json' | ConvertFrom-Json).version
           if (-not $html.Contains('home-security-build" content="' + $webBuild + '"')) { throw 'Preview does not match current web build.' }
           if (-not $css.Contains('.desktopCameraTile')) { throw 'Real camera component is not styled.' }
           @'
           HOME SECURITY Desktop — niezależny pakiet testowy UI 220
           Interfejs: projekt 193 zastosowany do prawdziwego panelu Windows / WebView2.
-          Wersja binarna: 1.4.8 (preview z nowym pakietem panelu 220).
+          Wersja binarna: z aktualnego wydania źródeł; to tylko niezależny podgląd UI.
           UWAGA: To nie jest oficjalny instalator ani automatyczna aktualizacja.
           Nie zastępuj plików działającego instalatora i nie uruchamiaj obok aktywnego nagrywania.
           Testuj na osobnym komputerze lub koncie Windows bez prywatnych nagrań.
