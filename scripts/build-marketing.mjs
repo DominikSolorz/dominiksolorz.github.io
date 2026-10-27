@@ -12,7 +12,7 @@ async function emit(name,html){
   else{await mkdir(new URL('./',file),{recursive:true});await writeFile(file,html);}
 }
 function head(title,description,path,prefix=''){
-return `<!doctype html>\n<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0c10"><meta name="referrer" content="no-referrer"><meta name="robots" content="index,follow"><title>${escape(title)} — HOME SECURITY</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="${origin+path}"><meta property="og:type" content="website"><meta property="og:locale" content="pl_PL"><meta property="og:title" content="${escape(title)} — HOME SECURITY"><meta property="og:description" content="${escape(description)}"><meta property="og:url" content="${origin+path}"><meta property="og:image" content="${origin}assets/home-security-hero.png"><link rel="icon" href="${prefix}icons/kamera-192.svg" type="image/svg+xml"><link rel="stylesheet" href="${prefix}marketing.css?v=5"></head>\n<body class="marketingPage">\n`;
+return `<!doctype html>\n<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0c10"><meta name="referrer" content="no-referrer"><meta name="robots" content="index,follow"><title>${escape(title)} — HOME SECURITY</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="${origin+path}"><meta property="og:type" content="website"><meta property="og:locale" content="pl_PL"><meta property="og:title" content="${escape(title)} — HOME SECURITY"><meta property="og:description" content="${escape(description)}"><meta property="og:url" content="${origin+path}"><meta property="og:image" content="${origin}assets/home-security-hero.png"><link rel="icon" href="${prefix}icons/kamera-192.svg" type="image/svg+xml"><link rel="stylesheet" href="${prefix}marketing.css?v=6"></head>\n<body class="marketingPage">\n`;
 }
 function nav(prefix=''){
  const panel=prefix||'./';
@@ -26,7 +26,7 @@ const index=await read(camera,'index.html');
 const slot=/<section id="publicHome"[\s\S]*?<\/section>(?=\s*<section id="authDialog")/;
 if(!slot.test(index))throw new Error('Public marketing slot not found; private panel not modified.');
 await emit('index.html',index.replace(slot,home.trimEnd()));
-await emit('o-systemie.html',head('Monitoring domowy po Twojemu','Poznaj HOME SECURITY: program Windows, podgląd w telefonie, archiwum, wymagania, poradniki i aktualny stan projektu.','o-systemie.html')+home+'\n</body></html>\n');
+await emit('o-systemie.html',head('Podgląd domu z telefonu i archiwum nagrań','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum, diagnostykę, wymagania i aktualne ograniczenia produktu.','o-systemie.html')+home+'\n</body></html>\n');
 const posts=JSON.parse(await read(source,'posts.json'));
 for(const post of posts)if(!/^[a-z0-9-]+$/.test(post.slug))throw new Error('Invalid article slug.');
 const cards=posts.map(post=>`<a class="mktPost" href="${post.slug}.html"><span class="mktPostArt ${escape(post.art)}" aria-hidden="true">${escape(post.number)} <i>PORADNIK</i></span><span class="mktPostCategory">${escape(post.category.toUpperCase())}</span><h3>${escape(post.title)}</h3><p>${escape(post.description)}</p><span class="mktTextLink">Czytaj poradnik ↗</span></a>`).join('\n');
