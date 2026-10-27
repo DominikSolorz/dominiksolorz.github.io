@@ -107,6 +107,10 @@ jobs:
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-extensions --hide-scrollbars --no-first-run --window-size=1440,900 --virtual-time-budget=2500 --screenshot=website-previews/home-desktop.png https://dominiksolorz.github.io/kamera/o-systemie.html || true
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-extensions --hide-scrollbars --no-first-run --window-size=390,844 --force-device-scale-factor=1 --virtual-time-budget=2500 --screenshot=website-previews/home-mobile.png https://dominiksolorz.github.io/kamera/o-systemie.html || true
           "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-extensions --hide-scrollbars --no-first-run --window-size=1440,900 --virtual-time-budget=2500 --screenshot=website-previews/gallery-desktop.png https://dominiksolorz.github.io/kamera/galeria.html || true
+          # These are screenshots of the real PUBLIC login and registration routes.
+          # No account data is entered and no camera footage is accessed.
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-extensions --hide-scrollbars --no-first-run --window-size=1280,900 --virtual-time-budget=3500 --screenshot=website-previews/login-real-ui.png "https://dominiksolorz.github.io/kamera/?auth=login" || true
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-extensions --hide-scrollbars --no-first-run --window-size=1280,900 --virtual-time-budget=3500 --screenshot=website-previews/register-real-ui.png "https://dominiksolorz.github.io/kamera/?auth=register" || true
           ls -lh website-previews
       - uses: actions/upload-artifact@v4
         if: always()
