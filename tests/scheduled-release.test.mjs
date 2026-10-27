@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {nextVersion,fingerprintEntries,distribution} from '../scripts/desktop-release.mjs';
 import {installerFor} from '../kamera/marketing-downloads.mjs';
+import {readFile} from 'node:fs/promises';
 test('scheduled release increments only the desktop patch',()=>{
  assert.equal(nextVersion('1.4.11'),'1.4.12');assert.throws(()=>nextVersion('latest'));assert.throws(()=>nextVersion('../1.4.11'));
 });
@@ -21,4 +22,9 @@ test('distribution rejects external destinations and malformed release metadata'
 test('public download derives its location from a validated version, never a supplied external URL',()=>{
  assert.ok(installerFor({version:'1.4.12',installerUrl:'https://evil.example/a.exe'}).endsWith('/downloads/HOME-SECURITY-Desktop-Setup-1.4.12.exe'));
  assert.throws(()=>installerFor({version:'../../evil'}));
+});
+test('the main homepage and brochure both load manifest-driven downloads',async()=>{
+ const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
+ assert.ok((await read('kamera/index.html')).includes('src="marketing-downloads.mjs?v=1"'));
+ assert.ok((await read('kamera/marketing-auto-update.mjs')).includes("import './marketing-downloads.mjs?v=1'"));
 });

@@ -28,3 +28,4 @@ export function mountInstallerDownloads(){
   window.addEventListener('focus',()=>void refresh().catch(()=>{}));
   window.setInterval(()=>{if(document.visibilityState==='visible')void refresh().catch(()=>{});},15*60*1000);
 }
+if(typeof document!=='undefined')mountInstallerDownloads();

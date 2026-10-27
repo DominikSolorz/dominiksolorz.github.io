@@ -1,7 +1,6 @@
 // HOME SECURITY public pages update automatically, without a misleading Update button.
 // Do not interrupt a partially filled contact form or an open modal.
-import {mountInstallerDownloads} from './marketing-downloads.mjs?v=1';
-mountInstallerDownloads();
+import './marketing-downloads.mjs?v=1';
 const buildMeta=document.querySelector('meta[name="home-security-build"]');
 if(document.body?.classList.contains('marketingPage')&&buildMeta?.content){
   const currentBuild=Number(buildMeta.content);
