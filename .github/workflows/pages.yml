@@ -10,11 +10,8 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: pages
-  # Never interrupt an active Pages deployment; queue the newest run instead.
-  cancel-in-progress: false
-
+# Verifications can run concurrently. Serialize only the Pages upload itself,
+# so an unrelated Windows build never holds newer web releases in a workflow queue.
 jobs:
   verify-frontend:
     runs-on: ubuntu-latest
@@ -48,6 +45,9 @@ jobs:
         run: dotnet build drive-sync/HomeSecurity.DriveSync.csproj -c Release
   deploy:
     needs: verify-frontend
+    concurrency:
+      group: pages-publish
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
