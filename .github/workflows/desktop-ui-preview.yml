@@ -24,16 +24,25 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          # This UI preview only needs source code and design resources.
+          # Do not download historical 80+ MB release ZIPs and installers.
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      # The full published release manifest/hash test still runs in pages.yml with the full repository.
       - name: Verify interface contract before packaging
         shell: pwsh
         run: |
-          node --test tests/desktop-concept-220.test.mjs tests/workspace-ui.test.mjs tests/owner-theme.test.mjs tests/release-consistency.test.mjs
+          node --test tests/desktop-concept-220.test.mjs tests/workspace-ui.test.mjs tests/owner-theme.test.mjs tests/desktop-bundle.test.mjs
           if ($LASTEXITCODE -ne 0) { throw 'Interface regression tests failed.' }
       - name: Build genuine Windows desktop and companion agent
         shell: pwsh
