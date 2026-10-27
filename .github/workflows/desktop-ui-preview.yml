@@ -24,18 +24,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          filter: blob:none
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            /desktop-client/**
-            /agent/**
-            /agent-client/**
-            /agent-contracts/**
-            /kamera/**
-            !/kamera/updates/**
-            !/kamera/downloads/**
-            /tests/**
-            /.github/workflows/desktop-ui-preview.yml
           # This UI preview only needs source code and design resources.
           # Do not download historical 80+ MB release ZIPs and installers.
           filter: blob:none
