@@ -55,10 +55,12 @@ test('marketing guided checklist is responsive and safely cached with the new re
  assert.ok(css.includes('mktSetupItem:focus-within'));
  assert.ok(sw.includes('./marketing-start.css?v=1'));
  assert.ok(sw.includes('./marketing-start.mjs?v=1'));
- assert.ok(sw.includes('kamera-domowa-shell-v130'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "130"'));
- assert.equal(JSON.parse(version).version,'220');
- assert.ok(app.includes('const VERSION = "220"'));
+ const release=JSON.parse(version).version;
+ const workerVersion=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
+ assert.ok(/^\d+$/.test(release),'version manifest must have a numeric build');
+ assert.ok(workerVersion,'service worker version must be declared');
+ assert.ok(sw.includes('kamera-domowa-shell-v'+workerVersion));
+ assert.ok(app.includes('const VERSION = "'+release+'"'));
 });
 
 test('legal documents never send visitors from Back to a login page',async()=>{
@@ -77,5 +79,6 @@ test('the deployed-site audit checks real pages without submitting forms',async(
  assert.ok(script.includes("HOME-SECURITY-Desktop-Setup-1.4.8.exe"));
  assert.ok(!script.includes("method:'POST'"));
  assert.ok(!script.includes('submit()'));
- assert.ok(script.includes('expectedBuild=\'219\''));
+ const manifest=JSON.parse(await read('kamera/version.json'));
+ assert.ok(script.includes("expectedBuild='"+manifest.version+"'"),'live audit must target current manifest release');
 });
