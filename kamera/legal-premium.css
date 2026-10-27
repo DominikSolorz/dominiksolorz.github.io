@@ -25,3 +25,6 @@
 .legalFooter nav a{color:#e8e3eb;text-decoration:none;font-size:12px}
 .legalFooter nav a:hover{text-decoration:underline;color:#f4ce8b}
 @media(max-width:680px){.legalPage .legalNav{flex-wrap:wrap;gap:14px}.legalPage main{padding:30px 0 55px}.legalFooter{grid-template-columns:1fr}.legalFooter nav{justify-content:flex-start}}
+
+.legalPage .mktSkip{position:absolute;z-index:20;top:8px;left:-1000px;padding:11px 15px;border-radius:8px;background:#f4ce8b;color:#131520;text-decoration:none;font-weight:700}
+.legalPage .mktSkip:focus{left:14px}
