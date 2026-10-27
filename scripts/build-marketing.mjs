@@ -36,8 +36,10 @@ for(const post of posts){
  const related=posts.filter(other=>other.slug!==post.slug).map(other=>`<a href="${other.slug}.html">${escape(other.title)} ↗</a>`).join('');
  await emit('blog/'+post.slug+'.html',head(post.title,post.description,'blog/'+post.slug+'.html','../')+nav('../')+`<main id="mkt-content" class="mktPageMain"><p class="mktBreadcrumb"><a href="../o-systemie.html">Strona główna</a> / <a href="index.html">Poradniki</a> / ${escape(post.category)}</p><p class="mktEyebrow">${escape(post.category)}</p><h1 class="mktPageTitle">${escape(post.title)}</h1><p class="mktPageLead">${escape(post.description)}</p><p class="mktArticleMeta">Dokumentacja HOME SECURITY · Aktualizacja: <time datetime="2026-10-25">25 października 2026</time></p><div class="mktArticleLayout"><article class="mktArticle">${article}</article><aside class="mktArticleAside"><h2>Przydatne dalej</h2>${related}<a href="../pomoc.html">Skontaktuj się z administratorem ↗</a><a href="../o-systemie.html#stan-projektu">Sprawdź stan projektu ↗</a></aside></div></main>`+footer('../')+'\n</body></html>\n');
 }
+const gallery=await read(source,'gallery.html');
+await emit('galeria.html',head('Galeria projektów panelu i telefonu','Zobacz osiem koncepcji interfejsu HOME SECURITY: pulpit, sterowanie, nagrania, diagnostyka i telefon. To projekty UI, nie rzeczywiste zrzuty aplikacji.','galeria.html')+nav()+gallery+footer()+'\n</body></html>\n');
 const contact=await read(source,'contact.html');
 await emit('pomoc.html',head('Kontakt i pomoc','Skontaktuj się z administratorem HOME SECURITY. Pomoc techniczna, konfiguracja, nagrania i pytania o produkt.','pomoc.html')+nav()+contact+footer()+'<script src="vendor/supabase.js?v=2.117.2"></script><script type="module" src="marketing-contact.js?v=8"></script>\n</body></html>\n');
-const paths=['o-systemie.html','pomoc.html','blog/index.html',...posts.map(post=>'blog/'+post.slug+'.html')];
+const paths=['o-systemie.html','galeria.html','pomoc.html','blog/index.html',...posts.map(post=>'blog/'+post.slug+'.html')];
 await emit('sitemap.xml','<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+paths.map(path=>`<url><loc>${origin+path}</loc></url>`).join('\n')+'\n</urlset>\n');
-console.log((check?'Verified':'Generated')+' marketing home, contact, blog index, 3 articles and sitemap.');
+console.log((check?'Verified':'Generated')+' marketing home, UI gallery, contact, blog index, 3 articles and sitemap.');
