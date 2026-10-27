@@ -1,0 +1,157 @@
+name: Prepare verified HOME SECURITY Desktop 1.4.9 stable update
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/stable-desktop-149.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare-stable-windows:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify existing app, updater and safe UI before releasing
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          node --test tests/update-flow.test.mjs tests/desktop-bundle.test.mjs tests/desktop-concept-220.test.mjs tests/preview-installer-ui220.test.mjs tests/mobile-updates.test.mjs
+          if($LASTEXITCODE -ne 0){throw 'Pre-release tests failed'}
+          $manifest=Get-Content -Raw kamera/desktop-update.json | ConvertFrom-Json
+          if($manifest.version -ne '1.4.8'){throw 'Refuse to build on an unexpected stable release'}
+      - name: Prepare new native source version and coherent public download links
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          function Replace-Exact([string]$file,[string]$before,[string]$after){
+            $path=Join-Path (Get-Location) $file
+            $source=[IO.File]::ReadAllText($path)
+            if(-not $source.Contains($before)){throw "Missing version anchor in $file : $before"}
+            [IO.File]::WriteAllText($path,$source.Replace($before,$after),[Text.UTF8Encoding]::new($false))
+          }
+          Replace-Exact 'desktop-client/Program.cs' 'private const string DesktopVersion = "1.4.8";' 'private const string DesktopVersion = "1.4.9";'
+          Replace-Exact 'desktop-client/Program.cs' 'private const string WebPanelBuild = "220";' 'private const string WebPanelBuild = "221";'
+          Replace-Exact 'desktop-client/HomeSecurityDesktop.csproj' '<Version>1.4.8</Version>' '<Version>1.4.9</Version>'
+          Replace-Exact 'desktop-client/HomeSecurityDesktop.csproj' '<AssemblyVersion>1.4.8.0</AssemblyVersion>' '<AssemblyVersion>1.4.9.0</AssemblyVersion>'
+          Replace-Exact 'desktop-client/HomeSecurityDesktop.csproj' '<FileVersion>1.4.8.0</FileVersion>' '<FileVersion>1.4.9.0</FileVersion>'
+          Replace-Exact 'desktop-client/installer/HomeSecurityDesktop.iss' '#define AppVersion "1.4.8"' '#define AppVersion "1.4.9"'
+          Replace-Exact 'desktop-client/installer/HomeSecurityDesktop.iss' 'publish-1.4.8' 'publish-1.4.9'
+          Replace-Exact 'desktop-client/build-release.ps1' "Version = '1.4.8'" "Version = '1.4.9'"
+          foreach($file in @('kamera/index.html','kamera/o-systemie.html','design/marketing/home.html')){
+            Replace-Exact $file '1.4.8' '1.4.9'
+          }
+          Replace-Exact 'scripts/verify-live-marketing.mjs' 'HOME-SECURITY-Desktop-Setup-1.4.8.exe' 'HOME-SECURITY-Desktop-Setup-1.4.9.exe'
+          node scripts/build-marketing.mjs --check
+          if($LASTEXITCODE -ne 0){throw 'Generated public site diverged from source'}
+      - name: Compile actual Windows host and camera agent 1.4.9
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & './desktop-client/build-release.ps1' -Version '1.4.9'
+          if($LASTEXITCODE -ne 0){throw 'Native compilation failed'}
+          $root='desktop-client/publish-1.4.9'
+          foreach($name in @('HomeSecurityDesktop.exe','Panel/index.html','Panel/interface-concept.css','Agent/1.4.9/HomeSecurityAgent.exe')){
+            if(-not (Test-Path (Join-Path $root $name))){throw "Missing native release file: $name"}
+          }
+          $panel=Get-Content -Raw "$root/Panel/index.html"
+          if(-not $panel.Contains('home-security-build" content="221"')){throw 'Expected web UI 221 is not packaged'}
+          if(-not $panel.Contains('interface-concept.css?v=2')){throw 'New owner interface is not packaged'}
+      - name: Build and verify stable ZIP and Windows installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force kamera/updates,kamera/downloads | Out-Null
+          $zip='kamera/updates/HomeSecurityDesktop-1.4.9-win-x64.zip'
+          Compress-Archive -Path 'desktop-client/publish-1.4.9/*' -DestinationPath $zip -CompressionLevel Optimal
+          $archive=[IO.Compression.ZipFile]::OpenRead((Resolve-Path $zip))
+          try {
+            $names=@($archive.Entries | ForEach-Object FullName)
+            foreach($required in @('HomeSecurityDesktop.exe','Panel/index.html','Agent/1.4.9/HomeSecurityAgent.exe')){
+              if($names -notcontains $required){throw "Release archive missing $required"}
+            }
+          } finally {$archive.Dispose()}
+          if((Get-Item $zip).Length -lt 50000000){throw 'Stable package is too small'}
+          $hash=(Get-FileHash $zip -Algorithm SHA256).Hash.ToUpperInvariant()
+          $iscc=Join-Path ([Environment]::GetFolderPath('ProgramFilesX86')) 'Inno Setup 6/ISCC.exe'
+          if(-not (Test-Path $iscc)){
+            choco install innosetup -y --no-progress
+            if($LASTEXITCODE -ne 0){throw 'Inno Setup installation failed'}
+          }
+          if(-not (Test-Path $iscc)){throw 'Inno Setup compiler is unavailable'}
+          & $iscc 'desktop-client/installer/HomeSecurityDesktop.iss'
+          if($LASTEXITCODE -ne 0){throw 'Native installer compilation failed'}
+          $installer='desktop-client/installer-output/HOME-SECURITY-Desktop-Setup-1.4.9.exe'
+          if(-not (Test-Path $installer)){throw 'Stable installer EXE is missing'}
+          $bytes=[IO.File]::ReadAllBytes((Resolve-Path $installer))
+          if($bytes.Length -lt 50000000 -or $bytes[0] -ne 77 -or $bytes[1] -ne 90){throw 'Installer invalid or missing MZ header'}
+          Copy-Item $installer 'kamera/downloads/HOME-SECURITY-Desktop-Setup-1.4.9.exe'
+          $manifest=[ordered]@{
+            version='1.4.9'
+            packageUrl='https://dominiksolorz.github.io/kamera/updates/HomeSecurityDesktop-1.4.9-win-x64.zip'
+            sha256=$hash
+          }
+          $json=($manifest | ConvertTo-Json -Depth 4) + "`n"
+          [IO.File]::WriteAllText((Join-Path (Get-Location) 'kamera/desktop-update.json'),$json,[Text.UTF8Encoding]::new($false))
+          Write-Host "STABLE 1.4.9 ZIP SHA256: $hash"
+          "Release ZIP SHA256: $hash" | Out-File $env:GITHUB_STEP_SUMMARY -Append
+          "Installer SHA256: $((Get-FileHash 'kamera/downloads/HOME-SECURITY-Desktop-Setup-1.4.9.exe' -Algorithm SHA256).Hash)" | Out-File $env:GITHUB_STEP_SUMMARY -Append
+      - name: Run release consistency, UX and installer integrity tests on exact new files
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          node --test tests/release-consistency.test.mjs tests/marketing.test.mjs tests/desktop-concept-220.test.mjs tests/preview-installer-ui220.test.mjs tests/marketing-start.test.mjs tests/desktop-bundle.test.mjs tests/update-flow.test.mjs
+          if($LASTEXITCODE -ne 0){throw 'Stable release did not pass regression tests'}
+          node scripts/build-marketing.mjs --check
+          if($LASTEXITCODE -ne 0){throw 'Marketing output not in sync'}
+      - name: Create isolated validated update PR (no published manifest before review)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $branch='validated-stable-1.4.9-' + $env:GITHUB_SHA.Substring(0,10)
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c $branch
+          $paths=@(
+            'desktop-client/Program.cs',
+            'desktop-client/HomeSecurityDesktop.csproj',
+            'desktop-client/installer/HomeSecurityDesktop.iss',
+            'desktop-client/build-release.ps1',
+            'kamera/index.html',
+            'kamera/o-systemie.html',
+            'design/marketing/home.html',
+            'scripts/verify-live-marketing.mjs',
+            'kamera/desktop-update.json',
+            'kamera/updates/HomeSecurityDesktop-1.4.9-win-x64.zip',
+            'kamera/downloads/HOME-SECURITY-Desktop-Setup-1.4.9.exe'
+          )
+          git add --sparse -- $paths
+          git diff --cached --stat
+          if($LASTEXITCODE -ne 0){throw 'Unable to stage all stable release files'}
+          git commit -m 'HOME SECURITY Desktop 1.4.9: verified native Windows update and official package'
+          if($LASTEXITCODE -ne 0){throw 'Could not prepare stable release commit'}
+          git push origin "HEAD:refs/heads/$branch"
+          if($LASTEXITCODE -ne 0){throw 'Could not upload stable release candidate branch'}
+          gh pr create --repo $env:GITHUB_REPOSITORY --head $branch --base main --title 'HOME SECURITY Desktop 1.4.9: oficjalna aktualizacja po kliknięciu' --body 'Wygenerowany i zweryfikowany natywny Windows 1.4.9 z UI221 i agentem. Dwa pliki binarne, SHA-256 manifestu, aktualny instalator, spójne źródła. Po scaleniu stary Desktop 1.4.8 WYKRYJE aktualizację i pokaże Zaktualizuj po lewej, ale NIE zainstaluje niczego bez kliknięcia. GitHub Pages opublikuje ZIP i manifest razem. Nie jest to automatyczna instalacja ani ingerencja w dane użytkownika.'
+          if($LASTEXITCODE -ne 0){throw 'Could not create reviewable stable release PR'}
