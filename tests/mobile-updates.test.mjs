@@ -122,7 +122,7 @@ test('marketing pages poll the published build but preserve unsent forms',async(
  assert.ok(source.includes('marketing-auto-update.mjs?v=2'));
  assert.ok(source.includes('home-security-build'));
  assert.ok(generated.includes('marketing-auto-update.mjs?v=2'));
- assert.ok(generated.includes('home-security-build" content="221"'));
+ assert.ok(generated.includes('home-security-build" content="222"'));
 });
 
 test('native Windows update remains strictly opt-in via the left-hand sidebar',async()=>{

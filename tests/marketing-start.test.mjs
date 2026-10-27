@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 
-const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
+const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
 test('the setup checklist actually responds to four user choices without tracking',async()=>{
  const script=await read('kamera/marketing-start.mjs');
@@ -55,10 +55,10 @@ test('marketing guided checklist is responsive and safely cached with the new re
  assert.ok(css.includes('mktSetupItem:focus-within'));
  assert.ok(sw.includes('./marketing-start.css?v=1'));
  assert.ok(sw.includes('./marketing-start.mjs?v=1'));
- assert.ok(sw.includes('kamera-domowa-shell-v131'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "131"'));
- assert.equal(JSON.parse(version).version,'221');
- assert.ok(app.includes('const VERSION = "221"'));
+ assert.ok(sw.includes('kamera-domowa-shell-v132'));
+ assert.ok(app.includes('SERVICE_WORKER_BUILD = "132"'));
+ assert.equal(JSON.parse(version).version,'222');
+ assert.ok(app.includes('const VERSION = "222"'));
 });
 
 test('legal documents never send visitors from Back to a login page',async()=>{

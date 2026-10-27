@@ -63,7 +63,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "221"; // musi się zgadzać z version.json
+const VERSION = "222"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2192,7 +2192,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "131";
+  const SERVICE_WORKER_BUILD = "132";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2605,7 +2605,7 @@ $("bootError").hidden = true;
 // Dla zwykłego wejścia na stronę najpierw pokazujemy stronę główną. Nadajnik
 // Windows i link odbiorcy rozwiązują tę bramę automatycznie w index.html.
 await window.__waitForPanel;
-if (!RECEIVER_ONLY) await window.__ensureAccountReady?.();
+const panelAccount = !RECEIVER_ONLY ? await window.__ensureAccountReady?.() : null;
 await window.__finishSecureBoot?.();
 if (RECEIVER_ONLY) {
   CHANNEL = receiverChannel;
@@ -2674,7 +2674,8 @@ if (RECEIVER_ONLY) {
       showViewer();
       if (OWNER_PANEL && !MOBILE_OWNER_APP) toastMsg("Panel właściciela: sterujesz komputerem-kamerą po wpisaniu PIN-u. Link odbiorcy nadal daje tylko podgląd.");
     }
-    document.dispatchEvent(new Event('hs-panel-ready'));
+    window.__HOME_SECURITY_CAMERA_OWNER__=panelAccount?.id||null;
+    document.dispatchEvent(new CustomEvent('hs-panel-ready',{detail:{ownerId:panelAccount?.id}}));
     if(new URLSearchParams(location.search).get('section')==='recordings'||new URLSearchParams(location.search).get('wroc')==='nagrania')document.dispatchEvent(new Event('hs-open-recordings'));
   } catch (error) {
     const detail = errText(error);

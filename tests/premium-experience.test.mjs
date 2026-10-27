@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
+const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
 test('public product story stays identical in the app and indexed landing page',async()=>{
   const [home,index,brochure]=await Promise.all([

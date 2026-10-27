@@ -23,6 +23,12 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--camera-workspace-test")
+        {
+            ApplicationConfiguration.Initialize();
+            Application.Run(new CameraWorkspaceTestWindow(Path.GetFullPath(args[1])));
+            return;
+        }
         if (args.Length == 2 && args[0] == "--agent-health-test")
         {
             using var runtime = new AgentRuntime();

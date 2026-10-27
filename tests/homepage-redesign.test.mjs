@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 
-const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
+const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
 test('homepage explains real use cases and privacy responsibilities without fictitious footage',async()=>{
  const [home,brochure]=await Promise.all(['design/marketing/home.html','kamera/o-systemie.html'].map(read));

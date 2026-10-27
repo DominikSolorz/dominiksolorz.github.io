@@ -5,6 +5,7 @@ import { createRouter } from "./core/router.mjs";
 import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { operatorStatus } from "./core/operator-status.mjs?v=1";
+import { mountCameraWorkspace } from './camera-workspace.mjs?v=1';
 import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=2";
 const isTransmitter = location.hash === "#nadaj";
 // Tryb urządzenia jest rozstrzygany raz, przed załadowaniem CSS w index.html.
@@ -14,11 +15,12 @@ const desktopRequested = !isTransmitter && document.documentElement.classList.co
 
 if (desktopRequested) {
   const $ = id => document.getElementById(id);
+  let cameraWorkspace = null;
   document.documentElement.classList.add("desktopMode");
   document.body.classList.add("desktopMode");
   // Panel operatora jest elementem po zalogowaniu. Desktop tworzy strukturę
   // wcześniej, ale do pomyślnego PIN-u lewy pasek pozostaje niewidoczny.
-  document.body.classList.add("accessPending");
+  if ($('app')?.hidden !== false) document.body.classList.add("accessPending");
 
   const header = document.querySelector(".topbar");
   const desktopTopStatus = document.createElement("div");
@@ -91,9 +93,7 @@ if (desktopRequested) {
     <div class="desktopContextActions">
       <span id="desktopCameraCount" class="desktopCameraCount">Kamery: sprawdzam…</span>
       <div class="desktopLayouts" role="group" aria-label="Układ kamer">
-        <button type="button" class="active" aria-pressed="true">1×1</button>
-        <button type="button" disabled title="Dodaj kolejne kamery, aby użyć układu 2×2">2×2</button>
-        <button type="button" disabled title="Dodaj kolejne kamery, aby użyć układu 3×3">3×3</button>
+        <button type="button" id="desktopAddCamera" title="Dodaj osobne źródło obrazu">＋ Dodaj kamerę</button>
         <button type="button" id="desktopOpenLive" title="Otwórz aktualny obraz w pełnym ekranie">⛶ Pełny ekran</button>
       </div>
     </div>`;
@@ -124,6 +124,22 @@ if (desktopRequested) {
   if (context.parentElement) context.insertAdjacentElement("afterend", overview);
   const liveTile = overview.querySelector(".desktopCameraLive");
   if (liveStage && liveTile) liveTile.append(liveStage);
+  $('desktopAddCamera').onclick=()=>{
+    if(cameraWorkspace)void cameraWorkspace.openSetup();
+    else $('desktopCameraCount').textContent='Konfiguracja kamer jest dostępna po zalogowaniu właściciela.';
+  };
+  const mountOwnerCameras=ownerId=>{
+    if(cameraWorkspace||!ownerId||$('app')?.hidden||document.body.classList.contains('accessPending'))return;
+    try{
+      cameraWorkspace=mountCameraWorkspace({root:overview.querySelector('.desktopLiveScene'),primaryTile:liveTile,primaryVideo:$('video'),ownerId,native:window.__HOME_SECURITY_DESKTOP__===true,
+        onState:(id,state)=>systemStore.component('camera:'+id,state)});
+    }catch(error){$('desktopCameraCount').textContent=error.message||'Nie udało się odczytać konfiguracji kamer.';}
+  };
+  document.addEventListener('hs-panel-ready',event=>mountOwnerCameras(event.detail?.ownerId));
+  mountOwnerCameras(window.__HOME_SECURITY_CAMERA_OWNER__);
+  // A route change only hides the workspace. Logout closes its owned previews.
+  new MutationObserver(()=>{if($('app')?.hidden)cameraWorkspace?.connections.stopAll();}).observe($('app'),{attributes:true,attributeFilter:['hidden']});
+  window.addEventListener('pagehide',()=>cameraWorkspace?.dispose(),{once:true});
   const eventsDrawer = overview.querySelector(".desktopEventsDrawer");
   if (eventCard && eventsDrawer) {
     eventsDrawer.append(eventCard);
@@ -427,8 +443,8 @@ if (desktopRequested) {
     if ($("desktopLiveDetail")) $("desktopLiveDetail").textContent = mode?.textContent?.trim() || live?.textContent?.trim() || "Sprawdzam stan…";
     const choices = $("cameraSelect")?.options;
     const count = choices ? Array.from(choices).filter(option => option.value).length : 0;
-    if ($("desktopCameraCount")) $("desktopCameraCount").textContent = `Wykryte źródła: ${count}`;
-    if ($("desktopSummaryCamera")) $("desktopSummaryCamera").textContent = `${count} aktywna${count === 1 ? "" : "e"}`;
+    if ($("desktopCameraCount")) $("desktopCameraCount").textContent = cameraWorkspace ? `Kamery: ${cameraWorkspace.catalog.list().length+1}` : `Wykryte źródła: ${count}`;
+    if ($("desktopSummaryCamera")) $("desktopSummaryCamera").textContent = cameraWorkspace ? `${cameraWorkspace.catalog.list().length+1} skonfigurowanych` : `${count} wykrytych źródeł`;
     if ($("desktopSummaryStatus")) $("desktopSummaryStatus").textContent = isLive ? "System online" : "Oczekiwanie na transmisję";
     if ($("desktopSummaryRecording")) $("desktopSummaryRecording").textContent = mode?.textContent?.trim() || "Brak danych";
     const operation=operatorStatus({isLive,recording:systemStore.read('recording',45000),storage:systemStore.read('storage',90000)});

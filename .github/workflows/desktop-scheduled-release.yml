@@ -84,6 +84,28 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Cannot restore the source dependency lock'}
           node scripts/desktop-release.mjs finish
           if($LASTEXITCODE -ne 0){throw 'Manifest generation failed'}
+      - name: Render real camera workspace in isolated WebView2
+        if: steps.plan.outputs.changed == 'true'
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force camera-ui-proof | Out-Null
+          $report=Join-Path $env:GITHUB_WORKSPACE 'camera-ui-proof/result.json'
+          $exe=Join-Path $env:GITHUB_WORKSPACE "desktop-client/publish-$env:RELEASE_VERSION/HomeSecurityDesktop.exe"
+          $probe=Start-Process -FilePath $exe -ArgumentList @('--camera-workspace-test',('"'+$report+'"')) -WindowStyle Hidden -PassThru
+          if(-not $probe.WaitForExit(60000)){throw 'Camera UI test timed out'}
+          if(-not (Test-Path $report)){throw 'Camera UI test did not produce a result'}
+          $result=Get-Content -Raw $report | ConvertFrom-Json
+          if(-not $result.ok -or -not $result.primaryRetained -or $result.cameras -ne 50){throw 'Camera UI or resource ownership regression'}
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.plan.outputs.changed == 'true'
+        with:
+          name: real-camera-workspace-ui-test
+          path: camera-ui-proof/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Validate exact release files and frontend
         if: steps.plan.outputs.changed == 'true'
         shell: pwsh
