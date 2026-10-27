@@ -55,13 +55,20 @@ test('standalone brochure and embedded public homepage match source',async()=>{
 
 test('PWA shell and every marketing page have consistent revisions',async()=>{
  const paths=['kamera/index.html','kamera/o-systemie.html','kamera/pomoc.html','kamera/blog/index.html','kamera/blog/pierwsze-uruchomienie.html','kamera/blog/zapis-lokalny-i-drive.html','kamera/blog/diagnostyka-monitoringu.html'];
- const content=await Promise.all(paths.map(read));for(let i=0;i<paths.length;i++)assert.ok(content[i].includes('marketing.css?v=6'),paths[i]);
- const [sw,app,version]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/version.json'].map(read));
- assert.ok(sw.includes('kamera-domowa-shell-v126'));
- assert.ok(sw.includes('./marketing.css?v=6'));
- assert.ok(sw.includes('./app.js?v=216'));
- assert.ok(app.includes('const VERSION = "216"'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "126"'));
- assert.equal(JSON.parse(version).version,'216');
- assert.ok(content[0].includes('home-security-build" content="216"'));
+ const content=await Promise.all(paths.map(read));
+ const [sw,app,version,source]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/version.json','scripts/build-marketing.mjs'].map(read));
+ const appVersion=JSON.parse(version).version;
+ const shellVersion=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
+ const cssVersion=content[0].match(/marketing\.css\?v=(\d+)/)?.[1];
+ assert.ok(appVersion,'missing version manifest');
+ assert.ok(shellVersion,'missing service-worker revision');
+ assert.ok(cssVersion,'missing marketing CSS revision');
+ for(let i=0;i<paths.length;i++)assert.ok(content[i].includes('marketing.css?v='+cssVersion),paths[i]);
+ assert.ok(source.includes('marketing.css?v='+cssVersion));
+ assert.ok(sw.includes('kamera-domowa-shell-v'+shellVersion));
+ assert.ok(sw.includes('./marketing.css?v='+cssVersion));
+ assert.ok(sw.includes('./app.js?v='+appVersion));
+ assert.ok(app.includes('const VERSION = "'+appVersion+'"'));
+ assert.ok(content[0].includes('app.js?v='+appVersion));
+ assert.ok(content[0].includes('home-security-build" content="'+appVersion+'"'));
 });
