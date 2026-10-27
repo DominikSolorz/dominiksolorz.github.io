@@ -6,13 +6,14 @@ const normalize=text=>text.replace(/\r\n/g,'\n');
 const read=async(base,name)=>normalize(await readFile(new URL(name,base),'utf8'));
 const escape=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const origin='https://dominiksolorz.github.io/kamera/';
+const publicBuild=JSON.parse(await read(camera,'version.json')).version;
 async function emit(name,html){
   const file=new URL(name,camera);
   if(check){if(normalize(await readFile(file,'utf8'))!==html)throw new Error('Outdated generated marketing page: '+name);}
   else{await mkdir(new URL('./',file),{recursive:true});await writeFile(file,html);}
 }
 function head(title,description,path,prefix=''){
-return `<!doctype html>\n<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0c10"><meta name="referrer" content="no-referrer"><meta name="robots" content="index,follow"><title>${escape(title)} — HOME SECURITY</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="${origin+path}"><meta property="og:type" content="website"><meta property="og:locale" content="pl_PL"><meta property="og:title" content="${escape(title)} — HOME SECURITY"><meta property="og:description" content="${escape(description)}"><meta property="og:url" content="${origin+path}"><meta property="og:image" content="${origin}assets/home-security-hero.png"><link rel="icon" href="${prefix}icons/kamera-192.svg" type="image/svg+xml"><link rel="stylesheet" href="${prefix}marketing.css?v=6"><link rel="stylesheet" href="${prefix}marketing-motion.css?v=1"><script type="module" src="${prefix}marketing-motion.mjs?v=1"></script></head>\n<body class="marketingPage">\n`;
+return `<!doctype html>\n<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="home-security-build" content="${publicBuild}"><meta name="theme-color" content="#0b0c10"><meta name="referrer" content="no-referrer"><meta name="robots" content="index,follow"><title>${escape(title)} — HOME SECURITY</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="${origin+path}"><meta property="og:type" content="website"><meta property="og:locale" content="pl_PL"><meta property="og:title" content="${escape(title)} — HOME SECURITY"><meta property="og:description" content="${escape(description)}"><meta property="og:url" content="${origin+path}"><meta property="og:image" content="${origin}assets/home-security-hero.png"><link rel="icon" href="${prefix}icons/kamera-192.svg" type="image/svg+xml"><link rel="stylesheet" href="${prefix}marketing.css?v=6"><link rel="stylesheet" href="${prefix}marketing-motion.css?v=1"><script type="module" src="${prefix}marketing-motion.mjs?v=1"></script><script type="module" src="${prefix}marketing-auto-update.mjs?v=1"></script></head>\n<body class="marketingPage">\n`;
 }
 function nav(prefix=''){
  const panel=prefix||'./';

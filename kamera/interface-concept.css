@@ -103,7 +103,29 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSidebarFoot{
   border-top:1px solid #413943;color:#c3beca;
 }
 html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSidebarFoot a{color:var(--concept-gold)}
-html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopUpdateNotice{background:#251d28;border-color:#65505c}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopUpdateNotice{
+  flex:none;margin:11px 5px 14px;padding:13px;
+  background:linear-gradient(140deg,#392634,#251e2b);
+  border:1px solid #ba8391;border-radius:14px;
+  box-shadow:0 10px 30px #0005;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopUpdateNotice button{
+  width:100%;min-height:49px;padding:10px 12px;
+  background:#f2c992;border:1px solid #ffe0a5;
+  color:#241a22;border-radius:10px;
+  font-size:13px;font-weight:800;line-height:1.35;
+  cursor:pointer;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopUpdateNotice button:disabled{
+  opacity:.68;cursor:progress;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopUpdateNotice small{
+  display:block;color:#f3e4ec;font-size:11px;line-height:1.5;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopUpdateNotice progress{
+  width:100%;height:8px;accent-color:#f4ce8b;
+}
+
 /* Header: calm hierarchy and authentic telemetry above the real frame. */
 html.desktopMode:not(.policeCommand):not(.usMilitary) .topbar{
   background:rgba(16,16,23,.975);
