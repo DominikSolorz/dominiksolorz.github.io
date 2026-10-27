@@ -1,0 +1,27 @@
+/* HOME SECURITY public legal pages — visual consistency with the product site. */
+.legalPage{background:radial-gradient(ellipse 650px 410px at 85% 0%,rgba(181,66,97,.14),transparent 75%),#090b11;color:#f3f3f7;font-family:Segoe UI,system-ui,sans-serif}
+.legalPage *{box-sizing:border-box}
+.legalPage .legalNav{background:rgba(16,18,27,.94);border-bottom:1px solid #373340;padding:18px clamp(18px,5vw,75px)}
+.legalPage .legalNav a{color:#f0eef4;line-height:1.5}
+.legalPage .legalNav a:last-child{border:1px solid #61525d;border-radius:999px;padding:10px 16px;color:#f9d49c}
+.legalPage .legalNav a:hover{color:#f4ce8b}
+.legalPage main{width:min(950px,calc(100% - 40px));padding:60px 0 80px}
+.legalPage .legalHero{background:linear-gradient(130deg,#22202e,#151721 80%);border:1px solid #48404c;border-radius:22px;padding:clamp(24px,5vw,54px);box-shadow:0 26px 70px rgba(0,0,0,.24)}
+.legalPage .publicEyebrow{font-size:11px;letter-spacing:.16em;color:#f4ce8b;font-weight:800}
+.legalPage .legalHero h1{color:#fff;font-size:clamp(38px,5vw,58px);line-height:1.07;letter-spacing:-.058em}
+.legalPage .legalHero p{color:#c9c9d3;max-width:760px;font-size:16px}
+.legalPage .legalMeta{color:#e4b7a9;margin-top:25px;line-height:1.5}
+.legalPage .legalContent{background:#141823;border:1px solid #3e404d;border-radius:19px;padding:clamp(22px,5vw,52px)}
+.legalPage .legalContent h2{color:#fff;font-size:clamp(20px,3vw,25px);letter-spacing:-.03em;line-height:1.25;scroll-margin-top:24px}
+.legalPage .legalContent p,.legalPage .legalContent li{color:#c3c7d2;line-height:1.78;font-size:15px;overflow-wrap:anywhere}
+.legalPage .legalContent a{color:#f4ce8b;text-decoration:underline;text-underline-offset:3px}
+.legalPage .legalNotice{background:#24222b;color:#ffe7d3;border-left:4px solid #f4ce8b;border-radius:11px;border-top:1px solid #514651;border-right:1px solid #514651;border-bottom:1px solid #514651;line-height:1.65}
+.legalPage :is(a,button):focus-visible{outline:3px solid #f4ce8b;outline-offset:4px}
+.legalFooter{max-width:1100px;margin:0 auto;padding:34px 20px 40px;border-top:1px solid #3c3945;display:grid;grid-template-columns:1fr 1.6fr;gap:28px;align-items:start}
+.legalFooter strong{letter-spacing:.12em;font-size:13px;color:#fff}
+.legalFooter strong span{color:#f4ce8b}
+.legalFooter p{font-size:12px;color:#aeb1bd;line-height:1.6;margin:8px 0 0}
+.legalFooter nav{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px 23px}
+.legalFooter nav a{color:#e8e3eb;text-decoration:none;font-size:12px}
+.legalFooter nav a:hover{text-decoration:underline;color:#f4ce8b}
+@media(max-width:680px){.legalPage .legalNav{flex-wrap:wrap;gap:14px}.legalPage main{padding:30px 0 55px}.legalFooter{grid-template-columns:1fr}.legalFooter nav{justify-content:flex-start}}
