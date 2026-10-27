@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# The authenticated application shell uses noindex; public product pages are indexable.
+Sitemap: https://dominiksolorz.github.io/kamera/sitemap.xml
