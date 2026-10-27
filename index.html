@@ -4,11 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0b1120">
 <meta http-equiv="refresh" content="0; url=./kamera/?start=home-v142">
-<title>Prywatna Kamera</title>
-<script>location.replace("./kamera/?start=home-v142" + location.hash);</script>
+<title>HOME SECURITY — otwieranie panelu</title>
+<script>
+(() => {
+  const destination = new URL("./kamera/", location.href);
+  const params = new URLSearchParams(location.search);
+  if (!params.has("start")) params.set("start", "home-v142");
+  destination.search = params.toString();
+  destination.hash = location.hash;
+  location.replace(destination.href);
+})();
+</script>
 </head>
-<body style="background:#0b1120;color:#e8edf6;font-family:system-ui,sans-serif">
-<p>Otwieram stronę startową <a href="./kamera/?start=home-v142" style="color:#a78bfa">HOME SECURITY</a>…</p>
+<body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1120;color:#e8edf6;font-family:system-ui,sans-serif;text-align:center">
+<main style="padding:24px">
+<h1 style="font-size:1.5rem">HOME SECURITY</h1>
+<p>Otwieranie panelu monitoringu…</p>
+<p><a href="./kamera/?start=home-v142" style="color:#c4b5fd">Przejdź do panelu ręcznie</a></p>
+</main>
 </body>
 </html>
