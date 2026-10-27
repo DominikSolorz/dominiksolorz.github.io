@@ -18,12 +18,12 @@ for(const [name,ua,touch,expected] of [
  assert.equal(platform({userAgent:ua,maxTouchPoints:touch}),expected);
  if(expected!=='unknown')assert.equal(layoutContext.HomeSecurityLayout.resolve({mobile:true,compact:false}),'mobile');
 });
-function setup({controlled=true,fail=false,prepare=async()=>{}}={}){
+function setup({controlled=true,fail=false,prepare=async()=>{},auto=false,can=()=>true}={}){
  const states=[],calls=[];const registration=new EventTarget();registration.installing=null;registration.waiting=null;
  registration.update=async()=>{calls.push('update');if(fail)throw Error('offline');};
  const worker=new EventTarget();worker.controller=controlled?{}:null;
  worker.register=async(url,options)=>{calls.push({url,options});return registration;};
- let time=0;const manager=createWebUpdates({serviceWorker:worker,build:'110',onState:s=>states.push(s),prepareReload:prepare,abortReload:async()=>calls.push('abort'),reload:()=>calls.push('reload'),now:()=>time});
+ let time=0;const manager=createWebUpdates({serviceWorker:worker,build:'110',onState:s=>states.push(s),prepareReload:prepare,abortReload:async()=>calls.push('abort'),reload:()=>calls.push('reload'),now:()=>time,autoApply:auto,canAutoApply:can});
  return {manager,worker,registration,states,calls,tick:()=>{time+=60000;}};
 }
 test('PWA registers fresh resources and throttles background checks',async()=>{
@@ -62,4 +62,78 @@ test('manifest recordings shortcut opens current mobile router, not legacy page'
  const [mobile,app]=await Promise.all(['mobile.js','app.js'].map(read));
  assert.ok(mobile.includes("get('mobileView')"));assert.ok(mobile.includes('mobileBuild'));
  assert.ok(app.includes("if(document.readyState==='complete')checkWebUpdate()"));
+});
+
+test('published web update reloads automatically when idle with no Update click',async()=>{
+ let saved=0;
+ const x=setup({auto:true,prepare:async()=>{saved++;}});
+ await x.manager.check();
+ x.worker.dispatchEvent(new Event('controllerchange'));
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(saved,1);
+ assert.equal(x.calls.filter(c=>c==='reload').length,1);
+ x.manager.dispose();
+});
+
+test('automatic web update waits while camera is active, then resumes without a click',async()=>{
+ let recording=true;
+ const x=setup({auto:true,can:()=>!recording});
+ await x.manager.check();
+ x.worker.dispatchEvent(new Event('controllerchange'));
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(!x.calls.includes('reload'));
+ assert.equal(x.states.at(-1).status,'waiting');
+ recording=false;
+ x.manager.tryAutoApply();
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(x.calls.filter(c=>c==='reload').length,1);
+ x.manager.dispose();
+});
+
+test('first web service-worker install does not trigger an automatic reload',async()=>{
+ const x=setup({controlled:false,auto:true});
+ await x.manager.check();
+ x.worker.dispatchEvent(new Event('controllerchange'));
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(!x.calls.includes('reload'));
+ x.manager.dispose();
+});
+
+test('failure to flush the recording blocks automatic update and restores recording',async()=>{
+ const x=setup({auto:true,prepare:async()=>{throw Error('write failure');}});
+ await x.manager.check();
+ x.worker.dispatchEvent(new Event('controllerchange'));
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(!x.calls.includes('reload'));
+ assert.ok(x.calls.includes('abort'));
+ assert.equal(x.states.at(-1).status,'error');
+ x.manager.dispose();
+});
+
+test('marketing pages poll the published build but preserve unsent forms',async()=>{
+ const [script,source,generated]=await Promise.all([
+  read('marketing-auto-update.mjs'),
+  readFile(new URL('../scripts/build-marketing.mjs',import.meta.url),'utf8'),
+  read('o-systemie.html')
+ ]);
+ for(const item of ['cache:\'no-store\'','window.location.reload()','!dirty','document.visibilityState', 'version.json']){
+  assert.ok(script.includes(item),'missing safe public update condition: '+item);
+ }
+ assert.ok(source.includes('marketing-auto-update.mjs?v=1'));
+ assert.ok(source.includes('home-security-build'));
+ assert.ok(generated.includes('marketing-auto-update.mjs?v=1'));
+ assert.ok(generated.includes('home-security-build" content="221"'));
+});
+
+test('native Windows update remains strictly opt-in via the left-hand sidebar',async()=>{
+ const [native,desktop]=await Promise.all([
+   readFile(new URL('../desktop-client/Program.cs',import.meta.url),'utf8'),
+   read('desktop.js')
+ ]);
+ assert.ok(native.includes('updateCheckTimer.Tick += async (_, _) => await CheckForUpdateAsync()'));
+ assert.ok(native.includes('updateButton.Click += async (_, _) => await DownloadAndPrepareOfferedUpdateAsync()'));
+ assert.ok(native.includes('if (manifest is null || !Version.TryParse'));
+ assert.ok(desktop.includes('data-desktop-view="live"'));
+ assert.ok(desktop.includes('type: "desktop.update.request"'));
+ assert.ok(desktop.includes('desktopUpdateNotice'));
 });
