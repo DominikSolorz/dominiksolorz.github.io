@@ -2,7 +2,23 @@ name: Check and publish current Windows installer
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/desktop-scheduled-release.yml']
+    # Ship real Windows app/agent changes without waiting for the next 6-hour timer.
+    # The release job fingerprints all bundled app assets and skips duplicate builds.
+    paths:
+      - '.github/workflows/desktop-scheduled-release.yml'
+      - 'desktop-client/**'
+      - 'agent/**'
+      - 'agent-client/**'
+      - 'agent-contracts/**'
+      - 'kamera/*.js'
+      - 'kamera/*.mjs'
+      - 'kamera/*.css'
+      - 'kamera/*.webmanifest'
+      - 'kamera/index.html'
+      - 'kamera/core/**'
+      - 'kamera/communication/**'
+      - 'kamera/version.json'
+      - 'kamera/sw.js'
   schedule:
     - cron: '23 2,8,14,20 * * *'
   workflow_dispatch:
