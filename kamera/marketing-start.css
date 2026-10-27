@@ -1,0 +1,30 @@
+/* Genuine configuration checklist: never claims to test hardware or store answers. */
+#publicHome .mktSetup{scroll-margin-top:115px;padding-block:clamp(65px,7vw,112px)}
+#publicHome .mktSetupHeading{display:flex;gap:40px;align-items:end;justify-content:space-between;margin-bottom:26px}
+#publicHome .mktSetupHeading>div:first-child{max-width:780px}
+#publicHome .mktSetupHeading h2{margin-bottom:18px}
+#publicHome .mktSetupHeading p:last-child{font-size:15px;line-height:1.8;color:#cdd0d7;max-width:700px}
+#publicHome .mktSetupCounter{min-width:180px;max-width:220px;text-align:right;padding:20px;border:1px solid #665664;border-radius:16px;background:linear-gradient(140deg,#241d2a,#141822)}
+#publicHome .mktSetupCounter>span{display:block;font-size:clamp(29px,3vw,42px);line-height:1.1;font-weight:800;letter-spacing:-.05em;color:#f5d69e;font-variant-numeric:tabular-nums}
+#publicHome .mktSetupCounter small{font-size:11px;color:#cfd0d9}
+#publicHome .mktSetupProgress{height:7px;margin-top:13px;border-radius:8px;background:#484351;overflow:hidden}
+#publicHome .mktSetupProgress>span{height:100%;width:0;display:block;border-radius:8px;background:linear-gradient(90deg,#dd6a7b,#f4ce8b);transition:width .3s ease}
+#publicHome .mktSetupList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+#publicHome .mktSetupItem{display:flex;gap:18px;align-items:start;position:relative;padding:clamp(19px,2.5vw,28px);min-height:133px;cursor:pointer;border-radius:17px;border:1px solid #4d4554;background:linear-gradient(135deg,#201d28,#151823);transition:border-color .22s ease,background-color .22s ease,transform .22s ease}
+#publicHome .mktSetupItem:hover{border-color:#c59e98}
+#publicHome .mktSetupItem:focus-within{outline:3px solid #f4ce8b;outline-offset:3px}
+#publicHome .mktSetupItem:has(input:checked){border-color:#b79b78;background:linear-gradient(135deg,#302534,#191c25)}
+#publicHome .mktSetupItem>input{position:absolute;opacity:0;width:30px;height:30px;left:26px;top:25px;cursor:pointer}
+#publicHome .mktSetupCheck{display:grid;place-items:center;flex:none;width:33px;height:33px;border-radius:10px;border:1px solid #aa8794;color:transparent;background:#29232f;font-size:18px;font-weight:800;transition:color .18s ease,background-color .18s ease,border-color .18s ease}
+#publicHome .mktSetupItem:has(input:checked) .mktSetupCheck{background:#f4ce8b;border-color:#f4ce8b;color:#16151d}
+#publicHome .mktSetupItem>span:last-child{display:block;min-width:0}
+#publicHome .mktSetupItem strong{display:block;font-size:17px;color:#f8f4f7;line-height:1.35;margin:2px 0 8px}
+#publicHome .mktSetupItem small{display:block;font-size:13px;line-height:1.7;color:#c6c8d2}
+#publicHome .mktSetupResult{margin:23px 0 18px;font-size:13px;color:#dbcdbb;line-height:1.75}
+#publicHome .mktSetupActions{display:flex;flex-wrap:wrap;align-items:center;gap:20px}
+#publicHome .mktOfferNotice{padding:20px;margin-top:22px;border-left:3px solid #f4ce8b;border-radius:0 12px 12px 0;background:#f4ce8b0b}
+#publicHome .mktOfferNotice strong{font-size:14px;color:#ffe1af}
+#publicHome .mktOfferNotice p{font-size:13px!important;line-height:1.75;color:#d3c9d3;margin:6px 0 0}
+@media(max-width:800px){#publicHome .mktSetupHeading{align-items:start}#publicHome .mktSetupCounter{min-width:150px}#publicHome .mktSetupList{gap:12px}#publicHome .mktSetupItem{padding:19px 15px;gap:12px}}
+@media(max-width:670px){#publicHome .mktSetup{padding-block:56px}#publicHome .mktSetupHeading{display:block}#publicHome .mktSetupCounter{margin-top:22px;max-width:100%;text-align:left;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:3px 15px}#publicHome .mktSetupCounter>span{grid-row:span 2}#publicHome .mktSetupProgress{margin-top:7px}#publicHome .mktSetupList{grid-template-columns:1fr}#publicHome .mktSetupItem{min-height:0;padding:20px}#publicHome .mktSetupItem strong{font-size:16px}#publicHome .mktSetupActions{flex-direction:column;align-items:stretch}#publicHome .mktSetupActions .mktButton{width:100%}}
+@media(prefers-reduced-motion:reduce){#publicHome .mktSetupProgress>span,#publicHome .mktSetupItem,#publicHome .mktSetupCheck{transition:none!important}}
