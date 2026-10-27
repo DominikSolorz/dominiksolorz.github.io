@@ -73,3 +73,28 @@
 @media(prefers-reduced-motion:no-preference){
   html:has(body.marketingPage),html:has(#publicHome:not([hidden])){scroll-behavior:smooth;scroll-padding-top:110px}
 }
+
+
+/* Avoid collision with the real customer-support launcher anchored at bottom right. */
+#publicHome.mktSite .mktBackToTop{left:clamp(14px,3vw,35px);right:auto}
+.marketingPage .mktContactForm{transition:border-color .25s ease,box-shadow .25s ease}
+.marketingPage .mktContactForm:focus-within{border-color:rgba(244,206,139,.48);box-shadow:0 18px 45px rgba(0,0,0,.2)}
+.marketingPage .mktContactForm :is(input:not([type="checkbox"]),select,textarea){
+  border-radius:11px;min-height:47px;transition:border-color .2s ease,box-shadow .2s ease,background-color .2s ease
+}
+.marketingPage .mktContactForm :is(input:not([type="checkbox"]),select,textarea):hover{border-color:#736578}
+.marketingPage .mktContactForm :is(input:not([type="checkbox"]),select,textarea):focus-visible{
+  outline:3px solid rgba(244,206,139,.3);outline-offset:1px;border-color:#f4ce8b;background:#171923;
+  box-shadow:0 0 0 3px rgba(244,206,139,.08)
+}
+.marketingPage .mktContactForm :is(input,textarea):user-invalid{border-color:#dc7182}
+.marketingPage .mktContactForm label{font-size:13px;line-height:1.6}
+.marketingPage .mktContactForm output{line-height:1.7;min-height:1.2em}
+.marketingPage .mktContactReasons article{transition:transform .22s var(--mkt-ease),border-color .22s ease}
+.marketingPage .mktContactReasons article:hover{transform:translateY(-2px);border-color:#786071}
+.marketingPage .mktBreadcrumb a{transition:color .2s ease}
+.marketingPage .mktBreadcrumb a:hover{color:#f4ce8b;text-decoration:underline;text-underline-offset:4px}
+.marketingPage .mktArticle a{transition:color .2s ease}
+.marketingPage .mktArticle a:hover{color:#ffe2b7}
+@media(max-width:700px){#publicHome.mktSite .mktBackToTop{left:13px;right:auto}.marketingPage .mktContactForm label{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.marketingPage .mktContactReasons article:hover{transform:none}}
