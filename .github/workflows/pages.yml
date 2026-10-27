@@ -16,18 +16,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  verify:
-    runs-on: windows-latest
+  verify-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Frontend regression tests
+        run: node --test tests/*.test.mjs
+  verify-desktop:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Frontend regression tests
-        run: node --test tests/*.test.mjs
       - name: Agent regression and crash tests
         run: dotnet run --project agent-tests/HomeSecurity.Agent.Tests.csproj -c Release -- --process-crash agent/bin/Release/net10.0-windows/HomeSecurityAgent.dll
       - name: Desktop compilation
@@ -35,7 +45,7 @@ jobs:
       - name: Independent Drive uploader compilation
         run: dotnet build drive-sync/HomeSecurity.DriveSync.csproj -c Release
   deploy:
-    needs: verify
+    needs: verify-frontend
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
