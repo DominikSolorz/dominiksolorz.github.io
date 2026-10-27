@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 const root=new URL('../',import.meta.url),base=new URL('kamera/',root);
 const read=name=>readFile(new URL(name,base),'utf8');
 const posts=JSON.parse(await readFile(new URL('design/marketing/posts.json',root),'utf8'));
-const pages=['o-systemie.html','pomoc.html','blog/index.html',...posts.map(post=>'blog/'+post.slug+'.html')];
+const pages=['o-systemie.html','galeria.html','pomoc.html','blog/index.html',...posts.map(post=>'blog/'+post.slug+'.html')];
 test('public marketing is generated from one source without replacing the private panel',()=>{
  const result=spawnSync(process.execPath,[fileURLToPath(new URL('../scripts/build-marketing.mjs',import.meta.url)),'--check'],{encoding:'utf8'});
  assert.equal(result.status,0,result.stderr||result.error?.message);
