@@ -12,6 +12,7 @@ if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
   let pendingReload = false;
   let autoTimer = null;
   let lastAttempt = 0;
+  let snoozedUntil = 0;
 
   const banner = document.createElement('aside');
   banner.className = 'mktUpdateBanner';
@@ -47,7 +48,7 @@ if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
   const marker = 'hs-marketing-reload-' + currentBuild;
 
   function showOffer() {
-    if (!validVersion(newerBuild) || newerBuild <= currentBuild) return;
+    if (!validVersion(newerBuild) || newerBuild <= currentBuild || Date.now() < snoozedUntil) return;
     banner.hidden = false;
     title.textContent = 'Nowa wersja HOME SECURITY ' + newerBuild;
     description.textContent = dirty
@@ -67,7 +68,7 @@ if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
     window.location.reload();
   }
   function queueAutomaticReload() {
-    if (autoTimer !== null || !newerBuild || !safeToReload() || alreadyReloaded()) return;
+    if (autoTimer !== null || !newerBuild || Date.now() < snoozedUntil || !safeToReload() || alreadyReloaded()) return;
     autoTimer = window.setTimeout(() => {
       autoTimer = null;
       if (safeToReload()) reloadLatest();
@@ -84,7 +85,7 @@ if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
     if (dirty && !window.confirm('Masz niezapisane zmiany w formularzu. Czy na pewno chcesz odświeżyć stronę i je utracić?')) return;
     reloadLatest();
   });
-  later.addEventListener('click', () => { cancelAutomaticReload(); banner.hidden = true; });
+  later.addEventListener('click', () => { snoozedUntil = Date.now() + 60 * 60000; cancelAutomaticReload(); banner.hidden = true; });
   document.addEventListener('input', event => {
     if (event.target?.matches?.('input,textarea,select,[contenteditable]')) {
       dirty = true;
