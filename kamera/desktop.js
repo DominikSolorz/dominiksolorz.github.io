@@ -56,7 +56,7 @@ if (desktopRequested) {
   updateNotice.innerHTML = '<button type="button" id="desktopUpdateAction" aria-label="Zaktualizuj program HOME SECURITY">↻ Zaktualizuj</button><progress id="desktopUpdateProgress" max="100" hidden></progress><small id="desktopUpdateStatus" role="status" aria-live="polite"></small>';
   // Always show the available native update inside the LEFT navigation rail.
   shell.insertBefore(updateNotice, shell.querySelector('.desktopNav'));
-  $("desktopUpdateAction").addEventListener("click", () => window.chrome?.webview?.postMessage({ type: "desktop.update.request" }));
+  $("desktopUpdateAction").addEventListener("click", () => { if (updatePanelVisible) window.chrome?.webview?.postMessage({ type: "desktop.update.request" }); });
   window.chrome?.webview?.addEventListener("message", event => {
     const state = event.data;
     if (state?.type !== "desktop.update.state") return;
@@ -68,6 +68,19 @@ if (desktopRequested) {
     if (Number.isFinite(state.percent)) progress.value = Math.max(0, Math.min(100, state.percent));
     else progress.removeAttribute("value");
   });
+  // The updater is available only after account login and PIN unlock. Keep
+  // background version checks independent from this presentation boundary.
+  let updatePanelVisible = false;
+  const syncUpdateAccess = () => {
+    const app = $("app");
+    updatePanelVisible = Boolean(app && !app.hidden && !document.body.classList.contains("accessPending"));
+    window.chrome?.webview?.postMessage({ type: "desktop.update.visibility", visible: updatePanelVisible });
+  };
+  const updateAccessObserver = new MutationObserver(syncUpdateAccess);
+  updateAccessObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+  if ($("app")) updateAccessObserver.observe($("app"), { attributes: true, attributeFilter: ["hidden"] });
+  document.addEventListener("hs-panel-ready", syncUpdateAccess);
+  syncUpdateAccess();
   window.chrome?.webview?.postMessage({ type: "desktop.update.query" });
 
   const context = document.createElement("section");

@@ -10,7 +10,7 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.4.10";
+    private const string DesktopVersion = "1.4.11";
     private const string WebPanelBuild = "221";
     // Desktop serves its installed Panel bundle at the existing trusted origin.
     // The website and installed UI can now be released independently without
@@ -154,6 +154,7 @@ internal static class Program
         private AgentWebViewBridge? agentBridge;
         private readonly AgentRuntime agentRuntime = new();
         private bool downloadingUpdate;
+        private bool panelUnlocked;
         private DesktopUpdateManifest? offeredUpdate;
         private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 60 * 1000 };
         private readonly ProgressBar updateProgress = new() { Dock = DockStyle.Bottom, Height = 6, Visible = false };
@@ -166,8 +167,8 @@ internal static class Program
         {
             updateState = new { type = "desktop.update.state", status, version = offeredUpdate?.Version, message, percent };
             try { if (AgentWebViewBridge.Trusted(webView.CoreWebView2.Source)) webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); } catch { }
-            // Keep the native notification visible even on login and marketing pages, where the sidebar is hidden.
-            updateBar.Visible = status != "none";
+            // Updates are offered only inside the unlocked account panel.
+            updateBar.Visible = panelUnlocked && status != "none";
         }
 
         public HomeSecurityWindow()
@@ -241,6 +242,11 @@ internal static class Program
                     using var message = JsonDocument.Parse(e.WebMessageAsJson);
                     var root = message.RootElement;
                     if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("type", out var type) && type.ValueKind == JsonValueKind.String) {
+                        if (type.GetString() == "desktop.update.visibility") {
+                            panelUnlocked = root.TryGetProperty("visible", out var visible) && visible.ValueKind == JsonValueKind.True;
+                            updateBar.Visible = panelUnlocked && offeredUpdate is not null;
+                            webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); return;
+                        }
                         if (type.GetString() == "desktop.update.query") {
                             // A query does not prove the HTML sidebar is visible. Keep the native offer.
                             webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); return;
@@ -256,6 +262,7 @@ internal static class Program
                 var safe = PanelDiagnostics.Project(e.WebMessageAsJson);
                 if (safe is not null) WriteDiagnostic("panel-state", safe);
             };
+            webView.CoreWebView2.NavigationStarting += (_, _) => { panelUnlocked = false; updateBar.Visible = false; };
             webView.CoreWebView2.ProcessFailed += (_, e) => WriteDiagnostic("webview-process-failed", new { reason = e.Reason.ToString(), kind = e.ProcessFailedKind.ToString() });
 
             webView.CoreWebView2.NewWindowRequested += (_, e) => {
@@ -342,7 +349,7 @@ internal static class Program
 
         private async Task DownloadAndPrepareOfferedUpdateAsync()
         {
-            if (downloadingUpdate || offeredUpdate is null) return;
+            if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;
             downloadingUpdate = true;
             var manifest = offeredUpdate;
             updateButton.Enabled = false;

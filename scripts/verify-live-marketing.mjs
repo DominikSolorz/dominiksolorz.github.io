@@ -22,17 +22,17 @@ const checks=[
   ['polityka-prywatnosci.html',['o-systemie.html','Polityka prywatności']],
   ['regulamin.html',['o-systemie.html','Regulamin']],
   ['rodo.html',['o-systemie.html','Informacja RODO']],
-  ['index.html',['name="home-security-build" content="'+expectedBuild+'"','id="authDialog"','id="publicHome"','interface-concept.css?v=1']],
+  ['index.html',['name="home-security-build" content="'+expectedBuild+'"','id="authDialog"','id="publicHome"','interface-concept.css?v=2']],
   ['sitemap.xml',['/kamera/galeria.html','/kamera/o-systemie.html']],
   ['../index.html',['./kamera/o-systemie.html','location.replace']]
 ];
 const assets=[
  'marketing-start.css?v=1','marketing-start.mjs?v=1',
  'marketing-gallery.css?v=1','marketing-gallery.mjs?v=1',
- 'interface-concept.css?v=1',
+ 'interface-concept.css?v=2',
  'marketing-motion.css?v=1','marketing.css?v=6',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
- 'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-1.4.10.exe'
+ 'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-1.4.11.exe'
 ];
 
 let tries=0;

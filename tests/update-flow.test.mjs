@@ -18,12 +18,24 @@ test('one click starts the native update without a second confirmation dialog',(
  const end=native.indexOf('private void RestartIntoPreparedUpdate',begin);
  const flow=native.slice(begin,end);
  assert.ok(!flow.includes('MessageBox.Show'), 'the update button must not require a second click');
- assert.ok(flow.includes('if (downloadingUpdate || offeredUpdate is null) return;'));
+ assert.ok(flow.includes('if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;'));
  assert.ok(flow.includes('RestartIntoPreparedUpdate(manifest.Version)'));
  assert.ok(native.includes('Interval = 60 * 1000'));
 });
-test('a hidden sidebar cannot suppress the native update notification',()=>{
- assert.ok(native.includes('updateBar.Visible = status != "none";'));
+test('native update notification and start require the unlocked account panel',()=>{
+ assert.ok(native.includes('updateBar.Visible = panelUnlocked && status != "none";'));
  const query=native.slice(native.indexOf('if (type.GetString() == "desktop.update.query")'),native.indexOf('if (type.GetString() == "desktop.update.request")'));
  assert.ok(!query.includes('updateBar.Visible = false'));
+});
+test('update visibility follows login, PIN unlock and logout',async()=>{
+ const desktop=await readFile(new URL('../kamera/desktop.js',import.meta.url),'utf8');
+ const source=desktop.slice(desktop.indexOf('  let updatePanelVisible = false;'),desktop.indexOf('  const updateAccessObserver'));
+ const messages=[];const panel={hidden:true};const flags=new Set(['accessPending']);
+ const ctx=vm.createContext({Boolean,$:id=>id==='app'?panel:null,document:{body:{classList:{contains:name=>flags.has(name)}}},window:{chrome:{webview:{postMessage:m=>messages.push(m)}}}});
+ vm.runInContext(source+'\nglobalThis.sync=syncUpdateAccess;',ctx);
+ ctx.sync(); // Public home, no account panel.
+ panel.hidden=false;ctx.sync(); // Account selected, PIN still required.
+ flags.delete('accessPending');ctx.sync(); // Successful unlock.
+ panel.hidden=true;ctx.sync(); // Logout.
+ assert.deepEqual(messages.map(m=>m.visible),[false,false,true,false]);
 });
