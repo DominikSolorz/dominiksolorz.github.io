@@ -1,0 +1,67 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+
+const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
+
+test('homepage explains real use cases and privacy responsibilities without fictitious footage',async()=>{
+ const [home,brochure]=await Promise.all(['design/marketing/home.html','kamera/o-systemie.html'].map(read));
+ for(const html of [home,brochure]){
+  for(const id of ['zobacz-panel','w-praktyce','zastosowania','prywatnosc','jak-dziala','specyfikacja','stan-projektu','wybierz-start','faq','asystent'])
+   assert.ok(html.includes('id="'+id+'"'),id);
+  for(const text of ['miniatury są schematami','SCHEMAT','folderu','Wydanie rozwojowe','nadajnika','nie transmisja z kamery'])
+   assert.ok(html.includes(text),text);
+  assert.ok(!html.includes('Kup teraz'),'website has no checkout');
+  assert.ok(!html.includes('Odtwórz film'),'no fake video links');
+ }
+ const ids=[...home.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+ assert.equal(new Set(ids).size,ids.length,'no duplicate section IDs');
+ for(const [,anchor] of home.matchAll(/href="#([^"]+)"/g))
+  assert.ok(ids.includes(anchor),'missing destination: '+anchor);
+});
+
+test('new homepage conversion actions point to actual account and contact paths',async()=>{
+ const home=await read('design/marketing/home.html');
+ assert.ok(home.includes('href="./?auth=register"'));
+ assert.ok(home.includes('href="pomoc.html?temat=produkt"'));
+ assert.ok(home.includes('href="#zobacz-panel"'));
+ assert.ok(home.includes('data-hs-open-support'));
+ assert.ok(home.includes('polityka-prywatnosci.html'));
+ assert.ok(home.includes('rodo.html'));
+ const app=await read('kamera/index.html');
+ assert.equal((app.match(/id="authDialog"/g)||[]).length,1);
+ assert.equal((app.match(/id="app"/g)||[]).length,1);
+});
+
+test('responsive feature diagrams disclose illustration status and avoid false telemetry',async()=>{
+ const [home,css]=await Promise.all(['design/marketing/home.html','kamera/marketing.css'].map(read));
+ assert.equal((home.match(/class="mktScenarioCard"/g)||[]).length,3);
+ assert.ok(home.includes('mktScenarioVisualFoot">OBRAZ · SCHEMAT'));
+ assert.ok(home.includes('mktPrivacyNote'));
+ assert.ok(css.includes('.mktScenarioGrid{display:grid'));
+ assert.ok(css.includes('.mktPrivacyGrid{display:grid'));
+ assert.ok(css.includes('@media(max-width:700px)'));
+ assert.ok(css.includes('prefers-reduced-motion:reduce'));
+ assert.ok(css.includes('mktHeroFacts'));
+});
+
+test('standalone brochure and embedded public homepage match source',async()=>{
+ const [src,app,brochure]=await Promise.all(['design/marketing/home.html','kamera/index.html','kamera/o-systemie.html'].map(read));
+ const slot=/<section id="publicHome"[\s\S]*?<\/section>(?=\s*<section id="authDialog")/;
+ assert.equal(app.match(slot)?.[0],src.trimEnd());
+ assert.ok(brochure.includes(src.trimEnd()));
+ assert.ok(brochure.includes('Podgląd domu z telefonu i archiwum nagrań — HOME SECURITY'));
+});
+
+test('PWA shell and every marketing page have consistent revisions',async()=>{
+ const paths=['kamera/index.html','kamera/o-systemie.html','kamera/pomoc.html','kamera/blog/index.html','kamera/blog/pierwsze-uruchomienie.html','kamera/blog/zapis-lokalny-i-drive.html','kamera/blog/diagnostyka-monitoringu.html'];
+ const content=await Promise.all(paths.map(read));for(let i=0;i<paths.length;i++)assert.ok(content[i].includes('marketing.css?v=6'),paths[i]);
+ const [sw,app,version]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/version.json'].map(read));
+ assert.ok(sw.includes('kamera-domowa-shell-v126'));
+ assert.ok(sw.includes('./marketing.css?v=6'));
+ assert.ok(sw.includes('./app.js?v=216'));
+ assert.ok(app.includes('const VERSION = "216"'));
+ assert.ok(app.includes('SERVICE_WORKER_BUILD = "126"'));
+ assert.equal(JSON.parse(version).version,'216');
+ assert.ok(content[0].includes('home-security-build" content="216"'));
+});
