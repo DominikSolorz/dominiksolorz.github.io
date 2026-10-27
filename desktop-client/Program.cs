@@ -88,7 +88,7 @@ internal static class Program
             if (!File.Exists(PendingUpdatePath)) return false;
             var pending = JsonSerializer.Deserialize<PendingUpdate>(File.ReadAllText(PendingUpdatePath));
             var exe = Environment.ProcessPath;
-            if (pending is null || string.IsNullOrWhiteSpace(exe) || !File.Exists(pending.PackagePath)) return false;
+            if (pending is null || string.IsNullOrWhiteSpace(exe) || string.IsNullOrWhiteSpace(pending.Version) || pending.Sha256?.Length != 64 || !File.Exists(pending.PackagePath)) return false;
             var updaterFolder = Path.Combine(UpdateRoot, "helpers");
             Directory.CreateDirectory(updaterFolder);
             var helper = Path.Combine(updaterFolder, $"HomeSecurityDesktop.Updater.{Guid.NewGuid():N}.exe");
@@ -105,33 +105,145 @@ internal static class Program
         catch { return false; }
     }
 
+    // The native helper runs only after the panel has acknowledged safe recording shutdown.
+    // All replacement files are backed up BEFORE touching the installed program.
+    // On any failed copy or failed relaunch, put the old files back and restart the old app.
     private static void ApplyPreparedUpdate(string[] args)
     {
-        var package = args[1];
-        var installDirectory = args[2];
-        var pendingPath = args[4];
+        var package = Path.GetFullPath(args[1]);
+        var installDirectory = Path.GetFullPath(args[2]);
+        var pendingPath = Path.GetFullPath(args[4]);
+        // A pending request is not a generic arbitrary-directory file installer.
+        var updateRoot = Path.GetFullPath(UpdateRoot) + Path.DirectorySeparatorChar;
+        if (!package.StartsWith(updateRoot, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(pendingPath, Path.GetFullPath(PendingUpdatePath), StringComparison.OrdinalIgnoreCase) ||
+            !Directory.Exists(installDirectory) || !File.Exists(package) || !File.Exists(pendingPath)) return;
+
+        string? staging = null;
+        string? backupRoot = null;
+        var originals = new List<(string Destination, string? Backup)>();
+        var startedReplacing = false;
+        var rollbackOk = true;
+        var success = false;
         try
         {
-            if (int.TryParse(args[3], out var parentPid))
+            if (!int.TryParse(args[3], out var parentPid) || parentPid <= 0)
+                throw new InvalidDataException("Nieprawidłowy proces aktualizacji.");
+            // Never try to overwrite a running host or companion process.
+            try
             {
-                try { Process.GetProcessById(parentPid).WaitForExit(60000); } catch { }
+                using var parent = Process.GetProcessById(parentPid);
+                if (!parent.WaitForExit(60000))
+                    throw new IOException("Program nie zakończył jeszcze pracy. Aktualizacja wstrzymana.");
             }
-            if (!File.Exists(package) || !Directory.Exists(installDirectory)) return;
-            var staging = Path.Combine(Path.GetDirectoryName(installDirectory)!, $".home-security-update-{Guid.NewGuid():N}");
+            catch (ArgumentException) { /* The parent has already exited. */ }
+
+            var pending = JsonSerializer.Deserialize<PendingUpdate>(File.ReadAllText(pendingPath));
+            if (pending is null ||
+                !string.Equals(Path.GetFullPath(pending.PackagePath), package, StringComparison.OrdinalIgnoreCase) ||
+                string.IsNullOrWhiteSpace(pending.Version) ||
+                pending.Sha256 is null || pending.Sha256.Length != 64 ||
+                !pending.Sha256.All(Uri.IsHexDigit))
+                throw new InvalidDataException("Nieprawidłowe dane aktualizacji.");
+
+            using (var input = File.OpenRead(package))
+            {
+                var actualHash = Convert.ToHexString(SHA256.HashData(input));
+                if (!string.Equals(actualHash, pending.Sha256, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException("Pakiet aktualizacji zmienił się po pobraniu.");
+            }
+
+            staging = Path.Combine(UpdateRoot, "staging-" + Guid.NewGuid().ToString("N"));
             ZipFile.ExtractToDirectory(package, staging);
-            foreach (var source in Directory.EnumerateFiles(staging, "*", SearchOption.AllDirectories))
+            if (!File.Exists(Path.Combine(staging, "HomeSecurityDesktop.exe")) ||
+                !File.Exists(Path.Combine(staging, "Panel", "index.html")) ||
+                !File.Exists(Path.Combine(staging, "Agent", pending.Version, "HomeSecurityAgent.exe")))
+                throw new InvalidDataException("Pakiet nie zawiera kompletnego programu i agenta Windows.");
+
+            // Establish the entire plan before changing ANY installed file.
+            var root = installDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                + Path.DirectorySeparatorChar;
+            var plan = Directory.EnumerateFiles(staging, "*", SearchOption.AllDirectories)
+                .Select(source =>
+                {
+                    var relative = Path.GetRelativePath(staging, source);
+                    var destination = Path.GetFullPath(Path.Combine(installDirectory, relative));
+                    if (Path.IsPathRooted(relative) || relative == ".." ||
+                        relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal) ||
+                        !destination.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidDataException("Niebezpieczna ścieżka pliku aktualizacji.");
+                    return (Source: source, Relative: relative, Destination: destination);
+                }).ToArray();
+            if (plan.Length < 3) throw new InvalidDataException("Niekompletny pakiet aktualizacji.");
+            backupRoot = Path.Combine(UpdateRoot, "rollback-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(backupRoot);
+            foreach (var file in plan)
             {
-                var relative = Path.GetRelativePath(staging, source);
-                var destination = Path.Combine(installDirectory, relative);
-                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-                File.Copy(source, destination, true);
+                string? backup = null;
+                if (File.Exists(file.Destination))
+                {
+                    backup = Path.Combine(backupRoot, file.Relative);
+                    Directory.CreateDirectory(Path.GetDirectoryName(backup)!);
+                    File.Copy(file.Destination, backup, true);
+                }
+                originals.Add((file.Destination, backup));
             }
+
+            startedReplacing = true;
+            foreach (var file in plan)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(file.Destination)!);
+                File.Copy(file.Source, file.Destination, true);
+            }
+            // Remove the pending instruction before relaunching, to prevent an update loop.
             File.Delete(pendingPath);
-            File.Delete(package);
-            Process.Start(new ProcessStartInfo(Path.Combine(installDirectory, "HomeSecurityDesktop.exe")) { UseShellExecute = true });
-            Directory.Delete(staging, true);
+            if (Process.Start(new ProcessStartInfo(Path.Combine(installDirectory, "HomeSecurityDesktop.exe"))
+                { UseShellExecute = true, WorkingDirectory = installDirectory }) is null)
+                throw new IOException("Windows nie uruchomił nowej wersji programu.");
+            success = true;
+            WriteDiagnostic("update-installed", new { pending.Version });
+            try { File.Delete(package); } catch { /* A verified cache file is harmless. */ }
         }
-        catch { /* Zachowujemy poprzedni program oraz pakiet do kolejnej próby. */ }
+        catch (Exception error)
+        {
+            WriteDiagnostic("update-apply-failed", new { error = error.Message, startedReplacing });
+            if (startedReplacing)
+            {
+                // Restore in reverse order: never claim rollback succeeded until all files match.
+                foreach (var original in originals.AsEnumerable().Reverse())
+                {
+                    try
+                    {
+                        if (original.Backup is null) { if (File.Exists(original.Destination)) File.Delete(original.Destination); }
+                        else File.Copy(original.Backup, original.Destination, true);
+                    }
+                    catch (Exception restoreError)
+                    {
+                        rollbackOk = false;
+                        WriteDiagnostic("update-rollback-failed", new { file = original.Destination, error = restoreError.Message });
+                    }
+                }
+            }
+            try { File.Delete(pendingPath); } catch { /* No automatic retry loop. */ }
+            if (rollbackOk)
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo(Path.Combine(installDirectory, "HomeSecurityDesktop.exe"))
+                        { UseShellExecute = true, WorkingDirectory = installDirectory });
+                }
+                catch (Exception restartError)
+                {
+                    WriteDiagnostic("update-old-version-restart-failed", new { error = restartError.Message });
+                }
+            }
+        }
+        finally
+        {
+            try { if (staging is not null && Directory.Exists(staging)) Directory.Delete(staging, true); } catch { }
+            // Preserve the backups if even one rollback restoration failed.
+            try { if ((success || rollbackOk) && backupRoot is not null && Directory.Exists(backupRoot)) Directory.Delete(backupRoot, true); } catch { }
+        }
     }
 
     private static void CleanupOldUpdaterCopies()
@@ -404,7 +516,7 @@ internal static class Program
                     webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { type = "desktop.update.abort", id = updatePreparationId }));
                     throw new InvalidDataException("Brak potwierdzenia bezpiecznego zapisu nagrania. Aktualizacja wstrzymana.");
                 }
-                File.WriteAllText(PendingUpdatePath, JsonSerializer.Serialize(new PendingUpdate(packagePath)));
+                File.WriteAllText(PendingUpdatePath, JsonSerializer.Serialize(new PendingUpdate(packagePath, manifest.Version, manifest.Sha256)));
                 WriteDiagnostic("update-ready", new { manifest.Version, packagePath });
                 RestartIntoPreparedUpdate(manifest.Version);
                 PublishUpdateState("installing", "Pakiet sprawdzony. Ponowne uruchamianie programu…");
@@ -437,5 +549,5 @@ internal static class Program
     }
 
     private sealed record DesktopUpdateManifest(string Version, string PackageUrl, string Sha256);
-    private sealed record PendingUpdate(string PackagePath);
+    private sealed record PendingUpdate(string PackagePath, string Version, string Sha256);
 }
