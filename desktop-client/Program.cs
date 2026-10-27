@@ -88,7 +88,13 @@ internal static class Program
             if (!File.Exists(PendingUpdatePath)) return false;
             var pending = JsonSerializer.Deserialize<PendingUpdate>(File.ReadAllText(PendingUpdatePath));
             var exe = Environment.ProcessPath;
-            if (pending is null || string.IsNullOrWhiteSpace(exe) || string.IsNullOrWhiteSpace(pending.Version) || pending.Sha256?.Length != 64 || !File.Exists(pending.PackagePath)) return false;
+            if (pending is null || string.IsNullOrWhiteSpace(exe) || string.IsNullOrWhiteSpace(pending.Version) ||
+                pending.Sha256?.Length != 64 || string.IsNullOrWhiteSpace(pending.PackagePath) || !File.Exists(pending.PackagePath))
+            {
+                // A previous/incomplete schema must not block all future update checks.
+                try { File.Delete(PendingUpdatePath); } catch { }
+                return false;
+            }
             var updaterFolder = Path.Combine(UpdateRoot, "helpers");
             Directory.CreateDirectory(updaterFolder);
             var helper = Path.Combine(updaterFolder, $"HomeSecurityDesktop.Updater.{Guid.NewGuid():N}.exe");
@@ -125,6 +131,7 @@ internal static class Program
         var startedReplacing = false;
         var rollbackOk = true;
         var success = false;
+        var parentStopped = false;
         try
         {
             if (!int.TryParse(args[3], out var parentPid) || parentPid <= 0)
@@ -135,8 +142,9 @@ internal static class Program
                 using var parent = Process.GetProcessById(parentPid);
                 if (!parent.WaitForExit(60000))
                     throw new IOException("Program nie zakończył jeszcze pracy. Aktualizacja wstrzymana.");
+                parentStopped = true;
             }
-            catch (ArgumentException) { /* The parent has already exited. */ }
+            catch (ArgumentException) { parentStopped = true; /* The parent has already exited. */ }
 
             var pending = JsonSerializer.Deserialize<PendingUpdate>(File.ReadAllText(pendingPath));
             if (pending is null ||
@@ -225,7 +233,7 @@ internal static class Program
                 }
             }
             try { File.Delete(pendingPath); } catch { /* No automatic retry loop. */ }
-            if (rollbackOk)
+            if (rollbackOk && parentStopped)
             {
                 try
                 {
