@@ -22,7 +22,7 @@ import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./au
 import { mountAccountUI } from "./account-ui.mjs?v=3";
 import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
-import { createWebUpdates } from "./core/web-updates.mjs?v=1";
+import { createWebUpdates } from "./core/web-updates.mjs?v=2";
 import { NativeAgentClient } from "./communication/native-agent-client.mjs";
 import { createAgentTelemetry } from "./communication/agent-telemetry.mjs?v=2";
 import { captureEventFrame } from "./workspace-panels.mjs?v=2";
@@ -63,7 +63,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "220"; // musi się zgadzać z version.json
+const VERSION = "221"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2192,16 +2192,20 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "130";
+  const SERVICE_WORKER_BUILD = "131";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
-      button.textContent=webUpdates.available?'Wczytaj aktualizację':'Sprawdź aktualizację';
-      button.disabled=['checking','applying','downloading','unsupported'].includes(webUpdateState.status);
+      button.textContent=webUpdates.available?'Nowa wersja · automatycznie':'Sprawdź teraz';
+      button.disabled=['checking','applying','downloading','unsupported','waiting'].includes(webUpdateState.status);
     });
     const output=$('mobileUpdateStatus');if(output)output.textContent=webUpdateState.message;
   };
   const webUpdates=createWebUpdates({serviceWorker:navigator.serviceWorker,build:SERVICE_WORKER_BUILD,
+    autoApply:true,
+    // Web pages update without a click, but never while the camera is live,
+    // during recording, or while a user is editing a form.
+    canAutoApply:()=>!sender.live&&!archive.status().recording&&!document.querySelector('input:focus,textarea:focus,[contenteditable="true"]:focus'),
     onState:state=>{webUpdateState=state;paintWebUpdate();},
     prepareReload:()=>archive.prepareUpdate(),abortReload:()=>archive.abortUpdate(),reload:()=>location.reload()});
   document.addEventListener('hs-web-update-ui-ready',paintWebUpdate);
@@ -2209,8 +2213,18 @@ if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   const checkWebUpdate=()=>{void webUpdates.check({background:true});};
   if(document.readyState==='complete')checkWebUpdate();
   else window.addEventListener('load',checkWebUpdate,{once:true});
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkWebUpdate();});
-  window.addEventListener('pagehide',event=>{if(!event.persisted)webUpdates.dispose();});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'){checkWebUpdate();webUpdates.tryAutoApply();}
+  });
+  // Keep already-open web/PWA tabs current. Windows EXE is deliberately excluded.
+  const webUpdateInterval=setInterval(()=>{
+    if(document.visibilityState==='visible'){
+      checkWebUpdate();
+      webUpdates.tryAutoApply();
+    }
+  }, 3*60000);
+  document.addEventListener('focusout',()=>{setTimeout(()=>webUpdates.tryAutoApply(),0);});
+  window.addEventListener('pagehide',event=>{if(!event.persisted){clearInterval(webUpdateInterval);webUpdates.dispose();}});
 }
 $("startBtn").addEventListener("click", () => sender.start());
 function setControlAction(text, kind = "") {
