@@ -25,9 +25,9 @@ jobs:
           sparse-checkout: |
             /*
             !/kamera/updates/**
-            /kamera/updates/HomeSecurityDesktop-1.4.9-win-x64.zip
+            /kamera/updates/HomeSecurityDesktop-1.4.10-win-x64.zip
             !/kamera/downloads/**
-            /kamera/downloads/HOME-SECURITY-Desktop-Setup-1.4.9.exe
+            /kamera/downloads/HOME-SECURITY-Desktop-Setup-1.4.10.exe
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -77,7 +77,7 @@ jobs:
           sparse-checkout: |
             /*
             !/kamera/updates/**
-            /kamera/updates/HomeSecurityDesktop-1.4.9-win-x64.zip
+            /kamera/updates/HomeSecurityDesktop-1.4.10-win-x64.zip
             /kamera/updates/HomeSecurityDesktop-1.4.7-win-x64.zip
       - name: Configure Pages
         uses: actions/configure-pages@v5

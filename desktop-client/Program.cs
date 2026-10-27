@@ -10,7 +10,7 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.4.9";
+    private const string DesktopVersion = "1.4.10";
     private const string WebPanelBuild = "221";
     // Desktop serves its installed Panel bundle at the existing trusted origin.
     // The website and installed UI can now be released independently without
@@ -155,9 +155,9 @@ internal static class Program
         private readonly AgentRuntime agentRuntime = new();
         private bool downloadingUpdate;
         private DesktopUpdateManifest? offeredUpdate;
-        private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 15 * 60 * 1000 };
+        private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 60 * 1000 };
         private readonly ProgressBar updateProgress = new() { Dock = DockStyle.Bottom, Height = 6, Visible = false };
-        private bool sidebarUpdateReady;
+
         private object updateState = new { type = "desktop.update.state", status = "none" };
         private TaskCompletionSource<bool>? updatePrepared;
         private string? updatePreparationId;
@@ -166,7 +166,8 @@ internal static class Program
         {
             updateState = new { type = "desktop.update.state", status, version = offeredUpdate?.Version, message, percent };
             try { if (AgentWebViewBridge.Trusted(webView.CoreWebView2.Source)) webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); } catch { }
-            updateBar.Visible = !sidebarUpdateReady && status != "none";
+            // Keep the native notification visible even on login and marketing pages, where the sidebar is hidden.
+            updateBar.Visible = status != "none";
         }
 
         public HomeSecurityWindow()
@@ -241,7 +242,7 @@ internal static class Program
                     var root = message.RootElement;
                     if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("type", out var type) && type.ValueKind == JsonValueKind.String) {
                         if (type.GetString() == "desktop.update.query") {
-                            sidebarUpdateReady = true; updateBar.Visible = false;
+                            // A query does not prove the HTML sidebar is visible. Keep the native offer.
                             webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); return;
                         }
                         if (type.GetString() == "desktop.update.request") { await DownloadAndPrepareOfferedUpdateAsync(); return; }
@@ -344,7 +345,6 @@ internal static class Program
             if (downloadingUpdate || offeredUpdate is null) return;
             downloadingUpdate = true;
             var manifest = offeredUpdate;
-            if (MessageBox.Show(this, $"Pobrać i zainstalować wersję {manifest.Version}? Program najpierw zapisze bieżący fragment. Aktualizacja może spowodować krótką przerwę w nagrywaniu.", "Aktualizacja HOME SECURITY", MessageBoxButtons.YesNo, MessageBoxIcon.Information) != DialogResult.Yes) { downloadingUpdate = false; return; }
             updateButton.Enabled = false;
             updateButton.Text = "Pobieranie aktualizacji…";
             try
