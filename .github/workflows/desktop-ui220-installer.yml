@@ -1,0 +1,115 @@
+name: Build HOME SECURITY UI220 one-click test installer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/desktop-ui220-installer.yml'
+      - 'desktop-client/installer/HomeSecurityDesktop.UI220.Preview.iss'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows-ui220-installer:
+    runs-on: windows-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify actual owner UI, bundle behavior and restricted preview setup
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          node --test tests/desktop-concept-220.test.mjs tests/desktop-bundle.test.mjs tests/workspace-ui.test.mjs tests/owner-theme.test.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'Owner interface tests failed' }
+          $iss = Get-Content -Raw desktop-client/installer/HomeSecurityDesktop.UI220.Preview.iss
+          if (-not $iss.Contains('InitializeSetup()')) { throw 'Preview installer must refuse an active recorder' }
+          if (-not $iss.Contains('UsePreviousAppDir=no')) { throw 'Preview must not target the installed production directory' }
+          if (-not $iss.Contains('skipifsilent unchecked')) { throw 'Preview installer must not auto-launch the camera' }
+      - name: Build Windows app and native camera agent, UI 220
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & './desktop-client/build-release.ps1' -Version '1.4.8'
+          if ($LASTEXITCODE -ne 0) { throw 'Desktop release build failed' }
+          $dir = 'desktop-client/publish-1.4.8'
+          foreach ($file in @('HomeSecurityDesktop.exe', 'Panel/index.html', 'Panel/interface-concept.css', 'Agent/1.4.8/HomeSecurityAgent.exe')) {
+            if (-not (Test-Path (Join-Path $dir $file))) { throw "Missing desktop component: $file" }
+          }
+          $html = Get-Content -Raw (Join-Path $dir 'Panel/index.html')
+          if (-not $html.Contains('home-security-build" content="220"')) { throw 'Built panel does not contain UI220' }
+          if (-not $html.Contains('interface-concept.css?v=')) { throw 'Real owner theme is missing' }
+      - name: Compile real Windows installer (not stable auto-update)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6/ISCC.exe'
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'Inno Setup install failed' }
+          }
+          if (-not (Test-Path $iscc)) { throw 'Inno Setup compiler is unavailable' }
+          & $iscc 'desktop-client/installer/HomeSecurityDesktop.UI220.Preview.iss'
+          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup compilation failed' }
+          $setup = 'desktop-client/installer-output/HOME-SECURITY-Desktop-UI220-PREVIEW-Setup.exe'
+          if (-not (Test-Path $setup)) { throw 'Missing preview installer EXE' }
+          $bytes = [IO.File]::ReadAllBytes((Resolve-Path $setup))
+          if ($bytes.Length -lt 50000000) { throw 'Unexpectedly small installer' }
+          if ($bytes[0] -ne 77 -or $bytes[1] -ne 90) { throw 'Installer has no Windows PE header' }
+          $hash = (Get-FileHash $setup -Algorithm SHA256).Hash
+          "Installer SHA-256: $hash" | Tee-Object -FilePath 'ui220-installer-sha256.txt'
+          Add-Content $env:GITHUB_STEP_SUMMARY "Verified preview Windows setup SHA-256: $hash"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: home-security-ui220-one-click-preview-installer
+          path: |
+            desktop-client/installer-output/HOME-SECURITY-Desktop-UI220-PREVIEW-Setup.exe
+            ui220-installer-sha256.txt
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish opt-in prerelease EXE with direct download
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = 'ui220-preview-' + $env:GITHUB_SHA.Substring(0,12)
+          $setup = 'desktop-client/installer-output/HOME-SECURITY-Desktop-UI220-PREVIEW-Setup.exe'
+          @'
+          # HOME SECURITY Desktop — testowy instalator interfejsu 220
+
+          **Wersja testowa, nie jest oficjalną aktualizacją produkcyjną.**
+
+          To prawdziwy instalator Windows z kompilacją WebView2 HOME SECURITY UI220 i natywnym agentem. Instaluje osobną aplikację testową obok wydania produkcyjnego, nie nadpisuje jego katalogu. Nie jest zdalnie uruchamiany na komputerze użytkownika.
+
+          **Przed instalacją:** zakończ nagrywanie w działającym HOME SECURITY i sprawdź zapis pliku, a następnie zamknij aplikację. Instalator odmawia pracy, jeżeli wykryje uruchomiony HomeSecurityDesktop.exe. Wersji testowej nie uruchamiaj razem z produkcyjną.
+
+          **Dane konta:** testowy program może korzystać z tego samego profilu %LOCALAPPDATA%\HomeSecurityDesktop; dla ochrony prywatnych danych używaj osobnego konta testowego Windows. Nie usuwaj obecnego programu, profilu danych ani folderów nagrań.
+
+          **Ograniczenie testów:** kompilacja i kontrola pakietu nie potwierdzają prawidłowego zapisu ani odtwarzania nagrania z konkretnej kamery. Problem uprawnień folderu widoczny na wcześniejszych zdjęciach trzeba rozwiązać osobno.
+
+          Publiczny instalator 1.4.8 i manifest aktualizacji pozostały bez zmian. Testowe wydanie nie pobierze się automatycznie na Twój komputer.
+          '@ | Set-Content -Path 'UI220-RELEASE-NOTES.md' -Encoding utf8
+          gh release view $tag --repo "$env:GITHUB_REPOSITORY" *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag $setup --repo "$env:GITHUB_REPOSITORY" --clobber
+          } else {
+            gh release create $tag $setup --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --title 'HOME SECURITY UI220 — testowy instalator Windows' --notes-file 'UI220-RELEASE-NOTES.md' --prerelease
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Publishing installer prerelease failed' }
+          Add-Content $env:GITHUB_STEP_SUMMARY "Direct preview installer: https://github.com/$env:GITHUB_REPOSITORY/releases/tag/$tag"
