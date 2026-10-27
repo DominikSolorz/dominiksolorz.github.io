@@ -71,11 +71,11 @@ test('legal documents never send visitors from Back to a login page',async()=>{
 });
 
 test('the deployed-site audit checks real pages without submitting forms',async()=>{
- const script=await read('scripts/verify-live-marketing.mjs');
+ const [script,manifest]=await Promise.all(['scripts/verify-live-marketing.mjs','kamera/version.json'].map(read));
  assert.ok(script.includes("galeria.html"));
  assert.ok(script.includes("polityka-prywatnosci.html"));
  assert.ok(script.includes("HOME-SECURITY-Desktop-Setup-1.4.8.exe"));
  assert.ok(!script.includes("method:'POST'"));
  assert.ok(!script.includes('submit()'));
- assert.ok(script.includes('expectedBuild=\'219\''));
+ assert.ok(script.includes("const expectedBuild='"+JSON.parse(manifest).version+"'"));
 });
