@@ -99,3 +99,15 @@ test('PWA, runtime and public pages have matching motion asset and build version
  assert.ok(index.includes('home-security-build" content="217"'));
  assert.ok(index.includes('app.js?v=217'));
 });
+
+
+test('support assistant does not overlap the scroll control and auth animations respect accessibility',async()=>{
+ const [css,html]=await Promise.all(['kamera/marketing-motion.css','kamera/index.html'].map(read));
+ assert.ok(css.includes('#publicHome.mktSite .mktBackToTop{left:'));
+ assert.ok(css.includes('#authDialog:not([hidden]) .authCard'));
+ assert.ok(css.includes('#authDialog:not([hidden]) [data-auth-step].authForm:not([hidden])'));
+ assert.ok(css.includes('#authDialog:not([hidden]) .authBackdrop'));
+ assert.ok(css.includes('#authDialog :is(.authPrimary,.authSecondary,.authGoogleButton,.authTextBtn,.authClose){transition:none!important'));
+ assert.ok(html.includes('class="authDialog"'));
+ assert.ok(html.includes('id="authClose"'));
+});
