@@ -67,7 +67,8 @@ jobs:
           $html = Get-Content -Raw (Join-Path $output 'Panel/index.html')
           $css = Get-Content -Raw (Join-Path $output 'Panel/interface-concept.css')
           if (-not $html.Contains('interface-concept.css?v=1')) { throw 'Preview is missing real UI concept stylesheet.' }
-          if (-not $html.Contains('home-security-build" content="220"')) { throw 'Preview is not running UI build 220.' }
+          $webBuild=(Get-Content -Raw 'kamera/version.json' | ConvertFrom-Json).version
+          if (-not $html.Contains('home-security-build" content="' + $webBuild + '"')) { throw 'Preview does not match current web build.' }
           if (-not $css.Contains('.desktopCameraTile')) { throw 'Real camera component is not styled.' }
           @'
           HOME SECURITY Desktop — niezależny pakiet testowy UI 220
