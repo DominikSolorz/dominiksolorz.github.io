@@ -32,7 +32,7 @@ const assets=[
  'interface-concept.css?v=1',
  'marketing-motion.css?v=1','marketing.css?v=6',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
- 'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-1.4.8.exe'
+ 'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-1.4.9.exe'
 ];
 
 let tries=0;
