@@ -225,3 +225,58 @@
 @media(max-width:1080px){.mktDecision{grid-template-columns:1fr;gap:25px}.mktStageHeading{display:block}.mktStageHeading>p{margin-top:20px}.mktDemoBody{grid-template-columns:58px minmax(0,1fr) 230px}.mktAiLayout{gap:36px}}
 @media(max-width:700px){.mktHero{padding-top:40px}.mktHero h1{font-size:clamp(44px,11.4vw,68px)}.mktHeroVisual{border-radius:17px}.mktHeroVisual figcaption{left:21px}.mktStage{padding-top:62px}.mktStageHeading>p{font-size:13px}.mktDemo{border-radius:16px}.mktDemoTop{padding-inline:15px}.mktDemoMark small{display:none}.mktDemoBody{grid-template-columns:43px minmax(0,1fr)}.mktDemoNav{gap:11px}.mktDemoNav span{width:33px;height:33px;font-size:17px}.mktDemoScreen{padding:19px 13px 22px}.mktDemoImage{min-height:220px}.mktDemoSide{grid-column:1/-1;border-left:0;border-top:1px solid #303446;padding:16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.mktDemoSide>p{grid-column:1/-1;margin:0}.mktDemoSide>div{display:block;border:1px solid #363b4b;border-radius:9px;padding:11px}.mktDemoSide>div span{display:block}.mktDemoSide strong{display:block;font-size:11px;margin-top:5px}.mktDemoSide small{display:block;font-size:10px}.mktDecision{padding-top:35px;padding-bottom:65px}.mktDecisionOptions{grid-template-columns:1fr}.mktDecisionOptions article{padding:24px}.mktAiBand{padding-block:50px}.mktAiLayout{grid-template-columns:1fr;gap:28px}.mktAiExample{padding:23px}.mktAiActions{align-items:stretch;flex-direction:column}.mktAiActions .mktButton{width:100%}.mktAiActions .mktTextLink{align-self:start}}
 @media(prefers-reduced-motion:reduce){.mktButton,.mktHeroVisual>img,.mktHeader nav a,.mktLogin{transition:none!important}.mktButton:hover,.mktHeroVisual:hover>img{transform:none!important}}
+
+
+/* Product walkthrough: uses an existing project illustration, not simulated camera footage. */
+.mktVisualStory{position:relative;scroll-margin-top:30px;border-block:1px solid rgba(244,206,139,.14);background:linear-gradient(115deg,#151820 0%,#1a1823 48%,#0e111b 100%);padding-block:clamp(64px,7vw,112px)}
+.mktVisualLayout{display:grid;grid-template-columns:minmax(0,1.03fr) minmax(0,1fr);gap:clamp(32px,5vw,85px);align-items:center}
+.mktVisualFigure{margin:0;min-width:0}
+.mktVisualImage{min-height:360px;aspect-ratio:1/1;border:1px solid #555060;border-radius:22px;overflow:hidden;display:grid;place-items:center;padding:18px;background:radial-gradient(ellipse at 65% 25%,rgba(244,206,139,.08),transparent 62%),#0e111a;box-shadow:0 30px 70px rgba(0,0,0,.36)}
+.mktVisualImage img{display:block;max-width:100%;width:100%;height:100%;object-fit:contain;border-radius:12px}
+.mktVisualFigure figcaption{margin:15px 3px 0;max-width:570px;color:#bdc1cc;font-size:12px;line-height:1.65}
+.mktVisualCopy h2{max-width:600px;text-wrap:balance;line-height:1.12}
+.mktVisualLead{margin:25px 0;color:#c9ccd8;font-size:16px;line-height:1.8;max-width:620px}
+.mktVisualSequence{list-style:none;margin:27px 0 31px;padding:0;display:grid;gap:0}
+.mktVisualSequence li{display:grid;grid-template-columns:38px minmax(0,1fr);gap:15px;border-top:1px solid #454452;padding:18px 0}
+.mktVisualSequence li:last-child{border-bottom:1px solid #454452}
+.mktVisualSequence li>span{display:grid;place-items:center;width:31px;height:31px;border:1px solid #6a5862;border-radius:9px;background:#30232e;color:#f4ce8b;font-size:12px;font-weight:750}
+.mktVisualSequence h3{font-size:17px!important;line-height:1.3;margin:0 0 5px!important;color:#fff}
+.mktVisualSequence p{font-size:13px;color:#c0c3ce;line-height:1.65;margin:0}
+.mktVisualActions{display:flex;flex-wrap:wrap;gap:22px;align-items:center}
+.mktVisualActions .mktButton{flex-shrink:0}
+.mktVisualActions .mktTextLink{text-decoration:underline;text-decoration-color:#706273;text-underline-offset:4px}
+/* Readability: the former 6–9px labels were too small on phones. */
+.mktBrand small{font-size:10px;letter-spacing:.12em}
+.mktEyebrow,.mktFeatureNumber,.mktPostCategory,.mktBadge,.mktImageLabel{font-size:11px;letter-spacing:.11em}
+.mktFine{font-size:12px}
+.mktCopyright{font-size:12px!important}
+.mktDemoBottom,.mktDemoEyebrow,.mktDemoSide>p,.mktDecisionOptions article>span,.mktAiExample>span{font-size:11px}
+.mktHeader nav a,.mktFooter nav a{display:inline-flex;align-items:center;min-height:36px}
+.mktSite :is(.mktButton,.mktLogin,.mktTextLink),.marketingPage :is(.mktButton,.mktLogin,.mktTextLink){text-underline-offset:4px}
+@media(max-width:1050px){.mktVisualLayout{gap:35px}.mktVisualImage{min-height:0}}
+@media(max-width:700px){
+ .mktVisualStory{padding-block:57px}
+ .mktVisualLayout{grid-template-columns:1fr;gap:30px}
+ .mktVisualImage{aspect-ratio:5/4;border-radius:15px;padding:12px}
+ .mktVisualFigure figcaption{font-size:12px}
+ .mktVisualLead{font-size:15px;margin:19px 0}
+ .mktVisualSequence li{grid-template-columns:34px minmax(0,1fr);gap:11px}
+ .mktVisualSequence h3{font-size:16px!important}
+ .mktVisualSequence p{font-size:13px}
+ .mktVisualActions{align-items:stretch;flex-direction:column;gap:14px}
+ .mktVisualActions .mktButton{width:100%}
+ .mktVisualActions .mktTextLink{align-self:flex-start}
+ .mktBrand small{font-size:9px;letter-spacing:.1em}
+ .mktHero .mktEyebrow,.mktEyebrow{font-size:11px}
+ .mktPostCategory,.mktFeatureNumber,.mktBadge,.mktImageLabel{font-size:11px}
+ .mktCapabilityStrip span{font-size:12px}
+ .mktHeader nav{font-size:13px}
+ .mktLogin{font-size:13px;min-height:44px}
+ .mktButton{font-size:14px;min-height:48px}
+ .mktTextLink,.mktFine{font-size:13px}
+ .mktFaq summary{font-size:15px}
+ .mktFeature p,.mktPost p,.mktRoadmap p{font-size:14px}
+ .mktFooter nav{font-size:13px}
+ .mktCopyright{font-size:12px!important}
+}
+@media(prefers-reduced-motion:reduce){.mktVisualImage img{transition:none}}
