@@ -18,7 +18,7 @@ test('product gallery uses existing proposal boards, not invented screenshots',a
     assert.ok(html.includes('marketing-gallery.mjs?v=1'));
     assert.ok(html.includes('aria-labelledby="mktGalleryDialogTitle"'));
     assert.ok(html.includes('data-mkt-image-close'));
-    assert.ok(html.includes('href="../docs/ui-193/index.html"'));
+    assert.ok(html.includes('href="galeria.html"'));
   }
   const html=pages[0];
   const assets=[...html.matchAll(/<a class="mktConceptOpen" href="([^"]+)"[^>]*>\s*<img src="([^"]+)"[^>]*>/g)];
@@ -29,6 +29,8 @@ test('product gallery uses existing proposal boards, not invented screenshots',a
     const file=new URL(src,new URL('kamera/o-systemie.html',base));
     assert.ok((await stat(file)).size>100_000,'concept must be a real, nonempty image');
   }
+  const full=await read('kamera/galeria.html'); assert.equal((full.match(/class="mktConceptCard"/g)||[]).length,8);
+  assert.ok(full.includes('nie zrzuty działającej aplikacji'));
   const docs=await read('docs/ui-193/README.md');
   assert.ok(docs.includes('nie zrzuty uruchomionego programu'));
 });
