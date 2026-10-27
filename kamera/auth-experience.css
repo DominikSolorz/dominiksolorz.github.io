@@ -1,0 +1,21 @@
+/* Accessible and clearer registration/login, scoped to the account dialog only. */
+#authDialog .authCard{border-radius:23px;border-color:#715062;background:radial-gradient(500px 270px at 95% 0%,rgba(216,55,88,.21),transparent 70%),linear-gradient(145deg,#211b27,#0e1018 78%);box-shadow:0 40px 110px rgba(0,0,0,.68)}
+#authDialog .authBrand{padding-bottom:15px;border-bottom:1px solid rgba(240,180,198,.15)}
+#authDialog .authEyebrow{color:#f6cd94}
+#authDialog .authForm input{min-height:49px;border-radius:11px;background:#10131c;border-color:#5b4b5c;transition:border-color .18s,box-shadow .18s}
+#authDialog .authForm input:focus-visible{outline:2px solid #f4ce8b;outline-offset:2px;border-color:#f4ce8b}
+#authDialog .authPrimary{background:linear-gradient(125deg,#f14c69,#ba2142);min-height:52px;border-radius:11px;box-shadow:0 12px 26px rgba(173,34,70,.24);font-weight:800}
+#authDialog .authPrimary:hover{filter:brightness(1.1)}
+#authDialog :is(.authPrimary,.authClose,.authTextBtn,.authGoogleButton,.hsPassToggle):focus-visible{outline:3px solid #f4ce8b;outline-offset:3px}
+#authDialog .authForm label a{color:#f6cf98;text-decoration:underline;text-underline-offset:3px}
+#authDialog .hsPassWrap{display:block;position:relative}
+#authDialog .hsPassWrap input{padding-right:85px}
+#authDialog .hsPassToggle{position:absolute;right:7px;top:50%;transform:translateY(-50%);border:1px solid #695766;background:#27202a;border-radius:8px;color:#f3d2da;font-size:12px;min-height:34px;min-width:68px;padding:4px 8px;cursor:pointer}
+#authDialog .hsPassToggle:hover{border-color:#f4ce8b;color:#fff}
+#authDialog .hsPasswordHint{font-size:12px;line-height:1.55;margin:0;border:1px solid #49424d;padding:11px 13px;border-radius:9px;color:#c3c6d0;background:#181b24}
+#authDialog .hsPasswordHint[data-state="good"]{color:#bfead0;border-color:#3f7660}
+#authDialog .hsPasswordHint[data-state="error"]{color:#ffb0bc;border-color:#a14c62}
+#authDialog .authNotice{border-radius:11px}
+#authDialog [hidden]{display:none!important}
+@media(max-width:600px){#authDialog{padding:10px}#authDialog .authCard{padding:22px 18px;border-radius:17px;max-height:94dvh}#authDialog .authGrid{grid-template-columns:1fr}#authDialog .authForm h1{font-size:30px}}
+@media(prefers-reduced-motion:reduce){#authDialog .authForm input{transition:none}}

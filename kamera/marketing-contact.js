@@ -54,5 +54,9 @@ if(form){
       show('Opis z czatu został przeniesiony. Uzupełnij dane, sprawdź treść i kliknij „Wyślij wiadomość”.','idle');
     }}
   }catch{}
+  // Prefill only the topic for product inquiries, never personal details.
+  const chosenTopic=new URLSearchParams(location.search).get('temat');
+  if(chosenTopic==='produkt' && !form.elements.namedItem('message').value)
+    form.elements.namedItem('topic').value='Produkt i współpraca';
   submit.disabled=false;
 }
