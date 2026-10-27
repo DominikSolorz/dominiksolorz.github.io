@@ -74,10 +74,13 @@ test('Windows WebView2 preview uses the updated bundle but does not change relea
  const [program,project,installer]=await Promise.all([
   'desktop-client/Program.cs','desktop-client/HomeSecurityDesktop.csproj',
   'desktop-client/installer/HomeSecurityDesktop.iss'].map(read));
- assert.ok(program.includes('private const string WebPanelBuild = "220"'));
- assert.ok(program.includes('private const string DesktopVersion = "1.4.8"'));
- assert.ok(project.includes('<Version>1.4.8</Version>'));
- assert.ok(installer.includes('AppVersion "1.4.8"'));
+ const installedWeb=Number(program.match(/WebPanelBuild = "(\d+)"/)?.[1]);
+ const currentWeb=Number(JSON.parse(await read('kamera/version.json')).version);
+ const nativeVersion=program.match(/DesktopVersion = "([\d.]+)"/)?.[1];
+ assert.ok(installedWeb>=220&&installedWeb<=currentWeb,'native bundle must never point to a future web build');
+ assert.ok(/^\d+\.\d+\.\d+$/.test(nativeVersion),'native release must be semantic');
+ assert.ok(project.includes('<Version>'+nativeVersion+'</Version>'));
+ assert.ok(installer.includes('AppVersion "'+nativeVersion+'"'));
  assert.ok(program.includes('installedShell = DesktopVersion + ":" + WebPanelBuild'));
  const clear=program.match(/Storage.clearDataForOrigin[\s\S]*?\);/);
  assert.ok(clear,'bundle migration should retain explicit cache migration');

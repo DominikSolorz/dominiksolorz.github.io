@@ -34,7 +34,8 @@ test('installer workflow builds and validates genuine Windows EXE without alteri
   assert.ok(workflow.includes(part),'Missing installer safety/build requirement: '+part);
  }
  assert.ok(panel.includes('interface-concept.css?v='));
- assert.equal(JSON.parse(stableManifest).version,'1.4.8');
+ const native=await read('desktop-client/Program.cs');
+ assert.equal(JSON.parse(stableManifest).version,native.match(/DesktopVersion = "([\d.]+)"/)?.[1]);
  assert.ok(!workflow.includes('desktop-update.json'),'preview may not switch stable update channel');
  assert.ok(!workflow.includes('git push'),'preview must not overwrite stable binaries');
 });
