@@ -55,10 +55,10 @@ test('marketing guided checklist is responsive and safely cached with the new re
  assert.ok(css.includes('mktSetupItem:focus-within'));
  assert.ok(sw.includes('./marketing-start.css?v=1'));
  assert.ok(sw.includes('./marketing-start.mjs?v=1'));
- assert.ok(sw.includes('kamera-domowa-shell-v131'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "131"'));
- assert.equal(JSON.parse(version).version,'221');
- assert.ok(app.includes('const VERSION = "221"'));
+ assert.ok(sw.includes('kamera-domowa-shell-v132'));
+ assert.ok(app.includes('SERVICE_WORKER_BUILD = "132"'));
+ assert.equal(JSON.parse(version).version,'222');
+ assert.ok(app.includes('const VERSION = "222"'));
 });
 
 test('legal documents never send visitors from Back to a login page',async()=>{
@@ -78,5 +78,5 @@ test('the deployed-site audit checks real pages without submitting forms',async(
  assert.ok(script.includes('HOME-SECURITY-Desktop-Setup-'+release+'.exe'));
  assert.ok(!script.includes("method:'POST'"));
  assert.ok(!script.includes('submit()'));
- assert.ok(script.includes("const expectedBuild='"+JSON.parse(manifest).version+"'"));
+ assert.ok(script.includes("expectedBuild=JSON.parse(await read('version.json')).version"));
 });
