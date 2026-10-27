@@ -26,6 +26,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Generate consistent public marketing pages
+        run: node scripts/build-marketing.mjs
       - name: Frontend regression tests
         run: node --test tests/*.test.mjs
   verify-desktop:
@@ -56,6 +58,8 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Generate consistent marketing pages for deployment
+        run: node scripts/build-marketing.mjs
       - name: Prepare bounded static distribution
         shell: bash
         run: |
