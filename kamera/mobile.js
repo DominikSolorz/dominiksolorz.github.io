@@ -142,7 +142,7 @@ if (isMobileOwnerApp) {
     const button = event.target.closest("button[data-setting-section]");
     if (!button) return;
     document.body.dataset.mobileSettings = button.dataset.settingSection;
-    const title=button.dataset.settingSection==='sound'?'Ustawienia dźwięku':'Ustawienia obrazu';
+    const title=({image:'Ustawienia obrazu',sound:'Ustawienia dźwięku',recording:'Ustawienia nagrywania',system:'Ustawienia systemu i diagnostyki'})[button.dataset.settingSection] || 'Ustawienia';
     const card=byId('setCard');
     if(card){card.setAttribute('aria-label',title);const heading=card.querySelector('h2');if(heading)heading.textContent=title;}
     window.scrollTo({ top: 0, behavior: "smooth" });
