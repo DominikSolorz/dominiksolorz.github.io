@@ -58,8 +58,8 @@ test('PWA shell and every marketing page have consistent revisions',async()=>{
  const content=await Promise.all(paths.map(read));
  const [sw,app,version,source]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/version.json','scripts/build-marketing.mjs'].map(read));
  const appVersion=JSON.parse(version).version;
- const shellVersion=app.match(/SERVICE_WORKER_BUILD = "(\\d+)"/)?.[1];
- const cssVersion=content[0].match(/marketing\\.css\\?v=(\\d+)/)?.[1];
+ const shellVersion=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
+ const cssVersion=content[0].match(/marketing\.css\?v=(\d+)/)?.[1];
  assert.ok(appVersion,'missing version manifest');
  assert.ok(shellVersion,'missing service-worker revision');
  assert.ok(cssVersion,'missing marketing CSS revision');
