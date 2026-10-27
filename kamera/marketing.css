@@ -120,3 +120,21 @@
 @media(max-width:700px){.mktContainer{width:calc(100% - 36px)}.mktHeader{padding:15px 18px;gap:17px}.mktBrand{font-size:12px;gap:9px}.mktBrand img{width:34px;height:38px}.mktBrand small{font-size:6px}.mktLogin{padding:9px 12px;font-size:11px;gap:10px}.mktHeader nav{font-size:12px;gap:23px}.mktHero{grid-template-columns:1fr;padding-top:38px;padding-bottom:36px;gap:33px}.mktHero h1{font-size:58px;line-height:1.03}.mktHero .mktEyebrow{font-size:8px}.mktLead{font-size:16px}.mktButton{padding:14px 16px;font-size:12px;gap:15px}.mktHeroVisual{height:370px}.mktHeroVisual strong{font-size:25px}.mktCapabilityStrip>.mktContainer{grid-template-columns:1fr 1fr;gap:18px;padding-block:20px}.mktCapabilityStrip span{font-size:10px;gap:9px}.mktSection{padding-block:55px}.mktSectionHead{display:block;margin-bottom:25px}.mktSectionHead>p,.mktSectionHead>.mktTextLink{margin-top:22px}.mktEyebrow{font-size:8px;margin-bottom:17px}.mktFeatureGrid,.mktProcessLayout,.mktSpecLayout,.mktRoadmap,.mktPosts,.mktFaqLayout,.mktContactLayout{grid-template-columns:1fr;gap:22px}.mktFeatureMain{grid-row:auto}.mktFeatureMain h3{font-size:30px}.mktFeatureDiagram{padding-top:15px;grid-template-columns:1fr 16px 1fr;align-items:center;gap:8px}.mktFeatureDiagram span{padding:11px 5px;font-size:10px}.mktFeatureDiagram i{transform:none}.mktFeature{padding:24px}.mktFeatureGrid>.mktFeature:last-child{grid-column:auto}.mktProcess{padding-block:45px}.mktProcessLayout{gap:33px}.mktSpecs>div{grid-template-columns:105px 1fr;font-size:12px;gap:15px}.mktDownload{padding:28px}.mktProject{padding-top:0}.mktRoadmap{gap:23px}.mktPosts{gap:35px}.mktPostArt{height:155px}.mktFaqLayout{padding-top:0;gap:23px}.mktFaq summary{font-size:13px}.mktContactBand{padding-block:40px}.mktContactBand>.mktContainer{align-items:flex-start;flex-direction:column;gap:27px}.mktContactBand h2{font-size:34px}.mktFooter{grid-template-columns:1fr 1fr;gap:32px;padding-top:40px}.mktFooter>div{grid-column:1/-1}.mktPageMain{padding:34px 18px 55px}.mktPageLead{font-size:16px}.mktArticleLayout{grid-template-columns:1fr;gap:30px}.mktArticle{font-size:15px}.mktArticle h2{font-size:25px}.mktContactForm{padding:22px}.mktPageTitle{font-size:39px}}
 @media(prefers-reduced-motion:reduce){.mktButton{transition:none}.mktButton:hover{transform:none}}
 @media(max-width:700px){.mktHeader nav{flex-wrap:wrap;overflow:visible;white-space:normal;gap:10px 20px}.mktActions{flex-direction:column}.mktActions>.mktButton{width:100%}}
+
+/* HOME SECURITY marketing polish: scoped to public pages, never to camera workspace. */
+#publicHome.mktSite{background:radial-gradient(ellipse 85% 540px at 75% 0%,rgba(217,185,117,.075),transparent 70%),var(--m-bg)!important}
+#publicHome .mktHeader{position:relative;z-index:2;background:rgba(11,12,16,.94)}
+#publicHome .mktHeroCopy{min-width:0}
+#publicHome .mktHero h1{text-wrap:balance}
+#publicHome .mktLead{text-wrap:pretty}
+#publicHome .mktHeroVisual{box-shadow:0 28px 75px rgba(0,0,0,.36);isolation:isolate}
+#publicHome .mktHeroVisual>img{object-position:center;image-rendering:auto}
+#publicHome .mktHeroVisual figcaption{max-width:calc(100% - 48px)}
+#publicHome .mktFeature,#publicHome .mktDownload{transition:border-color .2s ease,box-shadow .2s ease}
+#publicHome .mktFeature:hover,#publicHome .mktDownload:hover{border-color:#6b5860;box-shadow:0 14px 35px rgba(0,0,0,.16)}
+#publicHome .mktHeader nav a,#publicHome .mktTextLink{padding-block:5px;text-underline-offset:4px}
+#publicHome .mktHeader nav a:hover,#publicHome .mktTextLink:hover{text-decoration:underline}
+#publicHome .mktButton:focus-visible,#publicHome .mktLogin:focus-visible{outline:3px solid #f1d69d;outline-offset:4px}
+#publicHome .mktFeature p,#publicHome .mktSpecs dd{overflow-wrap:break-word}
+@media(max-width:700px){#publicHome .mktHero h1{font-size:clamp(40px,12vw,58px)}#publicHome .mktHeroVisual{height:clamp(290px,90vw,430px)}#publicHome .mktHeroVisual figcaption{bottom:22px;left:20px;right:20px}#publicHome .mktHeroVisual strong{font-size:clamp(21px,6vw,27px)}#publicHome .mktCapabilityStrip span{line-height:1.5}}
+@media(prefers-reduced-motion:reduce){#publicHome .mktFeature,#publicHome .mktDownload{transition:none}}
