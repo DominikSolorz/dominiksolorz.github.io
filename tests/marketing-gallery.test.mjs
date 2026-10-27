@@ -81,10 +81,10 @@ test('gallery respects reduced motion and does not load concept assets eagerly',
   assert.equal((src.match(/loading="lazy" decoding="async" fetchpriority="low"/g)||[]).length,4);
   assert.ok(sw.includes('./marketing-gallery.css?v=1'));
   assert.ok(sw.includes('./marketing-gallery.mjs?v=1'));
-  assert.ok(sw.includes('kamera-domowa-shell-v129'));
-  assert.equal(JSON.parse(manifest).version,'219');
-  assert.ok(app.includes('const VERSION = "219"'));
-  assert.ok(app.includes('SERVICE_WORKER_BUILD = "129"'));
-  assert.ok(index.includes('home-security-build" content="219"'));
-  assert.ok(index.includes('app.js?v=219'));
+  assert.ok(sw.includes('kamera-domowa-shell-v130'));
+  assert.equal(JSON.parse(manifest).version,'220');
+  assert.ok(app.includes('const VERSION = "220"'));
+  assert.ok(app.includes('SERVICE_WORKER_BUILD = "130"'));
+  assert.ok(index.includes('home-security-build" content="220"'));
+  assert.ok(index.includes('app.js?v=220'));
 });
