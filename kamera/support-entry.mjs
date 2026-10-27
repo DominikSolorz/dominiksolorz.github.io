@@ -6,6 +6,10 @@ if(home && !home.querySelector('.hsSupportLauncher')){
   button.setAttribute('aria-label','Otwórz czat pomocy HOME SECURITY');button.setAttribute('aria-expanded','false');
   button.setAttribute('aria-controls','hsSupportDialog');home.append(button);
   let open;
+  // All public AI CTAs open the same lazy-loaded assistant; no fake chat window.
+  home.querySelectorAll('[data-hs-open-support]').forEach(link=>{
+    link.addEventListener('click',()=>button.click());
+  });
   button.addEventListener('click',async()=>{
     if(button.disabled)return;button.disabled=true;
     try{if(!open){const module=await import('./support-view.mjs?v=1');open=module.mountSupport(home,button);}open();}
