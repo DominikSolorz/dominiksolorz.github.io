@@ -64,7 +64,7 @@ test('scroll progress, active nav and back-to-top work in reduced-motion mode',a
 });
 
 test('all marketing pages load the motion styles and script, including the panel public entry',async()=>{
- const paths=['kamera/index.html','kamera/o-systemie.html','kamera/pomoc.html',
+ const paths=['kamera/index.html','kamera/o-systemie.html','kamera/galeria.html','kamera/pomoc.html',
    'kamera/blog/index.html','kamera/blog/pierwsze-uruchomienie.html',
    'kamera/blog/zapis-lokalny-i-drive.html','kamera/blog/diagnostyka-monitoringu.html'];
  for(const path of paths){
