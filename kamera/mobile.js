@@ -49,7 +49,8 @@ if (isMobileOwnerApp) {
       </div>
     </div>`;
   document.body.append(deviceSheet);
-  const setDeviceSheet = open => { deviceSheet.hidden = !open; if (open) deviceSheet.querySelector("[data-ui-mode='phone']")?.focus(); };
+  const setDeviceSheet = open => { deviceSheet.hidden = !open; document.body.classList.toggle("deviceSheetOpen", open); if (open) deviceSheet.querySelector("[data-ui-mode='phone']")?.focus(); else byId("deviceLayoutBtn")?.focus(); };
+  document.addEventListener("keydown", event => { if (event.key === "Escape" && !deviceSheet.hidden) setDeviceSheet(false); });
   byId("deviceLayoutBtn")?.addEventListener("click", () => setDeviceSheet(true));
   deviceSheet.addEventListener("click", event => {
     if (event.target === deviceSheet || event.target.closest(".deviceLayoutClose")) return setDeviceSheet(false);
@@ -128,6 +129,10 @@ if (isMobileOwnerApp) {
   }
 
   const router = createRouter({ routes: Object.keys(views), render: renderView });
+  // Aktywna karta jest czytelna również dla VoiceOver na iPhonie.
+  nav.querySelectorAll("button[data-mobile-view]").forEach(button => {
+    button.setAttribute("aria-label", button.querySelector("span")?.textContent || button.dataset.mobileView);
+  });
   const setView = view => router.navigate(view);
   nav.addEventListener("click", event => {
     const button = event.target.closest("button[data-mobile-view]");
