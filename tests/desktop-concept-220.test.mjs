@@ -8,12 +8,12 @@ test('real HOME SECURITY 220 owner interface loads the UI-concept design last an
  const [html,sw,css,version,app]=await Promise.all([
   'kamera/index.html','kamera/sw.js','kamera/interface-concept.css',
   'kamera/version.json','kamera/app.js'].map(read));
- assert.equal(JSON.parse(version).version,'221');
- assert.ok(app.includes('const VERSION = "221"'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "131"'));
- assert.ok(sw.includes('kamera-domowa-shell-v131'));
- assert.ok(html.includes('home-security-build" content="221"'));
- assert.ok(html.includes('app.js?v=221'));
+ assert.equal(JSON.parse(version).version,'222');
+ assert.ok(app.includes('const VERSION = "222"'));
+ assert.ok(app.includes('SERVICE_WORKER_BUILD = "132"'));
+ assert.ok(sw.includes('kamera-domowa-shell-v132'));
+ assert.ok(html.includes('home-security-build" content="222"'));
+ assert.ok(html.includes('app.js?v=222'));
  assert.ok(html.includes('desktop.js?v=37'));
  assert.ok(sw.includes('./desktop.js?v=37'));
  assert.ok(html.includes('href="interface-concept.css?v=2"'));

@@ -17,7 +17,7 @@ if (isMobileOwnerApp) {
   mobileHeader.innerHTML = `
     <img class="mobileBrandLogo" src="assets/ds-logo.jpg" alt="DS"><div><h1 id="mobilePageTitle">Dom</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
     <button id="deviceLayoutBtn" type="button" aria-label="Zmień układ urządzenia"><span>▣</span><b>Telefon</b></button>
-    <div class="mobileRelease"><small id="mobileBuild"></small><button type="button" data-web-update>Aktualizacje automatyczne</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span></div>`;
+    <div class="mobileRelease"><small id="mobileBuild"></small><button type="button" data-web-update>Sprawdź aktualizacje</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span></div>`;
   app?.insertBefore(mobileHeader, app.firstChild);
   const platformName=({android:'Android',ios:'iPhone / iPad'})[document.documentElement.dataset.phonePlatform]||'Telefon';
   byId('deviceLayoutBtn').querySelector('b').textContent=platformName;
