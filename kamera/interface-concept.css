@@ -183,12 +183,12 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopTileMeta strong{
 html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopTileMeta .desktopCameraSource{
   font-size:12px;color:#dfd0d9;
 }
-/* Never apply a filter, blur, cover-crop, gradient or overlay to the live video. */
+/* The video remains uncropped. Keep every user-selected visual filter and picture control intact. */
 html.desktopMode:not(.policeCommand):not(.usMilitary) #stage video,
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #stage video,
 html.desktopMode:not(.policeCommand):not(.usMilitary) .controlPreview video,
 html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModalBody>.stage video{
-  object-fit:contain;background:#000;filter:none;
+  object-fit:contain;background:#000;
 }
 html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopEventsDrawer{
   border:1px solid #554954;border-radius:16px;
