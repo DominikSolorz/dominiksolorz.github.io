@@ -22,6 +22,8 @@ test('post-deployment verification compares both public update channels with imm
   const web=JSON.parse(webVersion),desktop=JSON.parse(desktopManifest);
   assert.match(web.version,/^\d+$/);
   assert.match(desktop.version,/^\d+\.\d+\.\d+$/);
+  // The actual deployed smoke must accept semantic versions like 1.4.20.
+  assert.ok(script.includes("assert.match(publicDesktop.version,/^\\d+\\.\\d+\\.\\d+$/);"),'production semver check must not double-escape backslashes');
   assert.match(desktop.sha256,/^[0-9A-F]{64}$/i);
   assert.match(desktop.installerSha256,/^[0-9A-F]{64}$/i);
   assert.ok(script.includes("await get('version.json')"),'must check live web manifest, not merely git contents');
