@@ -36,6 +36,7 @@ test('deployment CSS is inline and strict CSP hashes match the exact deployed sc
    const path=join(temp,'kamera',name),html=await readFile(path,'utf8');
    assert.ok(!/<link[^>]+rel="stylesheet"/.test(html),name);
    assert.ok(!/<script src="public-entry/.test(html),name);
+   assert.ok(!/<style\b/.test(html.slice(html.indexOf('<body'))),'all inline styles must be in the head: '+name);
    const policy=html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
    assert.ok(policy.includes("'strict-dynamic'"));assert.ok(policy.includes("require-trusted-types-for 'script'"));
    assert.ok(!policy.includes("script-src 'unsafe-inline'"));assert.ok(!policy.includes("'unsafe-eval'"));

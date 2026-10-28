@@ -7,7 +7,7 @@ test('public product story stays identical in the app and indexed landing page',
   const [home,index,brochure]=await Promise.all([
     'design/marketing/home.html','kamera/panel.html','kamera/o-systemie.html'
   ].map(read));
-  const slot=/<section id="publicHome"[\s\S]*?<\/section>(?=\s*<section id="authDialog")/;
+  const slot=/<(?:section|div)(?: role="group")? id="publicHome"[\s\S]*?<\/(?:section|div)>(?=\s*<section id="authDialog")/;
   assert.equal(index.match(slot)?.[0],home.trimEnd());
   assert.ok(brochure.includes(home.trimEnd()));
   for(const id of ['zobacz-panel','mozliwosci','wybierz-start','asystent','faq'])
@@ -43,7 +43,7 @@ test('registered owners retain direct panel access while visitors see brochure',
   assert.ok(root.includes('toPanel ? "./kamera/panel.html" : "./kamera/"'));
   assert.ok(root.includes('["auth","app","view","ui","desktop","bootRetry","theme","start","code","odbiorca","panel"]'));
   assert.ok(app.includes('auth-experience.mjs?v=1'));
-  assert.ok(app.includes('auth-experience.css?v=1'));
+  assert.ok(app.includes('auth-experience.css?v=2'));
   assert.ok(sw.includes('auth-experience.mjs?v=1'));
   const build=JSON.parse(version).version;
   assert.ok(app.includes('app.js?v='+build));

@@ -33,6 +33,11 @@ jobs:
         run: node scripts/desktop-release.mjs fetch
       - name: Generate consistent public marketing pages
         run: node scripts/build-marketing.mjs
+      - name: Validate application HTML and CSS with Nu Html Checker
+        run: |
+          npm install --prefix "$RUNNER_TEMP/html-validator" --no-save --no-package-lock vnu-jar@26.10.12
+          java -jar "$RUNNER_TEMP/html-validator/node_modules/vnu-jar/build/dist/vnu.jar" --skip-non-html kamera
+          java -jar "$RUNNER_TEMP/html-validator/node_modules/vnu-jar/build/dist/vnu.jar" --css kamera/*.css styles.css
       - name: Frontend regression tests
         run: node --test tests/*.test.mjs
       - name: Verify public audit script syntax

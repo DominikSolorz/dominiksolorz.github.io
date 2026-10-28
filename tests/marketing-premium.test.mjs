@@ -39,7 +39,7 @@ test('account modal has a separate UI layer with usable password toggles',async(
   const [html,auth,styles]=await Promise.all([
     read('kamera/panel.html'),read('kamera/auth-experience.mjs'),read('kamera/auth-experience.css')]);
   assert.ok(html.includes('auth-experience.mjs?v=1'));
-  assert.ok(html.includes('auth-experience.css?v=1'));
+  assert.ok(html.includes('auth-experience.css?v=2'));
   assert.ok(html.includes('name="terms" type="checkbox" required'));
   assert.ok(html.includes('href="rodo.html"'));
   assert.ok(auth.includes("input.type=visible?'text':'password'"));

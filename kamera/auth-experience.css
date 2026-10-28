@@ -17,5 +17,5 @@
 #authDialog .hsPasswordHint[data-state="error"]{color:#ffb0bc;border-color:#a14c62}
 #authDialog .authNotice{border-radius:11px}
 #authDialog [hidden]{display:none!important}
-@media(max-width:600px){#authDialog{padding:10px}#authDialog .authCard{padding:22px 18px;border-radius:17px;max-height:94dvh}#authDialog .authGrid{grid-template-columns:1fr}#authDialog .authForm h1{font-size:30px}}
+@media(max-width:600px){#authDialog{padding:10px}#authDialog .authCard{padding:22px 18px;border-radius:17px;max-height:94dvh}#authDialog .authGrid{grid-template-columns:1fr}#authDialog .authForm :is(h1,h2){font-size:30px}}
 @media(prefers-reduced-motion:reduce){#authDialog .authForm input{transition:none}}

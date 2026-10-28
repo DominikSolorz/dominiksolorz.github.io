@@ -47,7 +47,7 @@ test('responsive feature diagrams disclose illustration status and avoid false t
 
 test('standalone brochure and embedded public homepage match source',async()=>{
  const [src,app,brochure]=await Promise.all(['design/marketing/home.html','kamera/panel.html','kamera/o-systemie.html'].map(read));
- const slot=/<section id="publicHome"[\s\S]*?<\/section>(?=\s*<section id="authDialog")/;
+ const slot=/<(?:section|div)(?: role="group")? id="publicHome"[\s\S]*?<\/(?:section|div)>(?=\s*<section id="authDialog")/;
  assert.equal(app.match(slot)?.[0],src.trimEnd());
  assert.ok(brochure.includes(src.trimEnd()));
  assert.ok(brochure.includes('Monitoring domu z podglądem na telefonie — HOME SECURITY'));

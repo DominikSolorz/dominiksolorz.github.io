@@ -15,7 +15,7 @@ test('product gallery uses existing proposal boards, not invented screenshots',a
     assert.ok(html.includes('nie są rzeczywiste zrzuty ekranu') || html.includes('nie są zrzuty') || html.includes('nie są rzeczywiste zrzuty ekranu') || html.includes('To nie są rzeczywiste zrzuty ekranu'));
     assert.equal((html.match(/class="mktConceptCard"/g)||[]).length,4);
     assert.ok(html.includes('marketing-gallery.css?v=2'));
-    assert.ok(html.includes('marketing-gallery.mjs?v=1'));
+    assert.ok(html.includes('marketing-gallery.mjs?v=2'));
     assert.ok(html.includes('aria-labelledby="mktGalleryDialogTitle"'));
     assert.ok(html.includes('data-mkt-image-close'));
     assert.ok(html.includes('href="galeria.html"'));
@@ -39,10 +39,11 @@ test('gallery lightbox is keyboard accessible and does not block ordinary link f
   const code=await read('kamera/marketing-gallery.mjs');
   let handler,closeHandler,closeEvent,open=0,focus=0,prevented=0,dialogTitle='',imgSource='',imgAlt='';
   const dialogImage={set src(value){imgSource=value;},get src(){return imgSource;},set alt(value){imgAlt=value;},get alt(){return imgAlt;},removeAttribute(attr){if(attr==='src')imgSource='';}};
+  const imageContainer={replaceChildren(image){if(!image)imgSource='';}};
   const title={set textContent(value){dialogTitle=value;}};
   const closeButton={addEventListener(name,fn){if(name==='click')closeHandler=fn;}};
   const dialog={querySelector(sel){
-    if(sel==='.mktGalleryDialogImage img')return dialogImage;
+    if(sel==='.mktGalleryDialogImage')return imageContainer;
     if(sel==='#mktGalleryDialogTitle')return title;
     if(sel==='[data-mkt-image-close]')return closeButton;
     return null;
@@ -56,7 +57,7 @@ test('gallery lightbox is keyboard accessible and does not block ordinary link f
     focus(){focus++;}};
   const root={querySelector:sel=>sel==='.mktGalleryDialog'?dialog:null,
     querySelectorAll:()=>[link]};
-  vm.runInNewContext(code,{document:{querySelector:()=>root}});
+  vm.runInNewContext(code,{document:{querySelector:()=>root,createElement:tag=>{assert.equal(tag,'img');return dialogImage;}}});
   assert.equal(typeof handler,'function');
   handler({preventDefault(){prevented++;}});
   assert.equal(open,1);
@@ -80,7 +81,7 @@ test('gallery respects reduced motion and does not load concept assets eagerly',
   assert.ok(css.includes('@media(max-width:650px)'));
   assert.equal((src.match(/loading="lazy" decoding="async" fetchpriority="low"/g)||[]).length,4);
   assert.ok(sw.includes('./marketing-gallery.css?v=2'));
-  assert.ok(sw.includes('./marketing-gallery.mjs?v=1'));
+  assert.ok(sw.includes('./marketing-gallery.mjs?v=2'));
   const release=JSON.parse(manifest).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
  assert.ok(/^\d+$/.test(release)&&/^\d+$/.test(shell),'manifest and service worker revisions must be numeric');

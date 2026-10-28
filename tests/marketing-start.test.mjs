@@ -42,7 +42,7 @@ test('public home makes no fake sales promises and always marks concept material
  assert.ok(!home.includes('Kup teraz'));
  assert.ok(!home.includes('Zapłać teraz'));
  const [page,app]=await Promise.all(['kamera/o-systemie.html','kamera/panel.html'].map(read));
- const slot=/<section id="publicHome"[\s\S]*?<\/section>(?=\s*<section id="authDialog")/;
+ const slot=/<(?:section|div)(?: role="group")? id="publicHome"[\s\S]*?<\/(?:section|div)>(?=\s*<section id="authDialog")/;
  assert.ok(page.includes(home.trimEnd()));
  assert.equal(app.match(slot)?.[0],home.trimEnd());
 });

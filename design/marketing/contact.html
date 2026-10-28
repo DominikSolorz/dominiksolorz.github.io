@@ -12,11 +12,11 @@
       <label>Twój e-mail<input name="email" type="email" autocomplete="email" maxlength="254" required placeholder="Adres, na który możemy odpowiedzieć"></label>
       <label>Temat<select name="topic"><option>Pomoc techniczna</option><option>Konto i dostęp</option><option>Kamera i dźwięk</option><option>Nagrania i Google Drive</option><option>Produkt i współpraca</option><option>Prywatność i dokumenty</option></select></label>
       <label>Wiadomość<textarea name="message" rows="6" minlength="10" maxlength="4000" required placeholder="Opisz sprawę. Podaj urządzenie i komunikat błędu, jeśli wystąpił."></textarea></label>
-      <label class="mktContactTrap" aria-hidden="true" style="position:absolute;left:-10000px">Zostaw puste<input name="website" tabindex="-1" autocomplete="off"></label>
+      <div class="mktContactTrap" hidden><label>Zostaw puste<input name="website" tabindex="-1" autocomplete="off"></label></div>
       <label class="mktContactConsent" style="display:block;font-size:13px;line-height:1.55"><input name="consent" type="checkbox" required style="display:inline-block;width:18px;height:18px;margin:0 8px 0 0;padding:0;vertical-align:middle;accent-color:#d91b3e"> Zgadzam się na przetworzenie podanych danych w celu obsługi zgłoszenia. <a href="polityka-prywatnosci.html">Polityka prywatności</a>.</label>
     </fieldset>
     <button class="mktButton" id="mktSendMessage" type="submit" disabled>Wyślij wiadomość →</button>
-    <output id="mktContactResult" role="status" aria-live="polite" style="display:block;margin-top:16px;overflow-wrap:anywhere"></output>
+    <output id="mktContactResult" aria-live="polite" style="display:block;margin-top:16px;overflow-wrap:anywhere"></output>
     <noscript><p>Wysyłka formularza wymaga JavaScriptu. Możesz też napisać bezpośrednio na goldservicepoland@gmail.com.</p></noscript>
   </form></div>
 </main>

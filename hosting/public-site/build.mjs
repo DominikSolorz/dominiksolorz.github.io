@@ -57,6 +57,8 @@ for(const name of names){
   if(!styles.has(cssPath))styles.set(cssPath,(await transform(await readFile(cssPath,'utf8'),{loader:'css',minify:true})).code);
   html=html.replace(m[0],'<style>'+styles.get(cssPath)+'</style>');
  }
+ const inlineStyles=[...html.matchAll(/<style\b[^>]*>[\s\S]*?<\/style>/g)].map(m=>m[0]).join('');
+ html=html.replace(/<style\b[^>]*>[\s\S]*?<\/style>/g,'').replace('</head>',inlineStyles+'</head>');
  for(const m of [...html.matchAll(/\bsrc="([^"]+)"/g)])html=html.replace('src="'+m[1]+'"','src="'+await image(m[1],base)+'"');
  for(const m of [...html.matchAll(/\bsrcset="([^"]+)"/g)]){
   const set=[];for(const item of m[1].split(',')){const [url,size]=item.trim().split(/\s+/);set.push(await image(url,base)+' '+size);}
