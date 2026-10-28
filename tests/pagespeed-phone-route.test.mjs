@@ -11,7 +11,7 @@ test('private panel stays out of Google while the public homepage is indexed',as
  ]);
  assert.match(app,/<meta name="robots" content="noindex,follow">/);
  assert.match(publicPage,/<meta name="robots" content="index,follow">/);
- assert.match(publicPage,/<link rel="canonical" href="https:\/\/home-security-dominik-solorz\.vercel\.app\/kamera\/">/);
+ assert.ok(publicPage.includes('rel="canonical" href="https://dominiksolorz.github.io/kamera/"'));
  assert.ok(sitemap.includes('https://dominiksolorz.github.io/kamera/</loc>'));
  assert.ok(!sitemap.includes('/kamera/panel.html'));
  assert.ok(!sitemap.includes('ui=phone'));
