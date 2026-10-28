@@ -28,6 +28,7 @@ jobs:
           filter: blob:none
           sparse-checkout: |
             scripts/summarize-lighthouse.mjs
+            kamera/version.json
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
@@ -42,6 +43,21 @@ jobs:
           test -n "$CHROME" || { echo "Chrome missing on runner"; exit 1; }
           echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
           "$CHROME" --version
+      - name: Wait for Pages to publish this web build and its compressed images
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUILD="$(node -p "require('./kamera/version.json').version")"
+          for i in $(seq 1 36); do
+            url="https://dominiksolorz.github.io/kamera/o-systemie.html?audit=${GITHUB_SHA}&attempt=${i}"
+            if curl --fail --silent --show-error --max-time 15 --header "Cache-Control: no-cache" "$url" | grep -q "home-security-build\\\" content=\\\"${BUILD}\\\"" \
+              && curl --fail --silent --show-error --max-time 15 --head "https://dominiksolorz.github.io/kamera/assets/home-security-hero-640.webp?audit=${GITHUB_SHA}" > /dev/null; then
+              echo "Pages is serving HOME SECURITY build ${BUILD} with the optimized media."
+              break
+            fi
+            if [ "$i" = 36 ]; then echo "Timed out waiting for build ${BUILD}"; exit 1; fi
+            sleep 8
+          done
       - name: Audit actual published site in desktop and mobile modes
         shell: bash
         run: |
