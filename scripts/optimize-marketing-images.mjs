@@ -13,6 +13,7 @@ const plan=[
  {from:'kamera/assets/home-security-how-it-works.png',out:'kamera/assets/home-security-how-it-works.webp',width:1024,quality:77},
  {from:'kamera/assets/home-security-how-it-works.png',out:'kamera/assets/home-security-how-it-works-640.webp',width:640,quality:75},
  {from:'kamera/assets/ds-logo.jpg',out:'kamera/assets/ds-logo-96.webp',width:96,quality:84},
+ {from:'kamera/assets/ds-logo.jpg',out:'kamera/assets/ds-logo-192.webp',width:192,quality:85},
  ...['01-pulpit','02-sterowanie','03-nagrania','04-ustawienia','05-diagnostyka','06-alarmy','07-telefon','08-konto-i-przyciski'].map(name=>({
    from:'docs/ui-193/'+name+'.png',out:'docs/ui-193/'+name+'-960.webp',width:960,quality:81
  }))
