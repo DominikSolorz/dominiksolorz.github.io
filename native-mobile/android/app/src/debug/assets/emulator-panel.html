@@ -3,8 +3,8 @@
 <p class="label">EMULATOR · DANE TESTOWE</p><h1>Podgląd testowy</h1><p>Sprawdzamy interfejs i przesyłanie obrazu przez WebRTC. To syntetyczny obraz, bez kamery i danych konta.</p>
 <video id="testRemote" autoplay muted playsinline></video><canvas id="testSource" width="640" height="360"></canvas><button id="startMedia">Uruchom test mediów</button><p id="state" role="status">Test nieuruchomiony</p>
 <script>
-const canvas=document.getElementById('testSource'),ctx=canvas.getContext('2d');let frames=0,timer,peer1,peer2;
-window.testMedia={ready:false,frames:0,error:null};
+const canvas=document.getElementById('testSource'),ctx=canvas.getContext('2d');let frames=0,timer,statsTimer,peer1,peer2;
+window.testMedia={ready:false,frames:0,decoded:0,error:null};
 document.getElementById('startMedia').addEventListener('click',async()=>{
  try{
   document.getElementById('startMedia').disabled=true;document.getElementById('state').textContent='Łączę test WebRTC…';
@@ -17,11 +17,14 @@ document.getElementById('startMedia').addEventListener('click',async()=>{
   peer2.ontrack=({streams})=>{video.srcObject=streams[0];video.play().catch(e=>{window.testMedia.error=e.message;});};
   video.onloadeddata=()=>{window.testMedia.ready=true;document.getElementById('state').textContent='Obraz WebRTC działa — materiał testowy';};
   const stream=canvas.captureStream(15);stream.getTracks().forEach(track=>peer1.addTrack(track,stream));
+  const vp8=(RTCRtpSender.getCapabilities('video')?.codecs||[]).filter(c=>c.mimeType.toLowerCase()==='video/vp8');
+  for(const t of peer1.getTransceivers())if(vp8.length&&t.setCodecPreferences)t.setCodecPreferences(vp8);
+  statsTimer=setInterval(()=>peer2.getStats().then(stats=>stats.forEach(s=>{if(s.type==='inbound-rtp'&&(s.kind==='video'||s.mediaType==='video'))window.testMedia.decoded=s.framesDecoded||0;})).catch(()=>{}),250);
   await peer1.setLocalDescription(await peer1.createOffer());await peer2.setRemoteDescription(peer1.localDescription);
   for(const candidate of queue2)await peer2.addIceCandidate(candidate);
   await peer2.setLocalDescription(await peer2.createAnswer());await peer1.setRemoteDescription(peer2.localDescription);
   for(const candidate of queue1)await peer1.addIceCandidate(candidate);
  }catch(e){window.testMedia.error=e.message;document.getElementById('state').textContent='Błąd testu: '+e.message;}
 });
-window.addEventListener('pagehide',()=>{clearInterval(timer);peer1?.close();peer2?.close();});
+window.addEventListener('pagehide',()=>{clearInterval(timer);clearInterval(statsTimer);peer1?.close();peer2?.close();});
 </script></body></html>

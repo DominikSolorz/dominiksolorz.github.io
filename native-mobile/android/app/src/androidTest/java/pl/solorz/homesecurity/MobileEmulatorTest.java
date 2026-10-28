@@ -15,6 +15,11 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 import org.junit.Test;
+import org.junit.Before;
+import org.junit.After;
+import androidx.test.runner.lifecycle.ActivityLifecycleCallback;
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
+import androidx.test.runner.lifecycle.Stage;
 import org.junit.FixMethodOrder;
 import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
@@ -29,11 +34,35 @@ import static org.junit.Assert.*;
 public class MobileEmulatorTest {
     private final Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();
     private final UiDevice device=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+    private final AtomicBoolean privacyGuardObserved=new AtomicBoolean();
+    private ActivityLifecycleCallback screenshotLifecycle;
+    @Before public void observePrivacyBeforeCapturingFreshTestScreens() {
+        // Instrumentation only; no screenshot override is shipped inside the app APK.
+        screenshotLifecycle=(activity,stage)->{
+            if(activity instanceof MainActivity && stage==Stage.CREATED) {
+                assertTrue("App must protect real sessions",(activity.getWindow().getAttributes().flags&WindowManager.LayoutParams.FLAG_SECURE)!=0);
+                privacyGuardObserved.set(true);
+                activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            }
+        };
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(()->ActivityLifecycleMonitorRegistry.getInstance().addLifecycleCallback(screenshotLifecycle));
+    }
+    @After public void removeScreenshotInstrumentation() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(()->ActivityLifecycleMonitorRegistry.getInstance().removeLifecycleCallback(screenshotLifecycle));
+    }
+    private File proofDirectory() {
+        File directory=new File(context.getExternalFilesDir(null),"emulator-proof");directory.mkdirs();return directory;
+    }
     private ActivityScenario<MainActivity> launch(boolean fixture) {
         return ActivityScenario.launch(new Intent(context,MainActivity.class).putExtra("hsEmulatorFixture",fixture));
     }
     private UiObject2 control(String id) {
         UiObject2 object=device.wait(Until.findObject(By.res(context.getPackageName(),id)),10000);
+        if(object==null) {
+            try { device.dumpWindowHierarchy(new File(proofDirectory(),"missing-"+id+".xml"));device.takeScreenshot(new File(proofDirectory(),"missing-"+id+".png")); }
+            catch(Exception ignored) {}
+            System.out.println("ACTIVE_PACKAGE="+device.getCurrentPackageName());
+        }
         assertNotNull("Missing visible control: "+id,object); return object;
     }
     private void waitFor(Callable<Boolean> condition,long timeout) throws Exception {
@@ -49,14 +78,10 @@ public class MobileEmulatorTest {
         waitFor(()->result.get()!=null,10000);return result.get();
     }
     private void capture(ActivityScenario<MainActivity> scenario,String name) throws Exception {
-        // Only these synthetic/fresh-login emulator tests may capture the screen.
-        // Release privacy flags and all real account sessions remain protected.
-        scenario.onActivity(a->{assertTrue((a.getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_SECURE)!=0);a.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);});
-        try {
-            device.waitForIdle(2000);
-            File directory=new File(context.getExternalFilesDir(null),"emulator-proof");assertTrue(directory.isDirectory()||directory.mkdirs());
-            assertTrue("Could not save screenshot",device.takeScreenshot(new File(directory,name+".png")));
-        } finally { scenario.onActivity(a->a.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE)); }
+        assertTrue("Privacy guard must be verified before test capture",privacyGuardObserved.get());
+        device.waitForIdle(2000);
+        File out=new File(proofDirectory(),name+".png");
+        if(!device.takeScreenshot(out)) { SystemClock.sleep(500); assertTrue("Could not save screenshot",device.takeScreenshot(out)); }
     }
     @Test public void a_nativePhoneHomeAndNavigation() throws Exception {
         try(ActivityScenario<MainActivity> scenario=launch(true)) {
@@ -83,7 +108,8 @@ public class MobileEmulatorTest {
         try(ActivityScenario<MainActivity> scenario=launch(true)) {
             control("navLive").click();waitFor(()->!visible(scenario,R.id.panelLoading),20000);
             UiObject2 start=device.wait(Until.findObject(By.text("Uruchom test mediów")),15000);assertNotNull("Web media test button",start);start.click();
-            waitFor(()->"true".equals(js(scenario,"Boolean(window.testMedia&&window.testMedia.ready&&document.getElementById('testRemote').videoWidth>0)")),30000);
+            try { waitFor(()->"true".equals(js(scenario,"Boolean(window.testMedia&&window.testMedia.ready&&window.testMedia.decoded>5&&document.getElementById('testRemote').videoWidth>0)")),30000); }
+            finally { System.out.println("MEDIA_DIAGNOSTICS="+js(scenario,"JSON.stringify({test:window.testMedia,time:document.getElementById('testRemote').currentTime,width:document.getElementById('testRemote').videoWidth})")); capture(scenario,"02-media-diagnostics"); }
             assertEquals("true",js(scenario,"document.documentElement.scrollWidth<=innerWidth+1"));
             assertEquals("true",js(scenario,"innerWidth<600"));capture(scenario,"02-webrtc-test-video");
         }
@@ -97,7 +123,7 @@ public class MobileEmulatorTest {
                 device.setOrientationLeft();device.waitForIdle(2000);control("navLive").click();waitFor(()->!visible(scenario,R.id.panelLoading),20000);
                 capture(scenario,"04-landscape-panel");
                 scenario.moveToState(androidx.lifecycle.Lifecycle.State.CREATED);scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED);
-                scenario.onActivity(a->assertTrue((a.getWindow().getAttributes().flags&WindowManager.LayoutParams.FLAG_SECURE)!=0));
+                assertTrue(privacyGuardObserved.get());
             }
         } finally { device.setOrientationNatural();device.unfreezeRotation();device.executeShellCommand("wm size reset");device.executeShellCommand("wm density reset");device.executeShellCommand("settings put system font_scale 1.0"); }
     }

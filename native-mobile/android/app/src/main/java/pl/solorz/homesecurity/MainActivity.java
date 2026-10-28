@@ -33,6 +33,7 @@ public final class MainActivity extends ComponentActivity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        getWindow().setDecorFitsSystemWindows(false);
         setContentView(R.layout.activity_main);
         web = findViewById(R.id.ownerWeb); status = findViewById(R.id.nativeStatus);
         home = findViewById(R.id.homeScreen); error = findViewById(R.id.errorScreen);
@@ -48,7 +49,8 @@ public final class MainActivity extends ComponentActivity {
         settings.setUseWideViewPort(true); settings.setLoadWithOverviewMode(true);
         settings.setAllowFileAccess(false); settings.setAllowContentAccess(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setMediaPlaybackRequiresUserGesture(true);
+        // Opening the camera panel is explicit; allow its video track to start when connected.
+        settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setUserAgentString(settings.getUserAgentString()+" HomeSecurityNative/0.2 Android");
         web.setBackgroundColor(Color.rgb(9,13,22));
         CookieManager.getInstance().setAcceptThirdPartyCookies(web,false);
@@ -100,11 +102,14 @@ public final class MainActivity extends ComponentActivity {
         } else showHome();
     }
     private void showHome() {
+        web.onPause();
+        web.evaluateJavascript("document.querySelectorAll('video,audio').forEach(el=>el.pause())",null);
         showingHome=true; home.setVisibility(View.VISIBLE); web.setVisibility(View.GONE);
         error.setVisibility(View.GONE); loading.setVisibility(View.GONE);
         status.setText(R.string.private_access); selectTab(R.id.navHome);
     }
     private void showPanel() {
+        web.onResume();
         showingHome=false; home.setVisibility(View.GONE); error.setVisibility(View.GONE); web.setVisibility(View.VISIBLE);
         selectTab(currentRoute.equals("recordings")?R.id.navRecordings:currentRoute.equals("settings")?R.id.navAccount:R.id.navLive);
     }
