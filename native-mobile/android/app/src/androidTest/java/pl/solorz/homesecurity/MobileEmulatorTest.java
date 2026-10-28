@@ -51,7 +51,7 @@ public class MobileEmulatorTest {
         InstrumentationRegistry.getInstrumentation().runOnMainSync(()->ActivityLifecycleMonitorRegistry.getInstance().removeLifecycleCallback(screenshotLifecycle));
     }
     private File proofDirectory() {
-        File directory=new File(context.getExternalFilesDir(null),"emulator-proof");directory.mkdirs();return directory;
+        File directory=new File(context.getFilesDir(),"emulator-proof");directory.mkdirs();return directory;
     }
     private ActivityScenario<MainActivity> launch(boolean fixture) {
         return ActivityScenario.launch(new Intent(context,MainActivity.class).putExtra("hsEmulatorFixture",fixture));
@@ -69,6 +69,15 @@ public class MobileEmulatorTest {
         long end=SystemClock.uptimeMillis()+timeout;
         while(SystemClock.uptimeMillis()<end) { if(condition.call())return; SystemClock.sleep(100); }
         fail("Condition did not become true within "+timeout+" ms");
+    }
+    private void waitForNetwork() throws Exception {
+        android.net.ConnectivityManager manager=(android.net.ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        waitFor(()->{
+            android.net.Network network=manager.getActiveNetwork();
+            android.net.NetworkCapabilities capabilities=manager.getNetworkCapabilities(network);
+            return capabilities!=null && capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                && capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+        },30000);
     }
     private boolean supportedEngine() { return MainActivity.supportsCurrentWebView(); }
     private void assertUpdateScreen(ActivityScenario<MainActivity> scenario) throws Exception {
@@ -144,13 +153,15 @@ public class MobileEmulatorTest {
                 if(supportedEngine()) { control("retryPanel").click();waitFor(()->visible(scenario,R.id.errorScreen),30000); } else assertUpdateScreen(scenario);
                 control("errorGoHome").click();waitFor(()->visible(scenario,R.id.homeScreen),10000);
             }
-        } finally { device.executeShellCommand("svc wifi enable");device.executeShellCommand("svc data enable"); }
+        } finally { device.executeShellCommand("svc wifi enable");device.executeShellCommand("svc data enable"); if(supportedEngine())waitForNetwork(); }
     }
     @Test public void e_publicLoginLoadsInPhoneViewport() throws Exception {
+        if(supportedEngine())waitForNetwork();
         try(ActivityScenario<MainActivity> scenario=launch(false)) {
             control("navLive").click();
             if(!supportedEngine()) { assertUpdateScreen(scenario); return; }
             waitFor(()->!visible(scenario,R.id.panelLoading),45000);
+            if(visible(scenario,R.id.errorScreen))capture(scenario,"06-login-load-failure");
             assertFalse("Public login failed to load",visible(scenario,R.id.errorScreen));
             assertEquals("true",js(scenario,"location.host==='dominiksolorz.github.io'&&innerWidth<600"));
             waitFor(()->"true".equals(js(scenario,"Boolean(document.getElementById('authDialog')&&!document.getElementById('authDialog').hidden&&!document.getElementById('loginForm').hidden)")),30000);

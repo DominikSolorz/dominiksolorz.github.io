@@ -10,7 +10,7 @@ adb shell am instrument -w -r -e class pl.solorz.homesecurity.MobileEmulatorTest
 instrument_exit=${PIPESTATUS[0]}
 mkdir -p emulator-evidence/emulator-proof
 # API 30 scoped storage blocks shell reads; run-as uses this debuggable test app's own UID.
-adb exec-out run-as pl.solorz.homesecurity.preview tar -C /sdcard/Android/data/pl.solorz.homesecurity.preview/files/emulator-proof -cf - . > emulator-evidence/proof.tar
+adb exec-out run-as pl.solorz.homesecurity.preview tar -C files/emulator-proof -cf - . > emulator-evidence/proof.tar
 if tar -tf emulator-evidence/proof.tar >/dev/null 2>&1; then tar -xf emulator-evidence/proof.tar -C emulator-evidence/emulator-proof; fi
 rm -f emulator-evidence/proof.tar
 adb logcat -d -s System.out:I TestRunner:E chromium:E > emulator-evidence/media-diagnostics.txt
