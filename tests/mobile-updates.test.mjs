@@ -136,7 +136,8 @@ test('marketing pages poll the published build but preserve unsent forms',async(
  assert.ok(source.includes('marketing-auto-update.mjs?v=3'));
  assert.ok(source.includes('home-security-build'));
  assert.ok(generated.includes('marketing-auto-update.mjs?v=3'));
- assert.ok(generated.includes('home-security-build" content="224"'));
+ const version=JSON.parse(await read('version.json')).version;
+ assert.ok(generated.includes('home-security-build" content="'+version+'"'));
 });
 
 test('native Windows update remains strictly opt-in via the left-hand sidebar',async()=>{
@@ -150,4 +151,25 @@ test('native Windows update remains strictly opt-in via the left-hand sidebar',a
  assert.ok(desktop.includes('data-desktop-view="live"'));
  assert.ok(desktop.includes('type: "desktop.update.request"'));
  assert.ok(desktop.includes('desktopUpdateNotice'));
+});
+
+test('remote live camera viewer prevents idle or manually requested PWA refresh',async()=>{
+ const app=await read('app.js');
+ const match=app.match(/canAutoApply:\(\)=>([^\n]+),\n\s*onState:/);
+ assert.ok(match,'update safety guard must be wired in the current app');
+ const canRefresh=new Function('sender','archive','video','document','return ('+match[1]+');');
+ const sender={live:false},state={recording:false};
+ const archive={status:()=>state};
+ const video={srcObject:{getVideoTracks:()=>[{readyState:'live'}]}};
+ const document={querySelector:()=>null};
+ assert.equal(canRefresh(sender,archive,video,document),false,'never auto-reload while remote viewer plays a live track');
+ video.srcObject={getVideoTracks:()=>[{readyState:'ended'}]};
+ assert.equal(canRefresh(sender,archive,video,document),true,'allow idle viewer once the remote track has ended');
+ sender.live=true;
+ assert.equal(canRefresh(sender,archive,video,document),false,'a local sender must also be protected');
+ sender.live=false;state.recording=true;
+ assert.equal(canRefresh(sender,archive,video,document),false,'recording still blocks update');
+ state.recording=false;
+ document.querySelector=()=>({});
+ assert.equal(canRefresh(sender,archive,video,document),false,'editing a form blocks refresh');
 });
