@@ -1,0 +1,68 @@
+name: HOME SECURITY Lighthouse performance audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'kamera/index.html'
+      - 'kamera/o-systemie.html'
+      - 'kamera/marketing.css'
+      - 'kamera/marketing-motion.css'
+      - 'kamera/assets/**'
+      - 'design/marketing/home.html'
+      - 'scripts/summarize-lighthouse.mjs'
+      - '.github/workflows/pagespeed-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout: |
+            scripts/summarize-lighthouse.mjs
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Lighthouse CLI
+        run: npm install --no-save --no-package-lock lighthouse@12
+      - name: Confirm Chrome availability
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$CHROME" || { echo "Chrome missing on runner"; exit 1; }
+          echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
+          "$CHROME" --version
+      - name: Audit actual published site in desktop and mobile modes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p lighthouse-results
+          FLAGS="--headless --no-sandbox --disable-dev-shm-usage"
+          node_modules/.bin/lighthouse "https://dominiksolorz.github.io/kamera/" \
+            --preset=desktop --only-categories=performance,accessibility,best-practices,seo \
+            --chrome-flags="$FLAGS" --output=json --output-path=lighthouse-results/root-desktop.json --quiet
+          node_modules/.bin/lighthouse "https://dominiksolorz.github.io/kamera/o-systemie.html" \
+            --preset=desktop --only-categories=performance,accessibility,best-practices,seo \
+            --chrome-flags="$FLAGS" --output=json --output-path=lighthouse-results/marketing-desktop.json --quiet
+          node_modules/.bin/lighthouse "https://dominiksolorz.github.io/kamera/o-systemie.html" \
+            --only-categories=performance,accessibility,best-practices,seo \
+            --chrome-flags="$FLAGS" --output=json --output-path=lighthouse-results/marketing-mobile.json --quiet
+      - name: Publish real scores, timings and optimization opportunities
+        run: node scripts/summarize-lighthouse.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: home-security-lighthouse-reports
+          path: lighthouse-results/*.json
+          if-no-files-found: warn
+          retention-days: 21
