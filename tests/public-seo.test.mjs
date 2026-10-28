@@ -33,7 +33,7 @@ test('native, installed and pending entry launches retain the private panel',()=
 test('homepage HTML is indexable without JavaScript and contains no private account or camera runtime',async()=>{
  const html=await read('kamera/index.html');
  assert.match(html,/<meta name="robots" content="index,follow">/);
- assert.match(html,/<link rel="canonical" href="https:\/\/home-security-dominik-solorz.vercel.app\/kamera\/">/);
+ assert.match(html,/<link rel="canonical" href="https:\/\/dominiksolorz.github.io\/kamera\/">/);
  assert.equal((html.match(/rel="canonical"/g)||[]).length,1);
  assert.ok(html.includes('<h1>')&&html.includes('name="description"'));
  for(const token of ['id="authDialog"','id="app"','id="panelRuntime"','src="auth.js','src="app.js','src="vendor/supabase'])assert.ok(!html.includes(token),token);
