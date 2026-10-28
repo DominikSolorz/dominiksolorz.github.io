@@ -45,7 +45,12 @@ test('public site and PWA expose update controls while respecting recording safe
   ]);
   const version=JSON.parse(await read('kamera/version.json')).version;
   assert.ok(site.includes('home-security-build" content="'+version+'"'));
-  assert.ok(site.includes('marketing-auto-update.mjs?v=5'));
+  const updateAsset=site.match(/marketing-auto-update\.mjs\?v=\d+/)?.[0];
+  assert.ok(updateAsset,'public homepage must reference its update module');
+  assert.ok(sw.includes('./'+updateAsset),'PWA cache must include exactly the published update module');
+  const smoke=await read('scripts/verify-live-marketing.mjs');
+  assert.ok(smoke.includes('expectedMarketingHTML.match'), 'live smoke uses the current generated HTML');
+  assert.ok(smoke.includes('expectedUpdateScript'), 'live smoke checks the current release, not a stale revision');
   assert.ok(sw.includes('./core/web-updates.mjs?v=3'));
   assert.ok(app.includes('autoApply:true'));
   assert.ok(app.includes("button.textContent=webUpdates.available?'Zaktualizuj':'Sprawdź aktualizacje'"));
