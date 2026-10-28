@@ -116,13 +116,13 @@ test('marketing pages poll the published build but preserve unsent forms',async(
   readFile(new URL('../scripts/build-marketing.mjs',import.meta.url),'utf8'),
   read('o-systemie.html')
  ]);
- for(const item of ['cache:\'no-store\'','window.location.reload()','!dirty','document.visibilityState', 'version.json']){
+ for(const item of ['cache: 'no-store'','window.location.reload()','!dirty','document.visibilityState', 'version.json']){
   assert.ok(script.includes(item),'missing safe public update condition: '+item);
  }
- assert.ok(source.includes('marketing-auto-update.mjs?v=2'));
+ assert.ok(source.includes('marketing-auto-update.mjs?v=3'));
  assert.ok(source.includes('home-security-build'));
- assert.ok(generated.includes('marketing-auto-update.mjs?v=2'));
- assert.ok(generated.includes('home-security-build" content="223"'));
+ assert.ok(generated.includes('marketing-auto-update.mjs?v=3'));
+ assert.ok(generated.includes('home-security-build" content="224"'));
 });
 
 test('native Windows update remains strictly opt-in via the left-hand sidebar',async()=>{
