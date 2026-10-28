@@ -277,6 +277,7 @@ internal static class Program
         private readonly Panel updateBar = new() { Dock = DockStyle.Top, Height = 48, Visible = false, BackColor = Color.FromArgb(43, 14, 19) };
         private readonly Button updateButton = new() { AutoSize = true, Anchor = AnchorStyles.Top | AnchorStyles.Right, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(190, 27, 50), ForeColor = Color.White, Font = new Font("Segoe UI", 10F, FontStyle.Bold), Text = "↻ Aktualizacja", UseVisualStyleBackColor = false };
         private bool checkingUpdate;
+        private DateTimeOffset lastForegroundUpdateCheck = DateTimeOffset.MinValue;
         private AgentWebViewBridge? agentBridge;
         private readonly AgentRuntime agentRuntime = new();
         private bool downloadingUpdate;
@@ -312,6 +313,13 @@ internal static class Program
             updateBar.Controls.Add(updateButton);
             updateBar.Controls.Add(updateProgress);
             updateCheckTimer.Tick += async (_, _) => await CheckForUpdateAsync();
+            // Windows can sleep or throttle background timers. Check as soon as the
+            // unlocked owner returns, without hammering the release server.
+            Activated += async (_, _) => {
+                if (!panelUnlocked || downloadingUpdate || DateTimeOffset.UtcNow - lastForegroundUpdateCheck < TimeSpan.FromMinutes(1)) return;
+                lastForegroundUpdateCheck = DateTimeOffset.UtcNow;
+                await CheckForUpdateAsync();
+            };
             FormClosed += (_, _) => { updateCheckTimer.Dispose(); agentRuntime.Dispose(); };
             updateBar.Resize += (_, _) => updateButton.Location = new Point(Math.Max(12, updateBar.ClientSize.Width - updateButton.Width - 16), 8);
             updateButton.FlatAppearance.BorderColor = Color.FromArgb(255, 112, 128);
@@ -371,7 +379,9 @@ internal static class Program
                         if (type.GetString() == "desktop.update.visibility") {
                             panelUnlocked = root.TryGetProperty("visible", out var visible) && visible.ValueKind == JsonValueKind.True;
                             updateBar.Visible = panelUnlocked && offeredUpdate is not null;
-                            webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); return;
+                            webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState));
+                            if (panelUnlocked && offeredUpdate is null) _ = CheckForUpdateAsync();
+                            return;
                         }
                         if (type.GetString() == "desktop.update.query") {
                             // A query does not prove the HTML sidebar is visible. Keep the native offer.
@@ -468,7 +478,7 @@ internal static class Program
         // Aktualizacja następuje dopiero po wyraźnym kliknięciu użytkownika.
         private void ShowUpdateOffer(string version)
         {
-            updateButton.Text = $"↻ Aktualizuj do wersji {version}";
+            updateButton.Text = $"↻ Zaktualizuj do {version}";
             updateButton.Location = new Point(Math.Max(12, updateBar.ClientSize.Width - updateButton.Width - 16), 8);
             PublishUpdateState("available", "Nowa wersja jest gotowa do pobrania.");
         }
