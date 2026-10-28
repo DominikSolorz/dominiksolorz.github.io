@@ -30,6 +30,12 @@ public final class MainActivity extends ComponentActivity {
     private View home, error, loading, bottom;
     private boolean showingHome = true, pageFailed = false, background = false;
     private String currentRoute = "home";
+    private boolean engineUpdateRequired=false;
+    public static boolean supportsCurrentWebView() {
+        android.content.pm.PackageInfo provider=WebView.getCurrentWebViewPackage();
+        try { return provider!=null && Integer.parseInt(provider.versionName.split("[.]")[0])>=124; }
+        catch(RuntimeException invalidVersion) { return false; }
+    }
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
@@ -73,6 +79,7 @@ public final class MainActivity extends ComponentActivity {
                 loading.setVisibility(View.GONE);
                 if(!pageFailed) status.setText(R.string.panel_access);
                 if(NavigationPolicy.isPanel(url)) {
+                    applyPhoneRoute();
                     // Remove duplicate web navigation; account and PIN gates are untouched.
                     web.evaluateJavascript("(()=>{if(document.getElementById('hs-native-chrome'))return;const s=document.createElement('style');s.id='hs-native-chrome';s.textContent='.mobileBottomNav,.mobileAppHeader{display:none!important}body.mobileOwnerMode{padding-bottom:0!important}';document.head.append(s)})()",null);
                 }
@@ -91,7 +98,7 @@ public final class MainActivity extends ComponentActivity {
         findViewById(R.id.navRecordings).setOnClickListener(v->openPanel("recordings",false));
         findViewById(R.id.navAccount).setOnClickListener(v->openPanel("settings",false));
         findViewById(R.id.refreshPanel).setOnClickListener(v->{ if(!showingHome) openPanel(currentRoute,true); });
-        findViewById(R.id.retryPanel).setOnClickListener(v->openPanel(currentRoute,true));
+        findViewById(R.id.retryPanel).setOnClickListener(v->{ if(engineUpdateRequired) openEngineUpdate(); else openPanel(currentRoute,true); });
         findViewById(R.id.errorGoHome).setOnClickListener(v->showHome());
         getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() { if(!showingHome) showHome(); else finish(); }
@@ -114,9 +121,11 @@ public final class MainActivity extends ComponentActivity {
         selectTab(currentRoute.equals("recordings")?R.id.navRecordings:currentRoute.equals("settings")?R.id.navAccount:R.id.navLive);
     }
     private void openPanel(String route,boolean refresh) {
-        boolean reuse=route.equals(currentRoute) && web.getUrl()!=null && !pageFailed && !refresh;
+        boolean reuse=web.getUrl()!=null && !pageFailed && !refresh;
         NavigationPolicy.view(route); currentRoute=route; showPanel();
-        if(reuse) return;
+        if(!supportsCurrentWebView()) { showEngineUpdate(); return; }
+        engineUpdateRequired=false;
+        if(reuse) { applyPhoneRoute(); return; }
         pageFailed=false; status.setText(R.string.loading); loading.setVisibility(View.VISIBLE);
         if(BuildConfig.DEBUG && getIntent().getBooleanExtra("hsEmulatorFixture",false)) {
             try {
@@ -129,7 +138,28 @@ public final class MainActivity extends ComponentActivity {
             } catch(IOException failed) { showError(); }
         } else web.loadUrl(NavigationPolicy.view(route));
     }
+    private void applyPhoneRoute() {
+        String route=org.json.JSONObject.quote(currentRoute);
+        web.evaluateJavascript("(()=>{const route="+route+";window.__hsNativeRouteObserver?.disconnect();const select=()=>{const b=document.querySelector('button[data-mobile-view=\"'+route+'\"]');if(!b)return false;b.click();document.querySelectorAll('video').forEach(v=>{if(!v.srcObject)return;if(route==='home')v.play().catch(()=>{});else v.pause()});return true;};if(!select()){const observer=new MutationObserver(()=>{if(select())observer.disconnect()});window.__hsNativeRouteObserver=observer;observer.observe(document.body,{childList:true,subtree:true});}})()",null);
+    }
+    private void showEngineUpdate() {
+        engineUpdateRequired=true; pageFailed=true; loading.setVisibility(View.GONE);web.setVisibility(View.GONE);error.setVisibility(View.VISIBLE);
+        ((TextView)findViewById(R.id.errorTitle)).setText(R.string.engine_update_title);
+        ((TextView)findViewById(R.id.errorDescription)).setText(R.string.engine_update_description);
+        ((TextView)findViewById(R.id.retryPanel)).setText(R.string.engine_update_action);
+        status.setText(R.string.engine_update_title);
+    }
+    private void openEngineUpdate() {
+        android.content.pm.PackageInfo provider=WebView.getCurrentWebViewPackage();
+        String pkg=provider!=null?provider.packageName:"com.google.android.webview";
+        try { startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://play.google.com/store/apps/details?id="+Uri.encode(pkg)))); }
+        catch(android.content.ActivityNotFoundException ignored) { status.setText(R.string.no_browser); }
+    }
     private void showError() {
+        engineUpdateRequired=false;
+        ((TextView)findViewById(R.id.errorTitle)).setText(R.string.connection_error_title);
+        ((TextView)findViewById(R.id.errorDescription)).setText(R.string.connection_error_description);
+        ((TextView)findViewById(R.id.retryPanel)).setText(R.string.retry);
         pageFailed=true; loading.setVisibility(View.GONE);
         if(!showingHome) { web.setVisibility(View.GONE); error.setVisibility(View.VISIBLE); status.setText(R.string.connection_error_title); }
     }

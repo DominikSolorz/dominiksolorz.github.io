@@ -70,6 +70,12 @@ public class MobileEmulatorTest {
         while(SystemClock.uptimeMillis()<end) { if(condition.call())return; SystemClock.sleep(100); }
         fail("Condition did not become true within "+timeout+" ms");
     }
+    private boolean supportedEngine() { return MainActivity.supportsCurrentWebView(); }
+    private void assertUpdateScreen(ActivityScenario<MainActivity> scenario) throws Exception {
+        waitFor(()->visible(scenario,R.id.errorScreen),10000);
+        scenario.onActivity(a->assertEquals(a.getString(R.string.engine_update_title),((android.widget.TextView)a.findViewById(R.id.errorTitle)).getText().toString()));
+        capture(scenario,"07-outdated-system-component");
+    }
     private boolean visible(ActivityScenario<MainActivity> scenario,int id) {
         AtomicBoolean shown=new AtomicBoolean();scenario.onActivity(a->shown.set(a.findViewById(id).isShown()));return shown.get();
     }
@@ -97,16 +103,19 @@ public class MobileEmulatorTest {
                 assertEquals(android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW,w.getSettings().getMixedContentMode());
             });
             capture(scenario,"01-native-home");
+            if(!supportedEngine()) { control("navRecordings").click();assertUpdateScreen(scenario);control("errorGoHome").click();return; }
             control("navRecordings").click();waitFor(()->visible(scenario,R.id.ownerWeb)&&!visible(scenario,R.id.panelLoading),20000);
-            assertEquals("true",js(scenario,"location.href.includes('mobileView=recordings')"));
+            assertEquals("true",js(scenario,"document.body.dataset.mobileView==='recordings'"));
             control("navAccount").click();waitFor(()->!visible(scenario,R.id.panelLoading),20000);
-            assertEquals("true",js(scenario,"location.href.includes('mobileView=settings')"));
+            assertEquals("true",js(scenario,"document.body.dataset.mobileView==='settings'"));
             device.pressBack();waitFor(()->visible(scenario,R.id.homeScreen),10000);
         }
     }
     @Test public void b_syntheticWebRtcVideoAndResponsivePanel() throws Exception {
         try(ActivityScenario<MainActivity> scenario=launch(true)) {
-            control("navLive").click();waitFor(()->!visible(scenario,R.id.panelLoading),20000);
+            control("navLive").click();
+            if(!supportedEngine()) { assertUpdateScreen(scenario); return; }
+            waitFor(()->!visible(scenario,R.id.panelLoading),20000);
             UiObject2 start=device.wait(Until.findObject(By.text("Uruchom test mediów")),15000);assertNotNull("Web media test button",start);start.click();
             try { waitFor(()->"true".equals(js(scenario,"Boolean(window.testMedia&&window.testMedia.ready&&window.testMedia.decoded>5&&document.getElementById('testRemote').videoWidth>0)")),30000); }
             finally { System.out.println("MEDIA_DIAGNOSTICS="+js(scenario,"JSON.stringify({test:window.testMedia,time:document.getElementById('testRemote').currentTime,width:document.getElementById('testRemote').videoWidth})")); capture(scenario,"02-media-diagnostics"); }
@@ -132,16 +141,19 @@ public class MobileEmulatorTest {
             device.executeShellCommand("svc wifi disable");device.executeShellCommand("svc data disable");
             try(ActivityScenario<MainActivity> scenario=launch(false)) {
                 control("navLive").click();waitFor(()->visible(scenario,R.id.errorScreen),30000);capture(scenario,"05-offline-error");
-                control("retryPanel").click();waitFor(()->visible(scenario,R.id.errorScreen),30000);
+                if(supportedEngine()) { control("retryPanel").click();waitFor(()->visible(scenario,R.id.errorScreen),30000); } else assertUpdateScreen(scenario);
                 control("errorGoHome").click();waitFor(()->visible(scenario,R.id.homeScreen),10000);
             }
         } finally { device.executeShellCommand("svc wifi enable");device.executeShellCommand("svc data enable"); }
     }
     @Test public void e_publicLoginLoadsInPhoneViewport() throws Exception {
         try(ActivityScenario<MainActivity> scenario=launch(false)) {
-            control("navLive").click();waitFor(()->!visible(scenario,R.id.panelLoading),45000);
+            control("navLive").click();
+            if(!supportedEngine()) { assertUpdateScreen(scenario); return; }
+            waitFor(()->!visible(scenario,R.id.panelLoading),45000);
             assertFalse("Public login failed to load",visible(scenario,R.id.errorScreen));
             assertEquals("true",js(scenario,"location.host==='dominiksolorz.github.io'&&innerWidth<600"));
+            waitFor(()->"true".equals(js(scenario,"Boolean(document.getElementById('authDialog')&&!document.getElementById('authDialog').hidden&&!document.getElementById('loginForm').hidden)")),30000);
             assertEquals("true",js(scenario,"document.documentElement.scrollWidth<=innerWidth+1"));capture(scenario,"06-real-public-login");
         }
     }

@@ -5,6 +5,7 @@ final class NavigationPolicyTests: XCTestCase {
         for route in PanelRoute.allCases {
             XCTAssertTrue(NavigationPolicy.isPanel(route.url))
             let items = URLComponents(url: route.url, resolvingAgainstBaseURL: false)!.queryItems!
+            XCTAssertEqual(items.first { $0.name == "auth" }?.value, "login")
             XCTAssertEqual(items.first { $0.name == "panel" }?.value, "owner")
             XCTAssertEqual(items.first { $0.name == "ui" }?.value, "phone")
         }

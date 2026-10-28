@@ -17,7 +17,7 @@ public final class NavigationPolicy {
     public static String view(String name) {
         if (!name.equals("home") && !name.equals("recordings") && !name.equals("settings"))
             throw new IllegalArgumentException("Unknown panel view");
-        return ORIGIN + "/kamera/panel.html?panel=owner&ui=phone&mobileView=" + name;
+        return ORIGIN + "/kamera/panel.html?auth=login&panel=owner&ui=phone&mobileView=" + name;
     }
     public static boolean isExternalHttps(String value) {
         try {

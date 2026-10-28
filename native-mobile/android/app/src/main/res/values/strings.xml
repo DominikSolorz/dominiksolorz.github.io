@@ -31,4 +31,8 @@
     <string name="understood">Rozumiem</string>
     <string name="no_browser">Brak przeglądarki do otwarcia odnośnika.</string>
     <string name="returned">Wrócono do panelu. Sprawdź stan połączenia.</string>
+    <string name="engine_update_title">Zaktualizuj
+składnik systemowy</string>
+    <string name="engine_update_description">Twój telefon ma starszą wersję składnika wyświetlającego panel. Zaktualizuj Android System WebView lub Chrome w sklepie, a następnie uruchom aplikację ponownie.</string>
+    <string name="engine_update_action">Otwórz aktualizację</string>
 </resources>

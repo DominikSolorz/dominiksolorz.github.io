@@ -48,8 +48,8 @@
         <ScrollView android:id="@+id/errorScreen" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone" android:fillViewport="true" android:background="#090D16">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="28dp" android:gravity="center_vertical">
                 <ImageView android:layout_width="48dp" android:layout_height="48dp" android:src="@drawable/ic_refresh" android:tint="#EDD6A4" android:importantForAccessibility="no"/>
-                <TextView style="@style/MobileTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/connection_error_title" android:layout_marginTop="24dp"/>
-                <TextView style="@style/MobileBody" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/connection_error_description" android:layout_marginTop="16dp"/>
+                <TextView android:id="@+id/errorTitle" style="@style/MobileTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/connection_error_title" android:layout_marginTop="24dp"/>
+                <TextView android:id="@+id/errorDescription" style="@style/MobileBody" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/connection_error_description" android:layout_marginTop="16dp"/>
                 <Button android:id="@+id/retryPanel" style="@style/MobilePrimaryButton" android:text="@string/retry" android:layout_marginTop="28dp"/>
                 <Button android:id="@+id/errorGoHome" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:text="@string/go_home" android:textAllCaps="false" android:textColor="#F5F4F0" android:backgroundTint="#242B3A" android:layout_marginTop="12dp"/>
             </LinearLayout>

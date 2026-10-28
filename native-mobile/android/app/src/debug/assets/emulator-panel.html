@@ -2,7 +2,10 @@
 *{box-sizing:border-box}body{margin:0;padding:20px;background:#0c121e;color:#f5f4f0;font:16px/1.6 system-ui,sans-serif;overflow-wrap:anywhere}h1{font-size:27px;line-height:1.2}p{color:#c4cad5}.label{font-size:12px;color:#edd6a4;letter-spacing:.08em}video{display:block;width:100%;aspect-ratio:16/9;background:#1e2c42;border:1px solid #43516c;border-radius:16px;object-fit:contain}button{display:block;width:100%;min-height:52px;margin-top:20px;padding:14px;border:0;border-radius:14px;background:#db3156;color:white;font:600 16px system-ui}#state{font-size:14px}canvas{display:none}</style></head><body>
 <p class="label">EMULATOR · DANE TESTOWE</p><h1>Podgląd testowy</h1><p>Sprawdzamy interfejs i przesyłanie obrazu przez WebRTC. To syntetyczny obraz, bez kamery i danych konta.</p>
 <video id="testRemote" autoplay muted playsinline></video><canvas id="testSource" width="640" height="360"></canvas><button id="startMedia">Uruchom test mediów</button><p id="state" role="status">Test nieuruchomiony</p>
+<nav class="mobileBottomNav" aria-label="Test routingu"><button data-mobile-view="home">Dom</button><button data-mobile-view="recordings">Nagrania</button><button data-mobile-view="settings">Ustawienia</button></nav>
 <script>
+document.querySelectorAll('[data-mobile-view]').forEach(b=>b.onclick=()=>{document.body.dataset.mobileView=b.dataset.mobileView;});
+
 const canvas=document.getElementById('testSource'),ctx=canvas.getContext('2d');let frames=0,timer,statsTimer,peer1,peer2;
 window.testMedia={ready:false,frames:0,decoded:0,error:null};
 document.getElementById('startMedia').addEventListener('click',async()=>{
