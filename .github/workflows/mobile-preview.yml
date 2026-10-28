@@ -1,0 +1,66 @@
+name: Build and test HOME SECURITY mobile previews
+on:
+  push:
+    branches: [main]
+    paths: ['native-mobile/**', '.github/workflows/mobile-preview.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: native-mobile
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Compile, test and lint Android
+        working-directory: native-mobile/android
+        run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease :app:bundleRelease
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HOME-SECURITY-Android-0.1.0-preview
+          path: |
+            native-mobile/android/app/build/outputs/apk/debug/*.apk
+            native-mobile/android/app/build/outputs/apk/release/*unsigned.apk
+            native-mobile/android/app/build/outputs/bundle/release/*.aab
+            native-mobile/android/app/build/reports/
+          retention-days: 30
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: native-mobile
+      - name: Install pinned XcodeGen
+        run: |
+          curl --fail --location --retry 2 https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-tool"
+          echo "$RUNNER_TEMP/xcodegen-tool/xcodegen/bin" >> "$GITHUB_PATH"
+      - name: Generate and compile iOS simulator application
+        working-directory: native-mobile/ios
+        run: |
+          xcodegen generate
+          xcodebuild -project HomeSecurity.xcodeproj -scheme HomeSecurity -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO build-for-testing
+      - name: Run iOS navigation and security tests
+        working-directory: native-mobile/ios
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys;d=json.load(sys.stdin);print(next(x["udid"] for a in d["devices"].values() for x in a if x["name"].startswith("iPhone")))')
+          xcodebuild -project HomeSecurity.xcodeproj -scheme HomeSecurity -configuration Debug -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO test-without-building
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HOME-SECURITY-iOS-0.1.0-simulator
+          path: |
+            native-mobile/ios/DerivedData/Build/Products/Debug-iphonesimulator/
+            native-mobile/ios/DerivedData/Logs/Test/
+          retention-days: 30

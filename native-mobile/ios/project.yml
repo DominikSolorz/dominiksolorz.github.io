@@ -1,0 +1,44 @@
+name: HomeSecurity
+options:
+  bundleIdPrefix: pl.solorz
+  deploymentTarget:
+    iOS: '17.0'
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    MARKETING_VERSION: '0.1.0'
+    CURRENT_PROJECT_VERSION: '1'
+    CODE_SIGN_STYLE: Automatic
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_CFBundleDisplayName: HOME SECURITY Preview
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+    TARGETED_DEVICE_FAMILY: '1,2'
+targets:
+  HomeSecurity:
+    type: application
+    platform: iOS
+    sources: [HomeSecurity]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: pl.solorz.homesecurity.preview
+        INFOPLIST_KEY_NSFaceIDUsageDescription: Odblokuj dostęp do prywatnego panelu monitoringu.
+    info:
+      path: HomeSecurity/Info.plist
+      properties:
+        CFBundleDisplayName: HOME SECURITY Preview
+        UILaunchScreen: {}
+        NSFaceIDUsageDescription: Odblokuj dostęp do prywatnego panelu monitoringu.
+  HomeSecurityTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [HomeSecurityTests]
+    dependencies:
+      - target: HomeSecurity
+schemes:
+  HomeSecurity:
+    build:
+      targets:
+        HomeSecurity: all
+    test:
+      targets: [HomeSecurityTests]
