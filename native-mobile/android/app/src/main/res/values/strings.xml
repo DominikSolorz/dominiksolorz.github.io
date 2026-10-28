@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">HOME SECURITY Preview</string>
+    <string name="app_brand">HOME SECURITY</string>
+    <string name="private_access">Twój prywatny panel</string>
+    <string name="eyebrow">DOM POD KONTROLĄ</string>
+    <string name="home_title">Spokojnie.\nMasz podgląd.</string>
+    <string name="home_description">Obraz z domu, nagrania i ustawienia. Wszystko pod ręką, na Twoim telefonie.</string>
+    <string name="live_title">Podgląd na żywo</string>
+    <string name="live_description">Otwórz panel i połącz się ze swoim komputerem z kamerą.</string>
+    <string name="open_live">Przejdź do podglądu</string>
+    <string name="protected_label">Dostęp przez konto i PIN</string>
+    <string name="recordings">Nagrania</string>
+    <string name="recordings_description">Wróć do archiwum</string>
+    <string name="settings">Ustawienia</string>
+    <string name="settings_description">Twój panel i urządzenia</string>
+    <string name="how_it_works">Komputer nadaje.\nTelefon pokazuje.</string>
+    <string name="how_it_works_description">Komputer z kamerą pozostaje uruchomiony. Tutaj sprawdzasz obraz i obsługujesz swój panel.</string>
+    <string name="preview_note">Wersja testowa 0.2 · Panel wymaga internetu</string>
+    <string name="nav_home">Dom</string>
+    <string name="nav_live">Podgląd</string>
+    <string name="nav_account">Konto</string>
+    <string name="refresh">Odśwież panel</string>
+    <string name="loading">Otwieram Twój panel…</string>
+    <string name="panel_access">Konto i PIN w panelu</string>
+    <string name="connection_error_title">Nie udało się\notworzyć panelu</string>
+    <string name="connection_error_description">Sprawdź połączenie z internetem i spróbuj ponownie. Nie zmieniamy Twojego konta ani ustawień.</string>
+    <string name="retry">Spróbuj ponownie</string>
+    <string name="go_home">Wróć do domu</string>
+    <string name="login_title">Logowanie w aplikacji</string>
+    <string name="login_notice">W tej wersji testowej użyj e-maila, hasła i PIN-u. Logowanie Google wymaga jeszcze bezpiecznego powrotu do aplikacji.</string>
+    <string name="understood">Rozumiem</string>
+    <string name="no_browser">Brak przeglądarki do otwarcia odnośnika.</string>
+    <string name="returned">Wrócono do panelu. Sprawdź stan połączenia.</string>
+</resources>

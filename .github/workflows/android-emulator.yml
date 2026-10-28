@@ -1,0 +1,56 @@
+name: Android emulator phone interface and media tests
+on:
+  push:
+    branches: [main]
+    paths: ['native-mobile/android/**', '.github/workflows/android-emulator.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  phone:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [30, 35]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: native-mobile/android
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Allow this runner to use hardware acceleration
+        run: sudo setfacl -m "u:$(id -un):rw" /dev/kvm
+      - name: Build and check phone client
+        working-directory: native-mobile/android
+        run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
+      - name: Install APK and run phone and WebRTC tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 2048M
+          disk-size: 4096M
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none -camera-front none
+          disable-animations: true
+          script: bash native-mobile/android/run-emulator-tests.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Android-phone-API-${{ matrix.api }}
+          path: |
+            emulator-evidence/
+            native-mobile/android/app/build/reports/
+            native-mobile/android/app/build/outputs/androidTest-results/
+            native-mobile/android/app/build/outputs/apk/debug/*.apk
+          retention-days: 30

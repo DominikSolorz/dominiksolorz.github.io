@@ -28,3 +28,9 @@ The debug APK is for test devices, not customers. Hosted CI debug signing keys a
 6. Only replace website store placeholders with real App Store/Google Play URLs after the listings exist. Only advertise a signed, tested release APK as a customer download.
 
 The current website's mobile panel links are web access, not these APK/IPA packages. Do not represent this preview work as a finished mobile release.
+
+## Android 0.2 phone interface and emulator checks
+
+Android now starts on a native phone dashboard with four bottom destinations, 48dp+ touch targets and a scrollable single-column layout. Account/PIN and private media stay in the existing phone panel. Native retry/error screens replace raw WebView network errors. Duplicate web navigation is hidden in the Android client.
+
+`android-emulator.yml` installs and runs the actual APK on Android API 30 and 35 phone emulators. Instrumentation covers home/navigation, narrow screen and font scale, landscape, background/resume, offline retry, a fresh public login page, and synthetic canvas-to-WebRTC-to-video playback. The debug-only fixture explicitly labels its video as test media. It does not authenticate a real account or prove production signaling, Windows capture or recordings. Screenshot capture temporarily clears FLAG_SECURE only inside instrumentation on fresh/synthetic emulator data and restores it afterward. Release APKs do not contain the fixture asset, ignore its debug intent, and keep screen-capture protection.

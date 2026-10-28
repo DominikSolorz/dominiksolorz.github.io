@@ -1,0 +1,27 @@
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Test emulatora HOME SECURITY</title><style>
+*{box-sizing:border-box}body{margin:0;padding:20px;background:#0c121e;color:#f5f4f0;font:16px/1.6 system-ui,sans-serif;overflow-wrap:anywhere}h1{font-size:27px;line-height:1.2}p{color:#c4cad5}.label{font-size:12px;color:#edd6a4;letter-spacing:.08em}video{display:block;width:100%;aspect-ratio:16/9;background:#1e2c42;border:1px solid #43516c;border-radius:16px;object-fit:contain}button{display:block;width:100%;min-height:52px;margin-top:20px;padding:14px;border:0;border-radius:14px;background:#db3156;color:white;font:600 16px system-ui}#state{font-size:14px}canvas{display:none}</style></head><body>
+<p class="label">EMULATOR · DANE TESTOWE</p><h1>Podgląd testowy</h1><p>Sprawdzamy interfejs i przesyłanie obrazu przez WebRTC. To syntetyczny obraz, bez kamery i danych konta.</p>
+<video id="testRemote" autoplay muted playsinline></video><canvas id="testSource" width="640" height="360"></canvas><button id="startMedia">Uruchom test mediów</button><p id="state" role="status">Test nieuruchomiony</p>
+<script>
+const canvas=document.getElementById('testSource'),ctx=canvas.getContext('2d');let frames=0,timer,peer1,peer2;
+window.testMedia={ready:false,frames:0,error:null};
+document.getElementById('startMedia').addEventListener('click',async()=>{
+ try{
+  document.getElementById('startMedia').disabled=true;document.getElementById('state').textContent='Łączę test WebRTC…';
+  const draw=()=>{frames++;window.testMedia.frames=frames;ctx.fillStyle='#16324f';ctx.fillRect(0,0,640,360);ctx.fillStyle='#e7cf99';ctx.fillRect((frames*5)%560,90,80,80);ctx.fillStyle='#fff';ctx.font='28px sans-serif';ctx.fillText('HOME SECURITY · TEST',35,55);ctx.font='22px sans-serif';ctx.fillText('Syntetyczny obraz · '+frames,35,280);};draw();timer=setInterval(draw,66);
+  peer1=new RTCPeerConnection({iceServers:[]});peer2=new RTCPeerConnection({iceServers:[]});
+  const queue1=[],queue2=[];
+  peer1.onicecandidate=({candidate})=>{if(candidate){if(peer2.remoteDescription)peer2.addIceCandidate(candidate).catch(()=>{});else queue2.push(candidate);}};
+  peer2.onicecandidate=({candidate})=>{if(candidate){if(peer1.remoteDescription)peer1.addIceCandidate(candidate).catch(()=>{});else queue1.push(candidate);}};
+  const video=document.getElementById('testRemote');
+  peer2.ontrack=({streams})=>{video.srcObject=streams[0];video.play().catch(e=>{window.testMedia.error=e.message;});};
+  video.onloadeddata=()=>{window.testMedia.ready=true;document.getElementById('state').textContent='Obraz WebRTC działa — materiał testowy';};
+  const stream=canvas.captureStream(15);stream.getTracks().forEach(track=>peer1.addTrack(track,stream));
+  await peer1.setLocalDescription(await peer1.createOffer());await peer2.setRemoteDescription(peer1.localDescription);
+  for(const candidate of queue2)await peer2.addIceCandidate(candidate);
+  await peer2.setLocalDescription(await peer2.createAnswer());await peer1.setRemoteDescription(peer2.localDescription);
+  for(const candidate of queue1)await peer1.addIceCandidate(candidate);
+ }catch(e){window.testMedia.error=e.message;document.getElementById('state').textContent='Błąd testu: '+e.message;}
+});
+window.addEventListener('pagehide',()=>{clearInterval(timer);peer1?.close();peer2?.close();});
+</script></body></html>
