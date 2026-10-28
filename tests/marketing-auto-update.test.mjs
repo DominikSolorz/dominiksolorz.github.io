@@ -4,8 +4,9 @@ import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 
 const read = path => readFile(new URL('../'+path,import.meta.url),'utf8');
+const currentBuild=Number(JSON.parse(await read('kamera/version.json')).version);
 
-function mount({latest=225,marketing=true,dirty=false}={}) {
+function mount({latest=currentBuild+1,marketing=true,dirty=false}={}) {
   const controls=[],listeners={},documentEvents={},timers=new Map();
   let nextTimer=1,reloads=0,confirmations=0,allowDiscard=false,banner=null;
   const session=new Map();
@@ -23,7 +24,7 @@ function mount({latest=225,marketing=true,dirty=false}={}) {
     readyState:'complete',
     visibilityState:'visible',
     createElement,
-    querySelector:selector=>selector==='meta[name="home-security-build"]'?{content:'224'}:null,
+    querySelector:selector=>selector==='meta[name="home-security-build"]'?{content:String(currentBuild)}:null,
     addEventListener:(name,handler)=>{documentEvents[name]=handler;}
   };
   const win={
@@ -65,7 +66,7 @@ test('newer public release automatically displays a clear one-click update actio
   const x=await mount().run();
   assert.ok(x.banner&&!x.banner.hidden);
   assert.ok(x.controls.some(item=>item.textContent==='Zaktualizuj'));
-  assert.ok(x.controls.some(item=>String(item.textContent).includes('Dostępna wersja HOME SECURITY 225')));
+  assert.ok(x.controls.some(item=>String(item.textContent).includes('Dostępna wersja HOME SECURITY '+(currentBuild+1))));
   x.act('Zaktualizuj');
   assert.equal(x.reloads,1);
 });
@@ -98,7 +99,7 @@ test('Later defers both prompt and automatic reload',async()=>{
 });
 
 test('no refresh prompt on a current release or unrelated page',async()=>{
-  for(const config of [{latest:224},{latest:223},{marketing:false}]){
+  for(const config of [{latest:currentBuild},{latest:currentBuild-1},{marketing:false}]){
     const x=await mount(config).run();
     assert.equal(x.banner===null||x.banner.hidden,true);
     assert.equal(x.reloads,0);
