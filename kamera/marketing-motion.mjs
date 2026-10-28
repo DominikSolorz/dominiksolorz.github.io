@@ -33,14 +33,17 @@ if (site) {
     const y = Math.max(0, window.scrollY || 0);
     const scrollable = Math.max(1, doc.scrollHeight - window.innerHeight);
     const ratio = Math.min(1, y / scrollable);
+    // Read all layout measurements before changing CSS classes and styles;
+    // this avoids a forced synchronous layout on every scroll frame.
+    const threshold = (header?.getBoundingClientRect().height || 80) + 55;
+    const sectionTops = navSections.map(item => item.section.getBoundingClientRect().top);
+    let active = null;
+    for (let i = 0; i < navSections.length; i++) {
+      if (sectionTops[i] <= threshold) active = navSections[i].link;
+    }
     header?.style.setProperty('--mkt-scroll-progress', String(ratio));
     header?.classList.toggle('mktIsScrolled', y > 12);
     backToTop.hidden = y < 600;
-    const threshold = (header?.getBoundingClientRect().height || 80) + 55;
-    let active = null;
-    for (const item of navSections) {
-      if (item.section.getBoundingClientRect().top <= threshold) active = item.link;
-    }
     for (const item of navSections) {
       if (item.link === active) item.link.setAttribute('aria-current', 'location');
       else item.link.removeAttribute('aria-current');
@@ -86,11 +89,13 @@ if (site) {
     revealObserver = new IntersectionObserver(entries => {
       for (const entry of entries) if (entry.isIntersecting) reveal(entry.target);
     }, { threshold: 0.07, rootMargin: '0px 0px -5% 0px' });
+    // Batch intersection setup geometry reads before visibility class writes.
+    const sectionPositions = revealTargets.map(element => element.getBoundingClientRect().top);
     let pendingIndex = 0;
-    for (const element of revealTargets) {
+    for (let i = 0; i < revealTargets.length; i++) {
+      const element = revealTargets[i];
       // Never hide something already in the reading viewport.
-      const bounds = element.getBoundingClientRect();
-      if (bounds.top < window.innerHeight * .93) {
+      if (sectionPositions[i] < window.innerHeight * .93) {
         element.classList.remove('mktWillReveal', 'mktIsVisible');
         continue;
       }
