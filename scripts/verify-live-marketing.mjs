@@ -30,7 +30,7 @@ const checks=[
 const assets=[
  'marketing-start.css?v=1','marketing-start.mjs?v=1',
  'marketing-auto-update.css?v=1','marketing-auto-update.mjs?v=3',
- 'core/web-updates.mjs?v=3','sw.js?v=135',
+ 'core/web-updates.mjs?v=3','sw.js?v=136',
  'marketing-gallery.css?v=1','marketing-gallery.mjs?v=1',
  'interface-concept.css?v=2',
  'marketing-motion.css?v=1','marketing.css?v=6',
