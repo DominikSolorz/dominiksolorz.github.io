@@ -8,3 +8,4 @@
 **/*.mobileprovision
 **/*.xcuserstate
 **/HomeSecurity.xcodeproj/
+**/DeviceBuild/

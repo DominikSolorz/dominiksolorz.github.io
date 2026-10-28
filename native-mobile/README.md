@@ -14,7 +14,7 @@ These are real Android and iOS application projects. They load the authenticated
 
 ## Build and verify
 
-`.github/workflows/mobile-preview.yml` compiles Android, runs navigation unit tests and Android lint, and compiles/tests iOS on a simulator. It produces a debug-signed Android APK, unsigned Android release packages, and an iOS simulator application. A simulator application cannot be installed on an iPhone.
+`.github/workflows/mobile-preview.yml` compiles Android, runs navigation unit tests and Android lint, and compiles/tests iOS on a simulator. It produces a debug-signed Android APK, unsigned Android release packages, an iOS simulator application, and an unsigned physical-device archive. The physical-device archive still requires owner signing; it is not an installable IPA. A simulator application cannot be installed on an iPhone.
 
 The debug APK is for test devices, not customers. Hosted CI debug signing keys are disposable: do not use this package for long-term updates or store publication. Its application ID ends in `.preview`, separate from a future production app. Release APK/AAB requires an owner-controlled, durable signing key; never commit the key or its password.
 

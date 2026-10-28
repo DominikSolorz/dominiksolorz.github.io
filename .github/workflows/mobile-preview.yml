@@ -25,6 +25,8 @@ jobs:
       - name: Compile, test and lint Android
         working-directory: native-mobile/android
         run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease :app:bundleRelease
+      - name: Verify test APK signature
+        run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose native-mobile/android/app/build/outputs/apk/debug/app-debug.apk'
       - uses: actions/upload-artifact@v4
         with:
           name: HOME-SECURITY-Android-0.1.0-preview
@@ -52,6 +54,9 @@ jobs:
         run: |
           xcodegen generate
           xcodebuild -project HomeSecurity.xcodeproj -scheme HomeSecurity -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO build-for-testing
+      - name: Compile unsigned application for physical iPhone
+        working-directory: native-mobile/ios
+        run: xcodebuild -project HomeSecurity.xcodeproj -scheme HomeSecurity -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -archivePath DeviceBuild/HomeSecurity.xcarchive CODE_SIGNING_ALLOWED=NO archive
       - name: Run iOS navigation and security tests
         working-directory: native-mobile/ios
         run: |
@@ -63,4 +68,5 @@ jobs:
           path: |
             native-mobile/ios/DerivedData/Build/Products/Debug-iphonesimulator/
             native-mobile/ios/DerivedData/Logs/Test/
+            native-mobile/ios/DeviceBuild/HomeSecurity.xcarchive/
           retention-days: 30
