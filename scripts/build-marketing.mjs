@@ -6,7 +6,7 @@ const normalize=text=>text.replace(/\r\n/g,'\n');
 const read=async(base,name)=>normalize(await readFile(new URL(name,base),'utf8'));
 const escape=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const origin='https://dominiksolorz.github.io/kamera/';
-const publicOrigin='https://home-security-dominik-solorz.vercel.app/kamera/';
+const publicOrigin=origin; // Reliable, tested GitHub Pages release.
 const publicBuild=JSON.parse(await read(camera,'version.json')).version;
 async function emit(name,html){
   const file=new URL(name,camera);
@@ -30,7 +30,7 @@ const slot=/<(?:section|div)(?: role="group")? id="publicHome"[\s\S]*?<\/(?:sect
 if(!slot.test(index))throw new Error('Public marketing slot not found; private panel not modified.');
 await emit('panel.html',index.replace(slot,home.trimEnd()));
 const publicContent=home;
-const publicHome=head('Monitoring domu i podgląd','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','').replace('</head>','<script src="public-entry.js?v=2"></script><link rel="manifest" href="manifest.webmanifest?v=3"></head>')+publicContent+'\n</body></html>\n';
+const publicHome=head('Monitoring domu i podgląd','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','').replace('</head>','<script src="public-entry.js?v=3"></script><link rel="manifest" href="manifest.webmanifest?v=3"></head>')+publicContent+'\n</body></html>\n';
 await emit('index.html',publicHome);
 // Keep old inbound product links working; canonical points at the single homepage.
 await emit('o-systemie.html',publicHome);
