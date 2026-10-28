@@ -19,6 +19,8 @@ on:
       - 'kamera/communication/**'
       - 'kamera/version.json'
       - 'kamera/sw.js'
+      # Retest immediately when a regression-test fix unblocks a pending Windows release.
+      - 'tests/**'
   schedule:
     - cron: '23 2,8,14,20 * * *'
   workflow_dispatch:
