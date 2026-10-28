@@ -6,6 +6,10 @@ const origin='https://dominiksolorz.github.io';
 const root=origin+'/kamera/';
 const expectedBuild=JSON.parse(await readFile(new URL('../kamera/version.json',import.meta.url),'utf8')).version;
 const expectedDesktop=JSON.parse(await readFile(new URL('../kamera/desktop-update.json',import.meta.url),'utf8'));
+const expectedMarketingHTML=await readFile(new URL('../kamera/o-systemie.html',import.meta.url),'utf8');
+const expectedUpdateScript=expectedMarketingHTML.match(/marketing-auto-update\\.mjs\\?v=\\d+/)?.[0];
+if(!expectedUpdateScript)throw Error('The public homepage does not reference an update checker');
+
 
 const timeoutMs=18000;
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -32,7 +36,7 @@ const checks=[
 ];
 const assets=[
  'marketing-start.css?v=3','marketing-start.mjs?v=2',
- 'marketing-auto-update.css?v=2','marketing-auto-update.mjs?v=5',
+ 'marketing-auto-update.css?v=2',expectedUpdateScript,
  'core/web-updates.mjs?v=3','sw.js?v=149','panel-entry.mjs?v=2','public-entry.js?v=2',
  'marketing-gallery.css?v=3','marketing-gallery.mjs?v=2',
  'interface-concept.css?v=2',
@@ -48,7 +52,7 @@ while(true){
     const html=await get('o-systemie.html');
     const app=await get('panel.html');
     const expected='home-security-build" content="'+expectedBuild+'"';
-    assert.ok(html.includes('id="przygotowanie"')&&html.includes(expected)&&html.includes('marketing-auto-update.mjs?v=5'),'The public homepage is still serving the previous release');
+    assert.ok(html.includes('id="przygotowanie"')&&html.includes(expected)&&html.includes(expectedUpdateScript),'The public homepage is still serving the previous release');
     assert.ok(app.includes(expected)&&app.includes('app.js?v='+expectedBuild),'The protected panel is still serving the previous release');
     break;
   }catch(error){
@@ -62,7 +66,7 @@ for(const [path,tokens] of checks){
   for(const token of tokens)assert.ok(html.includes(token),'Missing '+JSON.stringify(token)+' in '+path);
   if(/^(?:o-systemie|galeria|pomoc)\.html$/.test(path)||path.startsWith('blog/')){
     assert.ok(html.includes('home-security-build" content="'+expectedBuild+'"'),'Outdated marketing build on '+path);
-    assert.ok(html.includes('marketing-auto-update.mjs?v=5'),'New public update notice is missing from '+path);
+    assert.ok(html.includes(expectedUpdateScript),'New public update notice is missing from '+path);
   }
   if(path==='galeria.html')assert.equal((html.match(/class="mktConceptCard"/g)||[]).length,8);
   if(path==='panel.html')assert.ok(html.includes('app.js?v='+expectedBuild)&&html.includes('content="noindex,follow"'));
