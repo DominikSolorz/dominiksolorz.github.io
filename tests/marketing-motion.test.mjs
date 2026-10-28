@@ -70,7 +70,7 @@ test('all marketing pages load the motion styles and script, including the panel
  for(const path of paths){
    const html=await read(path),prefix=path.includes('/blog/')?'../':'';
    assert.ok(html.includes('href="'+prefix+'marketing-motion.css?v=1"'),path);
-   assert.ok(html.includes('src="'+prefix+'marketing-motion.mjs?v=1"'),path);
+   assert.ok(html.includes('src="'+prefix+'marketing-motion.mjs?v=2"'),path);
    assert.equal((html.match(/marketing-motion\.mjs\?v=1/g)||[]).length,1,path);
  }
 });
@@ -84,6 +84,11 @@ test('scroll effects are progressive, focus-safe and opt out of reduced motion',
  assert.ok(css.includes('mktBackToTop[hidden]'));
  assert.ok(js.includes("'IntersectionObserver' in window"));
  assert.ok(js.includes("site.addEventListener('focusin'"));
+ const readGeometry=js.indexOf('sectionTops = navSections.map');
+ const writeStyles=js.indexOf("header?.style.setProperty('--mkt-scroll-progress'");
+ assert.ok(readGeometry>0 && readGeometry<writeStyles,'scroll layout reads must happen before style writes');
+ assert.ok(js.includes('sectionPositions = revealTargets.map'),'reveal coordinates should be batched');
+
  assert.ok(js.includes("element.classList.remove('mktWillReveal', 'mktIsVisible')"));
  assert.ok(js.includes('entry.isIntersecting'));
 });
@@ -91,7 +96,7 @@ test('scroll effects are progressive, focus-safe and opt out of reduced motion',
 test('PWA, runtime and public pages have matching motion asset and build versions',async()=>{
  const [sw,app,version,index]=await Promise.all([
   'kamera/sw.js','kamera/app.js','kamera/version.json','kamera/index.html'].map(read));
- for(const asset of ['marketing-motion.css?v=1','marketing-motion.mjs?v=1'])assert.ok(sw.includes('./'+asset));
+ for(const asset of ['marketing-motion.css?v=1','marketing-motion.mjs?v=2'])assert.ok(sw.includes('./'+asset));
  const release=JSON.parse(version).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
  assert.ok(/^\d+$/.test(release)&&/^\d+$/.test(shell),'manifest and service worker revisions must be numeric');
