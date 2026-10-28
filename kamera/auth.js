@@ -78,6 +78,9 @@ function randomSalt() { const bytes = crypto.getRandomValues(new Uint8Array(24))
 
 export async function currentAccountUser() {
   const { data: { user }, error } = await accountClient.auth.getUser();
+  // A visitor opening the login form normally has no session yet.
+  // Only this explicit client state is anonymous; all other errors still fail closed.
+  if (error?.name === 'AuthSessionMissingError') return null;
   if (error) throw error;
   // Server-confirmed user, not user-editable metadata or the browser's token text.
   const googleIdentity = user?.identities?.some(identity => identity.provider === "google");
