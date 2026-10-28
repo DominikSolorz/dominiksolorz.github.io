@@ -5,6 +5,8 @@ import {readFile} from 'node:fs/promises';
 const origin='https://dominiksolorz.github.io';
 const root=origin+'/kamera/';
 const expectedBuild=JSON.parse(await readFile(new URL('../kamera/version.json',import.meta.url),'utf8')).version;
+const expectedDesktop=JSON.parse(await readFile(new URL('../kamera/desktop-update.json',import.meta.url),'utf8'));
+
 const timeoutMs=18000;
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const get=async(path,{method='GET'}={})=>{
@@ -72,6 +74,24 @@ for(const path of assets){
   const bytes=Number(response.headers.get('content-length')||'0');
   console.log('OK asset '+path+(bytes?' ('+bytes+' bytes)':''));
 }
+// Keep release channels consistent after each publication. This prevents an old
+// installer or update manifest from being advertised alongside the new website.
+const publicVersion=JSON.parse(await get('version.json'));
+assert.equal(String(publicVersion.version),String(expectedBuild),'Published PWA build differs from the source release');
+console.log('OK web update channel build '+expectedBuild);
+const publicDesktop=JSON.parse(await get('desktop-update.json'));
+assert.match(publicDesktop.version,/^\\d+\\.\\d+\\.\\d+$/);
+assert.equal(publicDesktop.version,expectedDesktop.version,'Published Windows release is not current');
+assert.equal(publicDesktop.packageUrl,expectedDesktop.packageUrl,'Published Windows update URL differs from the signed release');
+assert.equal(publicDesktop.sha256,expectedDesktop.sha256,'Published Windows ZIP checksum differs from the release');
+assert.equal(publicDesktop.installerSha256,expectedDesktop.installerSha256,'Published Windows installer checksum differs from the release');
+const packageURL=new URL(publicDesktop.packageUrl);
+assert.equal(packageURL.origin,origin,'Windows update package must stay on the trusted HTTPS origin');
+assert.equal(packageURL.pathname,'/kamera/updates/HomeSecurityDesktop-'+publicDesktop.version+'-win-x64.zip');
+await get('updates/HomeSecurityDesktop-'+publicDesktop.version+'-win-x64.zip',{method:'HEAD'});
+await get('downloads/HOME-SECURITY-Desktop-Setup-'+publicDesktop.version+'.exe',{method:'HEAD'});
+console.log('OK Windows update channel '+publicDesktop.version+' (manifest + ZIP + installer)');
+
 const headers=(await get('index.html',{method:'HEAD'})).headers;
 for(const name of ['cache-control','strict-transport-security','cross-origin-opener-policy','x-frame-options','content-security-policy'])console.log('Hosting header '+name+': '+(headers.get(name)||'(absent)'));
 console.log('Production marketing smoke: all public routes, releases and media files verified.');
