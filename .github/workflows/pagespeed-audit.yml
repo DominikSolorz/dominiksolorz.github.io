@@ -54,7 +54,9 @@ jobs:
           test -n "$CHROME" || { echo "Chrome missing on runner"; exit 1; }
           echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
           "$CHROME" --version
-      # Audit the same GitHub Pages origin that Lighthouse measures.\n      # Vercel is an independent deployment and must not gate this origin.\n      - name: Wait for GitHub Pages to publish this build and its optimized images
+      # Audit the same GitHub Pages origin that Lighthouse measures.
+      # Vercel is an independent deployment and must not gate this origin.
+      - name: Wait for GitHub Pages to publish this build and its optimized images
         shell: bash
         run: |
           set -euo pipefail
