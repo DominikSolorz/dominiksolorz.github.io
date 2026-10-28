@@ -14,7 +14,7 @@ const plan=[
  {from:'kamera/assets/home-security-how-it-works.png',out:'kamera/assets/home-security-how-it-works-640.webp',width:640,quality:75},
  {from:'kamera/assets/ds-logo.jpg',out:'kamera/assets/ds-logo-96.webp',width:96,quality:84},
  {from:'kamera/assets/ds-logo.jpg',out:'kamera/assets/ds-logo-192.webp',width:192,quality:84},
- ...['01-pulpit','02-sterowanie','03-nagrania','04-ustawienia','05-diagnostyka','06-alarmy','07-telefon','08-konto-i-przyciski'].flatMap(name=>[480,640,960].map(width=>({
+ ...['01-pulpit','02-sterowanie','03-nagrania','04-ustawienia','05-diagnostyka','06-alarmy','07-telefon','08-konto-i-przyciski'].flatMap(name=>[480,640,720,960].map(width=>({
    from:'docs/ui-193/'+name+'.png',out:'docs/ui-193/'+name+'-'+width+'.webp',width,quality:81
  })))
 ];

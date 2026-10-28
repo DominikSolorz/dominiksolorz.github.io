@@ -84,23 +84,24 @@ if (site) {
       }
       return;
     }
-    revealObserver = new IntersectionObserver(entries => {
-      for (const entry of entries) if (entry.isIntersecting) reveal(entry.target);
-    }, { threshold: 0.07, rootMargin: '0px 0px -5% 0px' });
     let pendingIndex = 0;
-    // Snapshot all positions before adding animation classes to any element.
-    const positions = revealTargets.map(element => ({ element, bounds: element.getBoundingClientRect() }));
-    for (const { element, bounds } of positions) {
-      // Never hide something already in the reading viewport.
-      if (bounds.top < window.innerHeight * .93) {
-        element.classList.remove('mktWillReveal', 'mktIsVisible');
-        continue;
+    // Let the browser report visibility asynchronously. Measuring every card at
+    // startup forced a complete layout and could delay the first mobile paint.
+    revealObserver = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          reveal(entry.target);
+        } else if (!entry.target.classList.contains('mktIsVisible')) {
+          entry.target.style.setProperty('--mkt-delay', String((pendingIndex++ % 3) * 65) + 'ms');
+          entry.target.classList.add('mktWillReveal');
+        }
       }
-      element.style.setProperty('--mkt-delay', String((pendingIndex % 3) * 65) + 'ms');
-      element.classList.remove('mktIsVisible');
-      element.classList.add('mktWillReveal');
+    }, { threshold: 0, rootMargin: '0px 0px 100px 0px' });
+    for (const element of revealTargets) {
+      // Content stays visible until the observer confirms it is off screen.
+      element.classList.remove('mktWillReveal', 'mktIsVisible');
+      element.style.removeProperty('--mkt-delay');
       revealObserver.observe(element);
-      pendingIndex++;
     }
   };
   configureReveals();

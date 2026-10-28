@@ -70,8 +70,8 @@ test('all marketing pages load the motion styles and script, including the panel
  for(const path of paths){
    const html=await read(path),prefix=path.includes('/blog/')?'../':'';
    assert.ok(html.includes('href="'+prefix+'marketing-motion.css?v=2"'),path);
-   assert.ok(html.includes('src="'+prefix+'marketing-motion.mjs?v=1"'),path);
-   assert.equal((html.match(/marketing-motion\.mjs\?v=1/g)||[]).length,1,path);
+   assert.ok(html.includes('src="'+prefix+'marketing-motion.mjs?v=2"'),path);
+   assert.equal((html.match(/marketing-motion\.mjs\?v=2/g)||[]).length,1,path);
  }
 });
 
@@ -91,7 +91,7 @@ test('scroll effects are progressive, focus-safe and opt out of reduced motion',
 test('PWA, runtime and public pages have matching motion asset and build versions',async()=>{
  const [sw,app,version,index]=await Promise.all([
   'kamera/sw.js','kamera/app.js','kamera/version.json','kamera/index.html'].map(read));
- for(const asset of ['marketing-motion.css?v=2','marketing-motion.mjs?v=1'])assert.ok(sw.includes('./'+asset));
+ for(const asset of ['marketing-motion.css?v=2','marketing-motion.mjs?v=2'])assert.ok(sw.includes('./'+asset));
  const release=JSON.parse(version).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
  assert.ok(/^\d+$/.test(release)&&/^\d+$/.test(shell),'manifest and service worker revisions must be numeric');
@@ -113,4 +113,28 @@ test('support assistant does not overlap the scroll control and auth animations 
  assert.ok(css.includes('#authDialog :is(.authPrimary,.authSecondary,.authGoogleButton,.authTextBtn,.authClose){transition:none!important'));
  assert.ok(html.includes('class="authDialog"'));
  assert.ok(html.includes('id="authClose"'));
+});
+
+test('reveal startup never measures every card synchronously or hides the first viewport',async()=>{
+ const js=await read('kamera/marketing-motion.mjs');
+ let callback,observed=0,unobserved=0;
+ const names=new Set();
+ const target={classList:{add:name=>names.add(name),remove:(...values)=>values.forEach(value=>names.delete(value)),contains:name=>names.has(name)},
+   style:{setProperty(){},removeProperty(){}},
+   getBoundingClientRect(){throw Error('Synchronous card layout during startup');}};
+ class Observer{constructor(fn){callback=fn;}observe(){observed++;}unobserve(){unobserved++;}disconnect(){}}
+ const site={querySelector:()=>null,querySelectorAll:()=>[target],append(){},addEventListener(){},getClientRects:()=>[{}]};
+ const control={setAttribute(){},append(){},addEventListener(){}};
+ const document={body:site,documentElement:{scrollHeight:2000},querySelector:()=>site,
+   createElement:()=>control,createTextNode:value=>({textContent:value}),getElementById:()=>null};
+ const window={scrollY:0,innerHeight:800,IntersectionObserver:Observer,requestAnimationFrame:fn=>fn(),
+   matchMedia:()=>({matches:false,addEventListener(){}}),addEventListener(){}};
+ vm.runInNewContext(js,{document,window,IntersectionObserver:Observer});
+ assert.equal(observed,1);
+ assert.equal(names.has('mktWillReveal'),false,'content must remain visible before visibility is known');
+ callback([{target,isIntersecting:false}]);
+ assert.equal(names.has('mktWillReveal'),true,'only confirmed offscreen content can be hidden');
+ callback([{target,isIntersecting:true}]);
+ assert.equal(names.has('mktIsVisible'),true);
+ assert.equal(unobserved,1,'visible content is never re-hidden');
 });
