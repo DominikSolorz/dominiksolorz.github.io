@@ -78,7 +78,7 @@ for(const [path,tokens] of checks){
 // Reject the original cause of invisible releases: redirect to an outdated public mirror.
 const entryScript=await get('public-entry.js?v=3');
 assert.ok(!entryScript.includes('home-security-dominik-solorz.vercel.app'),'The public entry must not redirect to stale Vercel');
-assert.ok(entryScript.includes("new URL('./panel.html'"),'Protected login and PIN paths must stay on the panel origin');
+assert.ok(entryScript.includes('panel.html')&&entryScript.includes('location.replace'), 'Private panel routing must remain in the deployed minified bridge');
 const publicHTML=await get('index.html');
 assert.ok(publicHTML.includes('rel="canonical" href="https://dominiksolorz.github.io/kamera/"'));
 console.log('OK routing: up-to-date GitHub Pages homepage, secure owner panel preserved.');
