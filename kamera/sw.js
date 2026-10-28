@@ -28,12 +28,20 @@ self.addEventListener("fetch", event => {
     const homeNavigation = url.pathname === panelPath || url.pathname === panelPath + "index.html";
     const panelNavigation = url.pathname === panelPath + "panel.html";
     const pageKey = panelNavigation ? "./panel.html" : homeNavigation ? "./index.html" : url.origin + url.pathname;
-    event.respondWith(fetch(event.request).then(async response => {
+    // A user-requested upgrade must not reuse the browser's old HTML cache.
+    // Ordinary navigation stays network-first as before.
+    const upgradeNavigation = url.searchParams.has('hs_release');
+    const navigationRequest = upgradeNavigation
+      ? fetch(event.request, {cache: 'no-store'})
+      : fetch(event.request);
+    event.respondWith(navigationRequest.then(async response => {
       if (response.ok && response.headers.get("content-type")?.includes("text/html")) {
         try { const cache = await caches.open(CACHE); await cache.put(pageKey, response.clone()); } catch { /* A full cache must not hide a working network response. */ }
       }
       return response;
     }).catch(async () => {
+      // Never report a successful new release while offline or serving old HTML.
+      if (upgradeNavigation) return new Response('Aktualizacja wymaga połączenia z internetem. Spróbuj ponownie.', {status:503,headers:{"Content-Type":"text/plain; charset=utf-8"}});
       const cached = await caches.match(pageKey);
       if (cached) return cached;
       return new Response('<!doctype html><html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Brak połączenia — HOME SECURITY</title><h1>Ta strona nie jest dostępna offline</h1><p>Połącz się z internetem i spróbuj ponownie.</p><a href="' + panelPath + '">Wróć do HOME SECURITY</a></html>', {status:503,headers:{"Content-Type":"text/html; charset=utf-8"}});
