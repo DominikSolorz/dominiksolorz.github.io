@@ -50,7 +50,8 @@ jobs:
           BUILD="$(node -p "require('./kamera/version.json').version")"
           for i in $(seq 1 36); do
             url="https://dominiksolorz.github.io/kamera/o-systemie.html?audit=${GITHUB_SHA}&attempt=${i}"
-            if curl --fail --silent --show-error --max-time 15 --header "Cache-Control: no-cache" "$url" | grep -q "home-security-build\\\" content=\\\"${BUILD}\\\"" \
+            if html="$(curl --fail --silent --show-error --max-time 15 --header "Cache-Control: no-cache" "$url")" \
+              && [[ "$html" == *"home-security-build\" content=\"${BUILD}\""* ]] \
               && curl --fail --silent --show-error --max-time 15 --head "https://dominiksolorz.github.io/kamera/assets/home-security-hero-640.webp?audit=${GITHUB_SHA}" > /dev/null; then
               echo "Pages is serving HOME SECURITY build ${BUILD} with the optimized media."
               break
