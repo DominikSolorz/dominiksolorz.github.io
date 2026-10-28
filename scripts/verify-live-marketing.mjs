@@ -35,6 +35,7 @@ const assets=[
  'interface-concept.css?v=2',
  'marketing-motion.css?v=1','marketing.css?v=6',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
+ 'assets/home-security-hero-640.webp','assets/home-security-hero.webp','assets/home-security-how-it-works-640.webp','assets/ds-logo-96.webp','../docs/ui-193/01-pulpit-960.webp',
  'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-1.4.14.exe'
 ];
 
