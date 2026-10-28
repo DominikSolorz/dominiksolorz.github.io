@@ -34,3 +34,10 @@ test('Windows release retries promptly when tests are fixed after a failed push'
  assert.ok(workflow.includes("- 'tests/**'"),'test-only fixes must trigger a new release check');
  assert.ok(workflow.includes("node scripts/desktop-release.mjs plan"),'unchanged application sources must not create duplicate installers');
 });
+
+test('installer version preparation never rewrites manifest-driven live-site checks',async()=>{
+ const source=await readFile(new URL('../scripts/desktop-release.mjs',import.meta.url),'utf8');
+ const preparation=source.slice(source.indexOf("if(command==='prepare')"),source.indexOf("if(command==='finish')"));
+ assert.ok(preparation.includes("'desktop-client/Program.cs'"));
+ assert.ok(!preparation.includes("'scripts/verify-live-marketing.mjs'"),'dynamic production audit must not be treated as a version-stamped installer file');
+});
