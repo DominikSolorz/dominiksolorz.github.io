@@ -14,6 +14,9 @@ for(const [name,path] of reportFiles){
  const report=JSON.parse(await readFile(path,'utf8'));
  if(!report.lighthouseVersion||!report.categories?.performance||!report.audits?.['largest-contentful-paint'])throw new Error('Incomplete Lighthouse results: '+path);
  const a=report.audits;
+ for(const id of ['errors-in-console','inspector-issues']){
+  if(a[id]?.score===0)throw new Error('Published browser regression in '+path+': '+JSON.stringify(a[id].details?.items));
+ }
  rows.push({name,url:report.finalDisplayedUrl||report.finalUrl||report.requestedUrl,
   lighthouse:report.lighthouseVersion,
   performance:score(report.categories.performance),

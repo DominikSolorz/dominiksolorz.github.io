@@ -110,6 +110,7 @@ jobs:
           npm install --no-save --no-package-lock sharp@0.34 esbuild@0.25
           node scripts/optimize-marketing-images.mjs _site
           node scripts/minify-web-assets.mjs _site
+          node scripts/bundle-public-enhancements.mjs _site
           node scripts/harden-public-pages.mjs _site
           test -s _site/kamera/assets/home-security-hero-640.webp
           test -s _site/kamera/assets/ds-logo-96.webp

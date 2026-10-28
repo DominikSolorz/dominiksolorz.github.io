@@ -30,8 +30,8 @@ const checks=[
 ];
 const assets=[
  'marketing-start.css?v=2','marketing-start.mjs?v=2',
- 'marketing-auto-update.css?v=1','marketing-auto-update.mjs?v=3',
- 'core/web-updates.mjs?v=3','sw.js?v=142','panel-entry.mjs?v=2','public-entry.js?v=1',
+ 'marketing-auto-update.css?v=1','marketing-auto-update.mjs?v=4',
+ 'core/web-updates.mjs?v=3','sw.js?v=143','panel-entry.mjs?v=2','public-entry.js?v=1',
  'marketing-gallery.css?v=2','marketing-gallery.mjs?v=1',
  'interface-concept.css?v=2',
  'marketing-motion.css?v=2','marketing.css?v=7',
@@ -46,7 +46,7 @@ while(true){
     const html=await get('o-systemie.html');
     const app=await get('panel.html');
     const expected='home-security-build" content="'+expectedBuild+'"';
-    assert.ok(html.includes('id="przygotowanie"')&&html.includes(expected)&&html.includes('marketing-auto-update.mjs?v=3'),'The public homepage is still serving the previous release');
+    assert.ok(html.includes('id="przygotowanie"')&&html.includes(expected)&&html.includes('marketing-auto-update.mjs?v=4'),'The public homepage is still serving the previous release');
     assert.ok(app.includes(expected)&&app.includes('app.js?v='+expectedBuild),'The protected panel is still serving the previous release');
     break;
   }catch(error){
@@ -60,7 +60,7 @@ for(const [path,tokens] of checks){
   for(const token of tokens)assert.ok(html.includes(token),'Missing '+JSON.stringify(token)+' in '+path);
   if(/^(?:o-systemie|galeria|pomoc)\.html$/.test(path)||path.startsWith('blog/')){
     assert.ok(html.includes('home-security-build" content="'+expectedBuild+'"'),'Outdated marketing build on '+path);
-    assert.ok(html.includes('marketing-auto-update.mjs?v=3'),'New public update notice is missing from '+path);
+    assert.ok(html.includes('marketing-auto-update.mjs?v=4'),'New public update notice is missing from '+path);
   }
   if(path==='galeria.html')assert.equal((html.match(/class="mktConceptCard"/g)||[]).length,8);
   if(path==='panel.html')assert.ok(html.includes('app.js?v='+expectedBuild)&&html.includes('content="noindex,follow"'));
