@@ -78,7 +78,10 @@ test('the deployed-site audit checks real pages without submitting forms',async(
  assert.ok(script.includes("galeria.html"));
  assert.ok(script.includes("polityka-prywatnosci.html"));
  const release=JSON.parse(await read('kamera/desktop-update.json')).version;
- assert.ok(script.includes('HOME-SECURITY-Desktop-Setup-'+release+'.exe'));
+ assert.match(release,/^\d+\.\d+\.\d+$/);
+ assert.ok(script.includes("assert.equal(publicDesktop.version,expectedDesktop.version"),'production manifest must match the release');
+ assert.ok(script.includes("await get('downloads/HOME-SECURITY-Desktop-Setup-'+publicDesktop.version+'.exe',{method:'HEAD'})"),
+   'installer check must follow the manifest, not a hardcoded release file');
  assert.ok(!script.includes("method:'POST'"));
  assert.ok(!script.includes('submit()'));
  assert.ok(script.includes("../kamera/version.json"));
