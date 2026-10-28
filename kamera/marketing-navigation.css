@@ -34,7 +34,7 @@
  #publicHome .mktMobileMenu>nav,.marketingPage .mktMobileMenu>nav{
   right:12px;left:auto;width:min(390px,calc(100vw - 24px));padding:8px;
   max-height:min(76dvh,calc(100dvh - 83px));overflow-y:auto;overflow-x:hidden;
-  scroll-behavior:contain;overscroll-behavior:contain;
+  overscroll-behavior:contain;
   background:#12131c;border:1px solid #806775;border-radius:0 0 17px 17px;
   box-shadow:0 23px 65px #000b;
  }
