@@ -37,6 +37,8 @@ jobs:
         run: node --test tests/*.test.mjs
       - name: Verify public audit script syntax
         run: node --check scripts/verify-live-marketing.mjs
+      - name: Verify marketing image optimizer syntax
+        run: node --check scripts/optimize-marketing-images.mjs
   verify-desktop:
     runs-on: windows-latest
     timeout-minutes: 45
@@ -100,6 +102,16 @@ jobs:
           # Keep the previous verified release as a rollback package. Older
           # binaries remain in Git, not in the size-limited Pages artifact.
           cp kamera/updates/HomeSecurityDesktop-1.4.7-win-x64.zip _site/kamera/updates/
+      - name: Produce responsive WebP images for public pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Install AFTER rsync so node_modules are not added to the Pages artifact.
+          npm install --no-save --no-package-lock --ignore-scripts sharp@0.34
+          node scripts/optimize-marketing-images.mjs _site
+          test -s _site/kamera/assets/home-security-hero-640.webp
+          test -s _site/kamera/assets/ds-logo-96.webp
+          test -s _site/docs/ui-193/01-pulpit-960.webp
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
