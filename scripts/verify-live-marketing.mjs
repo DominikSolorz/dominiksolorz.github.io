@@ -29,6 +29,8 @@ const checks=[
 ];
 const assets=[
  'marketing-start.css?v=1','marketing-start.mjs?v=1',
+ 'marketing-auto-update.css?v=1','marketing-auto-update.mjs?v=3',
+ 'core/web-updates.mjs?v=3','sw.js?v=134',
  'marketing-gallery.css?v=1','marketing-gallery.mjs?v=1',
  'interface-concept.css?v=2',
  'marketing-motion.css?v=1','marketing.css?v=6',
@@ -40,7 +42,10 @@ let tries=0;
 while(true){
   try{
     const html=await get('o-systemie.html');
-    assert.ok(html.includes('id="przygotowanie"'),'GitHub Pages is still serving the previous release');
+    const app=await get('index.html');
+    const expected='home-security-build" content="'+expectedBuild+'"';
+    assert.ok(html.includes('id="przygotowanie"')&&html.includes(expected)&&html.includes('marketing-auto-update.mjs?v=3'),'The public homepage is still serving the previous release');
+    assert.ok(app.includes(expected)&&app.includes('app.js?v='+expectedBuild),'The protected panel is still serving the previous release');
     break;
   }catch(error){
     if(++tries>=18)throw error;
@@ -51,6 +56,10 @@ while(true){
 for(const [path,tokens] of checks){
   const html=await get(path);
   for(const token of tokens)assert.ok(html.includes(token),'Missing '+JSON.stringify(token)+' in '+path);
+  if(/^(?:o-systemie|galeria|pomoc)\.html$/.test(path)||path.startsWith('blog/')){
+    assert.ok(html.includes('home-security-build" content="'+expectedBuild+'"'),'Outdated marketing build on '+path);
+    assert.ok(html.includes('marketing-auto-update.mjs?v=3'),'New public update notice is missing from '+path);
+  }
   if(path==='galeria.html')assert.equal((html.match(/class="mktConceptCard"/g)||[]).length,8);
   if(path==='index.html')assert.ok(html.includes('app.js?v='+expectedBuild));
   console.log('OK document '+path);
