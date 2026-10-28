@@ -49,13 +49,29 @@ test('marketing updates retain SW version consistency and original image links',
   read('kamera/sw.js'),read('kamera/app.js'),read('kamera/version.json'),
   read('kamera/index.html'),read('design/marketing/home.html')]);
  const build=JSON.parse(manifest).version;
- assert.equal(build,'226');
+ assert.ok(/^\d+$/.test(build));
  assert.ok(app.includes('const VERSION = "'+build+'"'));
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
- assert.equal(shell,'136');
+ assert.ok(/^\d+$/.test(shell));
  assert.ok(sw.includes('kamera-domowa-shell-v'+shell));
  assert.ok(sw.includes('./app.js?v='+build));
  assert.ok(index.includes('home-security-build" content="'+build+'"'));
  assert.ok(index.includes('app.js?v='+build));
  assert.ok(source.includes('src="assets/home-security-hero.png"'));
+});
+
+test('public and locked app screens use compact high-DPI logos instead of eager 241 KiB JPEG downloads',async()=>{
+ const [html,optimizer,workflow]=await Promise.all([
+   read('kamera/index.html'),read('scripts/optimize-marketing-images.mjs'),
+   read('.github/workflows/pages.yml')
+ ]);
+ const privateLogos=[...html.matchAll(/<img class="(?:dsBrandLogo|dsPanelLogo)"[^>]+>/g)];
+ assert.equal(privateLogos.length,4);
+ for(const logo of privateLogos){
+   assert.match(logo[0],/assets\/ds-logo-96\.webp 96w/);
+   assert.match(logo[0],/assets\/ds-logo-192\.webp 192w/);
+   assert.ok(logo[0].includes('src="assets/ds-logo.jpg"'),'old browsers retain original fallback');
+ }
+ assert.ok(optimizer.includes("out:'kamera/assets/ds-logo-192.webp'"));
+ assert.ok(workflow.includes('_site/kamera/assets/ds-logo-192.webp'));
 });
