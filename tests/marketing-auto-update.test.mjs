@@ -43,7 +43,7 @@ function mount({latest=225,marketing=true,dirty=false}={}) {
   return {
     async run() {
       const code=(await read('kamera/marketing-auto-update.mjs'))
-        .replace(/^import[^\n]*\n/, '')
+        .replace(/^import[^\n]*\n/m, '')
         .replaceAll('import.meta.url',JSON.stringify('https://example.test/kamera/marketing-auto-update.mjs'));
       vm.runInNewContext(code,runtime);
       await new Promise(resolve=>setImmediate(resolve));
