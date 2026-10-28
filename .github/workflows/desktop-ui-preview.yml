@@ -70,7 +70,9 @@ jobs:
           }
           $html = Get-Content -Raw (Join-Path $output 'Panel/panel.html')
           $css = Get-Content -Raw (Join-Path $output 'Panel/interface-concept.css')
-          if (-not $html.Contains('interface-concept.css?v=2')) { throw 'Preview is missing real UI concept stylesheet.' }
+          $sourcePanel = Get-Content -Raw 'kamera/panel.html'
+          $stylesheet = [regex]::Match($sourcePanel, 'interface-concept\.css\?v=[0-9]+').Value
+          if (-not $stylesheet -or -not $html.Contains($stylesheet)) { throw 'Preview stylesheet does not match current source panel.' }
           $webBuild=(Get-Content -Raw 'kamera/version.json' | ConvertFrom-Json).version
           if (-not $html.Contains('home-security-build" content="' + $webBuild + '"')) { throw 'Preview does not match current web build.' }
           if (-not $css.Contains('.desktopCameraTile')) { throw 'Real camera component is not styled.' }
