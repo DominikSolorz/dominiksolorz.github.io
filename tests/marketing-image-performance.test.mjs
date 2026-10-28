@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,stat} from 'node:fs/promises';
 
-const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
+const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
 test('public LCP hero uses responsive WebP candidates with original fallback and priority',async()=>{
  const [source,index,brochure]=await Promise.all([
