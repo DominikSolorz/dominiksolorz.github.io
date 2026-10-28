@@ -1,5 +1,6 @@
-// Public website uses the controlled HTTP host; private entry remains on its original origin.
-// Fixed same-origin destination. No network requests, analytics, authentication or device access.
+// Always serve the up-to-date public homepage from GitHub Pages.
+// Private authentication, transmitter and owner-panel entries stay on their original origin.
+// No network requests, analytics, authentication or device access.
 (() => {
   const params = new URLSearchParams(location.search);
   const fragment = new URLSearchParams(location.hash.replace(/^#/, ''));
@@ -12,12 +13,9 @@
   const native = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview;
   const installed = window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
   if (!privateLink && !pendingEntry && !native && !installed) {
-    // The support assistant keeps its existing same-origin backend and consent UI.
-    if (location.hash === '#asystent') return;
-    const publicTarget = new URL('https://home-security-dominik-solorz.vercel.app/kamera/');
-    publicTarget.search = location.search;
-    publicTarget.hash = location.hash;
-    location.replace(publicTarget.href);
+    // The page is already complete static marketing HTML.
+    // Do not send people to a separately queued, potentially outdated Vercel release.
+    // The public support assistant (#asystent) remains on this same origin.
     return;
   }
   const target = new URL('./panel.html', location.href);
