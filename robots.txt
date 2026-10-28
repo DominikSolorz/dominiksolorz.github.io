@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # The authenticated application shell uses noindex; public product pages are indexable.
-Sitemap: https://dominiksolorz.github.io/kamera/sitemap.xml
+Sitemap: https://home-security-dominik-solorz.vercel.app/kamera/sitemap.xml

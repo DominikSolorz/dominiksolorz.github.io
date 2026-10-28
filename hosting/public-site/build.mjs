@@ -73,7 +73,7 @@ for(const name of names){
  const canonical=origin+(name==='index.html'||name==='o-systemie.html'?'/kamera/':'/kamera/'+name);
  html=html.replace(/(<link rel="canonical" href=")[^"]+("[^>]*>)/,'$1'+canonical+'$2').replace(/(<meta property="og:url" content=")[^"]+("[^>]*>)/,'$1'+canonical+'$2');
  if(!html.includes('rel="canonical"'))html=html.replace('</head>','<link rel="canonical" href="'+canonical+'"></head>');
- html=html.replace(/<button\b[^>]*data-hs-open-support[^>]*>[\s\S]*?<\/button>/g,'<a class="mktButton" href="'+legacy+'/kamera/pomoc-ai.html">Otwórz pomoc AI ↗</a>');
+ html=html.replace(/<button\b[^>]*data-hs-open-support[^>]*>[\s\S]*?<\/button>/g,'<a class="mktButton" href="'+legacy+'/kamera/#asystent">Otwórz pomoc AI ↗</a>');
  for(const entry of new Set(entries)){const a=await moduleAsset(entry);html=html.replace('</body>','<script type="module" src="'+a.path+'" integrity="'+a.integrity+'" crossorigin="anonymous"></script></body>');}
  const ld=JSON.stringify({'@context':'https://schema.org','@type':'WebPage',url:canonical,name:html.match(/<title>([^<]+)<\/title>/)?.[1]||'HOME SECURITY',inLanguage:'pl-PL',isPartOf:{'@type':'WebSite',url:origin+'/kamera/',name:'HOME SECURITY'}}).replaceAll('<','\\u003c');
  hashes.add("'"+sri(ld)+"'");html=html.replace('</head>','<script type="application/ld+json">'+ld+'</script></head>').replace(/(<meta charset="utf-8">)/,'$1<script>'+entryCode+'</script>');

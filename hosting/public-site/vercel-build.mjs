@@ -13,3 +13,4 @@ for(const entry of config.redirects)routes.push({src:entry.source==='/'?'^/$':'^
 for(const entry of config.rewrites)routes.push({src:'^'+entry.source+'$',dest:entry.destination});
 routes.push({handle:'filesystem'});
 await mkdir(resolve(root,'.vercel/output'),{recursive:true});await writeFile(resolve(root,'.vercel/output/config.json'),JSON.stringify({version:3,routes},null,2)+'\n');
+const verify=spawnSync(process.execPath,['hosting/public-site/verify.mjs',output],{cwd:root,stdio:'inherit'});if(verify.status!==0)process.exit(verify.status||1);

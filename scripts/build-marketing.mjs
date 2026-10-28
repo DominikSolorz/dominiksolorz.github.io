@@ -6,6 +6,7 @@ const normalize=text=>text.replace(/\r\n/g,'\n');
 const read=async(base,name)=>normalize(await readFile(new URL(name,base),'utf8'));
 const escape=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const origin='https://dominiksolorz.github.io/kamera/';
+const publicOrigin='https://home-security-dominik-solorz.vercel.app/kamera/';
 const publicBuild=JSON.parse(await read(camera,'version.json')).version;
 async function emit(name,html){
   const file=new URL(name,camera);
@@ -13,7 +14,8 @@ async function emit(name,html){
   else{await mkdir(new URL('./',file),{recursive:true});await writeFile(file,html);}
 }
 function head(title,description,path,prefix=''){
-return `<!doctype html>\n<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="home-security-build" content="${publicBuild}"><meta name="theme-color" content="#0b0c10"><meta name="referrer" content="no-referrer"><meta name="robots" content="index,follow"><title>${escape(title)} — HOME SECURITY</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="${origin+path}"><meta property="og:type" content="website"><meta property="og:locale" content="pl_PL"><meta property="og:title" content="${escape(title)} — HOME SECURITY"><meta property="og:description" content="${escape(description)}"><meta property="og:url" content="${origin+path}"><meta property="og:image" content="${origin}assets/home-security-hero.png"><link rel="icon" href="${prefix}icons/kamera-192.svg" type="image/svg+xml"><link rel="stylesheet" href="${prefix}marketing.css?v=7"><link rel="stylesheet" href="${prefix}marketing-motion.css?v=2"><script type="module" src="${prefix}marketing-motion.mjs?v=3"></script><link rel="stylesheet" href="${prefix}marketing-auto-update.css?v=1"><script type="module" src="${prefix}marketing-auto-update.mjs?v=4"></script></head>\n<body class="marketingPage">\n`;
+const canonical=(path==='pomoc.html'?origin:publicOrigin)+path;
+return `<!doctype html>\n<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="home-security-build" content="${publicBuild}"><meta name="theme-color" content="#0b0c10"><meta name="referrer" content="no-referrer"><meta name="robots" content="index,follow"><title>${escape(title)} — HOME SECURITY</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="${canonical}"><meta property="og:type" content="website"><meta property="og:locale" content="pl_PL"><meta property="og:title" content="${escape(title)} — HOME SECURITY"><meta property="og:description" content="${escape(description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${origin}assets/home-security-hero.png"><link rel="icon" href="${prefix}icons/kamera-192.svg" type="image/svg+xml"><link rel="stylesheet" href="${prefix}marketing.css?v=7"><link rel="stylesheet" href="${prefix}marketing-motion.css?v=2"><script type="module" src="${prefix}marketing-motion.mjs?v=3"></script><link rel="stylesheet" href="${prefix}marketing-auto-update.css?v=1"><script type="module" src="${prefix}marketing-auto-update.mjs?v=4"></script></head>\n<body class="marketingPage">\n`;
 }
 function nav(prefix=''){
  const panel=prefix+'panel.html';
@@ -27,7 +29,7 @@ const index=await read(camera,'panel.html');
 const slot=/<section id="publicHome"[\s\S]*?<\/section>(?=\s*<section id="authDialog")/;
 if(!slot.test(index))throw new Error('Public marketing slot not found; private panel not modified.');
 await emit('panel.html',index.replace(slot,home.trimEnd()));
-const publicHome=head('Monitoring domu z podglądem na telefonie','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','').replace('</head>','<script src="public-entry.js?v=1"></script><link rel="manifest" href="manifest.webmanifest?v=3"></head>')+home+'\n</body></html>\n';
+const publicHome=head('Monitoring domu z podglądem na telefonie','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','').replace('</head>','<script src="public-entry.js?v=2"></script><link rel="manifest" href="manifest.webmanifest?v=3"></head>')+home+'\n</body></html>\n';
 await emit('index.html',publicHome);
 // Keep old inbound product links working; canonical points at the single homepage.
 await emit('o-systemie.html',publicHome);
@@ -44,6 +46,6 @@ const gallery=await read(source,'gallery.html');
 await emit('galeria.html',head('Galeria projektów panelu i telefonu','Zobacz osiem koncepcji interfejsu HOME SECURITY: pulpit, sterowanie, nagrania, diagnostyka i telefon. To projekty UI, nie rzeczywiste zrzuty aplikacji.','galeria.html')+nav()+gallery+footer()+'\n</body></html>\n');
 const contact=await read(source,'contact.html');
 await emit('pomoc.html',head('Kontakt i pomoc','Skontaktuj się z administratorem HOME SECURITY. Pomoc techniczna, konfiguracja, nagrania i pytania o produkt.','pomoc.html')+nav()+contact+footer()+'<script src="vendor/supabase.js?v=2.117.2"></script><script type="module" src="marketing-contact.js?v=8"></script>\n</body></html>\n');
-const paths=['','galeria.html','pomoc.html','blog/index.html',...posts.map(post=>'blog/'+post.slug+'.html')];
-await emit('sitemap.xml','<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+paths.map(path=>`<url><loc>${origin+path}</loc></url>`).join('\n')+'\n</urlset>\n');
+const paths=['','galeria.html','blog/index.html',...posts.map(post=>'blog/'+post.slug+'.html')];
+await emit('sitemap.xml','<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+paths.map(path=>`<url><loc>${publicOrigin+path}</loc></url>`).join('\n')+'\n</urlset>\n');
 console.log((check?'Verified':'Generated')+' marketing home, UI gallery, contact, blog index, 3 articles and sitemap.');

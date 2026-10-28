@@ -12,9 +12,9 @@ function redirect(path,{native=false,pending=false,installed=false,storageBlocke
   sessionStorage:{getItem:()=>{if(storageBlocked)throw Error('private mode');return pending?'ticket':null;}}});
  return result;
 }
-test('public root, phone/desktop variants and section anchors stay public, even in private mode',()=>{
+test('public entries route to controlled host while preserving query and anchors',()=>{
  for(const path of ['/kamera/','/kamera/?ui=phone','/kamera/?ui=computer','/kamera/index.html#faq','/kamera/?view=desktop','/kamera/?odbiorca=invalid']){
-  assert.equal(redirect(path),undefined,path);assert.equal(redirect(path,{storageBlocked:true}),undefined,path);
+  const u=new URL(path,'https://dominiksolorz.github.io');const expected='https://home-security-dominik-solorz.vercel.app/kamera/'+u.search+u.hash;assert.equal(redirect(path),expected,path);assert.equal(redirect(path,{storageBlocked:true}),expected,path);
  }
 });
 test('legacy auth, receiver and OAuth returns preserve their full query and fragment on the same origin',()=>{
@@ -32,7 +32,7 @@ test('native, installed and pending entry launches retain the private panel',()=
 test('homepage HTML is indexable without JavaScript and contains no private account or camera runtime',async()=>{
  const html=await read('kamera/index.html');
  assert.match(html,/<meta name="robots" content="index,follow">/);
- assert.match(html,/<link rel="canonical" href="https:\/\/dominiksolorz.github.io\/kamera\/">/);
+ assert.match(html,/<link rel="canonical" href="https:\/\/home-security-dominik-solorz.vercel.app\/kamera\/">/);
  assert.equal((html.match(/rel="canonical"/g)||[]).length,1);
  assert.ok(html.includes('<h1>')&&html.includes('name="description"'));
  for(const token of ['id="authDialog"','id="app"','id="panelRuntime"','src="auth.js','src="app.js','src="vendor/supabase'])assert.ok(!html.includes(token),token);
@@ -41,16 +41,16 @@ test('homepage HTML is indexable without JavaScript and contains no private acco
 test('sitemap contains only unique indexable canonical pages, never panel, query aliases or drafts',async()=>{
  const sitemap=await read('kamera/sitemap.xml');
  const urls=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match=>match[1]);
- assert.equal(urls.length,7);assert.equal(new Set(urls).size,urls.length);
+ assert.equal(urls.length,6);assert.equal(new Set(urls).size,urls.length);
  for(const href of urls){
-  const url=new URL(href);assert.equal(url.origin,'https://dominiksolorz.github.io');assert.equal(url.search,'');
+  const url=new URL(href);assert.equal(url.origin,'https://home-security-dominik-solorz.vercel.app');assert.equal(url.search,'');
   const path=url.pathname.endsWith('/')?url.pathname+'index.html':url.pathname;
   const html=await read(path.slice(1));
   assert.ok(html.includes('content="index,follow"'),path);
   assert.ok(html.includes('rel="canonical" href="'+href+'"'),path);
  }
  const alias=await read('kamera/o-systemie.html');
- assert.ok(alias.includes('rel="canonical" href="https://dominiksolorz.github.io/kamera/"'));
+ assert.ok(alias.includes('rel="canonical" href="https://home-security-dominik-solorz.vercel.app/kamera/"'));
  for(const path of ['panel.html','polityka-prywatnosci.html','regulamin.html','rodo.html']){
   assert.ok((await read('kamera/'+path)).includes('content="noindex,'),path);assert.ok(!sitemap.includes(path),path);
  }

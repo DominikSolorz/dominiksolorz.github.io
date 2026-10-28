@@ -10,10 +10,10 @@ export async function hardenPublicPages(root){
  const sitemap=await readFile(resolve(camera,'sitemap.xml'),'utf8');
  const origin='https://dominiksolorz.github.io';
  const pages=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(([,href])=>{
-  const url=new URL(href);if(url.origin!==origin||!url.pathname.startsWith('/kamera/'))throw Error('Unexpected sitemap origin');
+  const url=new URL(href);if(![origin,'https://home-security-dominik-solorz.vercel.app'].includes(url.origin)||!url.pathname.startsWith('/kamera/'))throw Error('Unexpected sitemap origin');
   return resolve(root,'.'+url.pathname+(url.pathname.endsWith('/')?'index.html':''));
  });
- pages.push(...['o-systemie.html','polityka-prywatnosci.html','regulamin.html','rodo.html'].map(path=>resolve(camera,path)));
+ pages.push(...['pomoc.html','o-systemie.html','polityka-prywatnosci.html','regulamin.html','rodo.html'].map(path=>resolve(camera,path)));
  for(const path of new Set(pages)){
   let html=await readFile(path,'utf8');
   if(/id="(?:authDialog|panelRuntime)"/.test(html))throw Error('Refusing to apply public-only policy to private panel');
@@ -31,7 +31,7 @@ export async function hardenPublicPages(root){
    html=html.replace(match[0],`<style data-source="${match[1]}">${css}</style>`);
   }
   // This tiny synchronous compatibility check must run before other page modules, without a network hop.
-  const bridge=/<script src="public-entry\.js\?v=1"><\/script>/;
+  const bridge=/<script src="public-entry\.js\?v=2"><\/script>/;
   if(bridge.test(html)){
    const js=await readFile(resolve(camera,'public-entry.js'),'utf8');
    if(/<\/script/i.test(js))throw Error('Unsafe script terminator');
