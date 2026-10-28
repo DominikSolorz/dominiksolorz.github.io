@@ -54,7 +54,9 @@ jobs:
           test -n "$CHROME" || { echo "Chrome missing on runner"; exit 1; }
           echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
           "$CHROME" --version
-      - name: Wait for Pages to publish this web build and its compressed images
+      # Audit the same GitHub Pages origin that Lighthouse measures.
+      # Vercel is an independent deployment and must not gate this origin.
+      - name: Wait for GitHub Pages to publish this build and its optimized images
         shell: bash
         run: |
           set -euo pipefail
@@ -63,9 +65,7 @@ jobs:
             url="https://dominiksolorz.github.io/kamera/o-systemie.html?audit=${GITHUB_SHA}&attempt=${i}"
             if html="$(curl --fail --silent --show-error --max-time 15 --header "Cache-Control: no-cache" "$url")" \
               && [[ "$html" == *"home-security-build\" content=\"${BUILD}\""* ]] \
-              && curl --fail --silent --show-error --max-time 15 --head "https://dominiksolorz.github.io/kamera/assets/home-security-hero-640.webp?audit=${GITHUB_SHA}" > /dev/null \
-              && public_build="$(curl --fail --silent --show-error --max-time 15 "https://home-security-dominik-solorz.vercel.app/kamera/version.json?audit=${GITHUB_SHA}")" \
-              && [[ "$public_build" == *"\"version\":\"${BUILD}\""* ]]; then
+              && curl --fail --silent --show-error --max-time 15 --head "https://dominiksolorz.github.io/kamera/assets/home-security-hero-640.webp?audit=${GITHUB_SHA}" > /dev/null; then
               echo "Pages is serving HOME SECURITY build ${BUILD} with the optimized media."
               break
             fi
