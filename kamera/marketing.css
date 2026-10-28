@@ -389,3 +389,29 @@
 .mktHeroCopy{min-width:0}
 .mktHero h1{font-size:clamp(45px,5.1vw,70px)}
 @media(max-width:700px){.mktReadingGuide{padding:20px;margin-block:26px 32px}.mktReadingGuide h2{font-size:23px}.mktHero h1{font-size:clamp(37px,10.4vw,55px);letter-spacing:-.06em}.mktBrand small{font-size:12px;letter-spacing:.06em}}
+
+/* Compact public homepage: keep captions and touch targets readable at every width. */
+#publicHome .mktHero{padding-top:clamp(32px,4vw,60px);padding-bottom:44px;gap:clamp(24px,4vw,56px)}
+#publicHome .mktHero h1{font-size:clamp(38px,4.4vw,60px);line-height:1.08;margin-bottom:20px}
+#publicHome .mktHero .mktLead{font-size:16px;line-height:1.65;margin-bottom:22px}
+#publicHome .mktHeroVisual{height:460px}
+#publicHome .mktHeroVisual figcaption strong{font-size:24px}
+#publicHome h2{font-size:clamp(25px,2.6vw,35px);line-height:1.22}
+#publicHome .mktFeatureMain h3,#publicHome .mktDownload h3{font-size:28px}
+#publicHome .mktSection{padding-block:64px}
+#publicHome.mktSite :is(.mktScenarios,.mktPrivacy,.mktConceptGallery,.mktSetup){padding-block:60px}
+#publicHome .mktStage{padding-top:60px}
+#publicHome .mktFeature{padding:22px}
+#publicHome .mktSectionHead{margin-bottom:26px}
+@media(max-width:700px){
+  #publicHome .mktHero{padding-top:28px;padding-bottom:32px;gap:24px}
+  #publicHome .mktHero h1{font-size:clamp(32px,8.8vw,44px);letter-spacing:-.045em;margin-bottom:18px}
+  #publicHome .mktHero .mktLead{font-size:15px;line-height:1.65}
+  #publicHome .mktHeroVisual{height:clamp(260px,72vw,320px)}
+  #publicHome .mktHeroVisual figcaption strong{font-size:22px}
+  #publicHome h2{font-size:25px}
+  #publicHome .mktFeatureMain h3,#publicHome .mktDownload h3{font-size:25px}
+  #publicHome .mktSection,#publicHome.mktSite :is(.mktScenarios,.mktPrivacy,.mktConceptGallery,.mktSetup){padding-block:40px}
+  #publicHome .mktStage{padding-top:40px}
+  #publicHome .mktFeature{padding:20px}
+}
