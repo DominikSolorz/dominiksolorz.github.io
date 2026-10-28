@@ -12,6 +12,12 @@ for(const name of manifest.documents){
  assert(html.includes('home-security-build" content="'+publicVersion+'"'),'Public release metadata must agree: '+name);
  assert(html.includes('width=device-width,initial-scale=1'),'Browser chooses the responsive viewport: '+name);
  assert(!/maximum-scale|user-scalable=no/.test(html),'Browser zoom must remain available: '+name);
+ if(html.includes('class="mktHeader"')){
+  assert.equal((html.match(/<details class="mktMobileMenu">/g)||[]).length,1,'One phone disclosure per header: '+name);
+  assert(html.includes('<summary aria-label="Otwórz lub zamknij menu nawigacji">'),'Phone menu is operable without JavaScript: '+name);
+  const phone=html.match(/<details class="mktMobileMenu">[\s\S]*?<\/details>/)?.[0]||'';
+  assert(phone.includes('auth=login')&&phone.includes('auth=register'),'Phone menu retains both account routes: '+name);
+ }
 }
 const config=JSON.parse(await readFile(join(out,'vercel.json'),'utf8'));
 const policy=config.headers[0].headers.find(h=>h.key==='Content-Security-Policy').value;
