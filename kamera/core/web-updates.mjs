@@ -36,7 +36,9 @@ export function createWebUpdates({serviceWorker, build, releaseVersion=null, rea
   }
   async function check({background=false}={}) {
     if(disposed||busy)return;
-    if(!serviceWorker){emit('unsupported','Aktualizacje PWA nie są dostępne w tej przeglądarce.');return;}
+    const localRelease=Number(releaseVersion);
+    const validRelease=typeof releaseVersion==='string' && /^\d+$/.test(releaseVersion) && Number.isSafeInteger(localRelease) && localRelease>0;
+    if(!serviceWorker&&!validRelease){emit('unsupported','Brak obsługi aktualizacji w tej przeglądarce.');return;}
     if(background&&now()-lastCheck<60000)return;
     busy=true;lastCheck=now();emit('checking','Sprawdzam aktualizacje…');
     try {
