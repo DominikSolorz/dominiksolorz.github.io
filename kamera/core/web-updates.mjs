@@ -42,6 +42,15 @@ export function createWebUpdates({serviceWorker, build, releaseVersion=null, rea
     if(background&&now()-lastCheck<60000)return;
     busy=true;lastCheck=now();emit('checking','Sprawdzam aktualizacje…');
     try {
+      // Service Workers can be unavailable in restricted or older browsers.
+      // Read the public release manifest without modifying camera or account state.
+      if(!serviceWorker){
+        const published=Number(await readRelease());
+        if(!Number.isSafeInteger(published)||published<1)throw Error('Nieprawidłowa wersja');
+        if(published>localRelease)ready();
+        else {available=false;emit('current','Masz najnowszą wersję panelu.');}
+        return;
+      }
       if(!registration){
         registration=await serviceWorker.register(`./sw.js?v=${build}`,{scope:'./',updateViaCache:'none'});
         if(disposed)return;
