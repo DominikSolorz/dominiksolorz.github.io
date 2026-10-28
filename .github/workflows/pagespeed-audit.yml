@@ -11,6 +11,9 @@ on:
       - 'kamera/marketing-motion.css'
       - 'kamera/marketing-motion.mjs'
       - 'kamera/app.js'
+      - 'kamera/panel-entry.mjs'
+      - 'scripts/minify-web-assets.mjs'
+      - 'scripts/optimize-marketing-images.mjs'
       - 'kamera/sw.js'
       - 'kamera/assets/**'
       - 'design/marketing/home.html'
@@ -37,7 +40,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install Lighthouse CLI
-        run: npm install --no-save --no-package-lock lighthouse@12
+        run: npm install --no-save --no-package-lock lighthouse@13
       - name: Confirm Chrome availability
         shell: bash
         run: |

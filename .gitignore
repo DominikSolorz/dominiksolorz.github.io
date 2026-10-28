@@ -15,3 +15,6 @@ agent-tests/obj/
 .env
 .env.local
 supabase/functions/.env
+node_modules/
+_site/
+lighthouse-results/

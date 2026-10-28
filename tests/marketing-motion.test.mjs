@@ -69,7 +69,7 @@ test('all marketing pages load the motion styles and script, including the panel
    'kamera/blog/zapis-lokalny-i-drive.html','kamera/blog/diagnostyka-monitoringu.html'];
  for(const path of paths){
    const html=await read(path),prefix=path.includes('/blog/')?'../':'';
-   assert.ok(html.includes('href="'+prefix+'marketing-motion.css?v=1"'),path);
+   assert.ok(html.includes('href="'+prefix+'marketing-motion.css?v=2"'),path);
    assert.ok(html.includes('src="'+prefix+'marketing-motion.mjs?v=1"'),path);
    assert.equal((html.match(/marketing-motion\.mjs\?v=1/g)||[]).length,1,path);
  }
@@ -91,7 +91,7 @@ test('scroll effects are progressive, focus-safe and opt out of reduced motion',
 test('PWA, runtime and public pages have matching motion asset and build versions',async()=>{
  const [sw,app,version,index]=await Promise.all([
   'kamera/sw.js','kamera/app.js','kamera/version.json','kamera/index.html'].map(read));
- for(const asset of ['marketing-motion.css?v=1','marketing-motion.mjs?v=1'])assert.ok(sw.includes('./'+asset));
+ for(const asset of ['marketing-motion.css?v=2','marketing-motion.mjs?v=1'])assert.ok(sw.includes('./'+asset));
  const release=JSON.parse(version).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
  assert.ok(/^\d+$/.test(release)&&/^\d+$/.test(shell),'manifest and service worker revisions must be numeric');

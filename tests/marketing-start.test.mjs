@@ -22,11 +22,11 @@ test('the setup checklist actually responds to four user choices without trackin
  assert.equal(progress.attrs['aria-valuenow'],'0');
  inputs[0].checked=true;handlers[0]();
  assert.equal(count.textContent,'1 / 4');
- assert.equal(bar.style.width,'25%');
+ assert.equal(bar.style.transform,'scaleX(0.25)');
  inputs.forEach(item=>{item.checked=true;});
  handlers[1]();
  assert.equal(count.textContent,'4 / 4');
- assert.equal(bar.style.width,'100%');
+ assert.equal(bar.style.transform,'scaleX(1)');
  assert.match(summary.textContent,/nie automatyczny test kamery/);
  assert.ok(!/localStorage|sessionStorage|fetch\(|XMLHttpRequest|navigator\.mediaDevices/.test(script),'checklist does not collect data or access camera');
 });
@@ -37,8 +37,8 @@ test('public home makes no fake sales promises and always marks concept material
   assert.ok(home.includes(part),'missing explicit disclosure: '+part);
  }
  assert.equal((home.match(/data-mkt-setup/g)||[]).length,4);
- assert.ok(home.includes('marketing-start.css?v=1'));
- assert.ok(home.includes('marketing-start.mjs?v=1'));
+ assert.ok(home.includes('marketing-start.css?v=2'));
+ assert.ok(home.includes('marketing-start.mjs?v=2'));
  assert.ok(!home.includes('Kup teraz'));
  assert.ok(!home.includes('Zapłać teraz'));
  const [page,app]=await Promise.all(['kamera/o-systemie.html','kamera/index.html'].map(read));
@@ -53,8 +53,8 @@ test('marketing guided checklist is responsive and safely cached with the new re
  assert.ok(css.includes('@media(max-width:670px)'));
  assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
  assert.ok(css.includes('mktSetupItem:focus-within'));
- assert.ok(sw.includes('./marketing-start.css?v=1'));
- assert.ok(sw.includes('./marketing-start.mjs?v=1'));
+ assert.ok(sw.includes('./marketing-start.css?v=2'));
+ assert.ok(sw.includes('./marketing-start.mjs?v=2'));
  const release=JSON.parse(version).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
  assert.ok(/^\d+$/.test(release)&&/^\d+$/.test(shell),'manifest and service worker revisions must be numeric');

@@ -3,11 +3,11 @@
 #publicHome .mktConceptHead{margin-bottom:32px}
 #publicHome .mktConceptHead>p{max-width:440px;line-height:1.7}
 #publicHome .mktConceptGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(14px,2.1vw,26px)}
-#publicHome .mktConceptCard{min-width:0;margin:0;border:1px solid #49404e;border-radius:19px;overflow:hidden;background:linear-gradient(150deg,#24212c,#14161f);box-shadow:0 16px 45px #0003;transition:border-color .25s ease,box-shadow .25s ease,transform .25s cubic-bezier(.22,1,.36,1)}
+#publicHome .mktConceptCard{min-width:0;margin:0;border:1px solid #49404e;border-radius:19px;overflow:hidden;background:linear-gradient(150deg,#24212c,#14161f);box-shadow:0 16px 45px #0003;transition:transform .22s ease}
 #publicHome .mktConceptCard:hover,#publicHome .mktConceptCard:focus-within{transform:translateY(-3px);border-color:#c39c85;box-shadow:0 25px 60px #0006}
 #publicHome .mktConceptOpen{position:relative;display:block;aspect-ratio:3/2;overflow:hidden;isolation:isolate;background:#0d1118}
 #publicHome .mktConceptOpen:after{position:absolute;content:"";inset:auto 0 0 0;height:45%;background:linear-gradient(0deg,#090d15b0,transparent);pointer-events:none}
-#publicHome .mktConceptOpen img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 20%;transition:transform .65s cubic-bezier(.22,1,.36,1),filter .35s ease}
+#publicHome .mktConceptOpen img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 20%;transition:transform .22s ease}
 #publicHome .mktConceptOpen:hover img,#publicHome .mktConceptOpen:focus-visible img{transform:scale(1.045);filter:brightness(1.08)}
 #publicHome .mktConceptZoom{display:flex;align-items:center;gap:10px;position:absolute;bottom:13px;right:16px;z-index:2;color:#fff;font-weight:750;font-size:12px;padding:9px 12px;border:1px solid #ffffff77;border-radius:999px;background:#10141bbd;backdrop-filter:blur(8px)}
 #publicHome .mktConceptZoom span{color:#f4ce8b}
@@ -26,7 +26,7 @@
 #publicHome .mktGalleryDialogHead{display:flex;justify-content:space-between;align-items:center;gap:18px;border-bottom:1px solid #43404c;padding:16px clamp(17px,2.4vw,27px)}
 #publicHome .mktGalleryDialogHead span{font-size:10px;font-weight:750;letter-spacing:.13em;color:#f4ce8b}
 #publicHome .mktGalleryDialogHead h3{margin:5px 0 0;font-size:20px}
-#publicHome .mktGalleryClose{font:650 13px/1.5 Segoe UI,system-ui,sans-serif;color:#fff;border:1px solid #826778;background:#302733;border-radius:9px;min-width:100px;min-height:43px;padding:9px 14px;cursor:pointer;transition:background .2s ease}
+#publicHome .mktGalleryClose{font:650 13px/1.5 Segoe UI,system-ui,sans-serif;color:#fff;border:1px solid #826778;background:#302733;border-radius:9px;min-width:100px;min-height:43px;padding:9px 14px;cursor:pointer;transition:none}
 #publicHome .mktGalleryClose:hover{background:#513342}
 #publicHome .mktGalleryClose:focus-visible{outline:3px solid #f4ce8b;outline-offset:3px}
 #publicHome .mktGalleryDialogImage{display:grid;place-items:center;min-height:0;padding:clamp(8px,1.5vw,20px)}
@@ -34,4 +34,4 @@
 #publicHome .mktGalleryDialog>p{margin:0;padding:0 23px 20px;font-size:12px;line-height:1.6;color:#cfc3cb}
 @media(max-width:800px){#publicHome .mktConceptNote{flex-direction:column;align-items:stretch}#publicHome .mktConceptActions{min-width:0;gap:10px}#publicHome .mktGalleryDialogImage img{max-height:calc(100dvh - 190px)}}
 @media(max-width:650px){#publicHome .mktConceptGallery{padding-block:48px 62px}#publicHome .mktConceptGrid{grid-template-columns:1fr;gap:17px}#publicHome .mktConceptCard figcaption{padding:18px 19px 21px}#publicHome .mktConceptOpen{aspect-ratio:16/10}#publicHome .mktConceptZoom{font-size:12px;min-height:40px;bottom:12px;right:12px}#publicHome .mktConceptNote{padding:18px}#publicHome .mktGalleryDialogHead h3{font-size:16px}#publicHome .mktGalleryDialogHead{padding:12px 13px}#publicHome .mktGalleryClose{min-width:88px;padding:7px 9px}#publicHome .mktGalleryDialog>p{padding:0 13px 16px}}
-@media(prefers-reduced-motion:reduce){#publicHome .mktConceptCard,#publicHome .mktConceptOpen img,#publicHome .mktGalleryClose{transition:none!important}#publicHome .mktConceptCard:hover,#publicHome .mktConceptOpen:hover img,#publicHome .mktConceptOpen:focus-visible img{transform:none!important}}
+@media(prefers-reduced-motion:reduce){#publicHome .mktConceptCard,#publicHome .mktConceptOpen img,#publicHome .mktGalleryClose{transition:none}#publicHome .mktConceptCard:hover,#publicHome .mktConceptOpen:hover img,#publicHome .mktConceptOpen:focus-visible img{transform:none!important}}

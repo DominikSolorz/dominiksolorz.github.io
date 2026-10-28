@@ -15,7 +15,7 @@ const get=async(path,{method='GET'}={})=>{
   return method==='HEAD'?response:response.text();
 };
 const checks=[
-  ['o-systemie.html',['id="publicHome"','id="przygotowanie"','data-mkt-setup','marketing-start.mjs?v=1','id="galeria"','Wydanie rozwojowe','href="galeria.html"']],
+  ['o-systemie.html',['id="publicHome"','id="przygotowanie"','data-mkt-setup','marketing-start.mjs?v=2','id="galeria"','Wydanie rozwojowe','href="galeria.html"']],
   ['galeria.html',['class="mktConceptCard"','nie zrzuty działającej aplikacji','marketing-gallery.mjs?v=1']],
   ['pomoc.html',['id="mktContactForm"','name="consent"','functions/v1/home-contact','id="mktContactResult"']],
   ['blog/index.html',['pierwsze-uruchomienie.html','diagnostyka-monitoringu.html']],
@@ -28,14 +28,14 @@ const checks=[
   ['../index.html',['./kamera/o-systemie.html','location.replace']]
 ];
 const assets=[
- 'marketing-start.css?v=1','marketing-start.mjs?v=1',
+ 'marketing-start.css?v=2','marketing-start.mjs?v=2',
  'marketing-auto-update.css?v=1','marketing-auto-update.mjs?v=3',
- 'core/web-updates.mjs?v=3','sw.js?v=136',
- 'marketing-gallery.css?v=1','marketing-gallery.mjs?v=1',
+ 'core/web-updates.mjs?v=3','sw.js?v=138','panel-entry.mjs?v=1',
+ 'marketing-gallery.css?v=2','marketing-gallery.mjs?v=1',
  'interface-concept.css?v=2',
- 'marketing-motion.css?v=1','marketing.css?v=6',
+ 'marketing-motion.css?v=2','marketing.css?v=7',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
- 'assets/home-security-hero-640.webp','assets/home-security-hero.webp','assets/home-security-how-it-works-640.webp','assets/ds-logo-96.webp','../docs/ui-193/01-pulpit-960.webp',
+ 'assets/home-security-hero-640.webp','assets/home-security-hero.webp','assets/home-security-how-it-works-640.webp','assets/ds-logo-96.webp','assets/ds-logo-192.webp','../docs/ui-193/01-pulpit-480.webp','../docs/ui-193/01-pulpit-640.webp','../docs/ui-193/01-pulpit-960.webp',
  'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-1.4.15.exe'
 ];
 
