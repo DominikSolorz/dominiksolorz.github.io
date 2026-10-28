@@ -44,7 +44,7 @@ async function main(command){
     const old=manifest.version,version=nextVersion(old);
     // The post-deploy verifier derives the installer path from desktop-update.json;
     // it does not embed a release number and must not be rewritten by prepare.
-    for(const path of ['desktop-client/Program.cs','desktop-client/HomeSecurityDesktop.csproj','desktop-client/installer/HomeSecurityDesktop.iss','desktop-client/build-release.ps1','design/marketing/home.html','kamera/index.html','kamera/panel.html']){
+    for(const path of ['desktop-client/Program.cs','desktop-client/HomeSecurityDesktop.csproj','desktop-client/installer/HomeSecurityDesktop.iss','desktop-client/build-release.ps1']){
       let source=(await readFile(path,'utf8')).replaceAll('\r\n','\n');
       if(!source.includes(old))throw Error(`Missing release version in ${path}`);
       source=source.replaceAll(old,version);
@@ -54,14 +54,18 @@ async function main(command){
       }
       await writeFile(path,source);
     }
-    execFileSync(process.execPath,['scripts/build-marketing.mjs'],{stdio:'inherit'});return;
+    execFileSync(process.execPath,['scripts/build-marketing.mjs'],{stdio:'inherit',env:{...process.env,HOME_SECURITY_DESKTOP_RELEASE:version}});return;
   }
   if(command==='finish'){
     const version=nextVersion(manifest.version);
     const zip=`kamera/updates/HomeSecurityDesktop-${version}-win-x64.zip`;
     const installer=`kamera/downloads/HOME-SECURITY-Desktop-Setup-${version}.exe`;
     const hash=async p=>createHash('sha256').update(await readFile(p)).digest('hex').toUpperCase();
-    await writeFile('kamera/desktop-update.json',JSON.stringify({version,packageUrl:`https://dominiksolorz.github.io/${zip}`,sha256:await hash(zip),installerSha256:await hash(installer),sourceFingerprint:await sourceFingerprint()},null,2)+'\n');return;
+    const release={version,packageUrl:`https://dominiksolorz.github.io/${zip}`,sha256:await hash(zip),installerSha256:await hash(installer),sourceFingerprint:''};
+    await writeFile('kamera/desktop-update.json',JSON.stringify(release,null,2)+'\n');
+    execFileSync(process.execPath,['scripts/build-marketing.mjs'],{stdio:'inherit'});
+    release.sourceFingerprint=await sourceFingerprint();
+    await writeFile('kamera/desktop-update.json',JSON.stringify(release,null,2)+'\n');return;
   }
   if(command==='fetch'){
     const sha=process.env.GITHUB_SHA;

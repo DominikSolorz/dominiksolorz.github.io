@@ -8,6 +8,7 @@ const escape=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;')
 const origin='https://dominiksolorz.github.io/kamera/';
 const publicOrigin=origin; // Reliable, tested GitHub Pages release.
 const publicBuild=JSON.parse(await read(camera,'version.json')).version;
+const currentDesktopRelease=process.env.HOME_SECURITY_DESKTOP_RELEASE||JSON.parse(await read(camera,'desktop-update.json')).version;
 async function emit(name,html){
   const file=new URL(name,camera);
   if(check){if(normalize(await readFile(file,'utf8'))!==html)throw new Error('Outdated generated marketing page: '+name);}
@@ -24,7 +25,7 @@ function nav(prefix=''){
 function footer(prefix=''){
  return `<footer class="mktFooter mktContainer"><div><a class="mktBrand" href="${prefix || './'}"><img src="${prefix}assets/ds-logo.jpg" srcset="${prefix}assets/ds-logo-96.webp 96w" sizes="44px" width="38" height="42" alt="Logo DS"><span>HOME <b>SECURITY</b></span></a><p>Monitoring domu z komputera Windows i podglądem na telefonie.</p><p class="mktFooterNote"><strong>Wydanie rozwojowe.</strong> Przed uruchomieniem sprawdź wymagania i ograniczenia.</p></div><nav aria-label="Poznaj produkt"><b>Poznaj produkt</b><a href="${prefix || './'}#jak-dziala">Jak działa</a><a href="${prefix || './'}#mozliwosci">Możliwości</a><a href="${prefix}galeria.html">Projekty interfejsu</a><a href="${prefix || './'}#specyfikacja">Wymagania</a><a href="${prefix || './'}#stan-projektu">Stan projektu</a></nav><nav aria-label="Rozpocznij korzystanie"><b>Rozpocznij</b><a href="${prefix}pobierz.html">Pobierz na Windows</a><a href="${prefix || './'}#przygotowanie">Przygotowanie</a><a href="${prefix}blog/pierwsze-uruchomienie.html">Pierwsze uruchomienie</a><a href="${prefix}blog/index.html">Poradniki</a><a href="${prefix}panel.html?auth=login">Zaloguj się</a></nav><nav aria-label="Pomoc i dokumenty"><b>Pomoc i dokumenty</b><a href="${prefix}pomoc.html">Kontakt i pomoc</a><a href="${prefix}polityka-prywatnosci.html">Polityka prywatności</a><a href="${prefix}regulamin.html">Regulamin</a><a href="${prefix}rodo.html">Informacja RODO</a></nav><p class="mktCopyright">© 2026 HOME SECURITY. Prezentowane makiety nie są obrazem z rzeczywistej kamery. Sprawdź zakres dostępnych funkcji.</p></footer>`;
 }
-const home=await read(source,'home.html');
+const home=(await read(source,'home.html')).replaceAll('__DESKTOP_RELEASE__',currentDesktopRelease);
 const index=await read(camera,'panel.html');
 const slot=/<(?:section|div)(?: role="group")? id="publicHome"[\s\S]*?<\/(?:section|div)>(?=\s*<section id="authDialog")/;
 if(!slot.test(index))throw new Error('Public marketing slot not found; private panel not modified.');
@@ -48,7 +49,7 @@ await emit('galeria.html',head('Galeria projektów panelu i telefonu','Zobacz os
 const contact=await read(source,'contact.html');
 await emit('pomoc.html',head('Kontakt i pomoc','Skontaktuj się z administratorem HOME SECURITY. Pomoc techniczna, konfiguracja, nagrania i pytania o produkt.','pomoc.html')+nav()+contact+footer()+'<script src="vendor/supabase.js?v=2.117.2"></script><script type="module" src="marketing-contact.js?v=8"></script>\n</body></html>\n');
 
-const currentDesktopRelease=JSON.parse(await read(camera,'desktop-update.json')).version;
+
 if(!/^\d+\.\d+\.\d+$/.test(currentDesktopRelease))throw new Error('Invalid published Windows version');
 const downloadSource=(await read(source,'pobierz.html')).replaceAll('__DESKTOP_RELEASE__',currentDesktopRelease);
 const downloadStyles=downloadSource.match(/<style>[\s\S]*?<\/style>/)?.[0]||'';
