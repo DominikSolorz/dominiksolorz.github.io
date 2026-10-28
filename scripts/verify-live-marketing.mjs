@@ -33,8 +33,13 @@ const assets=[
  'core/web-updates.mjs?v=3','sw.js?v=135',
  'marketing-gallery.css?v=1','marketing-gallery.mjs?v=1',
  'interface-concept.css?v=2',
- 'marketing-motion.css?v=1','marketing.css?v=6',
+ 'marketing-motion.css?v=2','marketing.css?v=7',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
+ 'assets/optimized/ds-logo-96.webp',
+ 'assets/optimized/home-security-hero-480.webp','assets/optimized/home-security-hero-900.webp',
+ 'assets/optimized/home-security-how-it-works-480.webp','assets/optimized/home-security-how-it-works-900.webp',
+ '../docs/ui-193/optimized/01-pulpit-480.webp','../docs/ui-193/optimized/03-nagrania-960.webp',
+ '../docs/ui-193/optimized/05-diagnostyka-480.webp','../docs/ui-193/optimized/07-telefon-960.webp',
  'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-1.4.14.exe'
 ];
 
@@ -67,6 +72,10 @@ for(const [path,tokens] of checks){
 for(const path of assets){
   const response=await get(path,{method:'HEAD'});
   const bytes=Number(response.headers.get('content-length')||'0');
+  if(path.includes('/optimized/') || /optimized\\/.test(path)){
+    assert.match(response.headers.get('content-type')||'',/image\\/webp/i,'Optimized image must be served as WebP: '+path);
+    assert.ok(bytes>0 && bytes<450000,'Optimized image must be under 450 KiB: '+path+' ('+bytes+')');
+  }
   console.log('OK asset '+path+(bytes?' ('+bytes+' bytes)':''));
 }
 console.log('Production marketing smoke: all public routes, releases and media files verified.');
