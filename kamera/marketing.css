@@ -404,14 +404,30 @@
 #publicHome .mktFeature{padding:22px}
 #publicHome .mktSectionHead{margin-bottom:26px}
 @media(max-width:700px){
-  #publicHome .mktHero{padding-top:28px;padding-bottom:32px;gap:24px}
-  #publicHome .mktHero h1{font-size:clamp(32px,8.8vw,44px);letter-spacing:-.045em;margin-bottom:18px}
-  #publicHome .mktHero .mktLead{font-size:15px;line-height:1.65}
-  #publicHome .mktHeroVisual{height:clamp(260px,72vw,320px)}
+  #publicHome .mktHero{padding-top:22px;padding-bottom:28px;gap:20px}
+  #publicHome .mktHero h1{font-size:clamp(30px,8vw,38px);letter-spacing:-.045em;margin-bottom:16px}
+  #publicHome .mktHero .mktLead{font-size:15px;line-height:1.55;margin-bottom:18px}
+  #publicHome .mktHeroVisual{height:clamp(220px,62vw,280px)}
   #publicHome .mktHeroVisual figcaption strong{font-size:22px}
   #publicHome h2{font-size:25px}
   #publicHome .mktFeatureMain h3,#publicHome .mktDownload h3{font-size:25px}
   #publicHome .mktSection,#publicHome.mktSite :is(.mktScenarios,.mktPrivacy,.mktConceptGallery,.mktSetup){padding-block:40px}
   #publicHome .mktStage{padding-top:40px}
   #publicHome .mktFeature{padding:20px}
+}
+
+/* Keep the mobile homepage compact without shrinking touch controls. */
+@media(max-width:700px){
+  #publicHome .mktHero .mktEyebrow{letter-spacing:.1em;line-height:1.5;margin-bottom:14px}
+  #publicHome .mktHeroFacts{margin-top:16px;gap:6px}
+  #publicHome .mktHeroFacts span{padding:6px 9px}
+  #publicHome .mktHero .mktFine{margin-top:12px;line-height:1.55}
+  #publicHome .mktHeader nav a,#publicHome .mktHeader .mktLogin{min-height:44px}
+  #publicHome .mktHeroVisual figcaption{bottom:18px;left:18px;right:18px;gap:8px}
+  #publicHome .mktHeroVisual figcaption strong{font-size:21px}
+}
+@media(min-width:360px) and (max-width:700px){
+  #publicHome .mktHero .mktActions{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:8px}
+  #publicHome .mktHero .mktButton{min-width:0;min-height:48px;padding:12px 10px;font-size:12px;justify-content:center}
+  #publicHome .mktHero .mktButton>span{display:none}
 }

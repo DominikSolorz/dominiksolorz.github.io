@@ -5,7 +5,7 @@ const SHELL = ["./panel-entry.mjs?v=2", "./", "./index.html", "./panel.html", ".
 
 SHELL.push("./core/view-memory.mjs?v=1", "./recording-view-state.mjs?v=1", "./recording-time.mjs?v=1", "./recording-actions.mjs?v=2", "./native-drive-ui.mjs?v=2", "./interface-theme.css?v=3", "./interface-concept.css?v=2", "./core/client-layout.js?v=2", "./core/web-updates.mjs?v=3", "./core/operator-status.mjs?v=1", "./communication/agent-telemetry.mjs?v=2", "./communication/native-agent-client.mjs");
 self.addEventListener("install", event => {
-  SHELL.push("./marketing.css?v=10", "./marketing-motion.css?v=2", "./marketing-motion.mjs?v=3", "./marketing-gallery.css?v=3", "./marketing-gallery.mjs?v=2", "./marketing-start.css?v=3", "./marketing-start.mjs?v=2", "./marketing-auto-update.css?v=2", "./marketing-auto-update.mjs?v=5", "./marketing-contact.js?v=8");
+  SHELL.push("./marketing.css?v=11", "./marketing-motion.css?v=2", "./marketing-motion.mjs?v=3", "./marketing-gallery.css?v=3", "./marketing-gallery.mjs?v=2", "./marketing-start.css?v=3", "./marketing-start.mjs?v=2", "./marketing-auto-update.css?v=2", "./marketing-auto-update.mjs?v=5", "./marketing-contact.js?v=8");
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", event => {
