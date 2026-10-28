@@ -37,7 +37,7 @@ const assets=[
  'marketing-motion.css?v=2','marketing.css?v=13',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
  'assets/home-security-hero-640.webp','assets/home-security-hero.webp','assets/home-security-how-it-works-640.webp','assets/ds-logo-96.webp','assets/ds-logo-192.webp','../docs/ui-193/01-pulpit-480.webp','../docs/ui-193/01-pulpit-640.webp','../docs/ui-193/01-pulpit-720.webp','../docs/ui-193/01-pulpit-960.webp',
- 'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-1.4.19.exe'
+ 'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-1.4.20.exe'
 ];
 
 let tries=0;
