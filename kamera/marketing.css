@@ -431,3 +431,10 @@
   #publicHome .mktHero .mktButton{min-width:0;min-height:48px;padding:12px 10px;font-size:12px;justify-content:center}
   #publicHome .mktHero .mktButton>span{display:none}
 }
+
+/* One responsive browser site; desktop mode follows the browser viewport, not device detection.
+   Keep browser zoom available while preventing automatic mobile text inflation. */
+.marketingPage,#publicHome.mktSite{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+#publicHome .mktHero h1{font-size:clamp(2rem,4.4vw,3.75rem);line-height:1.08;overflow-wrap:break-word}
+#publicHome .mktHero .mktLead{font-size:1rem;line-height:1.6}
+#publicHome .mktHero .mktButton{font-size:13px}

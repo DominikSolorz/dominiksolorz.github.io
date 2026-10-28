@@ -5,6 +5,14 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 const out=resolve(process.argv[2]||'.vercel/output/static');
 const manifest=JSON.parse(await readFile(join(out,'public-build.json'),'utf8'));
+const publicVersion=JSON.parse(await readFile(join(out,'kamera/version.json'),'utf8')).version;
+assert.equal(publicVersion,manifest.version);
+for(const name of manifest.documents){
+ const html=await readFile(join(out,'kamera',name),'utf8');
+ assert(html.includes('home-security-build" content="'+publicVersion+'"'),'Public release metadata must agree: '+name);
+ assert(html.includes('width=device-width,initial-scale=1'),'Browser chooses the responsive viewport: '+name);
+ assert(!/maximum-scale|user-scalable=no/.test(html),'Browser zoom must remain available: '+name);
+}
 const config=JSON.parse(await readFile(join(out,'vercel.json'),'utf8'));
 const policy=config.headers[0].headers.find(h=>h.key==='Content-Security-Policy').value;
 for(const asset of manifest.assets){const bytes=await readFile(join(out,asset.path));assert.equal(createHash('sha256').update(bytes).digest('hex'),asset.hash);}

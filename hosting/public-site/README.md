@@ -14,3 +14,15 @@ node hosting/public-site/vercel-build.mjs
 The public origin defaults to `https://home-security-dominik-solorz.vercel.app`. Do not redirect legacy traffic until this alias serves a READY deployment and has passed live checks. Account, OAuth, contact, AI support, PWA and native camera operations stay on `https://dominiksolorz.github.io`; no authentication data or environment files are copied into the distribution. The AI link retains the existing original-origin `#asystent` entry.
 
 Only fingerprinted assets have one-year cache lifetime. HTML must revalidate; version and desktop release metadata have no-store. Installer links point to the original verified downloads. HSTS preload is a header recommendation, not a submission to the browser preload list.
+
+Public browser updates use `release.json`, independently of `kamera/version.json`
+(the private panel and native clients). Increase the public release for every
+published UI/content change, including CSS-only fixes. The public builder stamps
+all documents and its version endpoint from the same release; verification rejects
+mismatches. Existing clean public tabs can then detect and safely reload a newer
+website without changing the private application version.
+
+Browser layouts follow the CSS viewport. Keep `width=device-width,initial-scale=1`
+and browser zoom enabled; do not choose homepage layouts from user-agent strings,
+native client settings or touch capability. Desktop-site mode uses the wider
+viewport supplied by the browser.

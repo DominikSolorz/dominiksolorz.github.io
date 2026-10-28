@@ -24,7 +24,7 @@ const checks=[
   ['regulamin.html',['o-systemie.html','Regulamin']],
   ['rodo.html',['o-systemie.html','Informacja RODO']],
   ['panel.html',['name="home-security-build" content="'+expectedBuild+'"','id="authDialog"','id="publicHome"','interface-concept.css?v=2']],
-  ['index.html',['http-equiv="Content-Security-Policy"','require-trusted-types-for','data-source="marketing.css?v=11"','name="robots" content="index,follow"','rel="canonical" href="https://home-security-dominik-solorz.vercel.app/kamera/"','data-public-entry']],
+  ['index.html',['http-equiv="Content-Security-Policy"','require-trusted-types-for','data-source="marketing.css?v=12"','name="robots" content="index,follow"','rel="canonical" href="https://home-security-dominik-solorz.vercel.app/kamera/"','data-public-entry']],
   ['sitemap.xml',['/kamera/galeria.html','/kamera/</loc>']],
   ['../index.html',['./kamera/','location.replace']]
 ];
@@ -34,7 +34,7 @@ const assets=[
  'core/web-updates.mjs?v=3','sw.js?v=149','panel-entry.mjs?v=2','public-entry.js?v=2',
  'marketing-gallery.css?v=3','marketing-gallery.mjs?v=2',
  'interface-concept.css?v=2',
- 'marketing-motion.css?v=2','marketing.css?v=11',
+ 'marketing-motion.css?v=2','marketing.css?v=12',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
  'assets/home-security-hero-640.webp','assets/home-security-hero.webp','assets/home-security-how-it-works-640.webp','assets/ds-logo-96.webp','assets/ds-logo-192.webp','../docs/ui-193/01-pulpit-480.webp','../docs/ui-193/01-pulpit-640.webp','../docs/ui-193/01-pulpit-720.webp','../docs/ui-193/01-pulpit-960.webp',
  'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-1.4.19.exe'

@@ -9,7 +9,9 @@ const variants=resolve(process.argv[3]||'/tmp/home-security-public-images');
 const legacy='https://dominiksolorz.github.io';
 const origin=process.env.PUBLIC_SITE_ORIGIN||'https://home-security-dominik-solorz.vercel.app';
 if(new URL(origin).origin!==origin||!origin.startsWith('https://'))throw Error('PUBLIC_SITE_ORIGIN must be an HTTPS origin');
-const version=JSON.parse(await readFile(join(repo,'kamera/version.json'),'utf8')).version;
+// Public browser releases advance independently of private panel / native client releases.
+const version=JSON.parse(await readFile(join(repo,'hosting/public-site/release.json'),'utf8')).version;
+if(!Number.isSafeInteger(version)||version<1)throw Error('Invalid public website release');
 const names=['pobierz.html','index.html','o-systemie.html','galeria.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html','polityka-prywatnosci.html','regulamin.html','rodo.html'];
 const publicPaths=new Set(names.map(name=>'/kamera/'+name));publicPaths.add('/kamera/');
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -49,6 +51,8 @@ hashes.add("'"+sri(entryCode)+"'");
 for(const name of names){
  const source=join(repo,'kamera',name),base=legacy+'/kamera/'+name;
  let html=await readFile(source,'utf8');
+ html=html.replace(/<meta name="home-security-build" content="[^"]+">/g,'');
+ html=html.replace('</head>','<meta name="home-security-build" content="'+version+'"></head>');
  if(/id="(?:authDialog|panelRuntime)"/.test(html))throw Error('Private markup in public distribution');
  const entries=[...html.matchAll(/<script\b[^>]*src="([^"]+)"[^>]*>[\s\S]*?<\/script>/g)].map(m=>basename(m[1].split('?')[0])).filter(n=>!['public-entry.js','support-entry.mjs'].includes(n));
  html=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,'').replace(/<meta[^>]+http-equiv="Content-Security-Policy"[^>]*>/g,'').replace(/<link[^>]+rel="manifest"[^>]*>/g,'');
