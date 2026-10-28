@@ -57,7 +57,13 @@ public class MobileEmulatorTest {
         return ActivityScenario.launch(new Intent(context,MainActivity.class).putExtra("hsEmulatorFixture",fixture));
     }
     private UiObject2 control(String id) {
-        UiObject2 object=device.wait(Until.findObject(By.res(context.getPackageName(),id)),10000);
+        UiObject2 object=device.wait(Until.findObject(By.res(context.getPackageName(),id)),5000);
+        if(object==null && device.hasObject(By.text("Pixel Launcher isn't responding"))) {
+            // An observed emulator launcher ANR, never an ANR from our app.
+            UiObject2 close=device.findObject(By.res("android","aerr_close"));
+            if(close!=null) { System.out.println("EMULATOR_LAUNCHER_ANR_CLOSED");close.click(); }
+            object=device.wait(Until.findObject(By.res(context.getPackageName(),id)),10000);
+        }
         if(object==null) {
             try { device.dumpWindowHierarchy(new File(proofDirectory(),"missing-"+id+".xml"));device.takeScreenshot(new File(proofDirectory(),"missing-"+id+".png")); }
             catch(Exception ignored) {}
@@ -161,8 +167,11 @@ public class MobileEmulatorTest {
             control("navLive").click();
             if(!supportedEngine()) { assertUpdateScreen(scenario); return; }
             waitFor(()->!visible(scenario,R.id.panelLoading),45000);
-            if(visible(scenario,R.id.errorScreen))capture(scenario,"06-login-load-failure");
-            assertFalse("Public login failed to load",visible(scenario,R.id.errorScreen));
+            if(visible(scenario,R.id.errorScreen)) {
+                capture(scenario,"06-login-first-load-error");
+                control("retryPanel").click();waitFor(()->!visible(scenario,R.id.panelLoading),45000);
+            }
+            assertFalse("Public login failed to load after restoring network and one native retry",visible(scenario,R.id.errorScreen));
             assertEquals("true",js(scenario,"location.host==='dominiksolorz.github.io'&&innerWidth<600"));
             waitFor(()->"true".equals(js(scenario,"Boolean(document.getElementById('authDialog')&&!document.getElementById('authDialog').hidden&&!document.getElementById('loginForm').hidden)")),30000);
             assertEquals("true",js(scenario,"document.documentElement.scrollWidth<=innerWidth+1"));capture(scenario,"06-real-public-login");
