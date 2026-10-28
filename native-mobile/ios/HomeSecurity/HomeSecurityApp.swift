@@ -74,6 +74,7 @@ struct PanelWebView: UIViewRepresentable {
         let view = WKWebView(frame: .zero, configuration: config)
         view.isOpaque = false; view.backgroundColor = .black
         view.navigationDelegate = context.coordinator
+        view.uiDelegate = context.coordinator
         view.load(URLRequest(url: model.route.url))
         return view
     }
@@ -81,7 +82,7 @@ struct PanelWebView: UIViewRepresentable {
         if context.coordinator.route != model.route { context.coordinator.route = model.route; view.load(URLRequest(url: model.route.url)) }
         if context.coordinator.reloadID != model.reloadID { context.coordinator.reloadID = model.reloadID; view.reload() }
     }
-    @MainActor final class Coordinator: NSObject, WKNavigationDelegate {
+    @MainActor final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         let model: PanelModel; var route: PanelRoute = .home; var reloadID = 0
         init(_ model: PanelModel) { self.model = model }
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
@@ -91,6 +92,7 @@ struct PanelWebView: UIViewRepresentable {
             if url.path.contains("/auth/") { model.notice = "W tej wersji testowej użyj e-maila i hasła. Logowanie Google wymaga bezpiecznego powrotu sesji do aplikacji."; return }
             if action.navigationType == .linkActivated && NavigationPolicy.external(url) { UIApplication.shared.open(url) }
         }
+        func webView(_ webView: WKWebView, requestMediaCapturePermissionFor origin: WKSecurityOrigin, initiatedByFrame frame: WKFrameInfo, type: WKMediaCaptureType, decisionHandler: @escaping (WKPermissionDecision) -> Void) { decisionHandler(.deny) }
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { model.status = "Panel połączony · stan kamery sprawdzisz w panelu" }
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { model.status = "Nie udało się połączyć. Sprawdź internet i wybierz Odśwież." }
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { model.status = "Przerwano połączenie. Wybierz Odśwież." }

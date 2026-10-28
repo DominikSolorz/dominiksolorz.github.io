@@ -1,6 +1,7 @@
 package pl.solorz.homesecurity;
 
-import android.app.Activity;
+import androidx.activity.ComponentActivity;
+import androidx.activity.OnBackPressedCallback;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Color;
@@ -20,7 +21,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public final class MainActivity extends Activity {
+public final class MainActivity extends ComponentActivity {
     private WebView web;
     private TextView status;
     private boolean background = false;
@@ -73,13 +74,15 @@ public final class MainActivity extends Activity {
         addButton(nav,"Nagrania",()->web.loadUrl(NavigationPolicy.view("recordings")));
         addButton(nav,"Ustawienia",()->web.loadUrl(NavigationPolicy.view("settings")));
         addButton(nav,"Odśwież",()->web.reload()); root.addView(nav); setContentView(root);
+        getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() { if(web.canGoBack()) web.goBack(); else finish(); }
+        });
         if (state==null || web.restoreState(state)==null) web.loadUrl(NavigationPolicy.view("home"));
     }
     private void addButton(LinearLayout nav,String title,Runnable action) {
         Button button = new Button(this); button.setText(title); button.setAllCaps(false); button.setTextSize(11);
         button.setOnClickListener(v->action.run()); nav.addView(button,new LinearLayout.LayoutParams(0,-2,1));
     }
-    @Override public void onBackPressed() { if(web.canGoBack()) web.goBack(); else super.onBackPressed(); }
     @Override protected void onSaveInstanceState(Bundle state) { web.saveState(state); super.onSaveInstanceState(state); }
     @Override protected void onPause() { web.setVisibility(View.INVISIBLE); web.onPause(); background=true; super.onPause(); }
     @Override protected void onResume() { super.onResume(); if(web!=null) { web.onResume(); web.setVisibility(View.VISIBLE); if(background) { status.setText("Wrócono do panelu. Sprawdź stan połączenia."); background=false; } } }
