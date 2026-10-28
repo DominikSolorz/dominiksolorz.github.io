@@ -32,14 +32,14 @@ const checks=[
   ['regulamin.html',['o-systemie.html','Regulamin']],
   ['rodo.html',['o-systemie.html','Informacja RODO']],
   ['panel.html',['name="home-security-build" content="'+expectedBuild+'"','id="authDialog"','id="publicHome"','interface-concept.css?v=2']],
-  ['index.html',['http-equiv="Content-Security-Policy"','require-trusted-types-for','data-source="marketing.css?v=13"','marketing-navigation.mjs?v=1','name="robots" content="index,follow"','rel="canonical" href="https://home-security-dominik-solorz.vercel.app/kamera/"','data-public-entry']],
+  ['index.html',['http-equiv="Content-Security-Policy"','require-trusted-types-for','data-source="marketing.css?v=13"','marketing-navigation.mjs?v=1','name="robots" content="index,follow"','rel="canonical" href="https://dominiksolorz.github.io/kamera/"','data-public-entry']],
   ['sitemap.xml',['/kamera/galeria.html','/kamera/</loc>']],
   ['../index.html',['./kamera/','location.replace']]
 ];
 const assets=[
  'marketing-start.css?v=3','marketing-start.mjs?v=2',
  'marketing-auto-update.css?v=2',currentUpdateModule,
- 'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=2','public-entry.js?v=2',
+ 'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=2','public-entry.js?v=3',
  'marketing-gallery.css?v=3','marketing-gallery.mjs?v=2',
  'interface-concept.css?v=2',
  'marketing-motion.css?v=2','marketing.css?v=13','marketing-navigation.css?v=1','marketing-navigation.mjs?v=1',
@@ -75,6 +75,13 @@ for(const [path,tokens] of checks){
   if(path==='index.html')assert.ok(!html.includes('id="authDialog"')&&!html.includes('app.js?v='));
   console.log('OK document '+path);
 }
+// Reject the original cause of invisible releases: redirect to an outdated public mirror.
+const entryScript=await get('public-entry.js?v=3');
+assert.ok(!entryScript.includes('home-security-dominik-solorz.vercel.app'),'The public entry must not redirect to stale Vercel');
+assert.ok(entryScript.includes("new URL('./panel.html'"),'Protected login and PIN paths must stay on the panel origin');
+const publicHTML=await get('index.html');
+assert.ok(publicHTML.includes('rel="canonical" href="https://dominiksolorz.github.io/kamera/"'));
+console.log('OK routing: up-to-date GitHub Pages homepage, secure owner panel preserved.');
 for(const path of assets){
   const response=await get(path,{method:'HEAD'});
   const bytes=Number(response.headers.get('content-length')||'0');
