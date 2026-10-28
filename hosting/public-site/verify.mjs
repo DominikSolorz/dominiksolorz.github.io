@@ -33,7 +33,7 @@ for(const name of ['panel.html','pomoc.html']){
 }
 assert(policy.includes("frame-ancestors 'none'"));assert(policy.includes("require-trusted-types-for 'script'"));
 assert(config.headers.some(r=>r.source==='/_assets/(.*)'&&r.headers.some(h=>h.value.includes('31536000, immutable'))));
-const sitemap=await readFile(join(out,'kamera/sitemap.xml'),'utf8');assert.equal([...sitemap.matchAll(/<loc>/g)].length,6);assert(!sitemap.includes(manifest.legacy));
+const sitemap=await readFile(join(out,'kamera/sitemap.xml'),'utf8');assert.equal([...sitemap.matchAll(/<loc>/g)].length,7);assert(!sitemap.includes(manifest.legacy));
 const routes=JSON.parse(await readFile(resolve(out,'../config.json'),'utf8')).routes;
 for(const route of routes)if(route.src){assert(!route.src.includes(':file'));new RegExp(route.src);}
 console.log('Verified '+manifest.documents.length+' public documents, '+manifest.assets.length+' content hashes, CSP, SRI, redirect state, sitemap and HTTP routes.');

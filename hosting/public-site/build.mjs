@@ -10,7 +10,7 @@ const legacy='https://dominiksolorz.github.io';
 const origin=process.env.PUBLIC_SITE_ORIGIN||'https://home-security-dominik-solorz.vercel.app';
 if(new URL(origin).origin!==origin||!origin.startsWith('https://'))throw Error('PUBLIC_SITE_ORIGIN must be an HTTPS origin');
 const version=JSON.parse(await readFile(join(repo,'kamera/version.json'),'utf8')).version;
-const names=['index.html','o-systemie.html','galeria.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html','polityka-prywatnosci.html','regulamin.html','rodo.html'];
+const names=['pobierz.html','index.html','o-systemie.html','galeria.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html','polityka-prywatnosci.html','regulamin.html','rodo.html'];
 const publicPaths=new Set(names.map(name=>'/kamera/'+name));publicPaths.add('/kamera/');
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const sri=bytes=>'sha256-'+createHash('sha256').update(bytes).digest('base64');
@@ -89,7 +89,7 @@ for(const [path,destination] of [['kamera/panel.html',legacy+'/kamera/panel.html
  await writeFile(join(output,path),text);
 }
 await writeFile(join(output,'kamera/version.json'),JSON.stringify({version})+'\n');
-const sitemapPaths=['','galeria.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html'];
+const sitemapPaths=['','pobierz.html','galeria.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html'];
 await writeFile(join(output,'kamera/sitemap.xml'),'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+sitemapPaths.map(p=>'<url><loc>'+origin+'/kamera/'+p+'</loc></url>').join('\n')+'\n</urlset>\n');
 await writeFile(join(output,'robots.txt'),'User-agent: *\nAllow: /\nSitemap: '+origin+'/kamera/sitemap.xml\n');
 await writeFile(join(output,'404.html'),'<!doctype html><html lang="pl"><meta charset="utf-8"><title>Nie znaleziono strony</title><h1>Nie znaleziono strony</h1><a href="/kamera/">Wróć do HOME SECURITY</a></html>');

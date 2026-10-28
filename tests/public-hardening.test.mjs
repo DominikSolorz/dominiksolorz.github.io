@@ -21,7 +21,7 @@ test('Trusted Types support policy rejects all markup except its fixed source te
 test('deployment CSS is inline and strict CSP hashes match the exact deployed script bytes',async()=>{
  const temp=await mkdtemp(join(tmpdir(),'home-security-public-'));
  try{
-  const htmlPaths=['index.html','o-systemie.html','galeria.html','pomoc.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html','polityka-prywatnosci.html','regulamin.html','rodo.html'];
+  const htmlPaths=['pobierz.html','index.html','o-systemie.html','galeria.html','pomoc.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html','polityka-prywatnosci.html','regulamin.html','rodo.html'];
   const files=new Set(['kamera/sitemap.xml','kamera/public-entry.js']);
   for(const name of htmlPaths){
    const path='kamera/'+name;files.add(path);

@@ -41,7 +41,7 @@ test('homepage HTML is indexable without JavaScript and contains no private acco
 test('sitemap contains only unique indexable canonical pages, never panel, query aliases or drafts',async()=>{
  const sitemap=await read('kamera/sitemap.xml');
  const urls=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match=>match[1]);
- assert.equal(urls.length,6);assert.equal(new Set(urls).size,urls.length);
+ assert.equal(urls.length,7);assert.equal(new Set(urls).size,urls.length);
  for(const href of urls){
   const url=new URL(href);assert.equal(url.origin,'https://home-security-dominik-solorz.vercel.app');assert.equal(url.search,'');
   const path=url.pathname.endsWith('/')?url.pathname+'index.html':url.pathname;
