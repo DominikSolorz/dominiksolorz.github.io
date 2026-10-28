@@ -461,3 +461,6 @@
 }
 @keyframes mktMenuDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.mktMobileMenu>nav{animation:none!important}}
+
+#publicHome .mktStartLinks{font-size:13px;line-height:1.65;color:#c5c8d1;margin:14px 0 0}
+#publicHome .mktStartLinks a{color:#f4ce8b;text-decoration:underline;text-underline-offset:3px}

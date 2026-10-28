@@ -14,7 +14,7 @@ for(const name of manifest.documents){
  assert(!/maximum-scale|user-scalable=no/.test(html),'Browser zoom must remain available: '+name);
  if(html.includes('class="mktHeader"')){
   assert.equal((html.match(/<details class="mktMobileMenu">/g)||[]).length,1,'One phone disclosure per header: '+name);
-  assert(html.includes('<summary aria-label="Otwórz lub zamknij menu nawigacji">'),'Phone menu is operable without JavaScript: '+name);
+  assert(html.includes('<summary aria-label="Otwórz menu nawigacji"'),'Phone menu is operable without JavaScript: '+name);
   const phone=html.match(/<details class="mktMobileMenu">[\s\S]*?<\/details>/)?.[0]||'';
   assert(phone.includes('auth=login')&&phone.includes('auth=register'),'Phone menu retains both account routes: '+name);
  }

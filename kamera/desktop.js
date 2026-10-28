@@ -122,6 +122,11 @@ if (desktopRequested) {
     <section class="desktopControlDock" aria-label="Sterowanie transmisją i nagrywaniem"><div class="desktopControlLocked" hidden><span>🔒</span><div><b>Sterowanie właściciela</b><small>Start, Stop i Restart są dostępne wyłącznie na komputerze-kamerze lub po zalogowaniu PIN-em właściciela.</small></div></div></section>
     <details class="desktopEventsDrawer" aria-label="Ostatnie zdarzenia"><summary><span>Ostatnie zdarzenia</span><small>ruch i dźwięk</small><b id="desktopEventCount">—</b></summary></details>`;
   if (context.parentElement) context.insertAdjacentElement("afterend", overview);
+  const homeGuide = document.createElement("section");
+  homeGuide.className = "desktopHomeGuide";
+  homeGuide.setAttribute("aria-label", "Najważniejsze funkcje pulpitu");
+  homeGuide.innerHTML = `<div><h2>Twój podgląd i nagrania</h2><p id="desktopHomeOperation" role="status">Oczekiwanie na aktualny stan urządzenia.</p></div><nav aria-label="Skróty pulpitu"><button type="button" data-home-view="controls">Sterowanie kamerą</button><button type="button" data-home-view="archive">Nagrania</button><button type="button" data-home-view="diagnostics">Sprawdź stan</button></nav>`;
+  overview.insertAdjacentElement("beforebegin", homeGuide);
   const liveTile = overview.querySelector(".desktopCameraLive");
   if (liveStage && liveTile) liveTile.append(liveStage);
   $('desktopAddCamera').onclick=()=>{
@@ -375,6 +380,7 @@ if (desktopRequested) {
     // Każdy wpis w bocznym menu ma własny pełnoekranowy obszar. Dzięki temu
     // Diagnostyka i Archiwum nie zostawiają pustej połowy monitora.
     overview.hidden = view !== "live";
+    homeGuide.hidden = view !== "live";
     settingsScreen.hidden = view !== "settings";
     controlsScreen.hidden = view !== "controls";
     eventsScreen.hidden = view !== "events";
@@ -429,6 +435,7 @@ if (desktopRequested) {
   };
   const router = createRouter({ routes: ["live", "controls", "events", "archive", "settings", "diagnostics"], render: renderRoute });
   const setActive = view => router.navigate(view);
+  homeGuide.querySelectorAll("[data-home-view]").forEach(button => button.addEventListener("click", () => setActive(button.dataset.homeView)));
   document.addEventListener('hs-panel-ready',()=>{if(router.current==='archive')document.dispatchEvent(new Event('hs-open-recordings'));});
   shell.querySelectorAll("[data-desktop-view]").forEach(button => button.addEventListener("click", () => setActive(button.dataset.desktopView)));
   document.addEventListener("hs-recordings-closed", () => setActive("live"));
@@ -449,6 +456,8 @@ if (desktopRequested) {
     if ($("desktopSummaryRecording")) $("desktopSummaryRecording").textContent = mode?.textContent?.trim() || "Brak danych";
     const operation=operatorStatus({isLive,recording:systemStore.read('recording',45000),storage:systemStore.read('storage',90000)});
     if ($("desktopTopStatusText")) $("desktopTopStatusText").textContent = operation.text;
+    const homeOperation = $("desktopHomeOperation");
+    if (homeOperation && homeOperation.textContent !== operation.text) homeOperation.textContent = operation.text;
     desktopTopStatus.classList.toggle("live", operation.severity==='active');
     desktopTopStatus.classList.toggle("warning", operation.severity==='warning');
     const settingsState = $("desktopSettingsLiveState");

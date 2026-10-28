@@ -31,7 +31,7 @@ async function image(ref,base){
 async function moduleAsset(names){
  const name=names.join('+');
  if(modules.has(name))return modules.get(name);
- if(names.some(entry=>!['marketing-motion.mjs','marketing-gallery.mjs','marketing-start.mjs','marketing-auto-update.mjs'].includes(entry)))throw Error('Unexpected public entry '+name);
+ if(names.some(entry=>!['marketing-motion.mjs','marketing-navigation.mjs','marketing-gallery.mjs','marketing-start.mjs','marketing-auto-update.mjs'].includes(entry)))throw Error('Unexpected public entry '+name);
  const result=await build({stdin:{contents:names.map(entry=>'import '+JSON.stringify(join(repo,'kamera',entry))+';').join('\n'),resolveDir:repo,sourcefile:'public-enhancements.mjs'},outfile:join(output,'build','public-enhancements.mjs'),write:false,bundle:true,format:'esm',platform:'browser',minify:true,keepNames:true,sourcemap:'external',legalComments:'inline',plugins:[{name:'public-module-urls',setup(b){
   b.onResolve({filter:/\?v=\d+$/},args=>({path:resolve(args.resolveDir,args.path.split('?')[0])}));
   b.onLoad({filter:/\.(?:mjs|js)$/},async args=>{
