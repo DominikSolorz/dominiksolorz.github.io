@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile,mkdtemp,mkdir,writeFile,rm,copyFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,resolve,dirname} from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 import {hardenPublicPages} from '../scripts/harden-public-pages.mjs';
 import {createSupportMarkup} from '../kamera/support-view.mjs';
@@ -43,7 +44,7 @@ test('deployment CSS is inline and strict CSP hashes match the exact deployed sc
    assert.ok(!policy.includes('frame-ancestors'),'never claim unsupported meta framing protection');
    for(const [,attrs,body] of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)){
     const src=attrs.match(/src="([^"]+)"/)?.[1];
-    const content=src?await readFile(new URL(src,'file://'+path)):body;
+    const content=src?await readFile(new URL(src,pathToFileURL(path))):body;
     const hash='sha256-'+createHash('sha256').update(content).digest('base64');
     assert.ok(policy.includes("'"+hash+"'"),name);
     if(src)assert.ok(attrs.includes('integrity="'+hash+'"'),name);
