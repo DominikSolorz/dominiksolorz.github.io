@@ -155,7 +155,7 @@ test('native Windows update remains strictly opt-in via the left-hand sidebar',a
 
 test('remote live camera viewer prevents idle or manually requested PWA refresh',async()=>{
  const app=await read('app.js');
- const match=app.match(/canAutoApply:\(\)=>([^\n]+),\n\s*onState:/);
+ const match=app.match(/canAutoApply:\(\)=>([^\r\n]+),\r?\n\s*onState:/);
  assert.ok(match,'update safety guard must be wired in the current app');
  const canRefresh=new Function('sender','archive','video','document','return ('+match[1]+');');
  const sender={live:false},state={recording:false};
