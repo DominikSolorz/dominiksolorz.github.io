@@ -6,6 +6,12 @@ const origin='https://dominiksolorz.github.io';
 const root=origin+'/kamera/';
 const expectedBuild=JSON.parse(await readFile(new URL('../kamera/version.json',import.meta.url),'utf8')).version;
 const expectedDesktop=JSON.parse(await readFile(new URL('../kamera/desktop-update.json',import.meta.url),'utf8'));
+const publicSource=await readFile(new URL('../kamera/o-systemie.html',import.meta.url),'utf8');
+const workerSource=await readFile(new URL('../kamera/sw.js',import.meta.url),'utf8');
+const currentUpdateModule=publicSource.match(/marketing-auto-update\.mjs\?v=\d+/)?.[0];
+const currentSW=workerSource.match(/kamera-domowa-shell-v(\d+)/)?.[1];
+assert.ok(currentUpdateModule&&currentSW,'Cannot derive current web updater and service worker revisions');
+
 
 const timeoutMs=18000;
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -32,14 +38,14 @@ const checks=[
 ];
 const assets=[
  'marketing-start.css?v=3','marketing-start.mjs?v=2',
- 'marketing-auto-update.css?v=2','marketing-auto-update.mjs?v=5',
- 'core/web-updates.mjs?v=3','sw.js?v=149','panel-entry.mjs?v=2','public-entry.js?v=2',
+ 'marketing-auto-update.css?v=2',currentUpdateModule,
+ 'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=2','public-entry.js?v=2',
  'marketing-gallery.css?v=3','marketing-gallery.mjs?v=2',
  'interface-concept.css?v=2',
  'marketing-motion.css?v=2','marketing.css?v=13',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
  'assets/home-security-hero-640.webp','assets/home-security-hero.webp','assets/home-security-how-it-works-640.webp','assets/ds-logo-96.webp','assets/ds-logo-192.webp','../docs/ui-193/01-pulpit-480.webp','../docs/ui-193/01-pulpit-640.webp','../docs/ui-193/01-pulpit-720.webp','../docs/ui-193/01-pulpit-960.webp',
- 'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-1.4.20.exe'
+ 'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-'+expectedDesktop.version+'.exe'
 ];
 
 let tries=0;
@@ -48,7 +54,7 @@ while(true){
     const html=await get('o-systemie.html');
     const app=await get('panel.html');
     const expected='home-security-build" content="'+expectedBuild+'"';
-    assert.ok(html.includes('id="przygotowanie"')&&html.includes(expected)&&html.includes('marketing-auto-update.mjs?v=5'),'The public homepage is still serving the previous release');
+    assert.ok(html.includes('id="przygotowanie"')&&html.includes(expected)&&html.includes(currentUpdateModule),'The public homepage is still serving the previous release');
     assert.ok(app.includes(expected)&&app.includes('app.js?v='+expectedBuild),'The protected panel is still serving the previous release');
     break;
   }catch(error){
@@ -62,7 +68,7 @@ for(const [path,tokens] of checks){
   for(const token of tokens)assert.ok(html.includes(token),'Missing '+JSON.stringify(token)+' in '+path);
   if(/^(?:o-systemie|galeria|pomoc)\.html$/.test(path)||path.startsWith('blog/')){
     assert.ok(html.includes('home-security-build" content="'+expectedBuild+'"'),'Outdated marketing build on '+path);
-    assert.ok(html.includes('marketing-auto-update.mjs?v=5'),'New public update notice is missing from '+path);
+    assert.ok(html.includes(currentUpdateModule),'New public update notice is missing from '+path);
   }
   if(path==='galeria.html')assert.equal((html.match(/class="mktConceptCard"/g)||[]).length,8);
   if(path==='panel.html')assert.ok(html.includes('app.js?v='+expectedBuild)&&html.includes('content="noindex,follow"'));
