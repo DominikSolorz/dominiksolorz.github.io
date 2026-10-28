@@ -110,8 +110,9 @@ test('mobile navigation is legible, keyboard-accessible and supports reduced mot
  const [sw,app,manifest]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/version.json'].map(read));
  assert.ok(sw.includes('./marketing-navigation.css?v=1'));
  assert.ok(sw.includes('./marketing-navigation.mjs?v=1'));
- assert.ok(sw.includes('kamera-domowa-shell-v151'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "151"'));
- assert.equal(JSON.parse(manifest).version,'241');
- assert.ok(app.includes('const VERSION = "241"'));
+ const currentRelease=JSON.parse(manifest).version;
+ const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
+ assert.ok(shell,'PWA shell revision must be declared');
+ assert.ok(sw.includes('kamera-domowa-shell-v'+shell));
+ assert.ok(app.includes('const VERSION = "'+currentRelease+'"'));
 });
