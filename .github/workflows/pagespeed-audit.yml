@@ -21,7 +21,10 @@ on:
       - 'scripts/optimize-marketing-images.mjs'
       - 'kamera/sw.js'
       - 'kamera/assets/**'
-      - 'design/marketing/home.html'
+      - 'design/marketing/**'
+      - 'kamera/*.html'
+      - 'kamera/blog/*.html'
+      - 'scripts/audit-page*.mjs'
       - 'scripts/summarize-lighthouse.mjs'
       - '.github/workflows/pagespeed-audit.yml'
 
@@ -102,5 +105,55 @@ jobs:
         with:
           name: home-security-lighthouse-reports
           path: lighthouse-results/*.json
+          if-no-files-found: warn
+          retention-days: 21
+
+  inventory:
+    runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.pages.outputs.targets }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/audit-page-inventory.mjs
+            /kamera/*.html
+            /kamera/blog/*.html
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - id: pages
+        run: echo "targets=$(node scripts/audit-page-inventory.mjs)" >> "$GITHUB_OUTPUT"
+  every-page:
+    needs: [inventory, lighthouse-production]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.inventory.outputs.targets) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: /scripts/audit-page.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock lighthouse@13
+      - name: Audit this exact URL on desktop and mobile
+        env:
+          AUDIT_TARGET: ${{ toJSON(matrix) }}
+        run: node scripts/audit-page.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-page-${{ matrix.id }}
+          path: lighthouse-results/
           if-no-files-found: warn
           retention-days: 21
