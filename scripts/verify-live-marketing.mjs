@@ -7,7 +7,7 @@ const root=origin+'/kamera/';
 const expectedBuild=JSON.parse(await readFile(new URL('../kamera/version.json',import.meta.url),'utf8')).version;
 const expectedDesktop=JSON.parse(await readFile(new URL('../kamera/desktop-update.json',import.meta.url),'utf8'));
 const expectedMarketingHTML=await readFile(new URL('../kamera/o-systemie.html',import.meta.url),'utf8');
-const expectedUpdateScript=expectedMarketingHTML.match(/marketing-auto-update\\.mjs\\?v=\\d+/)?.[0];
+const expectedUpdateScript=expectedMarketingHTML.match(/marketing-auto-update\.mjs\?v=\d+/)?.[0];
 if(!expectedUpdateScript)throw Error('The public homepage does not reference an update checker');
 
 
@@ -84,7 +84,7 @@ const publicVersion=JSON.parse(await get('version.json'));
 assert.equal(String(publicVersion.version),String(expectedBuild),'Published PWA build differs from the source release');
 console.log('OK web update channel build '+expectedBuild);
 const publicDesktop=JSON.parse(await get('desktop-update.json'));
-assert.match(publicDesktop.version,/^\\d+\\.\\d+\\.\\d+$/);
+assert.match(publicDesktop.version,/^\d+\.\d+\.\d+$/);
 assert.equal(publicDesktop.version,expectedDesktop.version,'Published Windows release is not current');
 assert.equal(publicDesktop.packageUrl,expectedDesktop.packageUrl,'Published Windows update URL differs from the signed release');
 assert.equal(publicDesktop.sha256,expectedDesktop.sha256,'Published Windows ZIP checksum differs from the release');
