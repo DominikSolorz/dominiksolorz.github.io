@@ -1,6 +1,7 @@
 // HOME SECURITY: public-page update notice, without tracking or camera access.
 // Keep manifest-based Windows installer links working on every marketing page.
 import './marketing-downloads.mjs?v=2';
+import {freshUpdateURL, pendingUpdateBuild} from './core/update-navigation.mjs?v=1';
 
 const buildMeta = document.querySelector('meta[name="home-security-build"]');
 if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
@@ -11,7 +12,9 @@ if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
   let backgroundReady = false;
   let initialCheckTimer = null;
   let dirty = false;
-  let newest = 0;
+  // A reload that returned old HTML is not a successful update.
+  const requestedBuild = pendingUpdateBuild(window.location.href);
+  let newest = requestedBuild > currentBuild ? requestedBuild : 0;
   let pendingReload = false;
   let autoTimer = null;
   let lastAttempt = 0;
@@ -62,17 +65,27 @@ if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
     if (!validVersion(newest) || newest <= currentBuild || Date.now() < snoozedUntil || pendingReload) return;
     banner.hidden = false;
     title.textContent = 'Dostępna wersja HOME SECURITY ' + newest;
-    description.textContent = dirty
-      ? 'Masz niezapisane dane. Aktualizacja nie przerwie pracy automatycznie.'
-      : 'Kliknij „Zaktualizuj” lub pozostaw stronę bezczynnie. Odświeżymy ją, gdy będzie bezpiecznie.';
+    description.textContent = requestedBuild > currentBuild && alreadyReloaded()
+      ? 'Serwer nadal pokazuje starszą wersję. Poczekaj na zakończenie publikacji i spróbuj ponownie.'
+      : dirty
+        ? 'Masz niezapisane dane. Aktualizacja nie przerwie pracy automatycznie.'
+        : 'Kliknij „Zaktualizuj” lub pozostaw stronę bezczynnie. Odświeżymy ją, gdy będzie bezpiecznie.';
   };
   const reloadLatest = () => {
-    if (pendingReload || !validVersion(newest) || newest <= currentBuild || alreadyReloaded()) return;
+    if (pendingReload || !validVersion(newest) || newest <= currentBuild) return;
+    if (alreadyReloaded()) {
+      banner.hidden = false;
+      description.textContent = 'Wersja ' + newest + ' jeszcze się publikuje lub przeglądarka nadal widzi starą stronę. Spróbuj ponownie za chwilę.';
+      return;
+    }
     pendingReload = true;
     lastAttempt = Date.now();
     try { sessionStorage.setItem(stampKey, String(lastAttempt)); } catch {}
     description.textContent = 'Wczytuję najnowszą wersję…';
-    window.location.reload();
+    // A normal reload can keep returning stale HTML from a browser/CDN cache.
+    // Preserve the current route, login query and fragment, but force a new
+    // same-origin navigation cache key for the next release.
+    window.location.replace(freshUpdateURL(window.location.href, newest, lastAttempt));
   };
   const queueAuto = () => {
     if (autoTimer !== null || !validVersion(newest) || Date.now() < snoozedUntil || alreadyReloaded() || !safeToRefresh()) return;
@@ -117,6 +130,7 @@ if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
     finally { checking = false; }
   };
   // Release checks are maintenance, not a dependency of the first public view.
+  if (newest > currentBuild) showOffer();
   const startBackgroundChecks = () => {
     initialCheckTimer = window.setTimeout(() => {
       initialCheckTimer = null;

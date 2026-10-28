@@ -23,6 +23,7 @@ import { mountAccountUI } from "./account-ui.mjs?v=3";
 import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { createWebUpdates } from "./core/web-updates.mjs?v=3";
+import { freshUpdateURL } from "./core/update-navigation.mjs?v=1";
 import { NativeAgentClient } from "./communication/native-agent-client.mjs";
 import { createAgentTelemetry } from "./communication/agent-telemetry.mjs?v=2";
 import { captureEventFrame } from "./workspace-panels.mjs?v=2";
@@ -63,7 +64,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "239"; // musi się zgadzać z version.json
+const VERSION = "240"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2192,7 +2193,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "149";
+  const SERVICE_WORKER_BUILD = "150";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2207,7 +2208,8 @@ if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
     // during recording, or while a user is editing a form.
     canAutoApply:()=>!sender.live&&!archive.status().recording&&!(video.srcObject?.getVideoTracks?.()||[]).some(track=>track.readyState==='live')&&!document.querySelector('input:focus,textarea:focus,select:focus,[contenteditable="true"]:focus,dialog[open]'),
     onState:state=>{webUpdateState=state;paintWebUpdate();},
-    prepareReload:()=>archive.prepareUpdate(),abortReload:()=>archive.abortUpdate(),reload:()=>location.reload()});
+    prepareReload:()=>archive.prepareUpdate(),abortReload:()=>archive.abortUpdate(),
+    reload:()=>location.replace(freshUpdateURL(location.href,VERSION,Date.now()))});
   document.addEventListener('hs-web-update-ui-ready',paintWebUpdate);
   document.addEventListener('hs-check-web-update',()=>{void(webUpdates.available?webUpdates.apply():webUpdates.check());});
   const checkWebUpdate=()=>{void webUpdates.check({background:true});};
