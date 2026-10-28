@@ -16,8 +16,8 @@ test('real HOME SECURITY 220 owner interface loads the UI-concept design last an
  assert.ok(sw.includes('kamera-domowa-shell-v'+shell));
  assert.ok(html.includes('home-security-build" content="'+release+'"'));
  assert.ok(html.includes('app.js?v='+release));
- assert.ok(html.includes('desktop.js?v=39'));
- assert.ok(sw.includes('./desktop.js?v=39'));
+ assert.ok(html.includes('desktop.js?v=40'));
+ assert.ok(sw.includes('./desktop.js?v=40'));
  assert.ok(html.includes('href="interface-concept.css?v=2"'));
  assert.ok(sw.includes('./interface-concept.css?v=2'));
  assert.ok(html.indexOf('interface-concept.css?v=2')>html.indexOf('interface-theme.css?v=3'));
