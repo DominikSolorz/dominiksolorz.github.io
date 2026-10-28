@@ -1,5 +1,5 @@
 // Shared by Android, iOS and desktop browsers. Never owns a camera or recorder.
-export function createWebUpdates({serviceWorker, build, onState, prepareReload=async()=>{}, abortReload=async()=>{}, reload, now=Date.now, autoApply=false, canAutoApply=()=>true}) {
+export function createWebUpdates({serviceWorker, build, releaseVersion=null, readRelease=async()=>{const response=await fetch('./version.json',{cache:'no-store'});if(!response.ok)throw Error('Brak metadanych wydania');return (await response.json()).version;}, onState, prepareReload=async()=>{}, abortReload=async()=>{}, reload, now=Date.now, autoApply=false, canAutoApply=()=>true}) {
   let registration=null, busy=false, available=false, disposed=false;
   let controlled=!!serviceWorker?.controller, lastCheck=-Infinity, autoQueued=false;
   const cleanups=[];
