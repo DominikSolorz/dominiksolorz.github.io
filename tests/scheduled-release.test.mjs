@@ -28,3 +28,9 @@ test('the main homepage and brochure both load manifest-driven downloads',async(
  assert.ok((await read('kamera/index.html')).includes('src="marketing-downloads.mjs?v=1"'));
  assert.ok((await read('kamera/marketing-auto-update.mjs')).includes("import './marketing-downloads.mjs?v=1'"));
 });
+
+test('Windows release retries promptly when tests are fixed after a failed push',async()=>{
+ const workflow=await readFile(new URL('../.github/workflows/desktop-scheduled-release.yml',import.meta.url),'utf8');
+ assert.ok(workflow.includes("- 'tests/**'"),'test-only fixes must trigger a new release check');
+ assert.ok(workflow.includes("node scripts/desktop-release.mjs plan"),'unchanged application sources must not create duplicate installers');
+});
