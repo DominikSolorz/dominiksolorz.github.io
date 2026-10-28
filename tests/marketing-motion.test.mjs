@@ -14,7 +14,7 @@ test('public motion module has valid JavaScript syntax and no recorder dependenc
  assert.equal(syntax.status,0,syntax.stderr||syntax.error?.message);
  const js=await read('kamera/marketing-motion.mjs');
  assert.ok(js.includes("document.querySelector('#publicHome.mktSite')"));
- assert.ok(js.includes("site.getClientRects().length > 0"));
+ assert.ok(js.includes("!site.hidden"));
  assert.ok(js.includes("aria-current', 'location'"));
  assert.ok(!/getUserMedia|MediaRecorder|createClient\(|signInWithPassword|localStorage/.test(js));
 });
@@ -70,8 +70,8 @@ test('all marketing pages load the motion styles and script, including the panel
  for(const path of paths){
    const html=await read(path),prefix=path.includes('/blog/')?'../':'';
    assert.ok(html.includes('href="'+prefix+'marketing-motion.css?v=2"'),path);
-   assert.ok(html.includes('src="'+prefix+'marketing-motion.mjs?v=2"'),path);
-   assert.equal((html.match(/marketing-motion\.mjs\?v=2/g)||[]).length,1,path);
+   assert.ok(html.includes('src="'+prefix+'marketing-motion.mjs?v=3"'),path);
+   assert.equal((html.match(/marketing-motion\.mjs\?v=3/g)||[]).length,1,path);
  }
 });
 
@@ -91,7 +91,7 @@ test('scroll effects are progressive, focus-safe and opt out of reduced motion',
 test('PWA, runtime and public pages have matching motion asset and build versions',async()=>{
  const [sw,app,version,index]=await Promise.all([
   'kamera/sw.js','kamera/app.js','kamera/version.json','kamera/panel.html'].map(read));
- for(const asset of ['marketing-motion.css?v=2','marketing-motion.mjs?v=2'])assert.ok(sw.includes('./'+asset));
+ for(const asset of ['marketing-motion.css?v=2','marketing-motion.mjs?v=3'])assert.ok(sw.includes('./'+asset));
  const release=JSON.parse(version).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
  assert.ok(/^\d+$/.test(release)&&/^\d+$/.test(shell),'manifest and service worker revisions must be numeric');
@@ -137,4 +137,16 @@ test('reveal startup never measures every card synchronously or hides the first 
  callback([{target,isIntersecting:true}]);
  assert.equal(names.has('mktIsVisible'),true);
  assert.equal(unobserved,1,'visible content is never re-hidden');
+});
+
+test('top-of-page startup never forces document, header or visibility layout',async()=>{
+ const js=await read('kamera/marketing-motion.mjs');
+ const noLayout=()=>{throw Error('Forced layout at initial scroll position');};
+ const control={setAttribute(){},append(){},addEventListener(){}};
+ const header={querySelector:()=>null,getBoundingClientRect:noLayout,style:{setProperty(){}},classList:{toggle(){}}};
+ const site={hidden:false,querySelector:selector=>selector==='.mktHeader'?header:null,querySelectorAll:()=>[],append(){},addEventListener(){},getClientRects:noLayout};
+ const doc={};Object.defineProperty(doc,'scrollHeight',{get:noLayout});
+ const document={body:{},documentElement:doc,querySelector:()=>site,createElement:()=>control,createTextNode:()=>({})};
+ const window={scrollY:0,innerHeight:800,matchMedia:()=>({matches:true,addEventListener(){}}),requestAnimationFrame:fn=>fn(),addEventListener(){}};
+ assert.doesNotThrow(()=>vm.runInNewContext(js,{document,window}));
 });

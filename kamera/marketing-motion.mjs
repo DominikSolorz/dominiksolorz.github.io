@@ -21,7 +21,7 @@ if (site) {
   backToTop.append(arrow, document.createTextNode('Na górę'));
   site.append(backToTop);
 
-  const isPublicVisible = () => site === document.body || site.getClientRects().length > 0;
+  const isPublicVisible = () => site === document.body || !site.hidden;
   const doc = document.documentElement;
   let frameScheduled = false;
   const refresh = () => {
@@ -31,6 +31,15 @@ if (site) {
       return;
     }
     const y = Math.max(0, window.scrollY || 0);
+    // At the top, all scroll state is known without measuring layout. Reading
+    // scrollHeight/header rectangles here forced the first complete page layout.
+    if (y === 0) {
+      header?.style.setProperty('--mkt-scroll-progress', '0');
+      header?.classList.toggle('mktIsScrolled', false);
+      backToTop.hidden = true;
+      for (const item of navSections) item.link.removeAttribute('aria-current');
+      return;
+    }
     const scrollable = Math.max(1, doc.scrollHeight - window.innerHeight);
     const ratio = Math.min(1, y / scrollable);
     // Read layout before changing styles; alternating reads and writes forces reflow.

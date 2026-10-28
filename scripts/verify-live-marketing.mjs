@@ -31,7 +31,7 @@ const checks=[
 const assets=[
  'marketing-start.css?v=2','marketing-start.mjs?v=2',
  'marketing-auto-update.css?v=1','marketing-auto-update.mjs?v=4',
- 'core/web-updates.mjs?v=3','sw.js?v=143','panel-entry.mjs?v=2','public-entry.js?v=1',
+ 'core/web-updates.mjs?v=3','sw.js?v=144','panel-entry.mjs?v=2','public-entry.js?v=1',
  'marketing-gallery.css?v=2','marketing-gallery.mjs?v=1',
  'interface-concept.css?v=2',
  'marketing-motion.css?v=2','marketing.css?v=7',
