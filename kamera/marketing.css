@@ -31,7 +31,7 @@
 .mktFine{font-size:11px;color:var(--m-muted);margin:17px 0 0;line-height:1.7}
 .mktFine a{text-decoration:underline;text-underline-offset:3px}
 .mktHeroVisual{position:relative;margin:0;min-width:0;height:570px;border:1px solid #34323a;border-radius:12px;overflow:hidden;background:#1c2028}
-.mktHeroVisual>img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.78)}
+.mktHeroVisual img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.78)}
 .mktHeroVisual:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#050609f2,transparent 75%);pointer-events:none}
 .mktHeroVisual figcaption{position:absolute;z-index:1;bottom:30px;left:28px;right:24px;display:grid;gap:14px}
 .mktHeroVisual strong{font-size:28px;line-height:1.2;letter-spacing:-.03em;font-weight:600}
@@ -128,7 +128,7 @@
 #publicHome .mktHero h1{text-wrap:balance}
 #publicHome .mktLead{text-wrap:pretty}
 #publicHome .mktHeroVisual{box-shadow:0 28px 75px rgba(0,0,0,.36);isolation:isolate}
-#publicHome .mktHeroVisual>img{object-position:center;image-rendering:auto}
+#publicHome .mktHeroVisual img{object-position:center;image-rendering:auto}
 #publicHome .mktHeroVisual figcaption{max-width:calc(100% - 48px)}
 #publicHome .mktFeature,#publicHome .mktDownload{transition:border-color .2s ease,box-shadow .2s ease}
 #publicHome .mktFeature:hover,#publicHome .mktDownload:hover{border-color:#6b5860;box-shadow:0 14px 35px rgba(0,0,0,.16)}
@@ -158,7 +158,7 @@
 .mktButtonQuiet{background:rgba(255,255,255,.035);border-color:#505361;box-shadow:none}
 .mktButtonQuiet:hover{background:rgba(255,255,255,.085);box-shadow:0 9px 24px rgba(0,0,0,.14)}
 .mktHeroVisual{border-radius:26px;border-color:#5b4a56;box-shadow:0 28px 94px rgba(0,0,0,.48),0 0 80px rgba(181,42,86,.09)!important;transform:translateZ(0)}
-.mktHeroVisual>img{filter:brightness(.9) saturate(1.06);transition:transform .8s ease}
+.mktHeroVisual img{filter:brightness(.9) saturate(1.06);transition:transform .8s ease}
 .mktHeroVisual:hover>img{transform:scale(1.035)}
 .mktHeroVisual:after{background:linear-gradient(0deg,#050609f2,transparent 75%),linear-gradient(145deg,rgba(241,94,111,.08),transparent)}
 .mktHeroVisual figcaption{bottom:32px;left:32px}
@@ -224,7 +224,7 @@
 .mktContactForm input:invalid:not(:placeholder-shown){box-shadow:0 0 0 1px rgba(240,61,91,.28)}
 @media(max-width:1080px){.mktDecision{grid-template-columns:1fr;gap:25px}.mktStageHeading{display:block}.mktStageHeading>p{margin-top:20px}.mktDemoBody{grid-template-columns:58px minmax(0,1fr) 230px}.mktAiLayout{gap:36px}}
 @media(max-width:700px){.mktHero{padding-top:40px}.mktHero h1{font-size:clamp(44px,11.4vw,68px)}.mktHeroVisual{border-radius:17px}.mktHeroVisual figcaption{left:21px}.mktStage{padding-top:62px}.mktStageHeading>p{font-size:13px}.mktDemo{border-radius:16px}.mktDemoTop{padding-inline:15px}.mktDemoMark small{display:none}.mktDemoBody{grid-template-columns:43px minmax(0,1fr)}.mktDemoNav{gap:11px}.mktDemoNav span{width:33px;height:33px;font-size:17px}.mktDemoScreen{padding:19px 13px 22px}.mktDemoImage{min-height:220px}.mktDemoSide{grid-column:1/-1;border-left:0;border-top:1px solid #303446;padding:16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.mktDemoSide>p{grid-column:1/-1;margin:0}.mktDemoSide>div{display:block;border:1px solid #363b4b;border-radius:9px;padding:11px}.mktDemoSide>div span{display:block}.mktDemoSide strong{display:block;font-size:11px;margin-top:5px}.mktDemoSide small{display:block;font-size:10px}.mktDecision{padding-top:35px;padding-bottom:65px}.mktDecisionOptions{grid-template-columns:1fr}.mktDecisionOptions article{padding:24px}.mktAiBand{padding-block:50px}.mktAiLayout{grid-template-columns:1fr;gap:28px}.mktAiExample{padding:23px}.mktAiActions{align-items:stretch;flex-direction:column}.mktAiActions .mktButton{width:100%}.mktAiActions .mktTextLink{align-self:start}}
-@media(prefers-reduced-motion:reduce){.mktButton,.mktHeroVisual>img,.mktHeader nav a,.mktLogin{transition:none!important}.mktButton:hover,.mktHeroVisual:hover>img{transform:none!important}}
+@media(prefers-reduced-motion:reduce){.mktButton,.mktHeroVisual img,.mktHeader nav a,.mktLogin{transition:none!important}.mktButton:hover,.mktHeroVisual:hover>img{transform:none!important}}
 
 
 /* Product walkthrough: uses an existing project illustration, not simulated camera footage. */
@@ -301,7 +301,7 @@
 .mktHeroFacts span:before{content:"";display:inline-block;height:6px;width:6px;flex:none;border-radius:50%;background:#f4ce8b}
 .mktHero .mktFine{max-width:590px;font-size:12px;color:#bfc2cf}
 .mktHeroVisual{height:clamp(400px,41vw,590px);border-color:#555160;box-shadow:0 36px 95px rgba(0,0,0,.5)}
-.mktHeroVisual>img{object-position:center center}
+.mktHeroVisual img{object-position:center center}
 .mktHeroVisual figcaption{gap:10px}
 .mktHeroVisual figcaption>span:last-child{font-size:13px}
 .mktHeroVisual figcaption strong{font-size:clamp(24px,2.35vw,35px)}
@@ -378,3 +378,12 @@
 @media(max-width:700px){.mktHeader{gap:8px;padding:12px 18px 8px}.mktHeader nav{order:3;padding-block:0 6px;margin-inline:-4px;gap:17px}.mktHeader nav a{font-size:13px;min-height:42px;padding-inline:5px}.mktHeader .mktLogin{min-height:43px;padding:8px 13px}.mktHero{padding-top:37px;padding-bottom:51px}.mktHero h1{font-size:clamp(43px,12vw,67px);letter-spacing:-.067em}.mktHero .mktLead{font-size:16px}.mktHero .mktActions{display:grid;grid-template-columns:1fr;gap:11px}.mktHero .mktButton{width:100%;justify-content:space-between;padding-inline:19px;font-size:14px}.mktHeroFacts{margin-top:20px}.mktHeroFacts span{padding:7px 10px}.mktHeroVisual{height:375px}.mktHeroVisual figcaption strong{font-size:27px}.mktHeroVisual figcaption>span:last-child{font-size:12px}.mktCapabilityStrip>.mktContainer{grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.mktCapabilityStrip span{align-items:start}.mktPrivacyBranches>div{padding:16px 12px}.mktPrivacyNode{padding:17px}.mktScenarios{scroll-margin-top:130px}}
 @media(max-width:400px){.mktHeader{gap:8px}.mktBrand{font-size:11px}.mktHero h1{font-size:clamp(41px,11.6vw,50px)}.mktHeroVisual{height:320px}.mktHeroFacts span{font-size:10px}.mktPrivacyBranches{gap:8px}.mktPrivacyBranches>div{padding:13px 9px}.mktPrivacyBranches small{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.mktScenarioCard,.mktFeature{transition:none!important}.mktScenarioCard:hover,.mktFeature:hover{transform:none!important}}
+
+/* Responsive image containers: same layout, lighter WebP srcset on supported browsers. */
+.mktLogoPicture{display:block;flex:none;line-height:0}
+.mktResponsiveImage,.mktBoardPicture{display:block;width:100%;height:100%}
+.mktHeroVisual .mktResponsiveImage img,.mktVisualImage .mktResponsiveImage img,
+#publicHome .mktConceptOpen .mktBoardPicture img{display:block;width:100%;height:100%;object-fit:cover}
+.mktHeroVisual .mktResponsiveImage{height:100%}
+.mktLogoPicture img{display:block}
+@media(prefers-reduced-motion:reduce){.mktHeroVisual .mktResponsiveImage img{transition:none!important;transform:none!important}}
