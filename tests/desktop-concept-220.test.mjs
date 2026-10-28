@@ -8,12 +8,14 @@ test('real HOME SECURITY 220 owner interface loads the UI-concept design last an
  const [html,sw,css,version,app]=await Promise.all([
   'kamera/index.html','kamera/sw.js','kamera/interface-concept.css',
   'kamera/version.json','kamera/app.js'].map(read));
- assert.equal(JSON.parse(version).version,'223');
- assert.ok(app.includes('const VERSION = "223"'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "133"'));
- assert.ok(sw.includes('kamera-domowa-shell-v133'));
- assert.ok(html.includes('home-security-build" content="223"'));
- assert.ok(html.includes('app.js?v=223'));
+ const release=JSON.parse(version).version;
+ const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
+ assert.ok(/^\d+$/.test(release)&&/^\d+$/.test(shell),'manifest and service worker revisions must be numeric');
+ assert.ok(app.includes('const VERSION = "'+release+'"'));
+ assert.ok(app.includes('SERVICE_WORKER_BUILD = "'+shell+'"'));
+ assert.ok(sw.includes('kamera-domowa-shell-v'+shell));
+ assert.ok(html.includes('home-security-build" content="'+release+'"'));
+ assert.ok(html.includes('app.js?v='+release));
  assert.ok(html.includes('desktop.js?v=39'));
  assert.ok(sw.includes('./desktop.js?v=39'));
  assert.ok(html.includes('href="interface-concept.css?v=2"'));

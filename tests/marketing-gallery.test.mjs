@@ -81,10 +81,12 @@ test('gallery respects reduced motion and does not load concept assets eagerly',
   assert.equal((src.match(/loading="lazy" decoding="async" fetchpriority="low"/g)||[]).length,4);
   assert.ok(sw.includes('./marketing-gallery.css?v=1'));
   assert.ok(sw.includes('./marketing-gallery.mjs?v=1'));
-  assert.ok(sw.includes('kamera-domowa-shell-v133'));
-  assert.equal(JSON.parse(manifest).version,'223');
-  assert.ok(app.includes('const VERSION = "223"'));
-  assert.ok(app.includes('SERVICE_WORKER_BUILD = "133"'));
-  assert.ok(index.includes('home-security-build" content="223"'));
-  assert.ok(index.includes('app.js?v=223'));
+  assert.ok(sw.includes('kamera-domowa-shell-v'+shell));
+  const release=JSON.parse(manifest).version;
+ const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
+ assert.ok(/^\d+$/.test(release)&&/^\d+$/.test(shell),'manifest and service worker revisions must be numeric');
+  assert.ok(app.includes('const VERSION = "'+release+'"'));
+  assert.ok(app.includes('SERVICE_WORKER_BUILD = "'+shell+'"'));
+  assert.ok(index.includes('home-security-build" content="'+release+'"'));
+  assert.ok(index.includes('app.js?v='+release));
 });
