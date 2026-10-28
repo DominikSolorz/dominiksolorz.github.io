@@ -22,7 +22,7 @@ import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./au
 import { mountAccountUI } from "./account-ui.mjs?v=3";
 import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
-import { createWebUpdates } from "./core/web-updates.mjs?v=2";
+import { createWebUpdates } from "./core/web-updates.mjs?v=3";
 import { NativeAgentClient } from "./communication/native-agent-client.mjs";
 import { createAgentTelemetry } from "./communication/agent-telemetry.mjs?v=2";
 import { captureEventFrame } from "./workspace-panels.mjs?v=2";
@@ -63,7 +63,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "223"; // musi się zgadzać z version.json
+const VERSION = "224"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2192,11 +2192,11 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "133";
+  const SERVICE_WORKER_BUILD = "134";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
-      button.textContent=webUpdates.available?'Nowa wersja · automatycznie':'Sprawdź teraz';
+      button.textContent=webUpdates.available?'Zaktualizuj':'Sprawdź aktualizacje';
       button.disabled=['checking','applying','downloading','unsupported','waiting'].includes(webUpdateState.status);
     });
     const output=$('mobileUpdateStatus');if(output)output.textContent=webUpdateState.message;
@@ -2205,7 +2205,7 @@ if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
     autoApply:true,
     // Web pages update without a click, but never while the camera is live,
     // during recording, or while a user is editing a form.
-    canAutoApply:()=>!sender.live&&!archive.status().recording&&!document.querySelector('input:focus,textarea:focus,[contenteditable="true"]:focus'),
+    canAutoApply:()=>!sender.live&&!archive.status().recording&&!document.querySelector('input:focus,textarea:focus,select:focus,[contenteditable="true"]:focus,dialog[open]'),
     onState:state=>{webUpdateState=state;paintWebUpdate();},
     prepareReload:()=>archive.prepareUpdate(),abortReload:()=>archive.abortUpdate(),reload:()=>location.reload()});
   document.addEventListener('hs-web-update-ui-ready',paintWebUpdate);
