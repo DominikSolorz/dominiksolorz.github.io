@@ -68,7 +68,7 @@ for(const name of names){
  for(const m of [...html.matchAll(/<link\b[^>]*rel="(?:icon|apple-touch-icon)"[^>]*href="([^"]+)"[^>]*>/g)])html=html.replace(m[0],m[0].replace('href="'+m[1]+'"','href="'+await image(m[1],base)+'"'));
  html=html.replace(/href="([^"]+)"/g,(all,href)=>{
   if(href.startsWith('#')||href.startsWith('/_assets/')||href.startsWith('mailto:'))return all;
-  const u=new URL(href,base);if(![legacy,origin].includes(u.origin))return all;
+  const u=new URL(href.replaceAll('&amp;','&'),base);if(![legacy,origin].includes(u.origin))return all;
   if(u.pathname==='/kamera/panel.html'||u.searchParams.has('auth')||u.pathname==='/kamera/pomoc.html'||u.pathname.includes('/downloads/')||u.pathname.includes('/docs/'))u.host=new URL(legacy).host;
   else if(publicPaths.has(u.pathname))u.host=new URL(origin).host;
   return 'href="'+u.href.replaceAll('&','&amp;')+'"';

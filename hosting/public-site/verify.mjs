@@ -10,6 +10,7 @@ const policy=config.headers[0].headers.find(h=>h.key==='Content-Security-Policy'
 for(const asset of manifest.assets){const bytes=await readFile(join(out,asset.path));assert.equal(createHash('sha256').update(bytes).digest('hex'),asset.hash);}
 for(const name of manifest.documents){
  const html=await readFile(join(out,'kamera',name),'utf8');
+ assert(!html.includes('&amp;amp;'),'Public links must not double-encode query separators: '+name);
  if(name==='index.html'){assert(html.includes(manifest.legacy+'/kamera/#asystent'));assert.equal([...html.matchAll(/<script\b[^>]*\bsrc=/g)].length,1,'homepage has one bundled enhancement request');assert(html.includes('async fetchpriority="low"'));} 
  const apple=[...html.matchAll(/<link\b[^>]*rel="apple-touch-icon"[^>]*href="([^"]+)"[^>]*>/g)];
  assert.equal(apple.length,1,'one Apple icon per public page: '+name);
@@ -27,7 +28,8 @@ for(const name of manifest.documents){
  }
 }
 for(const name of ['panel.html','pomoc.html']){
- const html=await readFile(join(out,'kamera',name),'utf8');let target;
+ const html=await readFile(join(out,'kamera',name),'utf8');
+ assert(!html.includes('&amp;amp;'),'Public links must not double-encode query separators: '+name);let target;
  vm.runInNewContext(html.match(/<script>([\s\S]*?)<\/script>/)[1],{URL,location:{search:'?test=1',hash:'#test',replace:v=>target=v}});
  assert.equal(target,manifest.legacy+'/kamera/'+name+'?test=1#test');
 }
