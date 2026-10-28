@@ -110,13 +110,27 @@ test('failure to flush the recording blocks automatic update and restores record
  x.manager.dispose();
 });
 
+test('a manually clicked PWA update is blocked until the active camera stops',async()=>{
+ let active=true;
+ const x=setup({auto:false,can:()=>!active});
+ await x.manager.check();
+ x.worker.dispatchEvent(new Event('controllerchange'));
+ await x.manager.apply();
+ assert.ok(!x.calls.includes('reload'));
+ assert.equal(x.states.at(-1).status,'waiting');
+ active=false;
+ await x.manager.apply();
+ assert.equal(x.calls.filter(c=>c==='reload').length,1);
+ x.manager.dispose();
+});
+
 test('marketing pages poll the published build but preserve unsent forms',async()=>{
  const [script,source,generated]=await Promise.all([
   read('marketing-auto-update.mjs'),
   readFile(new URL('../scripts/build-marketing.mjs',import.meta.url),'utf8'),
   read('o-systemie.html')
  ]);
- for(const item of ['cache: 'no-store'','window.location.reload()','!dirty','document.visibilityState', 'version.json']){
+ for(const item of ["cache: 'no-store'",'window.location.reload()','!dirty','document.visibilityState', 'version.json']){
   assert.ok(script.includes(item),'missing safe public update condition: '+item);
  }
  assert.ok(source.includes('marketing-auto-update.mjs?v=3'));
