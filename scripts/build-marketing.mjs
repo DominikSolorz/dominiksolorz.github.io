@@ -8,7 +8,7 @@ const escape=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;')
 const origin='https://dominiksolorz.github.io/kamera/';
 const publicOrigin=origin; // Reliable, tested GitHub Pages release.
 const publicBuild=JSON.parse(await read(camera,'version.json')).version;
-const currentDesktopRelease=process.env.HOME_SECURITY_DESKTOP_RELEASE||JSON.parse(await read(camera,'desktop-update.json')).version;
+const currentDesktopRelease=JSON.parse(await read(camera,'desktop-update.json')).version;
 async function emit(name,html){
   const file=new URL(name,camera);
   if(check){if(normalize(await readFile(file,'utf8'))!==html)throw new Error('Outdated generated marketing page: '+name);}
