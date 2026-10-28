@@ -111,6 +111,7 @@ jobs:
           node scripts/optimize-marketing-images.mjs _site
           test -s _site/kamera/assets/home-security-hero-640.webp
           test -s _site/kamera/assets/ds-logo-96.webp
+          test -s _site/kamera/assets/ds-logo-192.webp
           test -s _site/docs/ui-193/01-pulpit-960.webp
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3

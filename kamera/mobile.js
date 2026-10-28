@@ -15,7 +15,7 @@ if (isMobileOwnerApp) {
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
-    <img class="mobileBrandLogo" src="assets/ds-logo.jpg" alt="DS"><div><h1 id="mobilePageTitle">Dom</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
+    <img class="mobileBrandLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="48px" width="48" height="48" alt="DS"><div><h1 id="mobilePageTitle">Dom</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
     <button id="deviceLayoutBtn" type="button" aria-label="Zmień układ urządzenia"><span>▣</span><b>Telefon</b></button>
     <div class="mobileRelease"><small id="mobileBuild"></small><button type="button" data-web-update>Aktualizacje automatyczne</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span></div>`;
   app?.insertBefore(mobileHeader, app.firstChild);
