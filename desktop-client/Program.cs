@@ -468,7 +468,7 @@ internal static class Program
         // Aktualizacja następuje dopiero po wyraźnym kliknięciu użytkownika.
         private void ShowUpdateOffer(string version)
         {
-            updateButton.Text = $"↻ Aktualizuj do wersji {version}";
+            updateButton.Text = $"↻ Zaktualizuj do wersji {version}";
             updateButton.Location = new Point(Math.Max(12, updateBar.ClientSize.Width - updateButton.Width - 16), 8);
             PublishUpdateState("available", "Nowa wersja jest gotowa do pobrania.");
         }
