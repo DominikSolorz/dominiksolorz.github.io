@@ -34,3 +34,16 @@ test('Windows release retries promptly when tests are fixed after a failed push'
  assert.ok(workflow.includes("- 'tests/**'"),'test-only fixes must trigger a new release check');
  assert.ok(workflow.includes("node scripts/desktop-release.mjs plan"),'unchanged application sources must not create duplicate installers');
 });
+
+
+test('Windows patch preparation never rewrites metadata-driven production release checker',async()=>{
+ const script=await readFile(new URL('../scripts/desktop-release.mjs',import.meta.url),'utf8');
+ const prepare=script.slice(script.indexOf("if(command==='prepare')"),script.indexOf("if(command==='finish')"));
+ assert.ok(prepare.includes('desktop-client/Program.cs'));
+ assert.ok(prepare.includes('kamera/panel.html'));
+ assert.ok(!prepare.includes("'scripts/verify-live-marketing.mjs'"),
+   'the production checker is manifest-driven and must not be treated as release-number template');
+ const live=await readFile(new URL('../scripts/verify-live-marketing.mjs',import.meta.url),'utf8');
+ assert.ok(live.includes('expectedDesktop.version'),'live checker uses current manifest version');
+ assert.ok(live.includes("await get('desktop-update.json')"),'live checker verifies published version');
+});
