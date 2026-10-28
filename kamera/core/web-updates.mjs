@@ -56,6 +56,10 @@ export function createWebUpdates({serviceWorker, build, onState, prepareReload=a
   }
   async function apply() {
     if(!available||busy||disposed)return;
+    if(!canAutoApply()){
+      emit('waiting','Nowa wersja jest gotowa, ale trwa praca z kamerą lub edycja formularza. Zaktualizuj po jej zakończeniu.');
+      return;
+    }
     busy=true;emit('applying','Przygotowuję bezpieczne wczytanie nowej wersji…');
     try {await prepareReload();if(!disposed){available=false;reload();}}
     catch {available=true;await abortReload().catch(()=>{});emit('error','Aktualizacja wstrzymana: nie potwierdzono bezpiecznego zakończenia zapisu.');}
