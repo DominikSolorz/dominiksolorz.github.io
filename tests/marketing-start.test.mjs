@@ -37,7 +37,7 @@ test('public home makes no fake sales promises and always marks concept material
   assert.ok(home.includes(part),'missing explicit disclosure: '+part);
  }
  assert.equal((home.match(/data-mkt-setup/g)||[]).length,4);
- assert.ok(home.includes('marketing-start.css?v=2'));
+ assert.ok(home.includes('marketing-start.css?v=3'));
  assert.ok(home.includes('marketing-start.mjs?v=2'));
  assert.ok(!home.includes('Kup teraz'));
  assert.ok(!home.includes('Zapłać teraz'));
@@ -53,7 +53,7 @@ test('marketing guided checklist is responsive and safely cached with the new re
  assert.ok(css.includes('@media(max-width:670px)'));
  assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
  assert.ok(css.includes('mktSetupItem:focus-within'));
- assert.ok(sw.includes('./marketing-start.css?v=2'));
+ assert.ok(sw.includes('./marketing-start.css?v=3'));
  assert.ok(sw.includes('./marketing-start.mjs?v=2'));
  const release=JSON.parse(version).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];

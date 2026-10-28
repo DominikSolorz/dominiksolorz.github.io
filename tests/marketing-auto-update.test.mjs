@@ -131,11 +131,11 @@ test('public release notice preserves live Windows installer downloads on all ma
   assert.ok(version&&worker);
   assert.ok(sw.includes('kamera-domowa-shell-v'+worker));
   assert.ok(app.includes('const VERSION = "'+version+'"'));
-  assert.ok(sw.includes('./marketing-auto-update.css?v=1'));
+  assert.ok(sw.includes('./marketing-auto-update.css?v=2'));
   assert.ok(sw.includes('./marketing-auto-update.mjs?v=5'));
   assert.ok(sw.includes('./core/web-updates.mjs?v=3'));
   assert.ok(generator.includes('marketing-auto-update.mjs?v=5'));
-  assert.ok(generator.includes('marketing-auto-update.css?v=1'));
+  assert.ok(generator.includes('marketing-auto-update.css?v=2'));
   assert.ok(script.includes("import './marketing-downloads.mjs?v=2'"),'new prompt must not remove the installer version updater');
   assert.ok(script.includes("update.textContent = 'Zaktualizuj'"));
   assert.ok(style.includes('.mktUpdateBanner[hidden]'));
@@ -143,7 +143,7 @@ test('public release notice preserves live Windows installer downloads on all ma
     const html=await read(path);
     const prefix=path.startsWith('kamera/blog/')?'../':'';
     assert.ok(html.includes('home-security-build" content="'+version+'"'),path);
-    assert.ok(html.includes('href="'+prefix+'marketing-auto-update.css?v=1"'),path);
+    assert.ok(html.includes('href="'+prefix+'marketing-auto-update.css?v=2"'),path);
     assert.ok(html.includes('src="'+prefix+'marketing-auto-update.mjs?v=5"'),path);
     assert.equal((html.match(/marketing-auto-update\.mjs\?v=5/g)||[]).length,1,path);
   }

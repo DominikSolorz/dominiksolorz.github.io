@@ -65,7 +65,7 @@ for(const name of names){
   html=html.replace(m[0],'srcset="'+set.join(', ')+'"');
  }
  for(const m of [...html.matchAll(/<meta property="og:image" content="([^"]+)">/g)])html=html.replace(m[0],'<meta property="og:image" content="'+origin+await image(m[1],base)+'">');
- for(const m of [...html.matchAll(/<link\b[^>]*rel="icon"[^>]*href="([^"]+)"[^>]*>/g)])html=html.replace(m[0],'<link rel="icon" href="'+await image(m[1],base)+'" type="image/svg+xml">');
+ for(const m of [...html.matchAll(/<link\b[^>]*rel="(?:icon|apple-touch-icon)"[^>]*href="([^"]+)"[^>]*>/g)])html=html.replace(m[0],m[0].replace('href="'+m[1]+'"','href="'+await image(m[1],base)+'"'));
  html=html.replace(/href="([^"]+)"/g,(all,href)=>{
   if(href.startsWith('#')||href.startsWith('/_assets/')||href.startsWith('mailto:'))return all;
   const u=new URL(href,base);if(![legacy,origin].includes(u.origin))return all;

@@ -7,7 +7,7 @@
 .legalPage .legalNav a:hover{color:#f4ce8b}
 .legalPage main{width:min(950px,calc(100% - 40px));padding:60px 0 80px}
 .legalPage .legalHero{background:linear-gradient(130deg,#22202e,#151721 80%);border:1px solid #48404c;border-radius:22px;padding:clamp(24px,5vw,54px);box-shadow:0 26px 70px rgba(0,0,0,.24)}
-.legalPage .publicEyebrow{font-size:11px;letter-spacing:.16em;color:#f4ce8b;font-weight:800}
+.legalPage .publicEyebrow{font-size:12px;letter-spacing:.16em;color:#f4ce8b;font-weight:800}
 .legalPage .legalHero h1{color:#fff;font-size:clamp(38px,5vw,58px);line-height:1.07;letter-spacing:-.058em}
 .legalPage .legalHero p{color:#c9c9d3;max-width:760px;font-size:16px}
 .legalPage .legalMeta{color:#e4b7a9;margin-top:25px;line-height:1.5}

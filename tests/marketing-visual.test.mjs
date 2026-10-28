@@ -34,8 +34,8 @@ test('marketing CSS and PWA cache agree and mobile labels are legible',async()=>
   ]);
   assert.ok(css.includes('.mktVisualLayout'));
   assert.ok(css.includes('.mktVisualImage img'));
-  assert.ok(css.includes('.mktEyebrow{font-size:11px}'));
-  assert.ok(css.includes('.mktBrand small{font-size:11px'));
+  assert.ok(css.includes('.mktEyebrow{font-size:12px}'));
+  assert.ok(css.includes('.mktBrand small{font-size:12px'));
   const version=html.match(/marketing\.css\?v=(\d+)/)?.[1];
   assert.ok(version);
   assert.ok(sw.includes('./marketing.css?v='+version));

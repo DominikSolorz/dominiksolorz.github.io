@@ -50,7 +50,7 @@ test('standalone brochure and embedded public homepage match source',async()=>{
  const slot=/<(?:section|div)(?: role="group")? id="publicHome"[\s\S]*?<\/(?:section|div)>(?=\s*<section id="authDialog")/;
  assert.equal(app.match(slot)?.[0],src.trimEnd());
  assert.ok(brochure.includes(src.trimEnd()));
- assert.ok(brochure.includes('Monitoring domu z podglądem na telefonie — HOME SECURITY'));
+ assert.ok(brochure.includes('Monitoring domu i podgląd — HOME SECURITY'));
 });
 
 test('PWA shell and every marketing page have consistent revisions',async()=>{

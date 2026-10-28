@@ -11,6 +11,11 @@ for(const asset of manifest.assets){const bytes=await readFile(join(out,asset.pa
 for(const name of manifest.documents){
  const html=await readFile(join(out,'kamera',name),'utf8');
  if(name==='index.html'){assert(html.includes(manifest.legacy+'/kamera/#asystent'));assert.equal([...html.matchAll(/<script\b[^>]*\bsrc=/g)].length,1,'homepage has one bundled enhancement request');assert(html.includes('async fetchpriority="low"'));} 
+ const apple=[...html.matchAll(/<link\b[^>]*rel="apple-touch-icon"[^>]*href="([^"]+)"[^>]*>/g)];
+ assert.equal(apple.length,1,'one Apple icon per public page: '+name);
+ const icon=await readFile(join(out,apple[0][1]));
+ assert(icon.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),'Apple icon must be PNG');
+ assert.equal(icon.readUInt32BE(16),180);assert.equal(icon.readUInt32BE(20),180);
  assert(!/id="(?:authDialog|panelRuntime)"/.test(html));
  assert(html.includes('rel="canonical" href="'+manifest.origin+'/kamera/'));
  for(const script of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)){
