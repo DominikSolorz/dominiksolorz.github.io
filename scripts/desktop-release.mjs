@@ -44,7 +44,7 @@ async function main(command){
     const old=manifest.version,version=nextVersion(old);
     // The post-deploy verifier derives the installer path from desktop-update.json;
     // it does not embed a release number and must not be rewritten by prepare.
-    for(const path of ['desktop-client/Program.cs','desktop-client/HomeSecurityDesktop.csproj','desktop-client/installer/HomeSecurityDesktop.iss','desktop-client/build-release.ps1','design/marketing/home.html','kamera/index.html','kamera/panel.html']){
+    for(const path of ['desktop-client/Program.cs','desktop-client/HomeSecurityDesktop.csproj','desktop-client/installer/HomeSecurityDesktop.iss','desktop-client/build-release.ps1']){
       let source=(await readFile(path,'utf8')).replaceAll('\r\n','\n');
       if(!source.includes(old))throw Error(`Missing release version in ${path}`);
       source=source.replaceAll(old,version);

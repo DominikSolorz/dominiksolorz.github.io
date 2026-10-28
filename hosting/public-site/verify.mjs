@@ -25,7 +25,7 @@ for(const asset of manifest.assets){const bytes=await readFile(join(out,asset.pa
 for(const name of manifest.documents){
  const html=await readFile(join(out,'kamera',name),'utf8');
  assert(!html.includes('&amp;amp;'),'Public links must not double-encode query separators: '+name);
- if(name==='index.html'){assert(html.includes(manifest.legacy+'/kamera/#asystent'));assert.equal([...html.matchAll(/<script\b[^>]*\bsrc=/g)].length,1,'homepage has one bundled enhancement request');assert(html.includes('async fetchpriority="low"'));} 
+ if(name==='index.html'){assert(html.includes('/kamera/pomoc.html'),'homepage retains a real help page');assert.equal([...html.matchAll(/<script\b[^>]*\bsrc=/g)].length,1,'homepage has one bundled enhancement request');assert(html.includes('async fetchpriority="low"'));}
  const apple=[...html.matchAll(/<link\b[^>]*rel="apple-touch-icon"[^>]*href="([^"]+)"[^>]*>/g)];
  assert.equal(apple.length,1,'one Apple icon per public page: '+name);
  const icon=await readFile(join(out,apple[0][1]));
@@ -49,7 +49,7 @@ for(const name of ['panel.html','pomoc.html']){
 }
 assert(policy.includes("frame-ancestors 'none'"));assert(policy.includes("require-trusted-types-for 'script'"));
 assert(config.headers.some(r=>r.source==='/_assets/(.*)'&&r.headers.some(h=>h.value.includes('31536000, immutable'))));
-const sitemap=await readFile(join(out,'kamera/sitemap.xml'),'utf8');assert.equal([...sitemap.matchAll(/<loc>/g)].length,7);assert(!sitemap.includes(manifest.legacy));
+const sitemap=await readFile(join(out,'kamera/sitemap.xml'),'utf8');assert.equal([...sitemap.matchAll(/<loc>/g)].length,14);assert(!sitemap.includes(manifest.legacy));
 const routes=JSON.parse(await readFile(resolve(out,'../config.json'),'utf8')).routes;
 for(const route of routes)if(route.src){assert(!route.src.includes(':file'));new RegExp(route.src);}
 console.log('Verified '+manifest.documents.length+' public documents, '+manifest.assets.length+' content hashes, CSP, SRI, redirect state, sitemap and HTTP routes.');

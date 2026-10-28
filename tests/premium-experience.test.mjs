@@ -3,16 +3,15 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
-test('public product story stays identical in the app and indexed landing page',async()=>{
+test('public introduction stays identical in the app and indexed landing page',async()=>{
   const [home,index,brochure]=await Promise.all([
     'design/marketing/home.html','kamera/panel.html','kamera/o-systemie.html'
   ].map(read));
   const slot=/<(?:section|div)(?: role="group")? id="publicHome"[\s\S]*?<\/(?:section|div)>(?=\s*<section id="authDialog")/;
   assert.equal(index.match(slot)?.[0],home.trimEnd());
   assert.ok(brochure.includes(home.trimEnd()));
-  for(const id of ['zobacz-panel','mozliwosci','wybierz-start','asystent','faq'])
-    assert.ok(home.includes('id="'+id+'"'),id);
-  assert.ok(home.includes('WIZUALIZACJA INTERFEJSU'));
+  for(const [id,file] of Object.entries({'zobacz-panel':'prezentacja',mozliwosci:'mozliwosci','wybierz-start':'stan-projektu',asystent:'pytania',faq:'pytania'})){assert.ok(!home.includes('id="'+id+'"'),id);assert.ok((await read('kamera/'+file+'.html')).includes('id="'+id+'"'),file);}
+  assert.ok((await read('kamera/prezentacja.html')).includes('WIZUALIZACJA INTERFEJSU'));
 });
 
 test('honest sign-up, offer and assistant actions have actual destinations',async()=>{
@@ -20,8 +19,8 @@ test('honest sign-up, offer and assistant actions have actual destinations',asyn
     'design/marketing/home.html','kamera/support-entry.mjs','kamera/marketing-contact.js'
   ].map(read));
   assert.ok(home.includes('href="panel.html?auth=register"'));
-  assert.ok(home.includes('href="pomoc.html?temat=produkt"'));
-  assert.ok(home.includes('data-hs-open-support'));
+  assert.ok(home.includes('href="kontakt.html?temat=produkt"'));
+  assert.ok((await read('kamera/pytania.html')).includes('data-hs-open-support'));
   assert.ok(support.includes("button.click()"));
   assert.ok(contact.includes("chosenTopic==='produkt'"));
 });

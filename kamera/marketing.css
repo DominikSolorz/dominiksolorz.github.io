@@ -464,3 +464,16 @@
 
 #publicHome .mktStartLinks{font-size:13px;line-height:1.65;color:#c5c8d1;margin:14px 0 0}
 #publicHome .mktStartLinks a{color:#f4ce8b;text-decoration:underline;text-underline-offset:3px}
+
+.mktPageIntro{padding-block:38px 24px}
+.mktHomeDestinations{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding-block:44px}
+.mktHomeDestinations article{padding:22px;border:1px solid var(--m-line);border-radius:12px;background:var(--m-surface)}
+#publicHome .mktHomeDestinations h2{font-size:22px;margin-bottom:12px}
+.mktHomeDestinations p{color:var(--m-muted);font-size:15px;margin:0 0 16px}
+@media(max-width:700px){.mktHomeDestinations{grid-template-columns:1fr;padding-block:28px;gap:14px}.mktPageIntro{padding-block:26px 14px}}
+
+.mktHelpChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-block:28px 38px}
+.mktHelpChoices article{padding:20px;border:1px solid var(--m-line);border-radius:10px;background:var(--m-surface)}
+.marketingPage .mktHelpChoices h2{font-size:21px;margin-bottom:10px}
+.mktHelpChoices p{font-size:14px;color:var(--m-muted);margin:0 0 12px}
+@media(max-width:700px){.mktHelpChoices{grid-template-columns:1fr}}

@@ -13,7 +13,7 @@ function redirect(path,{native=false,pending=false,installed=false,storageBlocke
  return result;
 }
 test('public entries never redirect the current GitHub Pages homepage to a stale mirror',()=>{
- for(const path of ['/kamera/','/kamera/?ui=phone','/kamera/?ui=computer','/kamera/index.html#faq','/kamera/?view=desktop','/kamera/?odbiorca=invalid']){
+ for(const path of ['/kamera/','/kamera/?ui=phone','/kamera/?ui=computer','/kamera/?view=desktop','/kamera/?odbiorca=invalid']){
   assert.equal(redirect(path),undefined,path);
   assert.equal(redirect(path,{storageBlocked:true}),undefined,path);
  }
@@ -42,7 +42,7 @@ test('homepage HTML is indexable without JavaScript and contains no private acco
 test('sitemap contains only unique indexable canonical pages, never panel, query aliases or drafts',async()=>{
  const sitemap=await read('kamera/sitemap.xml');
  const urls=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match=>match[1]);
- assert.equal(urls.length,7);assert.equal(new Set(urls).size,urls.length);
+ assert.equal(urls.length,16);assert.equal(new Set(urls).size,urls.length);
  for(const href of urls){
   const url=new URL(href);assert.equal(url.origin,'https://dominiksolorz.github.io');assert.equal(url.search,'');
   const path=url.pathname.endsWith('/')?url.pathname+'index.html':url.pathname;

@@ -4,8 +4,10 @@ import {readFile} from 'node:fs/promises';
 
 const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
-test('homepage explains real use cases and privacy responsibilities without fictitious footage',async()=>{
- const [home,brochure]=await Promise.all(['design/marketing/home.html','kamera/o-systemie.html'].map(read));
+test('public topic pages explain real use cases and privacy responsibilities without fictitious footage',async()=>{
+ const names=['jak-dziala','mozliwosci','przygotowanie','wymagania','stan-projektu','prezentacja','pytania'];
+ const home=(await Promise.all(['design/marketing/home.html',...names.map(n=>'design/marketing/'+n+'.html')].map(read))).join('\n');
+ const brochure=(await Promise.all(names.map(n=>read('kamera/'+n+'.html')))).join('\n');
  for(const html of [home,brochure]){
   for(const id of ['zobacz-panel','w-praktyce','zastosowania','prywatnosc','jak-dziala','specyfikacja','stan-projektu','wybierz-start','faq','asystent'])
    assert.ok(html.includes('id="'+id+'"'),id);
@@ -23,9 +25,9 @@ test('homepage explains real use cases and privacy responsibilities without fict
 test('new homepage conversion actions point to actual account and contact paths',async()=>{
  const home=await read('design/marketing/home.html');
  assert.ok(home.includes('href="panel.html?auth=register"'));
- assert.ok(home.includes('href="pomoc.html?temat=produkt"'));
- assert.ok(home.includes('href="#zobacz-panel"'));
- assert.ok(home.includes('data-hs-open-support'));
+ assert.ok(home.includes('href="kontakt.html?temat=produkt"'));
+ assert.ok(home.includes('href="prezentacja.html"'));
+ assert.ok((await read('design/marketing/pytania.html')).includes('data-hs-open-support'));
  assert.ok(home.includes('polityka-prywatnosci.html'));
  assert.ok(home.includes('rodo.html'));
  const app=await read('kamera/panel.html');
@@ -34,7 +36,8 @@ test('new homepage conversion actions point to actual account and contact paths'
 });
 
 test('responsive feature diagrams disclose illustration status and avoid false telemetry',async()=>{
- const [home,css]=await Promise.all(['design/marketing/home.html','kamera/marketing.css'].map(read));
+ const home=(await read('design/marketing/mozliwosci.html'))+(await read('design/marketing/jak-dziala.html'));
+ const css=await read('kamera/marketing.css');
  assert.equal((home.match(/class="mktScenarioCard"/g)||[]).length,3);
  assert.ok(home.includes('mktScenarioVisualFoot">OBRAZ · SCHEMAT'));
  assert.ok(home.includes('mktPrivacyNote'));

@@ -13,12 +13,12 @@ test('public entry directs visitors to marketing while explicit auth links keep 
 });
 
 test('conversion buttons lead to registration or a real prefilled contact form',async()=>{
-  const html=await read('design/marketing/home.html');
+  const html=(await Promise.all(['home','prezentacja','stan-projektu','pytania'].map(name=>read('design/marketing/'+name+'.html')))).join('\n');
   assert.ok(html.includes('id="zobacz-panel"'));
   assert.ok(html.includes('id="wybierz-start"'));
   assert.ok(html.includes('id="asystent"'));
   assert.ok(html.includes('href="panel.html?auth=register"'));
-  assert.ok(html.includes('href="pomoc.html?temat=produkt"'));
+  assert.ok(html.includes('href="kontakt.html?temat=produkt"'));
   assert.ok(!html.includes('Kup teraz'));
   assert.ok(html.includes('nie transmisja z kamery'));
   const contact=await read('kamera/marketing-contact.js');
@@ -27,7 +27,7 @@ test('conversion buttons lead to registration or a real prefilled contact form',
 });
 
 test('AI CTA opens real support assistant, not a fake success or access to camera',async()=>{
-  const html=await read('design/marketing/home.html');
+  const html=await read('design/marketing/pytania.html');
   const launcher=await read('kamera/support-entry.mjs');
   assert.ok(html.includes('data-hs-open-support'));
   assert.ok(html.includes('Nie podawaj mu haseł, kodów PIN'));

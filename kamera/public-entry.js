@@ -13,6 +13,9 @@
   const native = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview;
   const installed = window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
   if (!privateLink && !pendingEntry && !native && !installed) {
+    const topics={"mozliwosci":"mozliwosci.html","jak-dziala":"jak-dziala.html","specyfikacja":"wymagania.html","stan-projektu":"stan-projektu.html","przygotowanie":"przygotowanie.html","zobacz-panel":"prezentacja.html","galeria":"galeria.html","faq":"pytania.html","asystent":"pytania.html","w-praktyce":"jak-dziala.html","zastosowania":"mozliwosci.html","prywatnosc":"jak-dziala.html"};
+    const topic=topics[location.hash.slice(1)];
+    if(topic){const destination=new URL(topic,location.href);destination.search=location.search;location.replace(destination.href);return;}
     // Full public content is already in this HTML. Never redirect to a stale mirror.
     // Local support and internal anchor links stay available.
     return;

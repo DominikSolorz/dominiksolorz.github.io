@@ -12,7 +12,8 @@ if(new URL(origin).origin!==origin||!origin.startsWith('https://'))throw Error('
 // Public browser releases advance independently of private panel / native client releases.
 const version=JSON.parse(await readFile(join(repo,'hosting/public-site/release.json'),'utf8')).version;
 if(!Number.isSafeInteger(version)||version<1)throw Error('Invalid public website release');
-const names=['pobierz.html','index.html','o-systemie.html','galeria.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html','polityka-prywatnosci.html','regulamin.html','rodo.html'];
+const topicFiles=JSON.parse(await readFile(join(repo,'design/marketing/pages.json'),'utf8')).map(p=>p.slug+'.html');
+const names=[...topicFiles,'pobierz.html','index.html','o-systemie.html','galeria.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html','polityka-prywatnosci.html','regulamin.html','rodo.html'];
 const publicPaths=new Set(names.map(name=>'/kamera/'+name));publicPaths.add('/kamera/');
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const sri=bytes=>'sha256-'+createHash('sha256').update(bytes).digest('base64');
@@ -93,7 +94,7 @@ for(const [path,destination] of [['kamera/panel.html',legacy+'/kamera/panel.html
  await writeFile(join(output,path),text);
 }
 await writeFile(join(output,'kamera/version.json'),JSON.stringify({version})+'\n');
-const sitemapPaths=['','pobierz.html','galeria.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html'];
+const sitemapPaths=[...topicFiles,'','pobierz.html','galeria.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html'];
 await writeFile(join(output,'kamera/sitemap.xml'),'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+sitemapPaths.map(p=>'<url><loc>'+origin+'/kamera/'+p+'</loc></url>').join('\n')+'\n</urlset>\n');
 await writeFile(join(output,'robots.txt'),'User-agent: *\nAllow: /\nSitemap: '+origin+'/kamera/sitemap.xml\n');
 await writeFile(join(output,'404.html'),'<!doctype html><html lang="pl"><meta charset="utf-8"><title>Nie znaleziono strony</title><h1>Nie znaleziono strony</h1><a href="/kamera/">Wróć do HOME SECURITY</a></html>');

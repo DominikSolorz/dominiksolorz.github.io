@@ -6,16 +6,17 @@ import {fileURLToPath} from 'node:url';
 const root=new URL('../',import.meta.url),base=new URL('kamera/',root);
 const read=name=>readFile(new URL(name,base),'utf8');
 const posts=JSON.parse(await readFile(new URL('design/marketing/posts.json',root),'utf8'));
-const pages=['index.html','o-systemie.html','galeria.html','pomoc.html','blog/index.html',...posts.map(post=>'blog/'+post.slug+'.html')];
+const topics=JSON.parse(await readFile(new URL('design/marketing/pages.json',root),'utf8'));
+const pages=[...topics.map(p=>p.slug+'.html'),'pobierz.html','kontakt.html','index.html','o-systemie.html','galeria.html','pomoc.html','blog/index.html',...posts.map(post=>'blog/'+post.slug+'.html')];
 test('public marketing is generated from one source without replacing the private panel',()=>{
  const result=spawnSync(process.execPath,[fileURLToPath(new URL('../scripts/build-marketing.mjs',import.meta.url)),'--check'],{encoding:'utf8'});
  assert.equal(result.status,0,result.stderr||result.error?.message);
 });
-test('landing page includes actual product depth, not dead section buttons',async()=>{
+test('landing page routes to product pages and preserves the private panel',async()=>{
  const html=await read('panel.html');
- for(const id of ['mozliwosci','jak-dziala','specyfikacja','stan-projektu','poradniki','faq'])assert.ok(html.includes('id="'+id+'"'));
+ for(const [id,page] of Object.entries({mozliwosci:'mozliwosci', 'jak-dziala':'jak-dziala',specyfikacja:'wymagania','stan-projektu':'stan-projektu',faq:'pytania'})){assert.ok(!html.includes('id="'+id+'"'));assert.ok((await read(page+'.html')).includes('id="'+id+'"'));}
  assert.equal((html.match(/id="authDialog"/g)||[]).length,1);assert.equal((html.match(/id="app"/g)||[]).length,1);
- assert.ok(html.includes('marketing.css?v=14'));assert.ok(html.includes('id="publicHome"'));
+ assert.ok(html.includes('marketing.css?v=15'));assert.ok(html.includes('id="publicHome"'));
 });
 test('public articles and brochure do not load recorder or account runtime',async()=>{
  for(const page of pages){const html=await read(page);assert.ok(!/src="(?:\.\.\/)?(?:app|auth|desktop|mobile)\.js/.test(html),page);assert.ok(html.includes('lang="pl"'));assert.ok(html.includes('rel="canonical"'));assert.ok(html.includes('name="description"'));}
@@ -50,12 +51,12 @@ test('contact form sends to its backend and requires a confirmed receipt',async(
  assert.ok(html.includes('name="surname"'));assert.ok(html.includes('name="consent"'));assert.ok(js.includes('submit.disabled=false'));
 });
 test('marketing distinguishes available features from incomplete integrations and app-store releases',async()=>{
- const html=await read('o-systemie.html');
+ const html=(await read('stan-projektu.html'))+(await read('pytania.html'));
  for(const text of ['Wydanie rozwojowe','W INTEGRACJI','Nie ma jeszcze opublikowanych aplikacji','niezależnego od otwartego panelu'])assert.ok(html.includes(text),text);
 });
 test('public downloads match the current installer release',async()=>{
  const version=JSON.parse(await read('desktop-update.json')).version;
- for(const page of ['index.html','o-systemie.html']){
+ for(const page of ['pobierz.html','wymagania.html']){
   const html=await read(page);const links=[...html.matchAll(/downloads\/HOME-SECURITY-Desktop-Setup-([\d.]+)\.exe/g)];
   assert.ok(links.length>0);for(const link of links)assert.equal(link[1],version);
  }

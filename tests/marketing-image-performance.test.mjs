@@ -13,15 +13,16 @@ test('public LCP hero uses responsive WebP candidates with original fallback and
  assert.ok(hero.includes('assets/home-security-hero.webp 1024w'));
  assert.ok(hero.includes('fetchpriority="high"'));
  assert.ok(hero.includes('sizes="(max-width: 700px)'));
- assert.ok(source.includes('assets/home-security-how-it-works-640.webp 640w'));
- assert.ok(source.includes('loading="lazy" decoding="async"'));
+ const explanation=await read('design/marketing/jak-dziala.html');
+ assert.ok(explanation.includes('assets/home-security-how-it-works-640.webp 640w'));
+ assert.ok(explanation.includes('loading="lazy" decoding="async"'));
  assert.ok(index.includes(source.trimEnd()));
  assert.ok(brochure.includes(source.trimEnd()));
 });
 
 test('all 8 gallery thumbnails have lightweight previews and retain full-resolution links',async()=>{
  const [home,gallery,full]=await Promise.all([
-  read('design/marketing/home.html'),read('design/marketing/gallery.html'),read('kamera/galeria.html')]);
+  read('design/marketing/prezentacja.html'),read('design/marketing/gallery.html'),read('kamera/galeria.html')]);
  assert.equal((home.match(/-960\.webp 960w/g)||[]).length,4);
  assert.equal((gallery.match(/-960\.webp 960w/g)||[]).length,8);
  assert.ok(full.includes(gallery.trimEnd()));

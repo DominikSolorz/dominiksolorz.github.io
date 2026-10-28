@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "jak-dziala",
+    "title": "Jak działa HOME SECURITY",
+    "description": "Komputer udostępnia obraz, a telefon otwiera Twój panel. Sprawdź podział ról i kolejność uruchomienia.",
+    "assets": ""
+  },
+  {
+    "slug": "mozliwosci",
+    "title": "Możliwości systemu",
+    "description": "Poznaj podgląd, nagrania, dostęp do konta i diagnostykę — wraz z warunkami ich działania.",
+    "assets": ""
+  },
+  {
+    "slug": "przygotowanie",
+    "title": "Przygotowanie do uruchomienia",
+    "description": "Sprawdź komputer, konto, folder nagrań i połączenie telefonu przed pierwszym uruchomieniem.",
+    "assets": "start"
+  },
+  {
+    "slug": "wymagania",
+    "title": "Wymagania i pobieranie",
+    "description": "Sprawdź wymagania komputera, telefonu, sieci oraz miejsca zapisu przed instalacją programu.",
+    "assets": ""
+  },
+  {
+    "slug": "stan-projektu",
+    "title": "Stan projektu i dostępność",
+    "description": "Zobacz, co jest dostępne, co pozostaje w integracji i jakie są ograniczenia wydania rozwojowego.",
+    "assets": ""
+  },
+  {
+    "slug": "prezentacja",
+    "title": "Prezentacja panelu",
+    "description": "Obejrzyj koncepcję panelu i projekty interfejsu. Makiety pokazują kierunek prac, a nie obraz z Twojej kamery.",
+    "assets": "gallery"
+  },
+  {
+    "slug": "pytania",
+    "title": "Pytania i odpowiedzi",
+    "description": "Odpowiedzi dotyczące programu, telefonu, zapisu, konta i dostępności produktu.",
+    "assets": "support"
+  }
+]
