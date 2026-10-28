@@ -9,6 +9,9 @@ on:
       - 'kamera/o-systemie.html'
       - 'kamera/marketing.css'
       - 'kamera/marketing-motion.css'
+      - 'kamera/marketing-motion.mjs'
+      - 'kamera/app.js'
+      - 'kamera/sw.js'
       - 'kamera/assets/**'
       - 'design/marketing/home.html'
       - 'scripts/summarize-lighthouse.mjs'
@@ -68,6 +71,14 @@ jobs:
           node_modules/.bin/lighthouse "https://dominiksolorz.github.io/kamera/" \
             --preset=desktop --only-categories=performance,accessibility,best-practices,seo \
             --chrome-flags="$FLAGS" --output=json --output-path=lighthouse-results/root-desktop.json --quiet
+          # Measure the EXACT URL used in the October PageSpeed report.
+          # It is an application entry with intentional noindex, not a marketing page.
+          node_modules/.bin/lighthouse "https://dominiksolorz.github.io/kamera/?ui=phone" \
+            --preset=desktop --only-categories=performance,accessibility,best-practices,seo \
+            --chrome-flags="$FLAGS" --output=json --output-path=lighthouse-results/phone-desktop.json --quiet
+          node_modules/.bin/lighthouse "https://dominiksolorz.github.io/kamera/?ui=phone" \
+            --only-categories=performance,accessibility,best-practices,seo \
+            --chrome-flags="$FLAGS" --output=json --output-path=lighthouse-results/phone-mobile.json --quiet
           node_modules/.bin/lighthouse "https://dominiksolorz.github.io/kamera/o-systemie.html" \
             --preset=desktop --only-categories=performance,accessibility,best-practices,seo \
             --chrome-flags="$FLAGS" --output=json --output-path=lighthouse-results/marketing-desktop.json --quiet
