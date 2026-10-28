@@ -58,3 +58,16 @@ test('public site and PWA expose update controls while respecting recording safe
   assert.ok(webUpdates.includes('prepareReload'));
   assert.ok(webUpdates.includes('canAutoApply'));
 });
+
+
+test('production Windows version validation accepts real releases and rejects malformed metadata',async()=>{
+  const script=await read('scripts/verify-live-marketing.mjs');
+  const source=script.match(/assert\.match\(publicDesktop\.version,\/([^/\n]+)\/\);/);
+  assert.ok(source,'the production verifier must validate the Windows release version');
+  const pattern=new RegExp(source[1]);
+  assert.ok(pattern.test('1.4.20'));
+  assert.ok(pattern.test('12.34.567'));
+  for(const invalid of ['1x4x20','1.4','latest','1.4.20-beta','../../1.4.20']){
+    assert.equal(pattern.test(invalid),false,'should reject '+invalid);
+  }
+});
