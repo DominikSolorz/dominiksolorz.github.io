@@ -124,6 +124,7 @@ if (desktopRequested) {
   if (context.parentElement) context.insertAdjacentElement("afterend", overview);
   const homeGuide = document.createElement("section");
   homeGuide.className = "desktopHomeGuide";
+  homeGuide.id = "desktopHomeGuide";
   homeGuide.setAttribute("aria-label", "Najważniejsze funkcje pulpitu");
   homeGuide.innerHTML = `<div><h2>Twój podgląd i nagrania</h2><p id="desktopHomeOperation" role="status">Oczekiwanie na aktualny stan urządzenia.</p></div><nav aria-label="Skróty pulpitu"><button type="button" data-home-view="controls">Sterowanie kamerą</button><button type="button" data-home-view="archive">Nagrania</button><button type="button" data-home-view="diagnostics">Sprawdź stan</button></nav>`;
   overview.insertAdjacentElement("beforebegin", homeGuide);
@@ -412,7 +413,7 @@ if (desktopRequested) {
     // interfejsu; wybrana kategoria jest widoczna tylko w module Ustawienia.
     if (view === "settings") setSettingsGroup(activeSettingsGroup);
     if(view==="events"){eventsScreen.scrollIntoView({block:"start"});return;}
-    const target = { live: "stage", controls: "ctrlBar", settings: "setCard", archive: "dvrCard" }[view];
+    const target = { live: "desktopHomeGuide", controls: "ctrlBar", settings: "setCard", archive: "dvrCard" }[view];
     if (target) {
       main?.classList.remove("focus-live", "focus-controls", "focus-settings", "focus-archive");
       $(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
