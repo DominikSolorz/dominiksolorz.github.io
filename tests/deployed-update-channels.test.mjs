@@ -45,7 +45,12 @@ test('public site and PWA expose update controls while respecting recording safe
   ]);
   const version=JSON.parse(await read('kamera/version.json')).version;
   assert.ok(site.includes('home-security-build" content="'+version+'"'));
-  assert.ok(site.includes('marketing-auto-update.mjs?v=5'));
+  const updateModule=sw.match(/marketing-auto-update\.mjs\?v=\d+/)?.[0];
+  assert.ok(updateModule,'service worker must cache the public updater');
+  assert.ok(site.includes(updateModule),'homepage and service worker must agree on updater revision');
+  assert.ok(marketing.includes('freshUpdateURL'),'public update must navigate to fresh HTML');
+  assert.ok(app.includes('freshUpdateURL(location.href,VERSION,Date.now())'),'private PWA must also refresh the current release');
+  assert.ok(sw.includes("fetch(event.request, {cache: 'no-store'})"),'explicit upgrades must bypass stale page cache');
   assert.ok(sw.includes('./core/web-updates.mjs?v=3'));
   assert.ok(app.includes('autoApply:true'));
   assert.ok(app.includes("button.textContent=webUpdates.available?'Zaktualizuj':'Sprawdź aktualizacje'"));
