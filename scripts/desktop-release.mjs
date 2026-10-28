@@ -42,7 +42,9 @@ async function main(command){
   }
   if(command==='prepare'){
     const old=manifest.version,version=nextVersion(old);
-    for(const path of ['desktop-client/Program.cs','desktop-client/HomeSecurityDesktop.csproj','desktop-client/installer/HomeSecurityDesktop.iss','desktop-client/build-release.ps1','design/marketing/home.html','kamera/index.html','kamera/panel.html','scripts/verify-live-marketing.mjs']){
+    // The live smoke audit reads desktop-update.json dynamically. It must
+    // never require a literal installer version or be rewritten per release.
+    for(const path of ['desktop-client/Program.cs','desktop-client/HomeSecurityDesktop.csproj','desktop-client/installer/HomeSecurityDesktop.iss','desktop-client/build-release.ps1','design/marketing/home.html','kamera/index.html','kamera/panel.html']){
       let source=(await readFile(path,'utf8')).replaceAll('\r\n','\n');
       if(!source.includes(old))throw Error(`Missing release version in ${path}`);
       source=source.replaceAll(old,version);
