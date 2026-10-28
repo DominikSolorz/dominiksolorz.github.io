@@ -5,7 +5,7 @@ const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8
 
 test('public product story stays identical in the app and indexed landing page',async()=>{
   const [home,index,brochure]=await Promise.all([
-    'design/marketing/home.html','kamera/index.html','kamera/o-systemie.html'
+    'design/marketing/home.html','kamera/panel.html','kamera/o-systemie.html'
   ].map(read));
   const slot=/<section id="publicHome"[\s\S]*?<\/section>(?=\s*<section id="authDialog")/;
   assert.equal(index.match(slot)?.[0],home.trimEnd());
@@ -19,7 +19,7 @@ test('honest sign-up, offer and assistant actions have actual destinations',asyn
   const [home,support,contact]=await Promise.all([
     'design/marketing/home.html','kamera/support-entry.mjs','kamera/marketing-contact.js'
   ].map(read));
-  assert.ok(home.includes('href="./?auth=register"'));
+  assert.ok(home.includes('href="panel.html?auth=register"'));
   assert.ok(home.includes('href="pomoc.html?temat=produkt"'));
   assert.ok(home.includes('data-hs-open-support'));
   assert.ok(support.includes("button.click()"));
@@ -38,10 +38,10 @@ test('legal pages link related documents and share the public visual system',asy
 
 test('registered owners retain direct panel access while visitors see brochure',async()=>{
   const [root,app,sw,version,code]=await Promise.all([
-    'index.html','kamera/index.html','kamera/sw.js','kamera/version.json','kamera/app.js'
+    'index.html','kamera/panel.html','kamera/sw.js','kamera/version.json','kamera/app.js'
   ].map(read));
-  assert.ok(root.includes('toPanel ? "./kamera/" : "./kamera/o-systemie.html"'));
-  assert.ok(root.includes('["auth","app","view","ui","desktop","bootRetry","theme","start"]'));
+  assert.ok(root.includes('toPanel ? "./kamera/panel.html" : "./kamera/"'));
+  assert.ok(root.includes('["auth","app","view","ui","desktop","bootRetry","theme","start","code","odbiorca","panel"]'));
   assert.ok(app.includes('auth-experience.mjs?v=1'));
   assert.ok(app.includes('auth-experience.css?v=1'));
   assert.ok(sw.includes('auth-experience.mjs?v=1'));

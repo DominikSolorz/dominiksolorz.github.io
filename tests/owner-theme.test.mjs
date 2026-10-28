@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 const read=path=>readFile(new URL('../kamera/'+path,import.meta.url),'utf8');
 
 test('premium owner theme matches HTML and service worker revisions',async()=>{
- const [html,sw,style]=await Promise.all(['index.html','sw.js','interface-theme.css'].map(read));
+ const [html,sw,style]=await Promise.all(['panel.html','sw.js','interface-theme.css'].map(read));
  const css=html.match(/interface-theme\.css\?v=(\d+)/);
  assert.ok(css,'owner theme must load on panel');
  assert.ok(sw.includes('./interface-theme.css?v='+css[1]),'PWA cache must reference same theme');

@@ -1,9 +1,9 @@
 // Summarize actual Lighthouse results. Missing results must fail rather than pretend success.
 import {readFile,appendFile} from 'node:fs/promises';
 const reportFiles=[
- ['Panel /kamera/ — desktop','lighthouse-results/root-desktop.json'],
- ['Panel /kamera/?ui=phone — desktop','lighthouse-results/phone-desktop.json'],
- ['Panel /kamera/?ui=phone — mobile','lighthouse-results/phone-mobile.json'],
+ ['Strona /kamera/ — desktop','lighthouse-results/root-desktop.json'],
+ ['Strona /kamera/?ui=phone — desktop','lighthouse-results/phone-desktop.json'],
+ ['Strona /kamera/?ui=phone — mobile','lighthouse-results/phone-mobile.json'],
  ['Strona /o-systemie.html — desktop','lighthouse-results/marketing-desktop.json'],
  ['Strona /o-systemie.html — mobile','lighthouse-results/marketing-mobile.json']
 ];
@@ -34,7 +34,7 @@ const markdown=['## HOME SECURITY — real Lighthouse results','',
  ...rows.map(x=>`| ${x.name} | ${x.performance} | ${x.accessibility} | ${x.practices} | ${x.seo} | ${x.fcp} | ${x.lcp} | ${x.tbt} | ${x.cls} | ${x.bytes} KiB |`),
  '',
  'This is a Lighthouse lab measurement from GitHub Actions, not the Google PageSpeed report or real-user CrUX field data.',
- 'The app panel /kamera/?ui=phone deliberately uses noindex; SEO score measures the app entry, not the indexed marketing page /kamera/o-systemie.html.',
+ 'The public /kamera/ and ?ui=phone are indexable; the private /kamera/panel.html remains noindex. The legacy o-systemie.html URL points to the homepage canonical.',
  '',
  ...opportunities.flatMap(o=>['### '+o.name,...(o.top.length?o.top.map(i=>'- '+i.title+' — potential saving '+i.savingsMs+' ms'):['- No significant classic opportunity audit returned']), '']),
  ''];

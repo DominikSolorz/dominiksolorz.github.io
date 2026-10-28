@@ -64,7 +64,7 @@ test('scroll progress, active nav and back-to-top work in reduced-motion mode',a
 });
 
 test('all marketing pages load the motion styles and script, including the panel public entry',async()=>{
- const paths=['kamera/index.html','kamera/o-systemie.html','kamera/galeria.html','kamera/pomoc.html',
+ const paths=['kamera/panel.html','kamera/o-systemie.html','kamera/galeria.html','kamera/pomoc.html',
    'kamera/blog/index.html','kamera/blog/pierwsze-uruchomienie.html',
    'kamera/blog/zapis-lokalny-i-drive.html','kamera/blog/diagnostyka-monitoringu.html'];
  for(const path of paths){
@@ -90,7 +90,7 @@ test('scroll effects are progressive, focus-safe and opt out of reduced motion',
 
 test('PWA, runtime and public pages have matching motion asset and build versions',async()=>{
  const [sw,app,version,index]=await Promise.all([
-  'kamera/sw.js','kamera/app.js','kamera/version.json','kamera/index.html'].map(read));
+  'kamera/sw.js','kamera/app.js','kamera/version.json','kamera/panel.html'].map(read));
  for(const asset of ['marketing-motion.css?v=2','marketing-motion.mjs?v=2'])assert.ok(sw.includes('./'+asset));
  const release=JSON.parse(version).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
@@ -105,7 +105,7 @@ assert.ok(sw.includes('kamera-domowa-shell-v'+shell));
 
 
 test('support assistant does not overlap the scroll control and auth animations respect accessibility',async()=>{
- const [css,html]=await Promise.all(['kamera/marketing-motion.css','kamera/index.html'].map(read));
+ const [css,html]=await Promise.all(['kamera/marketing-motion.css','kamera/panel.html'].map(read));
  assert.ok(css.includes('#publicHome.mktSite .mktBackToTop{left:'));
  assert.ok(css.includes('#authDialog:not([hidden]) .authCard'));
  assert.ok(css.includes('#authDialog:not([hidden]) [data-auth-step].authForm:not([hidden])'));

@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const base=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,base),'utf8');
-const homePaths=['design/marketing/home.html','kamera/index.html','kamera/o-systemie.html'];
+const homePaths=['design/marketing/home.html','kamera/index.html','kamera/panel.html','kamera/o-systemie.html'];
 
 test('product gallery uses existing proposal boards, not invented screenshots',async()=>{
   const pages=await Promise.all(homePaths.map(read));
@@ -73,7 +73,7 @@ test('gallery respects reduced motion and does not load concept assets eagerly',
   const [css,src,sw,manifest,app,index]=await Promise.all([
     read('kamera/marketing-gallery.css'),read('design/marketing/home.html'),
     read('kamera/sw.js'),read('kamera/version.json'),read('kamera/app.js'),
-    read('kamera/index.html')
+    read('kamera/panel.html')
   ]);
   assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
   assert.ok(css.includes(':focus-visible'));

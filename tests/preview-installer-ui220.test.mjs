@@ -24,7 +24,7 @@ test('preview setup is deliberately separate from the production installer',asyn
 test('installer workflow builds and validates genuine Windows EXE without altering public updates',async()=>{
  const [workflow,panel,stableManifest]=await Promise.all([
   read('.github/workflows/desktop-ui220-installer.yml'),
-  read('kamera/index.html'),
+  read('kamera/panel.html'),
   read('kamera/desktop-update.json')
  ]);
  for(const part of ['runs-on: windows-latest','HomeSecurityDesktop.UI220.Preview.iss',

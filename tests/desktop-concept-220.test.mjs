@@ -6,7 +6,7 @@ const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
 test('real HOME SECURITY 220 owner interface loads the UI-concept design last and offline',async()=>{
  const [html,sw,css,version,app]=await Promise.all([
-  'kamera/index.html','kamera/sw.js','kamera/interface-concept.css',
+  'kamera/panel.html','kamera/sw.js','kamera/interface-concept.css',
   'kamera/version.json','kamera/app.js'].map(read));
  const release=JSON.parse(version).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
@@ -59,7 +59,7 @@ test('special-purpose police and military themes remain independent and user mot
 
 test('desktop navigation derives current location from real router and never claims recording success',async()=>{
  const [desktop,panels,html]=await Promise.all([
-  'kamera/desktop.js','kamera/workspace-panels.mjs','kamera/index.html'].map(read));
+  'kamera/desktop.js','kamera/workspace-panels.mjs','kamera/panel.html'].map(read));
  assert.ok(desktop.includes('setAttribute("aria-current", "page")'));
  assert.ok(desktop.includes('removeAttribute("aria-current")'));
  assert.ok(desktop.includes('desktopSummaryCamera">Sprawdzam…'));

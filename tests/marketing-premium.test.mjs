@@ -7,7 +7,7 @@ const read=path=>readFile(new URL(path,root),'utf8');
 
 test('public entry directs visitors to marketing while explicit auth links keep the panel',async()=>{
   const rootHtml=await read('index.html');
-  assert.ok(rootHtml.includes('new URL(toPanel ? "./kamera/" : "./kamera/o-systemie.html"'));
+  assert.ok(rootHtml.includes('new URL(toPanel ? "./kamera/panel.html" : "./kamera/"'));
   assert.ok(rootHtml.includes('"auth","app","view","ui","desktop"'));
   assert.ok(rootHtml.includes('destination.hash = location.hash'));
 });
@@ -17,7 +17,7 @@ test('conversion buttons lead to registration or a real prefilled contact form',
   assert.ok(html.includes('id="zobacz-panel"'));
   assert.ok(html.includes('id="wybierz-start"'));
   assert.ok(html.includes('id="asystent"'));
-  assert.ok(html.includes('href="./?auth=register"'));
+  assert.ok(html.includes('href="panel.html?auth=register"'));
   assert.ok(html.includes('href="pomoc.html?temat=produkt"'));
   assert.ok(!html.includes('Kup teraz'));
   assert.ok(html.includes('nie transmisja z kamery'));
@@ -37,7 +37,7 @@ test('AI CTA opens real support assistant, not a fake success or access to camer
 
 test('account modal has a separate UI layer with usable password toggles',async()=>{
   const [html,auth,styles]=await Promise.all([
-    read('kamera/index.html'),read('kamera/auth-experience.mjs'),read('kamera/auth-experience.css')]);
+    read('kamera/panel.html'),read('kamera/auth-experience.mjs'),read('kamera/auth-experience.css')]);
   assert.ok(html.includes('auth-experience.mjs?v=1'));
   assert.ok(html.includes('auth-experience.css?v=1'));
   assert.ok(html.includes('name="terms" type="checkbox" required'));

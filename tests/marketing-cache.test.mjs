@@ -17,7 +17,7 @@ test('blog navigation never replaces the cached panel document',async()=>{
  assert.deepEqual(value.writes,['https://dominiksolorz.github.io/kamera/blog/pierwsze-uruchomienie.html']);
 });
 test('account navigation retains one query-free panel cache key',async()=>{
- assert.deepEqual((await navigate('/kamera/?auth=login')).writes,['./index.html']);
+ assert.deepEqual((await navigate('/kamera/panel.html?auth=login')).writes,['./panel.html']);
 });
 test('offline article uses its own cached document, not a private panel or another article',async()=>{
  const value=await navigate('/kamera/blog/zapis-lokalny-i-drive.html',{offline:true,cached:'saved article'});
@@ -29,4 +29,13 @@ test('cache quota failure never turns a successful network navigation into an er
 });
 test('uncached offline public page gives an honest 503 response',async()=>{
  const value=await navigate('/kamera/blog/index.html',{offline:true});assert.equal(value.response.status,503);
+});
+
+test('public homepage and private panel never share an offline document cache key',async()=>{
+ assert.deepEqual((await navigate('/kamera/?ui=phone')).writes,['./index.html']);
+ assert.deepEqual((await navigate('/kamera/panel.html?auth=register')).writes,['./panel.html']);
+ const home=await navigate('/kamera/?ui=phone',{offline:true,cached:'public home'});
+ assert.deepEqual(home.matches,['./index.html']);
+ const panel=await navigate('/kamera/panel.html?auth=login',{offline:true,cached:'panel'});
+ assert.deepEqual(panel.matches,['./panel.html']);
 });

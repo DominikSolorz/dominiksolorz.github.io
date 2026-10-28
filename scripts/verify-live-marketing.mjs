@@ -23,14 +23,15 @@ const checks=[
   ['polityka-prywatnosci.html',['o-systemie.html','Polityka prywatności']],
   ['regulamin.html',['o-systemie.html','Regulamin']],
   ['rodo.html',['o-systemie.html','Informacja RODO']],
-  ['index.html',['name="home-security-build" content="'+expectedBuild+'"','id="authDialog"','id="publicHome"','interface-concept.css?v=2']],
-  ['sitemap.xml',['/kamera/galeria.html','/kamera/o-systemie.html']],
-  ['../index.html',['./kamera/o-systemie.html','location.replace']]
+  ['panel.html',['name="home-security-build" content="'+expectedBuild+'"','id="authDialog"','id="publicHome"','interface-concept.css?v=2']],
+  ['index.html',['name="robots" content="index,follow"','rel="canonical" href="https://dominiksolorz.github.io/kamera/"','public-entry.js?v=1']],
+  ['sitemap.xml',['/kamera/galeria.html','/kamera/</loc>']],
+  ['../index.html',['./kamera/','location.replace']]
 ];
 const assets=[
  'marketing-start.css?v=2','marketing-start.mjs?v=2',
  'marketing-auto-update.css?v=1','marketing-auto-update.mjs?v=3',
- 'core/web-updates.mjs?v=3','sw.js?v=140','panel-entry.mjs?v=1',
+ 'core/web-updates.mjs?v=3','sw.js?v=141','panel-entry.mjs?v=2','public-entry.js?v=1',
  'marketing-gallery.css?v=2','marketing-gallery.mjs?v=1',
  'interface-concept.css?v=2',
  'marketing-motion.css?v=2','marketing.css?v=7',
@@ -43,7 +44,7 @@ let tries=0;
 while(true){
   try{
     const html=await get('o-systemie.html');
-    const app=await get('index.html');
+    const app=await get('panel.html');
     const expected='home-security-build" content="'+expectedBuild+'"';
     assert.ok(html.includes('id="przygotowanie"')&&html.includes(expected)&&html.includes('marketing-auto-update.mjs?v=3'),'The public homepage is still serving the previous release');
     assert.ok(app.includes(expected)&&app.includes('app.js?v='+expectedBuild),'The protected panel is still serving the previous release');
@@ -62,7 +63,8 @@ for(const [path,tokens] of checks){
     assert.ok(html.includes('marketing-auto-update.mjs?v=3'),'New public update notice is missing from '+path);
   }
   if(path==='galeria.html')assert.equal((html.match(/class="mktConceptCard"/g)||[]).length,8);
-  if(path==='index.html')assert.ok(html.includes('app.js?v='+expectedBuild));
+  if(path==='panel.html')assert.ok(html.includes('app.js?v='+expectedBuild)&&html.includes('content="noindex,follow"'));
+  if(path==='index.html')assert.ok(!html.includes('id="authDialog"')&&!html.includes('app.js?v='));
   console.log('OK document '+path);
 }
 for(const path of assets){

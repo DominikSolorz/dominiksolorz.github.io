@@ -8,7 +8,7 @@ const read=path=>readFile(new URL(path,root),'utf8');
 test('illustrated product explanation is real, accessible and consistent with its source',async()=>{
   const [home,app,brochure]=await Promise.all([
     read('design/marketing/home.html'),
-    read('kamera/index.html'),
+    read('kamera/panel.html'),
     read('kamera/o-systemie.html')
   ]);
   for(const html of [home,app,brochure]){
@@ -29,7 +29,7 @@ test('illustrated product explanation is real, accessible and consistent with it
 
 test('marketing CSS and PWA cache agree and mobile labels are legible',async()=>{
   const [css,html,sw,app,manifest]=await Promise.all([
-    read('kamera/marketing.css'),read('kamera/index.html'),read('kamera/sw.js'),
+    read('kamera/marketing.css'),read('kamera/panel.html'),read('kamera/sw.js'),
     read('kamera/app.js'),read('kamera/version.json')
   ]);
   assert.ok(css.includes('.mktVisualLayout'));

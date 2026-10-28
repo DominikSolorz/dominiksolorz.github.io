@@ -22,13 +22,13 @@ test('homepage explains real use cases and privacy responsibilities without fict
 
 test('new homepage conversion actions point to actual account and contact paths',async()=>{
  const home=await read('design/marketing/home.html');
- assert.ok(home.includes('href="./?auth=register"'));
+ assert.ok(home.includes('href="panel.html?auth=register"'));
  assert.ok(home.includes('href="pomoc.html?temat=produkt"'));
  assert.ok(home.includes('href="#zobacz-panel"'));
  assert.ok(home.includes('data-hs-open-support'));
  assert.ok(home.includes('polityka-prywatnosci.html'));
  assert.ok(home.includes('rodo.html'));
- const app=await read('kamera/index.html');
+ const app=await read('kamera/panel.html');
  assert.equal((app.match(/id="authDialog"/g)||[]).length,1);
  assert.equal((app.match(/id="app"/g)||[]).length,1);
 });
@@ -46,15 +46,15 @@ test('responsive feature diagrams disclose illustration status and avoid false t
 });
 
 test('standalone brochure and embedded public homepage match source',async()=>{
- const [src,app,brochure]=await Promise.all(['design/marketing/home.html','kamera/index.html','kamera/o-systemie.html'].map(read));
+ const [src,app,brochure]=await Promise.all(['design/marketing/home.html','kamera/panel.html','kamera/o-systemie.html'].map(read));
  const slot=/<section id="publicHome"[\s\S]*?<\/section>(?=\s*<section id="authDialog")/;
  assert.equal(app.match(slot)?.[0],src.trimEnd());
  assert.ok(brochure.includes(src.trimEnd()));
- assert.ok(brochure.includes('Podgląd domu z telefonu i archiwum nagrań — HOME SECURITY'));
+ assert.ok(brochure.includes('Monitoring domu z podglądem na telefonie — HOME SECURITY'));
 });
 
 test('PWA shell and every marketing page have consistent revisions',async()=>{
- const paths=['kamera/index.html','kamera/o-systemie.html','kamera/pomoc.html','kamera/blog/index.html','kamera/blog/pierwsze-uruchomienie.html','kamera/blog/zapis-lokalny-i-drive.html','kamera/blog/diagnostyka-monitoringu.html'];
+ const paths=['kamera/panel.html','kamera/o-systemie.html','kamera/pomoc.html','kamera/blog/index.html','kamera/blog/pierwsze-uruchomienie.html','kamera/blog/zapis-lokalny-i-drive.html','kamera/blog/diagnostyka-monitoringu.html'];
  const content=await Promise.all(paths.map(read));
  const [sw,app,version,source]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/version.json','scripts/build-marketing.mjs'].map(read));
  const appVersion=JSON.parse(version).version;

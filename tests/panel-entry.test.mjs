@@ -22,14 +22,14 @@ test('account returns, device handoffs and valid receiver links retain immediate
   assert.equal(needsPanelRuntime({ pendingEntry: true }), true);
 });
 test('panel assets are inert templates and remain behind the existing secure gate', async () => {
-  const html = await readFile(new URL('../kamera/index.html', import.meta.url), 'utf8');
+  const html = await readFile(new URL('../kamera/panel.html', import.meta.url), 'utf8');
   const stripped = html.replace(/<template\b[^>]*>[\s\S]*?<\/template>/g, '');
   assert.doesNotMatch(stripped, /src="(?:vendor\/supabase|app|auth|desktop|mobile)\.(?:js|mjs)/);
   assert.doesNotMatch(stripped, /rel="preload"[^>]+supabase/);
   assert.doesNotMatch(stripped, /rel="stylesheet" href="(?:style|workspace-ui|interface-concept)\.css/);
   assert.match(html, /id="panelRuntime"/);
   assert.match(html, /id="panelStyles"/);
-  assert.match(html, /panel-entry\.mjs\?v=1/);
+  assert.match(html, /panel-entry\.mjs\?v=2/);
   assert.match(html, /window\.__waitForPanel = new Promise/);
   assert.match(html, /window\.__panelRuntimeStarted&&!window\.__kameraReady/);
 });
@@ -53,7 +53,7 @@ test('runtime waits for styles and the classic library before mounting account m
     createElement: () => ({ setAttribute(name, value) { this[name] = value; } }),
   };
   const window = { addEventListener: (name, callback) => { events[name] = callback; }, dispatchEvent() {} };
-  vm.runInNewContext(source, { document, window, location: { search: '?auth=login', hash: '' },
+  vm.runInNewContext(source, { document, window, location: { pathname: '/kamera/panel.html', search: '?auth=login', hash: '' },
     sessionStorage: { getItem: () => null }, URLSearchParams, Event: class {} });
   assert.deepEqual(requests, ['panel.css']);
   callbacks.shift()(); await new Promise(resolve => setImmediate(resolve));

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const read = name => readFile(new URL('../kamera/'+name,import.meta.url),'utf8');
 test('workspace stylesheet loads after legacy styles and is cached',async()=>{
- const [html,sw,css]=await Promise.all(['index.html','sw.js','workspace-ui.css'].map(read));
+ const [html,sw,css]=await Promise.all(['panel.html','sw.js','workspace-ui.css'].map(read));
  const workspace=html.match(/workspace-ui.css\?v=\d+/)[0];
  assert.ok(html.indexOf(workspace)>html.indexOf('style.css?v='));
  assert.ok(sw.includes(workspace));assert.ok(css.includes(':focus-visible'));

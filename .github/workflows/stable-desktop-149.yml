@@ -57,7 +57,7 @@ jobs:
           Replace-Exact 'desktop-client/installer/HomeSecurityDesktop.iss' '#define AppVersion "1.4.8"' '#define AppVersion "1.4.9"'
           Replace-Exact 'desktop-client/installer/HomeSecurityDesktop.iss' 'publish-1.4.8' 'publish-1.4.9'
           Replace-Exact 'desktop-client/build-release.ps1' "Version = '1.4.8'" "Version = '1.4.9'"
-          foreach($file in @('kamera/index.html','kamera/o-systemie.html','design/marketing/home.html')){
+          foreach($file in @('kamera/index.html','kamera/panel.html','kamera/o-systemie.html','design/marketing/home.html')){
             Replace-Exact $file '1.4.8' '1.4.9'
           }
           Replace-Exact 'scripts/verify-live-marketing.mjs' 'HOME-SECURITY-Desktop-Setup-1.4.8.exe' 'HOME-SECURITY-Desktop-Setup-1.4.9.exe'
@@ -73,7 +73,7 @@ jobs:
           foreach($name in @('HomeSecurityDesktop.exe','Panel/index.html','Panel/interface-concept.css','Agent/1.4.9/HomeSecurityAgent.exe')){
             if(-not (Test-Path (Join-Path $root $name))){throw "Missing native release file: $name"}
           }
-          $panel=Get-Content -Raw "$root/Panel/index.html"
+          $panel=Get-Content -Raw "$root/Panel/panel.html"
           if(-not $panel.Contains('home-security-build" content="221"')){throw 'Expected web UI 221 is not packaged'}
           if(-not $panel.Contains('interface-concept.css?v=2')){throw 'New owner interface is not packaged'}
       - name: Build and verify stable ZIP and Windows installer

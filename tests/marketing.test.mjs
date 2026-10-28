@@ -6,13 +6,13 @@ import {fileURLToPath} from 'node:url';
 const root=new URL('../',import.meta.url),base=new URL('kamera/',root);
 const read=name=>readFile(new URL(name,base),'utf8');
 const posts=JSON.parse(await readFile(new URL('design/marketing/posts.json',root),'utf8'));
-const pages=['o-systemie.html','galeria.html','pomoc.html','blog/index.html',...posts.map(post=>'blog/'+post.slug+'.html')];
+const pages=['index.html','o-systemie.html','galeria.html','pomoc.html','blog/index.html',...posts.map(post=>'blog/'+post.slug+'.html')];
 test('public marketing is generated from one source without replacing the private panel',()=>{
  const result=spawnSync(process.execPath,[fileURLToPath(new URL('../scripts/build-marketing.mjs',import.meta.url)),'--check'],{encoding:'utf8'});
  assert.equal(result.status,0,result.stderr||result.error?.message);
 });
 test('landing page includes actual product depth, not dead section buttons',async()=>{
- const html=await read('index.html');
+ const html=await read('panel.html');
  for(const id of ['mozliwosci','jak-dziala','specyfikacja','stan-projektu','poradniki','faq'])assert.ok(html.includes('id="'+id+'"'));
  assert.equal((html.match(/id="authDialog"/g)||[]).length,1);assert.equal((html.match(/id="app"/g)||[]).length,1);
  assert.ok(html.includes('marketing.css?v=7'));assert.ok(html.includes('id="publicHome"'));
@@ -38,7 +38,7 @@ test('all brochure section anchors exist',async()=>{
 test('login links from every public page target the real panel, not the current article',async()=>{
  for(const page of pages){
   const html=await read(page);const links=[...html.matchAll(/href="([^"]*\?auth=login)"/g)];assert.ok(links.length>0,page);
-  for(const match of links){const target=new URL(match[1],new URL(page,base));assert.equal(target.pathname,base.pathname,page);}
+  for(const match of links){const target=new URL(match[1],new URL(page,base));assert.equal(target.pathname,base.pathname+"panel.html",page);}
  }
 });
 test('contact form sends to its backend and requires a confirmed receipt',async()=>{
@@ -61,7 +61,7 @@ test('public downloads match the current installer release',async()=>{
  }
 });
 test('cached marketing asset versions match every generated page',async()=>{
- const sw=await read('sw.js');const index=await read('index.html');
+ const sw=await read('sw.js');const index=await read('panel.html');
  const css=index.match(/marketing\.css\?v=\d+/)[0];assert.ok(sw.includes('./'+css));
  for(const page of pages)assert.ok((await read(page)).includes(css),page);
  const contact=(await read('pomoc.html')).match(/marketing-contact\.js\?v=\d+/)[0];assert.ok(sw.includes('./'+contact));

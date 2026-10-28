@@ -6,7 +6,7 @@ const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8
 
 test('public LCP hero uses responsive WebP candidates with original fallback and priority',async()=>{
  const [source,index,brochure]=await Promise.all([
-  read('design/marketing/home.html'),read('kamera/index.html'),read('kamera/o-systemie.html')]);
+  read('design/marketing/home.html'),read('kamera/panel.html'),read('kamera/o-systemie.html')]);
  const hero=source.match(/<img src="assets\/home-security-hero\.png"[^>]+>/)?.[0];
  assert.ok(hero,'original PNG remains the fallback');
  assert.ok(hero.includes('assets/home-security-hero-640.webp 640w'));
@@ -47,7 +47,7 @@ test('build generates optimized images only from local public illustrations, aft
 test('marketing updates retain SW version consistency and original image links',async()=>{
  const [sw,app,manifest,index,source]=await Promise.all([
   read('kamera/sw.js'),read('kamera/app.js'),read('kamera/version.json'),
-  read('kamera/index.html'),read('design/marketing/home.html')]);
+  read('kamera/panel.html'),read('design/marketing/home.html')]);
  const build=JSON.parse(manifest).version;
  assert.ok(/^\d+$/.test(build));
  assert.ok(app.includes('const VERSION = "'+build+'"'));
@@ -62,7 +62,7 @@ test('marketing updates retain SW version consistency and original image links',
 
 test('public and locked app screens use compact high-DPI logos instead of eager 241 KiB JPEG downloads',async()=>{
  const [html,optimizer,workflow]=await Promise.all([
-   read('kamera/index.html'),read('scripts/optimize-marketing-images.mjs'),
+   read('kamera/panel.html'),read('scripts/optimize-marketing-images.mjs'),
    read('.github/workflows/pages.yml')
  ]);
  const privateLogos=[...html.matchAll(/<img class="(?:dsBrandLogo|dsPanelLogo)"[^>]+>/g)];

@@ -13,7 +13,8 @@ const message = (text, bad = false) => { const el = $("authMessage"); el.textCon
 const section = name => document.querySelectorAll("[data-auth-step]").forEach(el => { el.hidden = el.dataset.authStep !== name; });
 // Zostawiamy adres bez parametrów. Jest zgodny z dozwolonym adresem strony
 // w Supabase, a po potwierdzeniu zdarzenie SIGNED_IN otworzy konfigurację.
-const callbackUrl = () => `${location.origin}${location.pathname}`;
+// Keep the existing allow-listed callback URL. The public entry forwards account returns.
+const callbackUrl = () => new URL("./", location.href).href;
 const postCode = value => /^\d{2}-\d{3}$/.test(value);
 let pendingConfirmationEmail = "";
 const ENTRY_TICKET = "hs-device-entry-v1";

@@ -54,5 +54,5 @@ if (typeof document !== 'undefined') {
   let pendingEntry = false;
   try { pendingEntry = !!sessionStorage.getItem('hs-device-entry-v1'); } catch { /* private mode */ }
   if (needsPanelRuntime({ search: location.search, hash: location.hash,
-    native: window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview, pendingEntry })) start();
+    native: location.pathname.endsWith("/panel.html") || window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview, pendingEntry })) start();
 }

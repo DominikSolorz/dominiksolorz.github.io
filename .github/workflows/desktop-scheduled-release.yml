@@ -129,7 +129,7 @@ jobs:
           if((git rev-parse origin/main) -ne $env:GITHUB_SHA){throw 'Main changed during build. Keep current release; retry at next check.'}
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add --sparse -- desktop-client/Program.cs desktop-client/HomeSecurityDesktop.csproj desktop-client/installer/HomeSecurityDesktop.iss desktop-client/build-release.ps1 design/marketing/home.html kamera/index.html kamera/o-systemie.html kamera/blog kamera/galeria.html kamera/pomoc.html kamera/sitemap.xml scripts/verify-live-marketing.mjs kamera/desktop-update.json "kamera/updates/HomeSecurityDesktop-$env:RELEASE_VERSION-win-x64.zip" "kamera/downloads/HOME-SECURITY-Desktop-Setup-$env:RELEASE_VERSION.exe"
+          git add --sparse -- desktop-client/Program.cs desktop-client/HomeSecurityDesktop.csproj desktop-client/installer/HomeSecurityDesktop.iss desktop-client/build-release.ps1 design/marketing/home.html kamera/index.html kamera/panel.html kamera/o-systemie.html kamera/blog kamera/galeria.html kamera/pomoc.html kamera/sitemap.xml scripts/verify-live-marketing.mjs kamera/desktop-update.json "kamera/updates/HomeSecurityDesktop-$env:RELEASE_VERSION-win-x64.zip" "kamera/downloads/HOME-SECURITY-Desktop-Setup-$env:RELEASE_VERSION.exe"
           if($LASTEXITCODE -ne 0){throw 'Cannot stage release'}
           git commit -m "Publish tested Windows installer $env:RELEASE_VERSION and matching download links"
           if($LASTEXITCODE -ne 0){throw 'Cannot commit release'}
