@@ -32,7 +32,7 @@ test('AI CTA opens real support assistant, not a fake success or access to camer
   assert.ok(html.includes('data-hs-open-support'));
   assert.ok(html.includes('Nie podawaj mu haseł, kodów PIN'));
   assert.ok(launcher.includes("link.addEventListener('click',()=>button.click())"));
-  assert.ok(launcher.includes("import('./support-view.mjs?v=1')"));
+  assert.ok(launcher.includes("import('./support-view.mjs?v=2')"));
 });
 
 test('account modal has a separate UI layer with usable password toggles',async()=>{

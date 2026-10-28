@@ -7,7 +7,7 @@ const reportFiles=[
  ['Strona /o-systemie.html — desktop','lighthouse-results/marketing-desktop.json'],
  ['Strona /o-systemie.html — mobile','lighthouse-results/marketing-mobile.json']
 ];
-const rows=[],opportunities=[];
+const rows=[],opportunities=[],diagnostics=[];
 const format=(audit)=>audit?.displayValue || (audit?.numericValue===undefined?'—':String(Math.round(audit.numericValue)));
 const score=x=>Math.round((x?.score??0)*100);
 for(const [name,path] of reportFiles){
@@ -24,6 +24,7 @@ for(const [name,path] of reportFiles){
   tbt:format(a['total-blocking-time']),cls:format(a['cumulative-layout-shift']),
   bytes:Math.round((a['total-byte-weight']?.numericValue||0)/1024)
  });
+ diagnostics.push({name,audits:Object.entries(a).filter(([key])=>/render-block|cache-insight|csp-xss|has-hsts|origin-isolation|clickjacking|trusted-types|long-tasks|dom-size/.test(key)).map(([id,value])=>({id,title:value.title,score:value.score,mode:value.scoreDisplayMode,display:value.displayValue,items:/csp-xss|has-hsts|origin-isolation|clickjacking|trusted-types/.test(id)?value.details?.items:undefined}))});
  const expensive=Object.values(a).filter(x=>x?.details?.type==='opportunity'&&x.details.overallSavingsMs>50)
   .sort((x,y)=>(y.details.overallSavingsMs||0)-(x.details.overallSavingsMs||0)).slice(0,7);
  opportunities.push({name,top:expensive.map(x=>({title:x.title,savingsMs:Math.round(x.details.overallSavingsMs)}))});
@@ -40,4 +41,5 @@ const markdown=['## HOME SECURITY — real Lighthouse results','',
  ''];
 const body=markdown.join('\n');
 console.log(body);
+console.log("Full remaining diagnostic audits: "+JSON.stringify(diagnostics));
 if(process.env.GITHUB_STEP_SUMMARY)await appendFile(process.env.GITHUB_STEP_SUMMARY,body);

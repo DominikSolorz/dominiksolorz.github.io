@@ -44,7 +44,7 @@ test('provider error bodies and empty answers are never forwarded to clients',as
 });
 test('chat entry is limited to homepage; messages render as text and handoff uses session not URL',async()=>{
  const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
- for(const page of ['kamera/panel.html','kamera/o-systemie.html'])assert.ok((await read(page)).includes('support-entry.mjs?v=2'));
+ for(const page of ['kamera/panel.html','kamera/o-systemie.html'])assert.ok((await read(page)).includes('support-entry.mjs?v=3'));
  for(const page of ['kamera/pomoc.html','kamera/blog/index.html'])assert.ok(!(await read(page)).includes('support-entry.mjs'));
  const view=await read('kamera/support-view.mjs');assert.ok(view.includes('element.textContent=text'));assert.ok(view.includes('sessionStorage.setItem'));assert.ok(view.includes('credentials:\'omit\''));assert.ok(!/sk-live-[a-f0-9]{20}/.test(view));
  const sql=await read('supabase/home-support-budget.sql');assert.ok(sql.includes('pg_advisory_xact_lock'));assert.ok(sql.includes('enable row level security'));assert.ok(sql.includes('security invoker'));

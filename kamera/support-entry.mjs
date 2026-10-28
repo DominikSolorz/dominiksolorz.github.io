@@ -12,7 +12,7 @@ if(home && !home.querySelector('.hsSupportLauncher')){
   });
   button.addEventListener('click',async()=>{
     if(button.disabled)return;button.disabled=true;
-    try{if(!open){const module=await import('./support-view.mjs?v=1');open=module.mountSupport(home,button);}open();}
+    try{if(!open){const module=await import('./support-view.mjs?v=2');open=module.mountSupport(home,button);}open();}
     catch{window.location.assign(new URL('./pomoc.html',import.meta.url));}
     finally{button.disabled=false;}
   });

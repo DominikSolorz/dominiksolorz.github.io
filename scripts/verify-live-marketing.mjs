@@ -24,14 +24,14 @@ const checks=[
   ['regulamin.html',['o-systemie.html','Regulamin']],
   ['rodo.html',['o-systemie.html','Informacja RODO']],
   ['panel.html',['name="home-security-build" content="'+expectedBuild+'"','id="authDialog"','id="publicHome"','interface-concept.css?v=2']],
-  ['index.html',['name="robots" content="index,follow"','rel="canonical" href="https://dominiksolorz.github.io/kamera/"','public-entry.js?v=1']],
+  ['index.html',['http-equiv="Content-Security-Policy"','require-trusted-types-for','data-source="marketing.css?v=7"','name="robots" content="index,follow"','rel="canonical" href="https://dominiksolorz.github.io/kamera/"','data-public-entry']],
   ['sitemap.xml',['/kamera/galeria.html','/kamera/</loc>']],
   ['../index.html',['./kamera/','location.replace']]
 ];
 const assets=[
  'marketing-start.css?v=2','marketing-start.mjs?v=2',
  'marketing-auto-update.css?v=1','marketing-auto-update.mjs?v=3',
- 'core/web-updates.mjs?v=3','sw.js?v=141','panel-entry.mjs?v=2','public-entry.js?v=1',
+ 'core/web-updates.mjs?v=3','sw.js?v=142','panel-entry.mjs?v=2','public-entry.js?v=1',
  'marketing-gallery.css?v=2','marketing-gallery.mjs?v=1',
  'interface-concept.css?v=2',
  'marketing-motion.css?v=2','marketing.css?v=7',
@@ -72,4 +72,6 @@ for(const path of assets){
   const bytes=Number(response.headers.get('content-length')||'0');
   console.log('OK asset '+path+(bytes?' ('+bytes+' bytes)':''));
 }
+const headers=(await get('index.html',{method:'HEAD'})).headers;
+for(const name of ['cache-control','strict-transport-security','cross-origin-opener-policy','x-frame-options','content-security-policy'])console.log('Hosting header '+name+': '+(headers.get(name)||'(absent)'));
 console.log('Production marketing smoke: all public routes, releases and media files verified.');

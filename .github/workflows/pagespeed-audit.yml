@@ -15,6 +15,8 @@ on:
       - 'kamera/app.js'
       - 'kamera/panel-entry.mjs'
       - 'scripts/minify-web-assets.mjs'
+      - 'scripts/harden-public-pages.mjs'
+      - 'kamera/support-view.mjs'
       - 'scripts/optimize-marketing-images.mjs'
       - 'kamera/sw.js'
       - 'kamera/assets/**'
