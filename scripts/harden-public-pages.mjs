@@ -2,8 +2,8 @@
 // Private account/camera documents keep their existing loading and authentication gates.
 import {createHash} from 'node:crypto';
 import {readFile,writeFile} from 'node:fs/promises';
-import {resolve,dirname,relative} from 'node:path';
-import {pathToFileURL} from 'node:url';
+import {resolve,relative,isAbsolute,sep} from 'node:path';
+import {pathToFileURL,fileURLToPath} from 'node:url';
 const digest=text=>createHash('sha256').update(text).digest('base64');
 export async function hardenPublicPages(root){
  const camera=resolve(root,'kamera');
@@ -20,8 +20,11 @@ export async function hardenPublicPages(root){
   const localFile=href=>{
    const url=new URL(href,pathToFileURL(path));url.search='';url.hash='';
    if(url.protocol!=='file:')throw Error('Unexpected remote asset '+href);
-   const local=resolve(dirname(path),decodeURIComponent(url.pathname));
-   if(relative(root,local).startsWith('..'))throw Error('Asset outside deployment root');
+   // URL pathname is not a filesystem path on Windows (it includes /C:/...).
+   // fileURLToPath handles drive letters, separators and encoded characters safely.
+   const local=fileURLToPath(url);
+   const delta=relative(resolve(root),local);
+   if(delta==='..'||delta.startsWith('..'+sep)||isAbsolute(delta))throw Error('Asset outside deployment root');
    return local;
   };
   // Keep the complete CSS cascade and media queries together, without a flash of unstyled content.
