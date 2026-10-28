@@ -1,6 +1,6 @@
 // HOME SECURITY: public-page update notice, without tracking or camera access.
 // Keep manifest-based Windows installer links working on every marketing page.
-import './marketing-downloads.mjs?v=1';
+import './marketing-downloads.mjs?v=2';
 
 const buildMeta = document.querySelector('meta[name="home-security-build"]');
 if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
@@ -8,6 +8,8 @@ if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
   const validVersion = value => Number.isSafeInteger(value) && value > 0;
   const versionURL = new URL('./version.json', import.meta.url);
   let checking = false;
+  let backgroundReady = false;
+  let initialCheckTimer = null;
   let dirty = false;
   let newest = 0;
   let pendingReload = false;
@@ -101,7 +103,7 @@ if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
   document.addEventListener('change', markDirty, {capture: true});
 
   const check = async () => {
-    if (checking || !validVersion(currentBuild)) return;
+    if (!backgroundReady || checking || !validVersion(currentBuild)) return;
     checking = true;
     try {
       const response = await fetch(versionURL, {cache: 'no-store'});
@@ -114,8 +116,16 @@ if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
     } catch { /* Keep the existing page usable offline. */ }
     finally { checking = false; }
   };
-  if (document.readyState === 'complete') void check();
-  else window.addEventListener('load', () => void check(), {once: true});
+  // Release checks are maintenance, not a dependency of the first public view.
+  const startBackgroundChecks = () => {
+    initialCheckTimer = window.setTimeout(() => {
+      initialCheckTimer = null;
+      backgroundReady = true;
+      if (document.visibilityState === 'visible') void check();
+    }, 30000);
+  };
+  if (document.readyState === 'complete') startBackgroundChecks();
+  else window.addEventListener('load', startBackgroundChecks, {once: true});
   window.addEventListener('focus', () => { showOffer(); void check(); });
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') { void check(); queueAuto(); }
@@ -126,6 +136,6 @@ if (document.body?.classList.contains('marketingPage') && buildMeta?.content) {
     if (document.visibilityState === 'visible') { void check(); queueAuto(); }
   }, 2 * 60000);
   window.addEventListener('pagehide', event => {
-    if (!event.persisted) { window.clearInterval(interval); cancelAuto(); }
+    if (!event.persisted) { window.clearInterval(interval); window.clearTimeout(initialCheckTimer); cancelAuto(); }
   });
 }

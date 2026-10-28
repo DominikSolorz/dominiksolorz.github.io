@@ -25,8 +25,8 @@ test('public download derives its location from a validated version, never a sup
 });
 test('the main homepage and brochure both load manifest-driven downloads',async()=>{
  const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
- assert.ok((await read('kamera/panel.html')).includes('src="marketing-downloads.mjs?v=1"'));
- assert.ok((await read('kamera/marketing-auto-update.mjs')).includes("import './marketing-downloads.mjs?v=1'"));
+ assert.ok((await read('kamera/panel.html')).includes('src="marketing-downloads.mjs?v=2"'));
+ assert.ok((await read('kamera/marketing-auto-update.mjs')).includes("import './marketing-downloads.mjs?v=2'"));
 });
 
 test('Windows release retries promptly when tests are fixed after a failed push',async()=>{

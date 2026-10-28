@@ -133,9 +133,9 @@ test('marketing pages poll the published build but preserve unsent forms',async(
  for(const item of ["cache: 'no-store'",'window.location.reload()','!dirty','document.visibilityState', 'version.json']){
   assert.ok(script.includes(item),'missing safe public update condition: '+item);
  }
- assert.ok(source.includes('marketing-auto-update.mjs?v=4'));
+ assert.ok(source.includes('marketing-auto-update.mjs?v=5'));
  assert.ok(source.includes('home-security-build'));
- assert.ok(generated.includes('marketing-auto-update.mjs?v=4'));
+ assert.ok(generated.includes('marketing-auto-update.mjs?v=5'));
  const version=JSON.parse(await read('version.json')).version;
  assert.ok(generated.includes('home-security-build" content="'+version+'"'));
 });

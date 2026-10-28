@@ -10,7 +10,7 @@ const policy=config.headers[0].headers.find(h=>h.key==='Content-Security-Policy'
 for(const asset of manifest.assets){const bytes=await readFile(join(out,asset.path));assert.equal(createHash('sha256').update(bytes).digest('hex'),asset.hash);}
 for(const name of manifest.documents){
  const html=await readFile(join(out,'kamera',name),'utf8');
- if(name==='index.html')assert(html.includes(manifest.legacy+'/kamera/#asystent')); 
+ if(name==='index.html'){assert(html.includes(manifest.legacy+'/kamera/#asystent'));assert.equal([...html.matchAll(/<script\b[^>]*\bsrc=/g)].length,1,'homepage has one bundled enhancement request');assert(html.includes('async fetchpriority="low"'));} 
  assert(!/id="(?:authDialog|panelRuntime)"/.test(html));
  assert(html.includes('rel="canonical" href="'+manifest.origin+'/kamera/'));
  for(const script of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)){

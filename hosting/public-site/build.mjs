@@ -26,10 +26,11 @@ async function image(ref,base){
  if(!file.startsWith((path.endsWith('.webp')?variants:repo)+'/'))throw Error('Image outside source root');
  return asset(await readFile(file),extname(file));
 }
-async function moduleAsset(name){
+async function moduleAsset(names){
+ const name=names.join('+');
  if(modules.has(name))return modules.get(name);
- if(!['marketing-motion.mjs','marketing-gallery.mjs','marketing-start.mjs','marketing-auto-update.mjs'].includes(name))throw Error('Unexpected public entry '+name);
- const result=await build({entryPoints:[join(repo,'kamera',name)],outfile:join(output,'build',name),write:false,bundle:true,format:'esm',platform:'browser',minify:true,keepNames:true,sourcemap:'external',legalComments:'inline',plugins:[{name:'public-module-urls',setup(b){
+ if(names.some(entry=>!['marketing-motion.mjs','marketing-gallery.mjs','marketing-start.mjs','marketing-auto-update.mjs'].includes(entry)))throw Error('Unexpected public entry '+name);
+ const result=await build({stdin:{contents:names.map(entry=>'import '+JSON.stringify(join(repo,'kamera',entry))+';').join('\n'),resolveDir:repo,sourcefile:'public-enhancements.mjs'},outfile:join(output,'build','public-enhancements.mjs'),write:false,bundle:true,format:'esm',platform:'browser',minify:true,keepNames:true,sourcemap:'external',legalComments:'inline',plugins:[{name:'public-module-urls',setup(b){
   b.onResolve({filter:/\?v=\d+$/},args=>({path:resolve(args.resolveDir,args.path.split('?')[0])}));
   b.onLoad({filter:/\.(?:mjs|js)$/},async args=>{
    let contents=await readFile(args.path,'utf8');
@@ -74,7 +75,7 @@ for(const name of names){
  html=html.replace(/(<link rel="canonical" href=")[^"]+("[^>]*>)/,'$1'+canonical+'$2').replace(/(<meta property="og:url" content=")[^"]+("[^>]*>)/,'$1'+canonical+'$2');
  if(!html.includes('rel="canonical"'))html=html.replace('</head>','<link rel="canonical" href="'+canonical+'"></head>');
  html=html.replace(/<button\b[^>]*data-hs-open-support[^>]*>[\s\S]*?<\/button>/g,'<a class="mktButton" href="'+legacy+'/kamera/#asystent">Otwórz pomoc AI ↗</a>');
- for(const entry of new Set(entries)){const a=await moduleAsset(entry);html=html.replace('</body>','<script type="module" src="'+a.path+'" integrity="'+a.integrity+'" crossorigin="anonymous"></script></body>');}
+ if(entries.length){const a=await moduleAsset([...new Set(entries)]);html=html.replace('</body>','<script type="module" async fetchpriority="low" src="'+a.path+'" integrity="'+a.integrity+'" crossorigin="anonymous"></script></body>');}
  const ld=JSON.stringify({'@context':'https://schema.org','@type':'WebPage',url:canonical,name:html.match(/<title>([^<]+)<\/title>/)?.[1]||'HOME SECURITY',inLanguage:'pl-PL',isPartOf:{'@type':'WebSite',url:origin+'/kamera/',name:'HOME SECURITY'}}).replaceAll('<','\\u003c');
  hashes.add("'"+sri(ld)+"'");html=html.replace('</head>','<script type="application/ld+json">'+ld+'</script></head>').replace(/(<meta charset="utf-8">)/,'$1<script>'+entryCode+'</script>');
  await mkdir(resolve(output,'kamera',name,'..'),{recursive:true});await writeFile(join(output,'kamera',name),html);
