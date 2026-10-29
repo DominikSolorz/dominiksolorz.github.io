@@ -4,7 +4,7 @@
 // i biblioteka z przyciskami Udostępnij / Pobierz / ☁️ Wyślij na Google Drive.
 // Pliki pobierane są z komputera przez kanał danych WebRTC (recproto.js) — działa też na internecie komórkowym.
 import { fixMp4Duration } from "./mp4fix.js?v=2";
-import {validThumbnail,captureEventFrame} from "./workspace-panels.mjs?v=1";
+import {validThumbnail,captureEventFrame} from "./workspace-panels.mjs?v=3";
 import {localDayRange,previousLocalDay} from './recording-time.mjs?v=1';
 import {confirmRecordingDeletion} from './recording-actions.mjs?v=2';
 import {archiveEmptyText} from './recording-view-state.mjs?v=1';

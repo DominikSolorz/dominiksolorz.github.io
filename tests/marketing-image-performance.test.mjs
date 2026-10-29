@@ -68,18 +68,16 @@ test('marketing updates retain SW version consistency and original image links',
  assert.ok(source.includes('src="assets/home-security-hero.png"'));
 });
 
-test('public and locked app screens use compact high-DPI logos instead of eager 241 KiB JPEG downloads',async()=>{
+test('public branding retains optimized assets and locked screens use a compact vector shield',async()=>{
  const [html,optimizer,workflow]=await Promise.all([
    read('kamera/panel.html'),read('scripts/optimize-marketing-images.mjs'),
    read('.github/workflows/pages.yml')
  ]);
  const privateLogos=[...html.matchAll(/<img class="(?:dsBrandLogo|dsPanelLogo)"[^>]+>/g)];
  assert.equal(privateLogos.length,4);
- for(const logo of privateLogos){
-   assert.match(logo[0],/assets\/ds-logo-96\.webp 96w/);
-   assert.match(logo[0],/assets\/ds-logo-192\.webp 192w/);
-   assert.ok(logo[0].includes('src="assets/ds-logo.jpg"'),'old browsers retain original fallback');
- }
+ for(const logo of privateLogos)assert.ok(logo[0].includes('src="assets/ds-shield.svg"'));
+ const shield=await read('kamera/assets/ds-shield.svg');
+ assert.ok(shield.includes('<svg'));assert.ok(shield.length<4096);
  assert.ok(optimizer.includes("out:'kamera/assets/ds-logo-192.webp'"));
  assert.ok(workflow.includes('_site/kamera/assets/ds-logo-192.webp'));
 });

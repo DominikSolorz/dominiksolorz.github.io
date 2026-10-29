@@ -1,3 +1,4 @@
+import {iconMarkup} from "./ui-icons.mjs?v=1";
 // HOME SECURITY Desktop: nakładka robocza dla dużego ekranu.
 // Używa tego samego silnika transmisji, zapisu i archiwum co index.html.
 // Nie uruchamia kamery ani nie zmienia jej konfiguracji samodzielnie.
@@ -6,7 +7,7 @@ import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { operatorStatus } from "./core/operator-status.mjs?v=1";
 import { mountCameraWorkspace } from './camera-workspace.mjs?v=2';
-import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=2";
+import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=3";
 const isTransmitter = location.hash === "#nadaj";
 // Tryb urządzenia jest rozstrzygany raz, przed załadowaniem CSS w index.html.
 // Dzięki temu Chrome w telefonie i wersja instalowana PWA nie rozchodzą się
@@ -36,7 +37,7 @@ if (desktopRequested) {
   shell.className = "desktopSidebar";
   shell.setAttribute("aria-label", "Nawigacja HOME SECURITY Desktop");
   shell.innerHTML = `
-    <div class="desktopBrand"><img class="dsPanelLogo" src="assets/ds-logo.jpg" width="42" height="42" alt="Logo DS"><span><b>HOME SECURITY</b><small>DESKTOP</small></span><button id="desktopCollapse" type="button" aria-label="Rozwiń menu">›</button></div>
+    <div class="desktopBrand"><img class="dsPanelLogo" src="assets/ds-shield.svg" width="88" height="110" alt="Logo DS"><span><b>HOME SECURITY</b><small>MONITORING · OCHRONA · KONTROLA</small></span><button id="desktopCollapse" type="button" aria-label="Rozwiń menu">›</button></div>
     <div class="desktopDevice"><span id="desktopLiveDot" class="desktopDot"></span><span><b id="desktopLiveState">Sprawdzam połączenie</b><small id="desktopLiveDetail">—</small></span></div>
     <nav class="desktopNav" aria-label="Moduły monitoringu">
       <button class="active" type="button" data-desktop-view="live"><i>▦</i><span><b>Pulpit</b><small>podgląd na żywo</small></span><kbd>1</kbd></button>
@@ -51,7 +52,7 @@ if (desktopRequested) {
       <p>Stan kamery, zapisu i sieci odczytasz w Diagnostyce.</p>
       <p class="muted">Podgląd obrazu nie potwierdza zapisanego nagrania.</p>
     </section>
-    <div class="desktopSidebarFoot"><button type="button" data-open-project-gallery>Projekty interfejsu</button><span>Alt + 1–6 przełącza moduły</span><a href="panel.html?panel=owner&ui=phone" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
+    <div class="desktopSidebarFoot"><button type="button" data-open-project-gallery>Projekty interfejsu</button><span>DS Home Security<br>Panel 254</span><a href="panel.html?panel=owner&ui=phone" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
   const navPaths = {
     live: '<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>',
     controls: '<rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/>',
@@ -210,10 +211,9 @@ if (desktopRequested) {
   summary.className = "desktopSummary";
   summary.setAttribute("aria-label", "Stan systemu");
   summary.innerHTML = `
-    <article><span class="desktopSummaryIcon">◈</span><div><b>System</b><strong id="desktopSummaryStatus">Sprawdzam…</strong><small>stan połączenia</small></div></article>
-    <article><span class="desktopSummaryIcon">▣</span><div><b>Kamery</b><strong id="desktopSummaryCamera">Sprawdzam…</strong><small>liczba urządzeń z telemetrii</small></div></article>
-    <article><span class="desktopSummaryIcon">◉</span><div><b>Nagrania</b><strong id="desktopSummaryRecording">Sprawdzam…</strong><small>status zapisu i DVR</small></div></article>
-    <article><span class="desktopSummaryIcon">⌁</span><div><b>Zdarzenia</b><strong>Sprawdź alarmy</strong><small>stan w module Alarmy</small></div></article>`;
+    <article><span class="desktopSummaryIcon">${iconMarkup('camera')}</span><div><b>Status kamer</b><strong id="desktopSummaryCamera">Sprawdzam…</strong><small id="desktopSummaryStatus">Oczekiwanie na dane</small></div></article>
+    <article><span class="desktopSummaryIcon">${iconMarkup('recording')}</span><div><b>Nagrywanie</b><strong id="desktopSummaryRecording">Sprawdzam…</strong><small id="desktopSummaryLastFile">Nie potwierdzono zapisu pliku</small></div></article>
+    <article><span class="desktopSummaryIcon">${iconMarkup('storage')}</span><div><b>Miejsce zapisu</b><strong id="desktopSummaryStorage">Sprawdzam…</strong><small id="desktopSummaryStorageDetail">Folder i dostęp do zapisu</small></div></article>`;
   overview.insertAdjacentElement("afterend", summary);
 
   // Ustawienia są osobnym ekranem desktopowym, a nie kartą pozostawioną pod
@@ -399,7 +399,7 @@ if (desktopRequested) {
     // Każdy wpis w bocznym menu ma własny pełnoekranowy obszar. Dzięki temu
     // Diagnostyka i Archiwum nie zostawiają pustej połowy monitora.
     overview.hidden = view !== "live";
-    homeGuide.hidden = view !== "live";
+    homeGuide.hidden = true;
     settingsScreen.hidden = view !== "settings";
     controlsScreen.hidden = view !== "controls";
     eventsScreen.hidden = view !== "events";
@@ -410,12 +410,12 @@ if (desktopRequested) {
     context.querySelector(".desktopContextActions").hidden = view !== "live";
     // Pulpit ma być roboczy: kamera, zdarzenia i oś czasu — bez dodatkowych
     // kart diagnostycznych pod spodem. Ich dane są w module Diagnostyka.
-    summary.hidden = true;
+    summary.hidden = !["live", "controls"].includes(view);
     if (view === "live" && $("dvrCard")?.parentElement !== timelineDock) timelineDock.append($("dvrCard"));
     if (view === "live") $("dvrCard").hidden = false;
     if (view === "archive" && $("dvrCard")?.parentElement !== main) main?.prepend($("dvrCard"));
     const labels = {
-      live: ["Pulpit", "Monitoring domu"],
+      live: ["Pulpit", "Pulpit"],
       controls: ["Sterowanie", "Sterowanie kamerą"],
       events: ["Alarmy", "Alarmy i zdarzenia"],
       archive: ["Archiwum", "Nagrania DVR"],
@@ -473,7 +473,12 @@ if (desktopRequested) {
     if ($("desktopCameraCount")) $("desktopCameraCount").textContent = cameraWorkspace ? `Kamery: ${cameraWorkspace.catalog.list().length+1}` : `Wykryte źródła: ${count}`;
     if ($("desktopSummaryCamera")) $("desktopSummaryCamera").textContent = cameraWorkspace ? `${cameraWorkspace.catalog.list().length+1} skonfigurowanych` : `${count} wykrytych źródeł`;
     if ($("desktopSummaryStatus")) $("desktopSummaryStatus").textContent = isLive ? "System online" : "Oczekiwanie na transmisję";
-    if ($("desktopSummaryRecording")) $("desktopSummaryRecording").textContent = mode?.textContent?.trim() || "Brak danych";
+    const recordingState=systemStore.read('recording',45000),storageState=systemStore.read('storage',90000);
+    const recordingLabels={recording:'Nagrywanie aktywne',waiting:'Oczekiwanie / harmonogram',idle:'Zapis zatrzymany',stopped:'Zapis zatrzymany',disabled:'Zapis wyłączony',error:'Błąd zapisu'};
+    if ($("desktopSummaryRecording")) $("desktopSummaryRecording").textContent = recordingState.freshness==='fresh'?(recordingLabels[recordingState.status]||'Stan niepotwierdzony'):'Brak aktualnych danych';
+    $("desktopSummaryLastFile").textContent=recordingState.lastFile?`Ostatni plik: ${recordingState.lastFile}`:'Nie potwierdzono zapisu pliku';
+    $("desktopSummaryStorage").textContent=storageState.name||storageState.folderName||'Brak danych o folderze';
+    $("desktopSummaryStorageDetail").textContent=storageState.message||({ready:'Dostęp do zapisu potwierdzony',permission_required:'Wymaga zatwierdzenia dostępu',error:'Błąd dostępu do folderu'}[storageState.status]||'Brak aktualnej telemetrii folderu');
     const operation=operatorStatus({isLive,recording:systemStore.read('recording',45000),storage:systemStore.read('storage',90000)});
     if ($("desktopTopStatusText")) $("desktopTopStatusText").textContent = operation.text;
     const homeOperation = $("desktopHomeOperation");

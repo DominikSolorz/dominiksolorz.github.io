@@ -1,3 +1,4 @@
+import {iconMarkup} from "./ui-icons.mjs?v=1";
 import {systemStore} from './core/store.mjs';
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
 const clock=at=>new Date(at).toLocaleString('pl-PL');
@@ -29,7 +30,7 @@ export function mountDiagnosticWorkspace(container,{store=systemStore}={}) {
  const wrap=node('div',null,'workspaceTableWrap');wrap.append(table);container.append(cards,node('h2','Dziennik zdarzeń'),toolbar,wrap);
  let latest=store.snapshot();
  const render=()=>{
-  cards.replaceChildren(...diagnosticCards(latest).map(c=>{const article=node('article',null,'componentCard');article.dataset.state=c.state;article.append(node('h3',c.name),node('strong',stateLabels[c.state]||c.state),node('p',c.detail));return article;}));
+  cards.replaceChildren(...diagnosticCards(latest).map(c=>{const article=node('article',null,'componentCard');article.dataset.state=c.state;const icon=node('span',null,'componentIcon');icon.innerHTML=iconMarkup(({'Kamera':'camera','Nagrywanie':'recording','Folder lokalny':'storage','WebRTC':'network','Google Drive':'cloud','Agent Windows':'agent'})[c.name]);article.append(icon,node('h3',c.name),node('strong',stateLabels[c.state]||c.state),node('p',c.detail));return article;}));
   const events=latest.events.filter(e=>!filter.value||e.component===filter.value).slice().reverse();
   body.replaceChildren(...events.map(e=>{const r=node('tr');[clock(e.at),e.component||'System',e.level||'info',e.message||''].forEach(t=>r.append(node('td',t)));return r;}));
   if(!events.length){const r=node('tr'),td=node('td','Brak zarejestrowanych zdarzeń dla tego filtra.');td.colSpan=4;r.append(td);body.append(r);}

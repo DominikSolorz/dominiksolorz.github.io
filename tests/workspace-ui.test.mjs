@@ -18,7 +18,7 @@ test('events navigation reuses actual card rather than copying event data',async
  const render=desktop.slice(desktop.indexOf('const openExistingView'),desktop.indexOf('const sync ='));
  assert.ok(!/getTracks|\.stop\(|srcObject\s*=|sender\./.test(render));
 });
-test('original DS asset remains the application brand',async()=>{
+test('reference DS shield is used without turning concept boards into application backgrounds',async()=>{
  const desktop=await read('desktop.js');
- assert.ok(desktop.includes('src="assets/ds-logo.jpg"'));assert.ok(!desktop.includes('01-pulpit.png'));
+ assert.ok(desktop.includes('src="assets/ds-shield.svg"'));assert.ok(!desktop.includes('01-pulpit.png'));
 });

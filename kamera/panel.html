@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,follow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#070b16">
-<meta name="home-security-build" content="253">
+<meta name="home-security-build" content="254">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -72,6 +72,7 @@
 <link rel="stylesheet" href="mobile-camera-frame.css?v=4">
 <link rel="stylesheet" href="desktop-product.css?v=1">
 <link rel="stylesheet" href="gallery-viewer.css?v=1">
+<link rel="stylesheet" href="reference-ui.css?v=1">
 </template>
 <style>html,body{margin:0;min-height:100%;background:#090b11;color:#f4f3ef;font:15px/1.5 system-ui,sans-serif}[hidden]{display:none!important}.publicLanding body>:not(#publicHome):not(script):not(template):not(#bootError){display:none!important}.publicLanding #publicHome{position:relative;z-index:200;min-height:100vh;overflow:hidden}.publicLanding #bootError{position:fixed;z-index:999;inset:auto 16px 16px;padding:18px;background:#24141a;color:#fff}</style>
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png"></head>
@@ -94,7 +95,7 @@
   </div>
 <section id="authDialog" class="authDialog" aria-label="Konto HOME SECURITY" hidden>
   <div class="authBackdrop"></div><div class="authCard" role="dialog" aria-modal="true" aria-labelledby="authTitle"><button id="authClose" class="authClose" type="button" aria-label="Zamknij">×</button>
-    <div class="authBrand"><img class="dsBrandLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="58px" width="96" height="96" alt="Logo DS"><p>HOME <b>SECURITY</b></p></div><p id="authMessage" class="authMessage" role="status"></p>
+    <div class="authBrand"><img class="dsBrandLogo" src="assets/ds-shield.svg" width="96" height="96" alt="Logo DS"><p>HOME <b>SECURITY</b></p></div><p id="authMessage" class="authMessage" role="status"></p>
     <form id="loginForm" data-auth-step="login" class="authForm" aria-label="Logowanie do HOME SECURITY"><p class="authEyebrow">BEZPIECZNE WEJŚCIE</p><h2 id="authTitle">Zaloguj się</h2><p>Najpierw konto, później dodatkowy PIN do panelu.</p><label>E-mail<input name="email" type="email" autocomplete="email" required></label><label>Hasło<input name="password" type="password" autocomplete="current-password" required></label><button class="authPrimary" type="submit">Zaloguj się →</button><button id="authToRegister" class="authTextBtn" type="button">Nie masz konta? Zarejestruj się</button></form>
 <form id="registerForm" data-auth-step="register" class="authForm" hidden><p class="authEyebrow">NOWE KONTO</p><h2>Załóż konto</h2><p>Wszystkie pola oznaczone gwiazdką są potrzebne do utworzenia konta.</p><div class="authGrid"><label>Imię *<input name="first_name" autocomplete="given-name" required></label><label>Nazwisko *<input name="last_name" autocomplete="family-name" required></label></div><label>Adres *<input name="address_line" autocomplete="address-line1" required></label><div class="authGrid"><label>Kod pocztowy *<input name="postal_code" placeholder="00-000" autocomplete="postal-code" required></label><label>Telefon <input name="phone" type="tel" autocomplete="tel"></label></div><label>E-mail *<input name="email" type="email" autocomplete="email" required></label><div class="authGrid"><label>Hasło *<input name="password" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></label><label>Powtórz hasło *<input name="password_repeat" type="password" autocomplete="new-password" required></label></div><label class="authCheck"><input name="terms" type="checkbox" required><span>Akceptuję <a href="regulamin.html" target="_blank" rel="noopener noreferrer">Regulamin</a> i zapoznałem(-am) się z <a href="polityka-prywatnosci.html" target="_blank" rel="noopener noreferrer">Polityką prywatności</a> oraz <a href="rodo.html" target="_blank" rel="noopener noreferrer">informacją RODO</a>.</span></label><button class="authPrimary" type="submit">Utwórz konto i wyślij e-mail →</button><button class="authToLogin authTextBtn" type="button">Masz konto? Zaloguj się</button></form>
 <section data-auth-step="confirm" class="authForm" hidden><p class="authEyebrow">POTWIERDŹ KONTO</p><h2>Sprawdź e-mail</h2><p>Wysłaliśmy wiadomość potwierdzającą. Otwórz bezpieczny link w wiadomości albo przepisz kod weryfikacyjny, jeśli jest podany.</p><form id="verificationCodeForm" class="verificationCodeForm"><label>Kod weryfikacyjny (opcjonalnie)<input id="verificationCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" maxlength="8" placeholder="Kod z e-maila"></label><button class="authSecondary" type="submit">Potwierdź kod</button></form><div class="authNotice">Link lub kod są jednorazowe. Nie przekazuj ich innej osobie. Jeśli nie widzisz wiadomości, sprawdź Spam.</div><button id="resendConfirmation" class="authPrimary" type="button">Wyślij wiadomość ponownie</button><button class="authToLogin authTextBtn" type="button">Wróć do logowania</button></section>
@@ -158,7 +159,7 @@
 </script>
 <header class="topbar">
   <button id="quickMenuBtn" class="quickMenuBtn" type="button" aria-label="Otwórz menu kamery" aria-controls="quickMenu" aria-expanded="false"><i></i><i></i><i></i></button>
-  <div class="brand"><img class="dsPanelLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="96px" width="96" height="96" alt="Logo DS"><span class="brandText">HOME <b>SECURITY</b></span></div>
+  <div class="brand"><img class="dsPanelLogo" src="assets/ds-shield.svg" width="96" height="96" alt="Logo DS"><span class="brandText">HOME <b>SECURITY</b></span></div>
   <span id="topStatus" class="chip">offline</span>
   <nav class="nav">
     <a class="navLink active" href="./">Na żywo</a>
@@ -189,7 +190,7 @@
 <section id="boot" class="bootScreen" aria-live="polite" aria-label="Uruchamianie HOME SECURITY">
   <div class="bootAtmosphere" aria-hidden="true"><i></i><i></i><b></b><b></b></div>
   <div class="bootCard">
-    <div class="bootMark"><img class="dsPanelLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="96px" width="96" height="96" alt="Logo DS"></div>
+    <div class="bootMark"><img class="dsPanelLogo" src="assets/ds-shield.svg" width="96" height="96" alt="Logo DS"></div>
     <p class="bootBrand">HOME <b>SECURITY</b></p>
     <p class="bootUnit">COMMAND CENTER · SECURE CHANNEL</p>
     <h2>Uruchamianie bezpiecznego panelu</h2>
@@ -282,7 +283,7 @@
 <!-- Wejście PIN-em -->
 <section id="lock" class="lockScreen" hidden>
   <div class="pinCard">
-    <div class="pinLogo"><img class="dsPanelLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="96px" width="96" height="96" alt="Logo DS"></div>
+    <div class="pinLogo"><img class="dsPanelLogo" src="assets/ds-shield.svg" width="96" height="96" alt="Logo DS"></div>
     <h2>Wpisz PIN</h2>
     <p class="muted small">Dostęp do kamery i nagrań tylko z PIN-em.</p>
     <div class="pinDots" aria-hidden="true"></div>
@@ -559,9 +560,9 @@
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=13"></script>
 <script type="module" src="auth-experience.mjs?v=2"></script>
-<script type="module" src="app.js?v=253"></script>
-<script type="module" src="desktop.js?v=45"></script>
-<script type="module" src="mobile.js?v=21"></script>
+<script type="module" src="app.js?v=254"></script>
+<script type="module" src="desktop.js?v=46"></script>
+<script type="module" src="mobile.js?v=22"></script>
 </template>
 <script type="module" src="panel-entry.mjs?v=2"></script>
 </body>

@@ -1,3 +1,4 @@
+import {iconMarkup} from "./ui-icons.mjs?v=1";
 // HOME SECURITY Mobile: osobny układ PWA dla właściciela.
 // Przełącza tylko widoki istniejącej strony — transmisja i nagrywanie działają dalej.
 // index.html wybiera tryb urządzenia przed narysowaniem strony. To obejmuje
@@ -21,7 +22,7 @@ if (isMobileOwnerApp) {
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
-    <img class="mobileBrandLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="48px" width="48" height="48" alt="DS"><div><h1 id="mobilePageTitle">Dom</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
+    <img class="mobileBrandLogo" src="assets/ds-shield.svg" width="48" height="48" alt="DS"><div><h1 id="mobilePageTitle">Dom</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
     <button id="deviceLayoutBtn" type="button" aria-label="Zmień układ urządzenia"><span>▣</span><b>Telefon</b></button>
     <details class="mobileRelease"><summary>Opcje aplikacji</summary><div class="mobileOptionsBody"><small id="mobileBuild"></small><button type="button" data-web-update>Aktualizacje automatyczne</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span><button type="button" data-open-project-gallery>Projekty interfejsu</button><div class="mobileAccountOptions"></div></div></details>`;
   app?.insertBefore(mobileHeader, app.firstChild);
@@ -44,6 +45,8 @@ if (isMobileOwnerApp) {
     <button type="button" data-mobile-view="alerts"><b>♧</b><span>Alarmy</span></button>
     <button type="button" data-mobile-view="recordings"><b>▷</b><span>Nagrania</span></button>
     <button type="button" data-mobile-view="settings"><b>⚙</b><span>Ustawienia</span></button>`;
+  const mobileIcons={home:'home',alerts:'alerts',recordings:'archive',settings:'settings'};
+  nav.querySelectorAll('[data-mobile-view]').forEach(button=>{button.querySelector('b').innerHTML=iconMarkup(mobileIcons[button.dataset.mobileView]);});
   document.body.append(nav);
 
   const deviceSheet = document.createElement("section");
