@@ -17,6 +17,15 @@ if (isMobileOwnerApp) {
   const disposeCameraFrame=mountMobileCameraFrame(byId('stage'),byId('video'));
   window.addEventListener('pagehide',event=>{if(!event.persisted)disposeCameraFrame();});
   const cameraInfo=mountMobileCameraInfo({stage:byId('stage'),video:byId('video'),statusNode:byId('topStatus')});
+  // Keep original media/control nodes: changing orientation must never reopen the camera.
+  const zoomControls=byId('zoomBar');
+  if(zoomControls){zoomControls.classList.add('mobileZoomControls');byId('stage').after(zoomControls);}
+  byId('watchPanel')?.after(cameraInfo.element);
+  const infoToggle=document.createElement('button');
+  infoToggle.type='button';infoToggle.className='mobileCameraInfoToggle';infoToggle.textContent='Szczegóły';
+  infoToggle.setAttribute('aria-expanded','false');infoToggle.setAttribute('aria-label','Pokaż szczegóły kamery');
+  infoToggle.addEventListener('click',()=>{const expanded=cameraInfo.element.classList.toggle('expanded');infoToggle.setAttribute('aria-expanded',String(expanded));infoToggle.textContent=expanded?'Zwiń':'Szczegóły';});
+  cameraInfo.element.append(infoToggle);
   window.addEventListener('pagehide',event=>{if(!event.persisted)cameraInfo.dispose();});
 
   const mobileHeader = document.createElement("section");
@@ -98,7 +107,7 @@ if (isMobileOwnerApp) {
   backSettings.addEventListener("click", () => { document.body.dataset.mobileSettings = "root"; });
 
   const views = {
-    home: ["mobileCameraInfo", "stage", "watchPanel"],
+    home: ["mobileCameraInfo", "stage", "zoomBar", "watchPanel"],
     alerts: ["mobileEventsWorkspace"],
     recordings: ["dvrCard", "dvrListCard", "mobileRecordingStorage"],
     settings: ["modeCard", "systemPanel", "setCard", "diagCard", "mobileDiagnosticWorkspace"]
