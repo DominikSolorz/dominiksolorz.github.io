@@ -67,6 +67,7 @@ if (isMobileOwnerApp) {
       <p>UKŁAD APLIKACJI</p><h2 id="deviceLayoutTitle">Na czym oglądasz?</h2>
       <span>Zmienia się tylko wielkość i układ ekranu. Nadajnik kamery pozostaje w programie Windows.</span>
       <div>
+        <button type="button" data-ui-mode="auto"><b>↔</b><strong>Automatycznie</strong><small>dopasuj do tego urządzenia i ekranu — zalecane</small></button>
         <button type="button" data-ui-mode="phone"><b>▯</b><strong>Telefon</strong><small>duży obraz, dolna nawigacja, obsługa dotykiem</small></button>
         <button type="button" data-ui-mode="computer"><b>▣</b><strong>Komputer</strong><small>panel boczny, pełny pulpit i więcej informacji</small></button>
       </div>
@@ -79,9 +80,15 @@ if (isMobileOwnerApp) {
     if (event.target === deviceSheet || event.target.closest(".deviceLayoutClose")) return setDeviceSheet(false);
     const button = event.target.closest("[data-ui-mode]");
     if (!button) return;
-    try { localStorage.setItem("hs-ui-mode", button.dataset.uiMode); } catch (_) { /* tryb prywatny */ }
+    const automatic = button.dataset.uiMode === "auto";
+    try {
+      localStorage.setItem("hs-layout-mode-v2", automatic ? "auto" : "manual");
+      localStorage.setItem("hs-layout-choice-v2", automatic ? "" : button.dataset.uiMode);
+    } catch (_) { /* tryb prywatny */ }
     const url = new URL(location.href);
-    url.searchParams.set("ui", button.dataset.uiMode);
+    ["ui", "view", "desktop"].forEach(key=>url.searchParams.delete(key));
+    url.searchParams.set("layout", automatic ? "auto" : "manual");
+    if (!automatic) url.searchParams.set("ui", button.dataset.uiMode);
     location.assign(url.toString());
   });
 

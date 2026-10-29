@@ -6,12 +6,12 @@
 <meta name="robots" content="noindex,follow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#070b16">
-<meta name="home-security-build" content="256">
+<meta name="home-security-build" content="257">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kamera domowa">
-<script src="core/client-layout.js?v=2"></script>
+<script src="core/client-layout.js?v=3"></script>
 <script>
   const routeParams = new URLSearchParams(location.search);
   const desktopParam = routeParams.get("desktop");
@@ -19,12 +19,21 @@
   // urządzenia korzysta. Wybór jest tylko ustawieniem wyglądu i nie zmienia
   // tego, który komputer jest nadajnikiem kamery.
   let savedUiMode = "";
-  try { savedUiMode = localStorage.getItem("hs-ui-mode") || ""; } catch (_) { /* tryb prywatny */ }
-  const requestedUiMode = routeParams.get("ui");
+  let layoutPreference = "auto";
+  try {
+    layoutPreference = localStorage.getItem("hs-layout-mode-v2") || "auto";
+    savedUiMode = localStorage.getItem("hs-layout-choice-v2") || "";
+  } catch (_) { /* tryb prywatny */ }
+  if (routeParams.get("layout") === "auto") layoutPreference = "auto";
+  if (routeParams.get("layout") === "manual" && ["phone", "computer"].includes(routeParams.get("ui"))) {
+    layoutPreference = "manual";
+    savedUiMode = routeParams.get("ui");
+  }
+  const requestedUiMode = routeParams.get("layout") === "manual" ? routeParams.get("ui") : "";
   const nativeWindowsApp = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview;
   // Nadajnik ma zawsze pozostać lekką, osobną aplikacją Chrome.
   const isTransmitter = location.hash === "#nadaj";
-  const requestedView = routeParams.get("view");
+  const requestedView = routeParams.get("layout") === "manual" ? routeParams.get("view") : "";
   const mobileRequested = routeParams.get("app") === "android" || requestedView === "mobile" || desktopParam === "0";
   const phonePlatform = HomeSecurityLayout.detectPlatform(navigator);
   document.documentElement.dataset.phonePlatform = phonePlatform;
@@ -38,9 +47,15 @@
   // dodatkowego parametru. "view=desktop" pozostaje świadomym wyjątkiem
   // do testów; stary "desktop=1" nie rozwija już panelu na telefonie.
   const clientLayout = HomeSecurityLayout.resolve({ native: nativeWindowsApp,
-    transmitter: isTransmitter, ui: requestedUiMode, view: requestedView,
+    transmitter: isTransmitter, preference: layoutPreference, ui: requestedUiMode, view: requestedView,
     legacyMobile: mobileRequested, saved: savedUiMode, mobile: mobileBrowser, compact: compactScreen });
   document.documentElement.dataset.clientMode = clientLayout;
+  document.documentElement.dataset.layoutPreference = nativeWindowsApp ? "native" : layoutPreference;
+  try {
+    localStorage.setItem("hs-layout-mode-v2", layoutPreference);
+    localStorage.setItem("hs-layout-choice-v2", savedUiMode);
+    localStorage.setItem("hs-last-client-layout", clientLayout);
+  } catch (_) { /* Storage unavailable: current device detection still works. */ }
   document.documentElement.dataset.clientRuntime = nativeWindowsApp ? "windows" : "web";
   document.documentElement.classList.add("publicLanding");
   if (clientLayout === "mobile") {
@@ -562,9 +577,9 @@
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=13"></script>
 <script type="module" src="auth-experience.mjs?v=2"></script>
-<script type="module" src="app.js?v=256"></script>
-<script type="module" src="desktop.js?v=47"></script>
-<script type="module" src="mobile.js?v=23"></script>
+<script type="module" src="app.js?v=257"></script>
+<script type="module" src="desktop.js?v=48"></script>
+<script type="module" src="mobile.js?v=24"></script>
 </template>
 <script type="module" src="panel-entry.mjs?v=2"></script>
 </body>
