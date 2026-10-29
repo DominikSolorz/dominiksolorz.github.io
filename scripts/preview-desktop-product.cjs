@@ -17,6 +17,7 @@ for(const width of [1024,1440,1920]){
 }
 await page.evaluate(()=>window.fixtureDvr.closeArchive());
 await page.locator('#desktopCollapse').click();
+await page.waitForFunction(()=>Math.round(document.querySelector('.desktopSidebar').getBoundingClientRect().width)===72);
 const collapsed=await page.locator('.desktopSidebar').evaluate(n=>Math.round(n.getBoundingClientRect().width));
 if(collapsed!==72)throw Error('Sidebar did not collapse: '+collapsed);
 await page.locator('#desktopCollapse').click();
