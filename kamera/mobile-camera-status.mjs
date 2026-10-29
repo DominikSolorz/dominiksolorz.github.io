@@ -9,9 +9,11 @@ export function mountMobileCameraInfo({stage,video,statusNode}){
   const info=document.createElement('section');info.id='mobileCameraInfo';info.className='mobileCameraInfo';info.setAttribute('aria-label','Informacje o podglądzie kamery');
   info.innerHTML='<div class="mobileCameraHeading"><h2>Kamera główna</h2><span>Komputer nadający</span></div><p class="mobileCameraState" role="status" aria-live="polite"></p><p class="mobileCameraDetail"></p><p class="mobileCameraDimensions"></p>';
   stage.before(info);const state=info.querySelector('.mobileCameraState'),detail=info.querySelector('.mobileCameraDetail'),dimensions=info.querySelector('.mobileCameraDimensions');
-  const update=()=>{const next=mobileCameraStatus({connected:statusNode?.classList.contains('live'),playing:video.readyState>=2&&!video.paused&&!video.ended,width:video.videoWidth,height:video.videoHeight,fit:stage.classList.contains('fit-cover')?'cover':'contain'});
+  let buffering=false;
+  const update=()=>{const next=mobileCameraStatus({connected:statusNode?.classList.contains('live'),playing:!buffering&&video.readyState>=2&&!video.paused&&!video.ended,width:video.videoWidth,height:video.videoHeight,fit:stage.classList.contains('fit-cover')?'cover':'contain'});
     info.dataset.state=next.state;for(const [node,text] of [[state,next.title],[detail,next.detail],[dimensions,next.dimensions]])if(node.textContent!==text)node.textContent=text;};
   const observer=new MutationObserver(update);if(statusNode)observer.observe(statusNode,{attributes:true,attributeFilter:['class'],childList:true,subtree:true,characterData:true});observer.observe(stage,{attributes:true,attributeFilter:['class']});
-  const events=['loadedmetadata','playing','waiting','emptied','pause','ended','resize'];events.forEach(name=>video.addEventListener(name,update));update();
-  return {element:info,dispose(){observer.disconnect();events.forEach(name=>video.removeEventListener(name,update));info.remove();}};
+  const onVideoEvent=event=>{if(['waiting','emptied','ended'].includes(event.type))buffering=true;else if(event.type==='playing')buffering=false;update();};
+  const events=['loadedmetadata','playing','waiting','emptied','pause','ended','resize'];events.forEach(name=>video.addEventListener(name,onVideoEvent));update();
+  return {element:info,dispose(){observer.disconnect();events.forEach(name=>video.removeEventListener(name,onVideoEvent));info.remove();}};
 }
