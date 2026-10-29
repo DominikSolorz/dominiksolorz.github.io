@@ -36,7 +36,7 @@ if (desktopRequested) {
   shell.className = "desktopSidebar";
   shell.setAttribute("aria-label", "Nawigacja HOME SECURITY Desktop");
   shell.innerHTML = `
-    <div class="desktopBrand"><img class="dsPanelLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="42px" width="42" height="42" alt="Logo DS"><span><b>HOME SECURITY</b><small>DESKTOP</small></span><button id="desktopCollapse" type="button" aria-label="Rozwiń menu">›</button></div>
+    <div class="desktopBrand"><img class="dsPanelLogo" src="assets/ds-logo.jpg" width="42" height="42" alt="Logo DS"><span><b>HOME SECURITY</b><small>DESKTOP</small></span><button id="desktopCollapse" type="button" aria-label="Rozwiń menu">›</button></div>
     <div class="desktopDevice"><span id="desktopLiveDot" class="desktopDot"></span><span><b id="desktopLiveState">Sprawdzam połączenie</b><small id="desktopLiveDetail">—</small></span></div>
     <nav class="desktopNav" aria-label="Moduły monitoringu">
       <button class="active" type="button" data-desktop-view="live"><i>▦</i><span><b>Pulpit</b><small>podgląd na żywo</small></span><kbd>1</kbd></button>
@@ -52,6 +52,17 @@ if (desktopRequested) {
       <p class="muted">Podgląd obrazu nie potwierdza zapisanego nagrania.</p>
     </section>
     <div class="desktopSidebarFoot"><span>Alt + 1–6 przełącza moduły</span><a href="panel.html?panel=owner&ui=phone" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
+  const navPaths = {
+    live: '<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>',
+    controls: '<rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/>',
+    events: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',
+    archive: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 8 6 4-6 4Z"/>',
+    settings: '<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/>',
+    diagnostics: '<path d="M2 12h5l3-8 4 16 3-8h5"/>'
+  };
+  shell.querySelectorAll('[data-desktop-view]').forEach(button => {
+    button.querySelector('i').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${navPaths[button.dataset.desktopView]}</svg>`;
+  });
   document.body.prepend(shell);
   const updateNotice = document.createElement("section");
   updateNotice.id = "desktopUpdateNotice"; updateNotice.className = "desktopUpdateNotice"; updateNotice.hidden = true;
@@ -263,6 +274,7 @@ if (desktopRequested) {
   const previewEmpty=document.createElement("p");previewEmpty.textContent="Oczekiwanie na obraz kamery. Uruchom podgląd przyciskiem Start.";
   controlPreview.append(previewVideo,previewEmpty);
   const controlDeviceDock=document.createElement("aside");controlDeviceDock.className="controlDeviceDock";
+  if ($("modeCard")) controlDeviceDock.append($("modeCard"));
   controlWorkspace.append(controlPreview,controlDeviceDock);controlsScreen.querySelector("header").after(controlWorkspace);
   mirrorLivePreview($("video"),previewVideo,previewEmpty);
   controlDock.hidden = true;
@@ -386,7 +398,7 @@ if (desktopRequested) {
     controlsScreen.hidden = view !== "controls";
     eventsScreen.hidden = view !== "events";
     diagnosticsScreen.hidden = view !== "diagnostics";
-    if(view==="controls"){controlDeviceDock.append(deviceManager);deviceManager.hidden=false;}
+    if(view==="controls"){controlDeviceDock.prepend(deviceManager);deviceManager.hidden=false;}
     if (eventCard) { eventsDrawer.append(eventCard); eventCard.open = true; }
     if (layout) layout.hidden = true;
     context.querySelector(".desktopContextActions").hidden = view !== "live";

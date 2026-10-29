@@ -1,0 +1,55 @@
+/* Desktop product surface. Media elements and command handlers retain their owners. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) { --desktop-sidebar:216px; --bg:#0b0d10; --panel:#13161b; --text:#eef0f3; --muted:#9da4af; color-scheme:dark; }
+html.desktopMode.desktopSidebarCollapsed { --desktop-sidebar:72px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) body { background:#0b0d10; color:#eef0f3; font-family:Segoe UI,Arial,sans-serif; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSidebar { width:var(--desktop-sidebar); background:#0d0f13; border-right:1px solid #252930; padding:20px 12px 12px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopBrand { padding:8px 4px 25px; gap:10px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopBrand b { font-size:13px; letter-spacing:.04em; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopBrand small { color:#c5a868; font-size:10px; letter-spacing:.15em; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav { gap:5px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button { min-height:48px; border:0; border-radius:5px; padding:10px 12px; background:transparent; color:#bfc5cf; box-shadow:none; grid-template-columns:24px minmax(0,1fr); gap:12px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button.active { background:#31151e; color:#ff4265; box-shadow:inset 3px 0 #e51d46; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button:hover { background:#1c2027; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button b { font-size:14px; font-weight:600; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button small, html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav kbd { display:none; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav i svg { display:block; width:22px; height:22px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .topbar { background:#101216; border-bottom:1px solid #292d35; gap:16px; padding:0 22px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .topbar .nav > a.navLink { display:none; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSearch { flex:1 1 240px; min-width:140px; max-width:340px; margin:0 auto; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSearch input { width:100%; min-width:0; box-sizing:border-box; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopTopStatus { min-width:0; max-width:320px; font-size:12px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .topbar .nav { flex:0 1 auto; gap:8px; min-width:0; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) main { padding:88px 24px 32px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopContext { margin-bottom:22px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopContext h1 { font-size:28px; letter-spacing:-.02em; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(.card,.panel,.desktopDeviceManager,.controlPreview,.settingsHelp) { background:#13161b; border:1px solid #282d35; border-radius:8px; box-shadow:none; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen > header { margin:0 0 18px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen > header h2 { font-size:24px; margin:4px 0 8px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen > header p { color:#a1a8b3; font-size:13px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlWorkspace { display:grid; grid-template-columns:minmax(0,1fr) 300px; align-items:start; gap:16px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlPreview { overflow:hidden; aspect-ratio:16/9; min-height:0; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlPreview video { display:block; width:100%; height:100%; object-fit:contain; background:#000; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock { display:grid; gap:16px; min-width:0; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard { margin:0; padding:16px; min-width:0; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock h2 { font-size:18px; margin:0 0 14px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock :is(button,select) { min-height:40px; font-size:13px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock .muted { font-size:12px; line-height:1.6; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(button,select,input) { border-radius:6px; border-color:#343942; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) button { box-shadow:none; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) #ctrlStart { background:#d91c40; border-color:#ec2951; color:white; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(#ctrlStop,#ctrlRestart) { background:#22262e; border-color:#393e48; color:#e7eaf0; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) #ctrlBar { margin-top:16px; padding:16px; border-radius:8px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) #ctrlBar button { min-height:46px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(.desktopBrand,.desktopContext,.desktopControlsScreen) { overflow-wrap:anywhere; }
+@media(max-width:1200px) { html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSearch { display:none; } html.desktopMode:not(.policeCommand):not(.usMilitary) .controlWorkspace { grid-template-columns:minmax(0,1fr) 260px; } }
+@media(max-width:950px) { html.desktopMode:not(.policeCommand):not(.usMilitary) .controlWorkspace { grid-template-columns:minmax(0,1fr); } html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+html.desktopMode:not(.policeCommand):not(.usMilitary) main { background:#0b0d10; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen { padding:20px; background:#101318; border:1px solid #282d35; border-radius:8px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock { grid-template-columns:minmax(0,1fr); }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock > * { width:100%; box-sizing:border-box; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock :is(select,button) { max-width:100%; box-sizing:border-box; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSearch { padding:0 10px; background:#191d24; border:1px solid #343942; border-radius:6px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSearch input { padding:10px 4px; border:0; background:transparent; outline-offset:2px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) #ctrlBar .ctrl { flex:1; }
+@media(max-width:950px) { html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock { grid-template-columns:repeat(2,minmax(0,1fr)); } }
