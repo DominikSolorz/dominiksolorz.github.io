@@ -89,6 +89,20 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Cannot restore the source dependency lock'}
           node scripts/desktop-release.mjs finish
           if($LASTEXITCODE -ne 0){throw 'Manifest generation failed'}
+      - name: Verify recording storage in isolated real WebView2
+        if: steps.plan.outputs.changed == 'true'
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $report=Join-Path $env:GITHUB_WORKSPACE 'recording-storage-bridge.json'
+          $exe=Join-Path $env:GITHUB_WORKSPACE "desktop-client/publish-$env:RELEASE_VERSION/HomeSecurityDesktop.exe"
+          $probe=Start-Process -FilePath $exe -ArgumentList @('--recording-storage-test',('"'+$report+'"')) -WindowStyle Hidden -PassThru
+          if(-not $probe.WaitForExit(60000)){throw 'Storage bridge test timed out'}
+          if(-not (Test-Path $report)){throw 'Storage bridge report missing'}
+          $result=Get-Content -Raw $report | ConvertFrom-Json
+          if(-not $result.ok -or $result.spoolBytes -ne 1048613 -or -not $result.preservedAfterDisconnect){throw 'Native storage transfer or disconnect failed'}
       - name: Render real camera workspace in isolated WebView2
         if: steps.plan.outputs.changed == 'true'
         shell: pwsh

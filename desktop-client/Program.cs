@@ -23,6 +23,10 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        if(args.Length==2&&args[0]=="--recording-storage-test")
+        {
+            ApplicationConfiguration.Initialize();Application.Run(new RecordingStorageTestWindow(Path.GetFullPath(args[1])));return;
+        }
         if (args.Length == 2 && args[0] == "--camera-workspace-test")
         {
             ApplicationConfiguration.Initialize();
@@ -335,6 +339,9 @@ internal static class Program
             // secrets remain inaccessible to arbitrary page messages.
             agentRuntime.StartMonitoring();
             agentBridge = new AgentWebViewBridge(webView.CoreWebView2);
+            var recordingStorage = new RecordingStorageBridge(webView.CoreWebView2, () => panelUnlocked);
+            FormClosed += (_, _) => recordingStorage.Dispose();
+            await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.__HOME_SECURITY_STORAGE_BRIDGE__ = true;");
             FormClosed += (_, _) => agentBridge?.Dispose();
             await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync("window.__HOME_SECURITY_AGENT_BRIDGE__ = true;");
             await RefreshWebShellIfNeededAsync();

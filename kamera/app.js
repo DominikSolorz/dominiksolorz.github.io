@@ -1,5 +1,6 @@
 import {prepareRecordingVideo,recorderActuallyRunning,waitForRecorderData} from "./recording-init.mjs?v=1";
 import {applyCameraFit,fitAction} from './camera-fit.mjs?v=1';
+import {RecordingStorageClient,mountRecordingStorage,storageDescription} from './recording-storage.mjs?v=1';
 import "./gallery-viewer.mjs?v=1";
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
@@ -11,7 +12,7 @@ import { requireAccess } from "./lock.js?v=20";
 import { channelFor, lock } from "./access.js?v=20";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=17";
-import * as recstore from "./recstore.js?v=77";
+import * as recstore from "./recstore.js?v=78";
 import { oldRecordingPlan } from "./local-retention.mjs?v=1";
 import { createRecordingDeletion } from "./recording-actions.mjs?v=2";
 import { localRecordingView } from './recording-view-state.mjs?v=1';
@@ -68,8 +69,14 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 // pochodzi z powłoki Windows i pozostaje ważna na każdej stronie konta.
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
+const recordingStorage = new RecordingStorageClient();
+let storageSaveTail = Promise.resolve();
+function spoolRecording(data,name,state) {
+  const saving=storageSaveTail.then(()=>recordingStorage.save(data,name,state));
+  storageSaveTail=saving.catch(()=>{});return saving;
+}
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "261"; // musi się zgadzać z version.json
+const VERSION = "262"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -520,9 +527,24 @@ const archive = (() => {
   async function save(data, name, events, start, end) {
     // Długość nagrania wpisana od razu do pliku — przewijanie działa w każdym odtwarzaczu (telefon, WhatsApp, Windows).
     data = await fixMp4Duration(data).catch(() => data);
+    let nativePolicy = null, nativeQueued = false;
+    if (recordingStorage.webview) {
+      try { nativePolicy = await recordingStorage.refresh(); }
+      catch (error) { lastError = `Nie potwierdzono miejsca zapisu: ${errText(error)}. Zachowuję plik awaryjnie.`; }
+      if (nativePolicy?.connected && nativePolicy.mode !== 'local') {
+        try {
+          await spoolRecording(data,name,nativePolicy); nativeQueued=true;
+          if(nativePolicy.mode==='cloud') {
+            saved++;lastName=name;folderWriteError='';
+            folderReceipt={name,bytes:data.size,folder:'bufor Google Drive — oczekuje na wysłanie',verifiedAt:Date.now()};
+            render(); return;
+          }
+        } catch(error) { lastError=`Wysyłka Drive oczekuje na ponowienie: ${errText(error)}`; }
+      }
+    }
     let savedToDisk = false;
     try {
-      savedToDisk = await diskstore.save(name, data);
+      savedToDisk = nativePolicy?.mode==='cloud' ? false : await diskstore.save(name, data);
       if (savedToDisk) {
         folderReceipt = { name, bytes: data.size, folder: disk.name, verifiedAt: Date.now() };
         folderWriteError = "";
@@ -533,15 +555,16 @@ const archive = (() => {
     if (!savedToDisk) folderWriteError = disk.error || "Folder nie został wybrany. Brak potwierdzenia zapisu do folderu.";
     // Bez folderu archiwum (albo gdy zapis do niego się nie udał) nagranie trafia do pamięci strony —
     // To zapis zapasowy, który również może zawieść, np. przy pełnym dysku.
-    if (!savedToDisk) {
+    if (!savedToDisk || (nativePolicy?.mode==='both'&&!nativeQueued)) {
       try {
-        await recstore.put({ name, start, end, events: events || [], thumbnail:captureEventFrame(video), type: data.type, uploaded: false }, data);
+        await recstore.put({ name, start, end, events: events || [], thumbnail:captureEventFrame(video), type: data.type, uploaded: false,
+          pendingNative:!!recordingStorage.webview&&!nativeQueued&&(!nativePolicy||nativePolicy.mode!=='local'), cloudOnly:nativePolicy?.mode==='cloud' }, data);
         saved++; lastName = name; lastError = "";
       } catch (e) { localSaveFailures++; lastError = `Nie udało się zapisać ${name}: ${errText(e)}`; }
     }
     // Kolejka powstaje dopiero po pełnym lokalnym zapisie. Gdy nie ma internetu,
     // plik pozostaje na Pulpicie i wysyłka zostanie ponowiona automatycznie.
-    if (prefs.driveAuto && cloud.enabled && (savedToDisk || await recstore.meta(name))) {
+    if (!recordingStorage.webview && prefs.driveAuto && cloud.enabled && (savedToDisk || await recstore.meta(name))) {
       await idb.qPut(name, savedToDisk
         ? { diskRef: name, events: events || [], cleanupLocal: false }
         : { ref: name, events: events || [], cleanupLocal: false });
@@ -730,7 +753,7 @@ const archive = (() => {
     return status();
   }
   function saveCurrentFragment() {
-    return closeRecordingFragment({current:()=>running&&rec,ready:()=>disk.ready,receipt:()=>folderReceipt,
+    return closeRecordingFragment({current:()=>running&&rec,ready:()=>disk.ready||recordingStorage.state?.mode==='cloud',receipt:()=>folderReceipt,
       rotate:active=>{const done=stopped.get(active);rotate();return done;},flush,error:()=>folderWriteError});
   }
   async function prepareUpdate() {
@@ -752,10 +775,11 @@ const archive = (() => {
       : prefs.mode === "rec-only" && activeRecording ? `Tylko zapis (bez transmisji na żywo), pliki co ${prefs.segmentMin} min.`
       : activeRecording && prefs.recordUntil > Date.now() ? `Nagranie jednorazowe do ${new Date(prefs.recordUntil).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}, potem tylko podgląd.`
       : activeRecording ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
-    if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; plików na dysku: ${diskFiles.count} (${gb(diskFiles.bytes)}).`;
+    if (recordingStorage.state?.mode==='cloud') text += ' Nowe nagrania trafiają do bufora wysyłania Drive; nie powstaje stałe archiwum w wybranym folderze komputera.';
+    else if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; plików na dysku: ${diskFiles.count} (${gb(diskFiles.bytes)}).`;
     else if (disk.selected) text += ` ⚠ Folder „${disk.name}” czeka na ponowną zgodę Chrome (po odświeżeniu strony) — na komputerze kliknij „Przywróć dostęp do folderu”. Pliki w folderze są bezpieczne; do tego czasu nagrania zapisują się w pamięci strony.`;
     else text += " Nagrania zapisują się w pamięci strony (folder archiwum nie jest ustawiony).";
-    text += prefs.driveAuto
+    text += recordingStorage.state ? ` ${storageDescription(recordingStorage.state)}` : prefs.driveAuto
       ? " Kopia zapasowa: lokalny folder komputera → Google Drive. Lokalna kopia pozostaje na komputerze."
       : " Nagrania pozostają lokalnie na komputerze; kopia Google Drive jest wyłączona.";
     if (local.count) text += ` W pamięci strony: ${local.count} nagrań (${gb(local.bytes)}).`;
@@ -782,10 +806,11 @@ const archive = (() => {
   function render() {
     systemStore.component("cloudQueue", { status: pumping ? "uploading" : queued ? "queued" : "idle", queued, verified: verifiedToDrive });
     const previousStorage=systemStore.read("storage");
-    const storageState={status:disk.error?"error":disk.ready?"ready":disk.selected?"permission_required":"unselected",name:disk.name||"",message:disk.error||"",saved};
+    const cloudStorage=recordingStorage.state?.mode==='cloud';
+    const storageState={status:cloudStorage?'ready':disk.error?"error":disk.ready?"ready":disk.selected?"permission_required":"unselected",name:cloudStorage?'Google Drive — bufor wysyłania':disk.name||"",message:cloudStorage?storageDescription(recordingStorage.state):disk.error||"",saved};
     systemStore.component("storage",storageState);
     if(previousStorage.status!==storageState.status||previousStorage.name!==storageState.name)systemStore.event({component:"storage",level:disk.error?"error":"info",message:disk.error||`Miejsce zapisu: ${disk.ready?disk.name:disk.selected?"wymagana zgoda":"nie wybrano folderu"}.`});
-    if(Number.isFinite(previousStorage.saved)&&saved>previousStorage.saved)systemStore.event({component:"storage",level:"info",message:`Potwierdzono lokalny zapis segmentu: ${lastName}`});
+    if(Number.isFinite(previousStorage.saved)&&saved>previousStorage.saved)systemStore.event({component:"storage",level:"info",message:`Potwierdzono ${cloudStorage?'bufor wysyłania Drive':'lokalny zapis'} segmentu: ${lastName}`});
     $("recBadge").hidden = !running;
     $("archiveInfo").textContent = describe();
     const confirmation = $("localSaveConfirmation");
@@ -798,7 +823,7 @@ const archive = (() => {
       confirmation.dataset.state = folderWriteError ? "error" : folderReceipt ? "verified" : "pending";
     }
     const operational = $("opArchive");
-    if (operational) operational.textContent = disk.ready ? `Dysk: ${diskFiles.count} pl.` : disk.selected ? "Przywróć dostęp" : "Wybierz folder";
+    if (operational) operational.textContent = cloudStorage ? 'Google Drive — sprawdź wysyłkę' : disk.ready ? `Dysk: ${diskFiles.count} pl.` : disk.selected ? "Przywróć dostęp" : "Wybierz folder";
     const btn = $("chooseArchiveDir");
     if (btn && !btn.disabled) btn.textContent = CAN_MANAGE_CAMERA ? "📁 Wybierz folder na komputerze…" : "📁 Wybierz folder komputera nadającego…";
     const restore = $("restoreArchiveDir");
@@ -938,8 +963,8 @@ const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", pay
 
 // Polecenia zmieniające pracę komputera-kamery muszą być podpisane kluczem z PIN-u.
 // Link odbiorcy zawiera tylko nazwę kanału, dlatego nie wystarcza jako uprawnienie do sterowania.
-const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "audio-profile-set", "light-set", "restart", "reload", "folder-browse", "folder-create", "folder-select", "folder-delete-empty", "recording-delete"]);
-const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}${sig.type === "light-set" ? `|L${clampLight(sig.light)}` : ""}${(sig.type.startsWith("folder-") || sig.type === "recording-delete") ? `|F${JSON.stringify(sig.folderEnvelope)}` : ""}`;
+const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "audio-profile-set", "light-set", "restart", "reload", "folder-browse", "folder-create", "folder-select", "folder-delete-empty", "recording-delete", "storage-snapshot", "storage-set", "storage-connect", "storage-disconnect"]);
+const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}${sig.type === "light-set" ? `|L${clampLight(sig.light)}` : ""}${(sig.type.startsWith("folder-") || sig.type.startsWith("storage-") || sig.type === "recording-delete") ? `|F${JSON.stringify(sig.folderEnvelope)}` : ""}`;
 const controlSignatureText = sig => controlText(sig) + (sig.type === 'audio-profile-set' ? `|A${sig.audioProfile}` : '') + (sig.commandId ? `|v1|${sig.commandId}|${sig.clientId}|${sig.expiresAt}` : "");
 async function signedOwnerControl(payload) {
   if (!ACCESS_KEY) return null;
@@ -1235,7 +1260,7 @@ const sender = (() => {
       if (!(await validOwnerControl(sig))) return;
       if (sig.commandId) {
         if (typeof sig.clientId !== "string" || sig.clientId.length > 80) return;
-        const isFolder = (sig.type.startsWith("folder-") || sig.type === "recording-delete");
+        const isFolder = (sig.type.startsWith("folder-") || sig.type.startsWith("storage-") || sig.type === "recording-delete");
         const args = isFolder ? await openFolder(sig.folderEnvelope, ACCESS_KEY, sig.clientId, sig.commandId)
           : { mode: sig.mode, minutes: sig.minutes, q: sig.q, media: sig.media, light: sig.light, audioProfile: sig.audioProfile };
         const result = await commandDispatcher.execute({ v: 1, id: sig.commandId, name: sig.type, args, expiresAt: sig.expiresAt }, sig.clientId);
@@ -1683,7 +1708,7 @@ const viewer = (() => {
   const commandClient = new CommandClient({
     send: async command => {
       if (!chan.channel) throw new Error("Brak połączenia z nadajnikiem.");
-      const args = (command.name.startsWith("folder-") || command.name === "recording-delete") ? {folderEnvelope:await sealFolder(command.args,ACCESS_KEY,viewerId,command.id)} : command.args;
+      const args = (command.name.startsWith("folder-") || command.name.startsWith("storage-") || command.name === "recording-delete") ? {folderEnvelope:await sealFolder(command.args,ACCESS_KEY,viewerId,command.id)} : command.args;
       const payload = await signedOwnerControl({ type: command.name, ...args,
         commandId: command.id, clientId: viewerId, expiresAt: command.expiresAt });
       if (!payload) throw new Error("Panel jest zablokowany.");
@@ -1869,6 +1894,10 @@ function requireCommandSuccess(result) {
   throw error;
 }
 const commandDispatcher = new CommandDispatcher({ handlers: {
+  'storage-snapshot': () => recordingStorage.refresh(),
+  'storage-set': async ({mode}) => {const result=await recordingStorage.request('set',{mode});recordingStorage.state=result;return result;},
+  'storage-connect': async ({folderId}) => {const result=await recordingStorage.request('connect',{folderId});recordingStorage.state=result;return result;},
+  'storage-disconnect': async () => {const result=await recordingStorage.request('disconnect');recordingStorage.state=result;return result;},
   'recording-delete': async ({recordingName})=>{
     if(!CAN_MANAGE_CAMERA)throw new Error('Usunięcie wykonuje wyłącznie komputer z archiwum.');
     return archive.local.remove(recordingName);
@@ -2234,7 +2263,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "170";
+  const SERVICE_WORKER_BUILD = "172";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2431,7 +2460,7 @@ $("saveCurrentFragment").disabled = !CAN_MANAGE_CAMERA;
 $("saveCurrentFragment").addEventListener("click", async event => {
   if(!CAN_MANAGE_CAMERA)return;
   const button=event.currentTarget,output=$("archiveFolderSelectionStatus");button.disabled=true;
-  output.textContent="Domykam plik w wybranym folderze. Podgląd kamery pozostaje aktywny.";
+  output.textContent="Domykam plik w wybranym miejscu zapisu. Podgląd kamery pozostaje aktywny.";
   try { const receipt=await archive.saveCurrentFragment();output.textContent=`Potwierdzono plik „${receipt.name}” w folderze „${receipt.folder}”: ${receipt.bytes.toLocaleString('pl-PL')} bajtów. Kolejny fragment nagrywa się dalej.`; }
   catch(error){output.textContent=`Zapis do folderu niepotwierdzony: ${errText(error)}`;}
   finally{button.disabled=false;}
@@ -2672,6 +2701,24 @@ if (RECEIVER_ONLY) {
   }
   if(MOBILE_OWNER_APP&&$('mobileRecordingStorage'))$('mobileRecordingStorage').prepend(drivePanel);
   const disposeDrive=mountNativeDriveUI({root:drivePanel,store:systemStore,refresh:refreshDrive});
+  const storagePanel=$('recordingStorageChoice');
+  drivePanel.before(storagePanel);drivePanel.hidden=true;storagePanel.hidden=false;
+  const disposeStorage=mountRecordingStorage({root:storagePanel,execute:executeControl,canManage:canControlCamera,
+    authorize:recordingStorage.webview?folderId=>recordingStorage.request('authorize',{folderId}):null});
+  let retryingNative=false;
+  const nativeRetryTimer=recordingStorage.webview?setInterval(async()=>{
+    if(retryingNative)return;retryingNative=true;
+    try {
+      const state=await recordingStorage.refresh();if(!state.connected||state.mode==='local')return;
+      for(const item of (await recstore.list()).filter(item=>item.pendingNative)) {
+        const data=await recstore.blob(item.name);if(!data)continue;
+        await spoolRecording(data,item.name,state);
+        // Native spool acknowledged the complete bytes. Its uploader retains them until Google confirms checksum and size.
+        if(item.cloudOnly)await recstore.remove(item.name);else await recstore.update(item.name,{pendingNative:false});
+      }
+    }catch{/* Preserve every pending recording and retry later. */}finally{retryingNative=false;}
+  },60000):null;
+  window.addEventListener('pagehide',()=>{disposeStorage();clearInterval(nativeRetryTimer);recordingStorage.dispose();},{once:true});
   window.addEventListener('pagehide',disposeDrive,{once:true});
   // Pulpit ma pojawić się natychmiast po poprawnym PIN-ie. Obliczenie kanału
   // lub późniejsze łączenie sieciowe nie może zostawić użytkownika z pustym

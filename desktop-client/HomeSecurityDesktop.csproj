@@ -27,6 +27,7 @@
     <Content Include="AgentTestAssets/index.html" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="AgentTestAssets/untrusted.html" CopyToOutputDirectory="PreserveNewest" />
     <ProjectReference Include="../agent-client/HomeSecurity.Agent.Client.csproj" />
+    <ProjectReference Include="../agent/HomeSecurityAgent.csproj" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3065.39" />
   </ItemGroup>
 </Project>

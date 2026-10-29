@@ -77,6 +77,7 @@ try
     await JobTests.RunAsync(Check, Path.Combine(directory, "jobs"));
     CredentialTests.Run(Check, Path.Combine(directory, "credentials"));
     await DriveTests.Run(Check,Path.Combine(directory,"drive"));
+    RecordingStorageTests.Run(Check,Path.Combine(directory,"recording-storage"));
     if (args.Length == 2 && args[0] == "--process-crash") await ProcessCrashTests.RunAsync(Check, Path.GetFullPath(args[1]));
     Console.WriteLine($"ALL {count} TESTS PASSED");
 }

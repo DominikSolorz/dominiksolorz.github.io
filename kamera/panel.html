@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,follow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#070b16">
-<meta name="home-security-build" content="261">
+<meta name="home-security-build" content="262">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -480,6 +480,19 @@
         <div id="archiveInfo" class="status"></div>
         <section id="archiveStoragePanel" aria-label="Folder zapisu nagrań">
           <h2>Miejsce zapisu</h2>
+          <section id="recordingStorageChoice" hidden aria-label="Wybór miejsca zapisu">
+            <h3>Gdzie zapisywać nowe nagrania?</h3>
+            <label>Miejsce zapisu <select data-storage-mode><option value="local">Komputer</option><option value="cloud">Google Drive</option><option value="both">Komputer i Google Drive</option></select></label>
+            <button type="button" class="btn primary" data-storage-apply>Zastosuj miejsce zapisu</button>
+            <label>Folder Google Drive <input data-storage-folder type="url" placeholder="https://drive.google.com/drive/folders/…" autocomplete="off"></label>
+            <div class="row"><button type="button" class="btn" data-storage-connect>Podłącz / zmień folder Drive</button><button type="button" class="btn ghost" data-storage-disconnect>Odłącz Drive — zachowaj pliki</button></div>
+            <button type="button" class="btn ghost" data-storage-authorize hidden>Autoryzuj konto Google w programie Windows</button>
+            <p class="muted small">Przy pierwszym połączeniu potrzebna jest konfiguracja OAuth aplikacji oraz zgoda Google w przeglądarce systemowej. Na telefonie możesz zmienić folder już podłączonego konta. Wybrany folder musi mieć przyznany aplikacji dostęp.</p>
+            <a class="btn ghost" data-storage-open hidden target="_blank" rel="noopener noreferrer">Otwórz wybrany folder Drive ↗</a>
+            <button type="button" class="btn ghost" data-storage-refresh>Sprawdź miejsce i stan zapisu</button>
+            <p data-storage-status class="status" role="status" aria-live="polite">Łączę z komputerem nadającym…</p>
+            <p class="muted small">Ustawienie dotyczy kolejnych zamykanych fragmentów. Nie przenosi ani nie usuwa wcześniejszych nagrań. Odłączenie Drive przełącza nowe nagrania na komputer; pliki czekające na wysłanie pozostają zachowane.</p>
+          </section>
           <section id="nativeDrivePanel" class="nativeDrivePanel" hidden aria-label="Automatyczne wysyłanie Google Drive">
             <h3>Google Drive</h3>
             <p data-drive-summary class="status" role="status" aria-live="polite">Sprawdzam kolejkę wysyłania…</p>
@@ -577,7 +590,7 @@
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=14"></script>
 <script type="module" src="auth-experience.mjs?v=2"></script>
-<script type="module" src="app.js?v=261"></script>
+<script type="module" src="app.js?v=262"></script>
 <script type="module" src="desktop.js?v=49"></script>
 <script type="module" src="mobile.js?v=27"></script>
 </template>
