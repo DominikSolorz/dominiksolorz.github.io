@@ -51,7 +51,7 @@ if (desktopRequested) {
       <p>Stan kamery, zapisu i sieci odczytasz w Diagnostyce.</p>
       <p class="muted">Podgląd obrazu nie potwierdza zapisanego nagrania.</p>
     </section>
-    <div class="desktopSidebarFoot"><span>Alt + 1–6 przełącza moduły</span><a href="panel.html?panel=owner&ui=phone" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
+    <div class="desktopSidebarFoot"><button type="button" data-open-project-gallery>Projekty interfejsu</button><span>Alt + 1–6 przełącza moduły</span><a href="panel.html?panel=owner&ui=phone" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
   const navPaths = {
     live: '<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>',
     controls: '<rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/>',

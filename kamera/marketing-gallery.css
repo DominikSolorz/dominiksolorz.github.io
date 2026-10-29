@@ -35,3 +35,11 @@
 @media(max-width:800px){#publicHome .mktConceptNote{flex-direction:column;align-items:stretch}#publicHome .mktConceptActions{min-width:0;gap:10px}#publicHome .mktGalleryDialogImage img{max-height:calc(100dvh - 190px)}}
 @media(max-width:650px){#publicHome .mktConceptGallery{padding-block:48px 62px}#publicHome .mktConceptGrid{grid-template-columns:1fr;gap:17px}#publicHome .mktConceptCard figcaption{padding:18px 19px 21px}#publicHome .mktConceptOpen{aspect-ratio:16/10}#publicHome .mktConceptZoom{font-size:12px;min-height:40px;bottom:12px;right:12px}#publicHome .mktConceptNote{padding:18px}#publicHome .mktGalleryDialogHead h3{font-size:16px}#publicHome .mktGalleryDialogHead{padding:12px 13px}#publicHome .mktGalleryClose{min-width:88px;padding:7px 9px}#publicHome .mktGalleryDialog>p{padding:0 13px 16px}}
 @media(prefers-reduced-motion:reduce){#publicHome .mktConceptCard,#publicHome .mktConceptOpen img,#publicHome .mktGalleryClose{transition:none}#publicHome .mktConceptCard:hover,#publicHome .mktConceptOpen:hover img,#publicHome .mktConceptOpen:focus-visible img{transform:none!important}}
+
+/* Full-resolution reference gallery: keep each entire board visible. */
+#publicHome.mktDesignLibrary .mktConceptCard { background:#13181f; border-color:#2b333f; border-radius:14px; }
+#publicHome.mktDesignLibrary .mktConceptOpen { aspect-ratio:auto; }
+#publicHome.mktDesignLibrary .mktConceptOpen::after { display:none; }
+#publicHome.mktDesignLibrary .mktConceptOpen img { width:100%; height:auto; object-fit:contain; transform:none; filter:none; }
+#publicHome.mktDesignLibrary .mktConceptGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; }
+@media(max-width:700px){#publicHome.mktDesignLibrary .mktConceptGrid { grid-template-columns:minmax(0,1fr); gap:20px; }}

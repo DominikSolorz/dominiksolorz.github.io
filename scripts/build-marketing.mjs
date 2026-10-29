@@ -40,7 +40,7 @@ for(const page of topicPages){
  if(!/^[a-z0-9-]+$/.test(page.slug))throw Error('Invalid topic slug');
  const file=page.slug+'.html';
  const body=(await read(source,file)).replaceAll('__DESKTOP_RELEASE__',currentDesktopRelease);
- const assets=page.assets==='gallery'?'<link rel="stylesheet" href="marketing-gallery.css?v=3"><script type="module" src="marketing-gallery.mjs?v=2"></script>':page.assets==='start'?'<link rel="stylesheet" href="marketing-start.css?v=3"><script type="module" src="marketing-start.mjs?v=2"></script>':page.assets==='support'?'<link rel="stylesheet" href="support.css?v=2"><script type="module" src="support-entry.mjs?v=4"></script>':'';
+ const assets=page.assets==='gallery'?'<link rel="stylesheet" href="marketing-gallery.css?v=4"><script type="module" src="marketing-gallery.mjs?v=2"></script>':page.assets==='start'?'<link rel="stylesheet" href="marketing-start.css?v=3"><script type="module" src="marketing-start.mjs?v=2"></script>':page.assets==='support'?'<link rel="stylesheet" href="support.css?v=2"><script type="module" src="support-entry.mjs?v=4"></script>':'';
  const intro=`<div class="mktPageIntro mktContainer"><p class="mktBreadcrumb"><a href="./">Strona główna</a> / ${escape(page.title)}</p><h1 class="mktPageTitle">${escape(page.title)}</h1><p class="mktPageLead">${escape(page.description)}</p></div>`;
  await emit(file,head(page.title,page.description,file).replace('</head>',assets+'</head>')+'<div role="group" id="publicHome" class="publicHome mktSite" aria-label="'+escape(page.title)+'">'+nav()+'<main id="mkt-content" class="mktMain">'+intro+body+'</main>'+footer()+'</div>\n</body></html>\n');
 }

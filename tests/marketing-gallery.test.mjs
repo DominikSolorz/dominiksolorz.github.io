@@ -14,7 +14,7 @@ test('product gallery uses existing proposal boards, not invented screenshots',a
     assert.ok(html.includes('Wizualizacje UI') || html.includes('wizualizacje UI') || html.includes('wizualizacje UI') || html.includes('wizualizacje UI z etapu 193') || html.includes('wizualizacje UI z etapu 193'.toUpperCase()) || html.includes('wizualizacje UI z etapu 193'),'concept disclaimer');
     assert.ok(html.includes('nie są rzeczywiste zrzuty ekranu') || html.includes('nie są zrzuty') || html.includes('nie są rzeczywiste zrzuty ekranu') || html.includes('To nie są rzeczywiste zrzuty ekranu'));
     assert.equal((html.match(/class="mktConceptCard"/g)||[]).length,4);
-    if(html.startsWith('<!doctype'))assert.ok(html.includes('marketing-gallery.css?v=3'));
+    if(html.startsWith('<!doctype'))assert.ok(html.includes('marketing-gallery.css?v=4'));
     if(html.startsWith('<!doctype'))assert.ok(html.includes('marketing-gallery.mjs?v=2'));
     assert.ok(html.includes('aria-labelledby="mktGalleryDialogTitle"'));
     assert.ok(html.includes('data-mkt-image-close'));
@@ -80,7 +80,7 @@ test('gallery respects reduced motion and does not load concept assets eagerly',
   assert.ok(css.includes(':focus-visible'));
   assert.ok(css.includes('@media(max-width:650px)'));
   assert.equal((src.match(/loading="lazy" decoding="async" fetchpriority="low"/g)||[]).length,4);
-  assert.ok(sw.includes('./marketing-gallery.css?v=3'));
+  assert.ok(sw.includes('./marketing-gallery.css?v=4'));
   assert.ok(sw.includes('./marketing-gallery.mjs?v=2'));
   const release=JSON.parse(manifest).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];

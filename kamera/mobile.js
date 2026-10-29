@@ -23,7 +23,7 @@ if (isMobileOwnerApp) {
   mobileHeader.innerHTML = `
     <img class="mobileBrandLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="48px" width="48" height="48" alt="DS"><div><h1 id="mobilePageTitle">Dom</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
     <button id="deviceLayoutBtn" type="button" aria-label="Zmień układ urządzenia"><span>▣</span><b>Telefon</b></button>
-    <details class="mobileRelease"><summary>Opcje aplikacji</summary><div class="mobileOptionsBody"><small id="mobileBuild"></small><button type="button" data-web-update>Aktualizacje automatyczne</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span><div class="mobileAccountOptions"></div></div></details>`;
+    <details class="mobileRelease"><summary>Opcje aplikacji</summary><div class="mobileOptionsBody"><small id="mobileBuild"></small><button type="button" data-web-update>Aktualizacje automatyczne</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span><button type="button" data-open-project-gallery>Projekty interfejsu</button><div class="mobileAccountOptions"></div></div></details>`;
   app?.insertBefore(mobileHeader, app.firstChild);
   // Move the original profile/logout controls, retaining their handlers and identity.
   const accountOptions=mobileHeader.querySelector('.mobileAccountOptions');
