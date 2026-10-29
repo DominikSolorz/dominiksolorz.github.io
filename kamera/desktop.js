@@ -42,7 +42,7 @@ if (desktopRequested) {
     <nav class="desktopNav" aria-label="Moduły monitoringu">
       <button class="active" type="button" data-desktop-view="live"><i>▦</i><span><b>Pulpit</b><small>podgląd na żywo</small></span><kbd>1</kbd></button>
       <button type="button" data-desktop-view="controls"><i>◉</i><span><b>Sterowanie</b><small>zapis i tryb pracy</small></span><kbd>2</kbd></button>
-      <button type="button" data-desktop-view="events"><i>♧</i><span><b>Alarmy</b><small>zdarzenia z kamery</small></span><kbd>6</kbd></button>
+      <button type="button" data-desktop-view="events"><i>♧</i><span><b>Zdarzenia</b><small>zdarzenia z kamery</small></span><kbd>6</kbd></button>
       <button type="button" data-desktop-view="archive"><i>⏪</i><span><b>Nagrania</b><small>archiwum DVR i folder zapisu</small></span><kbd>3</kbd></button>
       <button type="button" data-desktop-view="settings"><i>◌</i><span><b>Ustawienia</b><small>obraz, dźwięk i zapis</small></span><kbd>4</kbd></button>
       <button type="button" data-desktop-view="diagnostics"><i>⌁</i><span><b>Diagnostyka</b><small>stan systemu</small></span><kbd>5</kbd></button>
@@ -168,8 +168,8 @@ if (desktopRequested) {
   }
   const eventsScreen = document.createElement("section");
   eventsScreen.className = "desktopEventsScreen"; eventsScreen.hidden = true;
-  eventsScreen.setAttribute("aria-label", "Alarmy i zdarzenia");
-  eventsScreen.innerHTML = '<h2>Alarmy i zdarzenia</h2><p>Rzeczywiste wykrycia ruchu i dźwięku z kamery. Zmiana widoku nie zatrzymuje transmisji ani zapisu.</p>';
+  eventsScreen.setAttribute("aria-label", "Zdarzenia");
+  eventsScreen.innerHTML = '<h2>Zdarzenia</h2><p>Rzeczywiste wykrycia ruchu i dźwięku z kamery. Zmiana widoku nie zatrzymuje transmisji ani zapisu.</p>';
   context.insertAdjacentElement("afterend", eventsScreen);
   mountEventWorkspace(eventsScreen);
   const diagnosticsScreen = document.createElement("section");
@@ -325,7 +325,7 @@ if (desktopRequested) {
   emptySettings.className = "desktopSettingsEmpty";
   const setSettingsGroup = group => {
     activeSettingsGroup = settingsGroups[group] ? group : "picture";
-    settingsHelp.querySelector("p").textContent=({picture:"Korekta podglądu zmienia wygląd obrazu na tym ekranie. Nie udaje sprzętowej regulacji obiektywu.",sound:"Wybierz obraz z dźwiękiem lub sam obraz. Mikrofon wymaga zgody na komputerze nadającym.",quality:"Wyższa jakość zwiększa rozmiar nagrań i obciążenie łącza. Faktyczne parametry odczytasz w Diagnostyce.",recording:"Harmonogram i długość segmentu dotyczą nowych nagrań. Zatrzymanie zapisu pozostawia podgląd na żywo.",detection:"Zdarzenia ruchu i dźwięku pojawią się w zakładce Alarmy. Nie są klasyfikacją osób ani pojazdów.",devices:"Podłącz urządzenie, wykryj je i wybierz z listy. Zmiana źródła wymaga dostępu do komputera.",access:"PIN odblokowuje panel. Dostęp do folderu oraz autoryzacja Google Drive są osobnymi zgodami.",application:"Program Windows działa bez Chrome. Aktualizacja jest pokazywana dopiero po wykryciu nowszej wersji."})[activeSettingsGroup]||"";
+    settingsHelp.querySelector("p").textContent=({picture:"Korekta podglądu zmienia wygląd obrazu na tym ekranie. Nie udaje sprzętowej regulacji obiektywu.",sound:"Wybierz obraz z dźwiękiem lub sam obraz. Mikrofon wymaga zgody na komputerze nadającym.",quality:"Wyższa jakość zwiększa rozmiar nagrań i obciążenie łącza. Faktyczne parametry odczytasz w Diagnostyce.",recording:"Harmonogram i długość segmentu dotyczą nowych nagrań. Zatrzymanie zapisu pozostawia podgląd na żywo.",detection:"Zdarzenia ruchu i dźwięku pojawią się w zakładce Zdarzenia. Nie są klasyfikacją osób ani pojazdów.",devices:"Podłącz urządzenie, wykryj je i wybierz z listy. Zmiana źródła wymaga dostępu do komputera.",access:"PIN odblokowuje panel. Dostęp do folderu oraz autoryzacja Google Drive są osobnymi zgodami.",application:"Program Windows działa bez Chrome. Aktualizacja jest pokazywana dopiero po wykryciu nowszej wersji."})[activeSettingsGroup]||"";
     if (activeSettingsGroup === "devices") settingsControls.append(deviceManager);
     const visible = new Set(settingsGroups[activeSettingsGroup].filter(Boolean));
     Object.values(settingsGroups).flat().filter(Boolean).forEach(row => { row.hidden = !visible.has(row); });
@@ -418,7 +418,7 @@ if (desktopRequested) {
     const labels = {
       live: ["Pulpit", "Pulpit"],
       controls: ["Sterowanie", "Sterowanie kamerą"],
-      events: ["Alarmy", "Alarmy i zdarzenia"],
+      events: ["Zdarzenia", "Zdarzenia"],
       archive: ["Archiwum", "Nagrania DVR"],
       settings: ["Ustawienia", "Ustawienia kamery"],
       diagnostics: ["Diagnostyka", "Stan systemu"]

@@ -26,7 +26,7 @@ export const galleryBoards = Object.freeze([
   },
   {
     "url": "https://dominiksolorz.github.io/docs/ui-193/06-alarmy.png",
-    "title": "Alarmy i zdarzenia",
+    "title": "Zdarzenia",
     "caption": "Koncepcyjna lista zdarzeń, bez obietnic wykrywania osób."
   },
   {

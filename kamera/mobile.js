@@ -53,7 +53,7 @@ if (isMobileOwnerApp) {
   nav.setAttribute("aria-label", "Nawigacja mobilna");
   nav.innerHTML = `
     <button class="active" type="button" data-mobile-view="home"><b>⌂</b><span>Dom</span></button>
-    <button type="button" data-mobile-view="alerts"><b>♧</b><span>Alarmy</span></button>
+    <button type="button" data-mobile-view="alerts"><b>♧</b><span>Zdarzenia</span></button>
     <button type="button" data-mobile-view="recordings"><b>▷</b><span>Nagrania</span></button>
     <button type="button" data-mobile-view="settings"><b>⚙</b><span>Ustawienia</span></button>`;
   const mobileIcons={home:'home',alerts:'alerts',recordings:'archive',settings:'settings'};
@@ -140,7 +140,7 @@ if (isMobileOwnerApp) {
   const managed = [...new Set([...Object.values(views).flat(),"viewEventsCard"])];
 
   function renderView(view) {
-    byId("mobilePageTitle").textContent = ({ home: "Dom", alerts: "Alarmy", recordings: "Nagrania", settings: "Ustawienia" })[view] || "Dom";
+    byId("mobilePageTitle").textContent = ({ home: "Dom", alerts: "Zdarzenia", recordings: "Nagrania", settings: "Ustawienia" })[view] || "Dom";
     const visible = new Set(views[view] || views.home);
     document.body.dataset.mobileView = view;
     document.body.dataset.mobileSettings = view === "settings" ? "root" : "";
