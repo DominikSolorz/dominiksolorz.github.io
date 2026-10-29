@@ -21,6 +21,11 @@ html:is([data-phone-platform="ios"],[data-phone-platform="android"]) body.mobile
 .mobileOwnerMode #stage:fullscreen video,.mobileOwnerMode #stage.fakeFull video{object-fit:contain!important}
 
 /* One preview workspace in both orientations; account/update tools are secondary. */
+.pipPreferences{padding:12px;border:1px solid #414652;border-radius:10px;background:#12161e;color:#e5e9f1}
+.pipPreferences h3{margin:0 0 10px;font-size:15px}
+.pipPreferences label{display:flex!important;align-items:center;gap:8px;min-height:44px;font-size:13px}
+.pipPreferences input[type=checkbox]{width:20px!important;height:20px!important;min-height:20px!important;flex:0 0 20px}
+.pipPreferences p{margin:10px 0 0;font-size:12px;line-height:1.5;color:#bbc6d4;overflow-wrap:anywhere}
 .mobileOwnerMode .mobileAppHeader{position:relative;align-items:center;gap:10px;padding:10px 0!important;min-height:62px;flex-wrap:nowrap!important}
 .mobileOwnerMode .mobileAppHeader .mobileBrandLogo{width:30px;height:34px}
 .mobileOwnerMode .mobileAppHeader h1{font-size:21px}

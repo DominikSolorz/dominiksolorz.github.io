@@ -16,6 +16,7 @@ import { mountNativeDriveUI, nativeDriveSummary } from './native-drive-ui.mjs?v=
 import { fixMp4Duration } from "./mp4fix.js?v=2";
 import * as diskstore from "./diskstore.js?v=12";
 import { closeRecordingFragment } from './close-recording-fragment.mjs?v=1';
+import { createPictureInPicture } from './picture-in-picture.mjs?v=1';
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
 import { mountDvr } from "./dvr-ui.js?v=105";
 import { accountClient } from "./auth.js?v=13";
@@ -65,7 +66,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "250"; // musi się zgadzać z version.json
+const VERSION = "251"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2201,7 +2202,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "160";
+  const SERVICE_WORKER_BUILD = "161";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2470,13 +2471,14 @@ $("reconnectBtn").addEventListener("click", () => {
 });
 // Pełny ekran: cały kadr (obraz na żywo albo odtwarzane nagranie, z zegarem i przyciskami).
 // iPhone nie pozwala stronie na pełny ekran elementu — tam kadr rozciąga się na cały ekran (z przyciskiem ✕).
+let panelOrientationLocked=false;
 function toggleFullscreen() {
   const stage = $("stage");
   if (document.fullscreenElement || document.webkitFullscreenElement) return (document.exitFullscreen || document.webkitExitFullscreen).call(document);
   if (stage.classList.contains("fakeFull")) return setFakeFull(false);
   const req = stage.requestFullscreen || stage.webkitRequestFullscreen;
   if (req) {
-    Promise.resolve(req.call(stage)).then(() => screen.orientation?.lock?.("landscape").catch(() => {})).catch(() => setFakeFull(true));
+    Promise.resolve(req.call(stage)).then(async()=>{try{if(screen.orientation?.lock){await screen.orientation.lock('landscape');if(document.fullscreenElement||document.webkitFullscreenElement)panelOrientationLocked=true;else screen.orientation.unlock?.();}}catch{}}).catch(() => setFakeFull(true));
   } else setFakeFull(true);
 }
 function setFakeFull(on) {
@@ -2487,37 +2489,29 @@ function setFakeFull(on) {
 }
 // Przycisk dopasowania widoczny także w prawdziwym pełnym ekranie.
 ["fullscreenchange", "webkitfullscreenchange"].forEach(ev => document.addEventListener(ev, () => {
-  $("fitFull").hidden = !(document.fullscreenElement || document.webkitFullscreenElement || $("stage").classList.contains("fakeFull"));
+  const on=!!(document.fullscreenElement || document.webkitFullscreenElement || $("stage").classList.contains("fakeFull"));
+  $("fitFull").hidden = !on;$("exitFull").hidden=!on;
+  if(!on&&panelOrientationLocked){screen.orientation?.unlock?.();panelOrientationLocked=false;}
 }));
 $("fullBtn").addEventListener("click", toggleFullscreen);
 // Mini-okno (Picture-in-Picture): użytkownik uruchamia je dotknięciem, więc
 // przeglądarka może bezpiecznie pokazać obraz nad innymi aplikacjami. To nie
 // zatrzymuje transmisji ani nagrywania na komputerze-kamerze.
-async function togglePictureInPicture() {
-  if (!video.srcObject && !video.currentSrc) return toastMsg("Mini-okno będzie dostępne, gdy dotrze obraz z kamery.");
-  try {
-    if (document.pictureInPictureElement) {
-      await document.exitPictureInPicture();
-      return;
-    }
-    await video.play().catch(() => {});
-    if (typeof video.requestPictureInPicture === "function") {
-      await video.requestPictureInPicture();
-      return;
-    }
-    // Safari/iPhone używa własnego trybu prezentacji wideo.
-    if (typeof video.webkitSetPresentationMode === "function") {
-      video.webkitSetPresentationMode(video.webkitPresentationMode === "picture-in-picture" ? "inline" : "picture-in-picture");
-      return;
-    }
-    toastMsg("Ta przeglądarka nie pozwala stronie otworzyć mini-okna. Otwórz monitoring w Safari/Chrome z obsługą obrazu w obrazie albo użyj pełnego ekranu.");
-  } catch (e) {
-    toastMsg(`Nie udało się otworzyć mini-okna: ${errText(e)}.`);
-  }
-}
+const pipPreferences=document.createElement('section');pipPreferences.className='pipPreferences';pipPreferences.setAttribute('aria-label','Ustawienia mini-okna');
+pipPreferences.innerHTML='<h3>Mini-okno kamery</h3><label><input type="checkbox" id="autoPip"> Automatyczne mini-okno</label><p id="pipPreferenceStatus" role="status" aria-live="polite"></p><p>Okno nad innymi aplikacjami otwiera system telefonu. Aby mieć pewność, naciśnij „Mini-okno” przy działającym obrazie, zanim schowasz przeglądarkę. Zamykanie karty kończy podgląd na tym urządzeniu.</p>';
+(document.querySelector('.mobileOptionsBody')||$('setCard')).append(pipPreferences);
+const pipCheckbox=pipPreferences.querySelector('input'),pipMessage=pipPreferences.querySelector('[role=status]');
+let automaticPip=true;try{automaticPip=localStorage.getItem('hs-auto-pip-v1')!=='off';}catch{}
+pipCheckbox.checked=automaticPip;
+const pipController=createPictureInPicture(video,{onError:message=>{pipMessage.textContent=message;toastMsg(message);},onState:state=>{
+  for(const button of [$('pipBtn'),$('menuPip')]){button.disabled=state.busy||(!state.active&&(!state.ready||!state.supported));button.textContent=state.active?'▣ Zamknij mini-okno':'▣ Mini-okno';button.setAttribute('aria-pressed',String(state.active));button.title=!state.ready?'Poczekaj na obraz z kamery':!state.supported?'System nie udostępnia mini-okna dla tego źródła':'Otwórz podgląd nad innymi aplikacjami';}
+  pipMessage.textContent=!state.ready?'Poczekaj na obraz z kamery.':!state.supported?'Mini-okno jest niedostępne dla tego źródła w tej przeglądarce.':state.active?'Podgląd działa w systemowym mini-oknie.':state.automatic&&state.autoHandler?'Automatyczne mini-okno zgłoszone przeglądarce. System może poprosić o zgodę i decyduje, kiedy je otworzyć.':state.automatic?'Automatyczne przejście nie jest potwierdzone w tej przeglądarce. Włącz Mini-okno przyciskiem przed schowaniem strony.':'Automatyczne przejście wyłączone. Mini-okno możesz otworzyć przyciskiem.';
+}});
+pipController.setAutomatic(automaticPip);
+pipCheckbox.addEventListener('change',()=>{try{localStorage.setItem('hs-auto-pip-v1',pipCheckbox.checked?'on':'off');}catch{}pipController.setAutomatic(pipCheckbox.checked);});
+function togglePictureInPicture(){return pipController.toggle();}
 $("pipBtn").addEventListener("click", togglePictureInPicture);
-video.addEventListener("enterpictureinpicture", () => { $("pipBtn").textContent = "▣ Zamknij mini-okno"; });
-video.addEventListener("leavepictureinpicture", () => { $("pipBtn").textContent = "▣ Mini-okno"; });
+window.addEventListener('pagehide',event=>{if(!event.persisted)pipController.dispose();});
 // Dopasowanie obrazu do ekranu (np. telefon obrócony w lewo/prawo): cały kadr / wypełnij / rozciągnij.
 const FIT_MODES = MOBILE_OWNER_APP
   ? [["contain", "▣ Cały kadr"], ["cover", "⛶ Wypełnij"]]
@@ -2537,7 +2531,8 @@ function nextFit() {
 $("fitBtn").addEventListener("click", nextFit);
 $("fitFull").addEventListener("click", e => { e.stopPropagation(); nextFit(); });
 applyFit();
-$("exitFull").addEventListener("click", e => { e.stopPropagation(); setFakeFull(false); });
+$("exitFull").addEventListener("click", e => { e.stopPropagation();if(document.fullscreenElement||document.webkitFullscreenElement)toggleFullscreen();else setFakeFull(false); });
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('stage').classList.contains('fakeFull'))setFakeFull(false);});
 // Dwukrotne stuknięcie w obraz = pełny ekran / powrót.
 let lastTap = 0;
 $("stage").addEventListener("pointerup", e => {
