@@ -3,6 +3,7 @@
 // index.html wybiera tryb urządzenia przed narysowaniem strony. To obejmuje
 // aplikację instalowaną oraz zwykły Chrome na telefonie/tablecie.
 import { createRouter } from "./core/router.mjs";
+import { mountMobileCameraFrame } from './mobile-camera-frame.mjs?v=1';
 import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { mountEventWorkspace, mountDiagnosticWorkspace } from "./workspace-panels.mjs?v=2";
 const isMobileOwnerApp = document.documentElement.classList.contains("mobileOwnerMode");
@@ -11,6 +12,8 @@ if (isMobileOwnerApp) {
   const byId = id => document.getElementById(id);
   const app = byId("app");
   document.body.classList.add("mobileOwnerMode");
+  const disposeCameraFrame=mountMobileCameraFrame(byId('stage'),byId('video'));
+  window.addEventListener('pagehide',event=>{if(!event.persisted)disposeCameraFrame();});
 
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";

@@ -1,0 +1,19 @@
+/* Do not cap height independently from width: that flattened the landscape frame. */
+.mobileOwnerMode #stage:not(:fullscreen):not(.fakeFull){
+  display:block!important;position:relative;width:100%!important;min-width:0;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  aspect-ratio:var(--mobile-camera-ratio,4 / 3)!important;align-self:start;
+}
+.mobileOwnerMode #stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain!important}
+.mobileOwnerMode #stage.fit-cover video{object-fit:cover!important}
+.mobileOwnerMode #stage .placeholder{overflow-wrap:anywhere;box-sizing:border-box}
+/* The 480px desktop phone-preview limit must not constrain an actual touch device. */
+@media(pointer:coarse){
+  body.mobileOwnerMode:not(:has(#publicHome:not([hidden]))) #app{max-width:none!important;width:100%!important}
+  body.mobileOwnerMode .mobileBottomNav{left:0!important;right:0!important;width:100%!important;max-width:none!important;transform:none!important}
+}
+@media(orientation:landscape){
+  .mobileOwnerMode #stage:not(:fullscreen):not(.fakeFull){aspect-ratio:var(--mobile-camera-ratio,16 / 9)!important}
+}
+/* Fullscreen keeps the whole received frame regardless of the page dimensions. */
+.mobileOwnerMode #stage:fullscreen video,.mobileOwnerMode #stage.fakeFull video{object-fit:contain!important}
