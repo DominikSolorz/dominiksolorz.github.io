@@ -1,3 +1,4 @@
+import {prepareRecordingVideo,recorderActuallyRunning,waitForRecorderData} from "./recording-init.mjs?v=1";
 import "./gallery-viewer.mjs?v=1";
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
@@ -67,7 +68,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "254"; // musi się zgadzać z version.json
+const VERSION = "255"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -384,6 +385,7 @@ const archive = (() => {
   let localSaveFailures = 0, updateSource = null;
   let folderReceipt = null, folderWriteError = "";
   let source = null, recStream = null, running = false, rec = null, segTimer = null, clock = null;
+  let starting = null, startGeneration = 0, recordingError = "", firstDataReady = false, recordingMime = REC_MIME;
   let recSince = 0, saved = 0, lastName = "", lastError = "", queued = 0, sentToDrive = 0, verifiedToDrive = 0, lastVerified = "", pumping = false, retryTimer = null, looped = 0;
   let local = { count: 0, bytes: 0, oldest: 0 }, free = Infinity, persisted = false;
   let diskFiles = { count: 0, bytes: 0, oldest: 0 };
@@ -449,7 +451,7 @@ const archive = (() => {
       } catch { /* spróbujemy przy następnym uruchomieniu */ }
     }
     await refreshLocal();
-    resume();
+    void resume().catch(() => {});
     pump();
     clearInterval(init.timer);
     init.timer = setInterval(refreshLocal, 60000);
@@ -556,10 +558,9 @@ const archive = (() => {
     if (v) { try { await v.applyConstraints({ frameRate: { ideal: fast ? FAST_FPS : SLOW_FPS } }); } catch { /* zostaje bieżąca płynność kamery */ } }
     if (!v || !HTMLCanvasElement.prototype.captureStream) return new MediaStream([...(v ? [v] : []), ...s.getAudioTracks()]);
     const input = document.createElement("video");
-    input.muted = true; input.playsInline = true; input.srcObject = new MediaStream([v]);
+    input.muted = true; input.playsInline = true;
     try {
-      await new Promise((resolve, reject) => { input.onloadedmetadata = resolve; input.onerror = reject; });
-      await input.play();
+      await prepareRecordingVideo(input, new MediaStream([v]));
       const settings = v.getSettings();
       // Nie twórz sztucznie dodatkowych klatek, kiedy kamera fizycznie daje
       // mniej niż 60 FPS. Zapis zachowuje Full HD i każdą prawdziwą klatkę,
@@ -616,7 +617,7 @@ const archive = (() => {
     if (!running || !recStream) return;
     const startedAt = new Date();
     segStart = startedAt.getTime();
-    const opts = { ...(REC_MIME ? { mimeType: REC_MIME } : {}), videoBitsPerSecond: recQuality().bps, audioBitsPerSecond: REC_AUDIO_BPS, ...(recQuality().cbr ? { videoBitrateMode: "constant" } : {}) };
+    const opts = { ...(recordingMime ? { mimeType: recordingMime } : {}), videoBitsPerSecond: recQuality().bps, audioBitsPerSecond: REC_AUDIO_BPS, ...(recQuality().cbr ? { videoBitrateMode: "constant" } : {}) };
     let r;
     try { r = new MediaRecorder(recStream, opts); }
     catch {
@@ -626,7 +627,7 @@ const archive = (() => {
     }
     const chunks = [], events = [];
     segEvents = events;
-    r.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    r.ondataavailable = e => { if (e.data.size) {chunks.push(e.data);if(rec===r&&!firstDataReady){firstDataReady=true;render();}} };
     let resolveStopped;
     const finished = new Promise(resolve => { resolveStopped = resolve; });
     stopped.set(r, finished);
@@ -646,10 +647,12 @@ const archive = (() => {
       } finally { resolveStopped(); }
     };
     r.onerror = e => { lastError = `Błąd nagrywania: ${errText(e.error || e)}`; render(); };
-    r.start(5000);
+    firstDataReady=false;
+    r.start(1000);
     rec = r;
     clearTimeout(segTimer);
     segTimer = setTimeout(rotate, Number(prefs.segmentMin) * 60000);
+    return r;
   }
 
   // Nowy plik startuje zanim zamkniemy poprzedni — bez dziury w nagraniu.
@@ -660,18 +663,42 @@ const archive = (() => {
   }
 
   async function resume() {
-    if (!running && source && REC_MIME !== null) {
-      running = true; recSince = Date.now();
-      recStream = await makeRecStream(source);
-      if (!running) { recStream.getVideoTracks().forEach(t => t.stop()); recStream = null; return; }
-      startSegment();
-      clearInterval(clock);
-      clock = setInterval(() => { $("recTime").textContent = fmtTime(Math.floor((Date.now() - recSince) / 1000)); }, 1000);
-    }
-    render();
+    if (starting) { await starting; if (!running && source) return resume(); return; }
+    if (running || !source) { render(); return; }
+    if (REC_MIME === null) throw new Error("Ta przeglądarka nie obsługuje nagrywania.");
+    const generation=startGeneration;
+    const currentSource=source;
+    recordingError="";
+    starting=(async()=>{
+      let prepared=null;
+      try {
+        prepared=await makeRecStream(currentSource);
+        if (generation!==startGeneration || source!==currentSource) { watermarkStop?.();watermarkStop=null;prepared.getVideoTracks().forEach(track=>track.stop()); return; }
+        recStream=prepared;running=true;recSince=Date.now();
+        const fallback="video/webm;codecs=vp8,opus";
+        const candidates=[...new Set([recordingMime,MediaRecorder.isTypeSupported(fallback)?fallback:""])];
+        let startFailure=null,accepted=false;
+        for(const candidate of candidates){
+          if(generation!==startGeneration)break;
+          recordingMime=candidate;const attempt=startSegment();
+          try{await waitForRecorderData(attempt);accepted=true;break;}
+          catch(error){startFailure=error;clearTimeout(segTimer);if(attempt.state!=="inactive")attempt.stop();await stopped.get(attempt);if(rec===attempt)rec=null;}
+        }
+        if(!accepted)throw startFailure||new Error("Rejestrator nie potwierdził rozpoczęcia zapisu.");
+        if(generation!==startGeneration)return;
+        recordingError="";
+        clearInterval(clock);
+        clock=setInterval(()=>{$("recTime").textContent=fmtTime(Math.floor((Date.now()-recSince)/1000));},1000);
+      } catch(error) {
+        if(generation===startGeneration){running=false;recSince=0;clearInterval(clock);clearTimeout(segTimer);recordingError=errText(error);lastError=`Nie uruchomiono nagrywania: ${recordingError}`;watermarkStop?.();watermarkStop=null;prepared?.getVideoTracks().forEach(track=>track.stop());recStream=null;rec=null;}
+        throw error;
+      } finally {render();}
+    })();
+    try {await starting;} finally {starting=null;render();}
   }
 
   function halt() {
+    startGeneration++;
     running = false;
     clearTimeout(segTimer); clearInterval(clock); clearTimeout(slowTimer);
     const active = rec, done = active ? stopped.get(active) : null;
@@ -683,9 +710,9 @@ const archive = (() => {
     return done || Promise.resolve();
   }
 
-  function start(s) { source = s; resume(); }
+  function start(s) { source = s; return resume(); }
   function stop() { const done = halt(); source = null; render(); return done; }
-  function restart() { if (running) { halt(); resume(); } else render(); }
+  function restart() { if (running) { halt(); return resume(); } else render(); }
   async function flush(done = Promise.resolve()) {
     await done;
     // Obrót segmentu może domykać poprzedni plik równolegle — poczekaj także
@@ -717,12 +744,13 @@ const archive = (() => {
 
   const gb = n => `${(n / 1073741824).toFixed(1)} GB`;
   function describe() {
+    const activeRecording=firstDataReady && recorderActuallyRunning(rec);
     if (REC_MIME === null) return "Ta przeglądarka nie obsługuje nagrywania.";
     let text = prefs.mode === "off" ? "Kamera wstrzymana z telefonu — nie nagrywa i nie nadaje."
       : prefs.mode === "preview" ? "Tylko na żywo — bez zapisu plików."
-      : prefs.mode === "rec-only" && running ? `Tylko zapis (bez transmisji na żywo), pliki co ${prefs.segmentMin} min.`
-      : running && prefs.recordUntil > Date.now() ? `Nagranie jednorazowe do ${new Date(prefs.recordUntil).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}, potem tylko podgląd.`
-      : running ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
+      : prefs.mode === "rec-only" && activeRecording ? `Tylko zapis (bez transmisji na żywo), pliki co ${prefs.segmentMin} min.`
+      : activeRecording && prefs.recordUntil > Date.now() ? `Nagranie jednorazowe do ${new Date(prefs.recordUntil).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}, potem tylko podgląd.`
+      : activeRecording ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
     if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; plików na dysku: ${diskFiles.count} (${gb(diskFiles.bytes)}).`;
     else if (disk.selected) text += ` ⚠ Folder „${disk.name}” czeka na ponowną zgodę Chrome (po odświeżeniu strony) — na komputerze kliknij „Przywróć dostęp do folderu”. Pliki w folderze są bezpieczne; do tego czasu nagrania zapisują się w pamięci strony.`;
     else text += " Nagrania zapisują się w pamięci strony (folder archiwum nie jest ustawiony).";
@@ -735,7 +763,7 @@ const archive = (() => {
     if (set.width) {
       const actualFps = Math.max(1, Math.round(set.frameRate || recordingFps || FAST_FPS));
       const outputFps = recordingFps || actualFps;
-      text += ` Obraz: ${set.width}×${set.height}, kamera ${actualFps} kl./s · zapis ${outputFps} kl./s, ${(REC_MIME || "").split(";")[0] || "domyślny kodek"}, jakość ${recQuality().short}.`;
+      text += ` Obraz: ${set.width}×${set.height}, kamera ${actualFps} kl./s · zapis ${outputFps} kl./s, ${(recordingMime || "").split(";")[0] || "domyślny kodek"}, jakość ${recQuality().short}.`;
     }
     if (cloud.enabled) {
       if (queued) text += ` Kolejka Google Drive: ${queued}.`;
@@ -748,7 +776,7 @@ const archive = (() => {
     return `${text}${disk.error ? ` ${disk.error}` : ""}${lastError ? ` ${lastError}` : ""}`;
   }
 
-  const status = () => ({ recording: running, since: running ? recSince : 0, reason: describe(), folder: disk.ready ? disk.name : "nieustawiony", folderReceipt, folderWriteError, lastFile: lastName, saved, queued, migrated: sentToDrive, verifiedToDrive, lastVerified });
+  const status = () => ({ recording: firstDataReady && recorderActuallyRunning(rec), starting: !!starting, recordingError, since: firstDataReady && recorderActuallyRunning(rec) ? recSince : 0, reason: describe(), folder: disk.ready ? disk.name : "nieustawiony", folderReceipt, folderWriteError, lastFile: lastName, saved, queued, migrated: sentToDrive, verifiedToDrive, lastVerified });
 
   function render() {
     systemStore.component("cloudQueue", { status: pumping ? "uploading" : queued ? "queued" : "idle", queued, verified: verifiedToDrive });
@@ -1032,7 +1060,7 @@ function renderDiag(d, extra = []) {
   if (!$("diagList") || !d) return;
   const capture = d.camLive ? "track_live" : d.mode === "off" ? "disabled" : d.camError ? "error" : "waiting";
   systemStore.component("capture", { status: capture, camera: d.cam, width: d.w, height: d.h, fps: d.fps, message: d.camError || "" });
-  systemStore.component("recording", { status: d.recording ? "recording" : ["preview", "off"].includes(d.mode) ? "idle" : "waiting", lastFile: d.lastFile || null });
+  systemStore.component("recording", { status: d.recordingError ? "error" : d.recording ? "recording" : ["preview", "off"].includes(d.mode) ? "idle" : "waiting", message:d.recordingError||"", lastFile: d.lastFile || null });
   systemStore.component("microphone", { status: d.micOn ? "active" : "unused", device: d.mic || null });
   const row = (status, text) => Object.assign(document.createElement("li"), {
     className: status === "error" ? "bad" : status === "warning" ? "warn" : "ok",
@@ -1101,7 +1129,7 @@ function paintCtrl() {
     : ctrlState.mode === "off" ? "kamera wyłączona"
     : !ctrlState.hasCam ? "brak obrazu z kamery"
     : rec ? (ctrlState.until > now ? `na żywo · nagrywa jednorazowo (do ${new Date(ctrlState.until).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })})` : "na żywo · nagrywa bez przerwy")
-    : ctrlState.mode === "preview" ? "na żywo · bez nagrywania" : ctrlState.mode === "rec-only" ? "tylko zapis · bez transmisji na żywo" : "na żywo · nagrywanie zaraz ruszy";
+    : ctrlState.mode === "preview" ? "na żywo · bez nagrywania" : ctrlState.mode === "rec-only" ? "tylko zapis · bez transmisji na żywo" : "na żywo · zapis nieaktywny — sprawdź status i harmonogram";
   $("ctrlBar").dataset.state = ctrlState.mode === "off" ? "off" : rec ? "rec" : ctrlState.mode ? "live" : "";
 }
 setInterval(paintCtrl, 1000);
@@ -1369,7 +1397,7 @@ const sender = (() => {
       s.getVideoTracks()[0]?.addEventListener("ended", () => { if (live && stream === s) cameraLost(); });
       camAttempt = 0;
       applyMedia();
-      if (prefs.mode !== "preview" && recordingScheduledNow()) archive.start(s);
+      if (prefs.mode !== "preview" && recordingScheduledNow()) await archive.start(s);
       else archive.stop();
       if (prefs.detect) detector.start(s, video);
       return true;
@@ -1443,7 +1471,7 @@ const sender = (() => {
       camAttempt = 0; setStatus("Uruchamiam kamerę i mikrofon…");
       if (await acquireCamera()) { setStatus(""); send(chan.channel, { type: "broadcaster-ready" }); }
       else if (live) scheduleCameraRetry();
-    } else if (RECORDING_MODES.has(m) && recordingScheduledNow()) archive.start(stream);
+    } else if (RECORDING_MODES.has(m) && recordingScheduledNow()) await archive.start(stream);
     else await archive.flush(archive.stop());
     beat();
     report();
@@ -1457,11 +1485,11 @@ const sender = (() => {
     else if (live) scheduleCameraRetry();
   }
 
-  function applyRecordingPlan() {
+  async function applyRecordingPlan() {
     // Koniec nagrania jednorazowego → sam podgląd.
     if (prefs.recordUntil && prefs.recordUntil <= Date.now()) { prefs.recordUntil = 0; savePrefs(); if (prefs.mode === "record") return setMode("preview"); }
     if (!live || !stream) return;
-    if (RECORDING_MODES.has(prefs.mode) && recordingScheduledNow()) archive.start(stream);
+    if (RECORDING_MODES.has(prefs.mode) && recordingScheduledNow()) await archive.start(stream);
     else archive.stop();
     report();
   }
@@ -1509,7 +1537,7 @@ const sender = (() => {
     clearInterval(heartbeat);
     heartbeat = setInterval(beat, HEARTBEAT_MS);
     clearInterval(scheduleTimer);
-    scheduleTimer = setInterval(applyRecordingPlan, 30000);
+    scheduleTimer = setInterval(()=>{void applyRecordingPlan().catch(error=>setStatus(`Nie uruchomiono nagrywania: ${errText(error)}`));}, 30000);
     clearInterval(reportTimer);
     reportTimer = setInterval(report, 60000);
     setTimeout(report, 5000);
@@ -1596,7 +1624,7 @@ const sender = (() => {
     const v = stream?.getVideoTracks()[0], a = stream?.getAudioTracks()[0], st = v?.getSettings?.() || {}, r = archive.status();
     return { cam: v ? (v.label || "kamera") : "", camLive: v?.readyState === "live", w: st.width, h: st.height, fps: Math.round(st.frameRate || 0),
       mic: a ? (a.label || "mikrofon") : "", micOn: !!a && a.enabled && a.readyState === "live", recording: r.recording, lastFile: r.lastFile,
-      quality: recQuality().short, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem(), light: cameraLight, webrtc: webRtcDiagnostics.snapshot() };
+      quality: recQuality().short, recordingError:r.recordingError, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem(), light: cameraLight, webrtc: webRtcDiagnostics.snapshot() };
   }
   const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", nativeDrive: nativeDriveSummary(systemStore.snapshot().components.nativeDrive), rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, light: clampLight(prefs.light), lightSw, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, visible: document.visibilityState === "visible", diag: diag() }), reportNativePanelState({ role: "transmitter", live: !!stream, cameraError: camProblem(), recording: archive.status().recording, camera: diag().cam, resolution: `${diag().w || 0}x${diag().h || 0}`, fps: diag().fps || 0 }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream, quality: prefs.recQuality }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
@@ -1867,7 +1895,9 @@ const commandDispatcher = new CommandDispatcher({ handlers: {
     if (!sender.live && mode !== "off") await sender.start();
     await sender.setMode(mode, minutes);
     if (mode !== "off" && !sender.hasCamera) throw new Error("Brak aktywnej ścieżki kamery.");
-    return { mode: prefs.mode, recording: archive.status().recording, hasCamera: sender.hasCamera };
+    const state=archive.status();
+    if(RECORDING_MODES.has(prefs.mode)&&recordingScheduledNow()&&!state.recording)throw new Error(state.recordingError||"Rejestrator nie potwierdził startu zapisu.");
+    return { mode: prefs.mode, recording: state.recording, hasCamera: sender.hasCamera, reason:state.reason };
   },
   restart: async () => {
     await sender.restart();
@@ -2203,7 +2233,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "164";
+  const SERVICE_WORKER_BUILD = "165";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2251,7 +2281,7 @@ async function runControl(button, pendingText, doneText, task) {
   setControlAction(pendingText, "pending");
   try {
     const result = await task();
-    const confirmed = result?.mode === "record" && !result.recording ? "Tryb zapisu ustawiony — oczekiwanie na inicjalizację lub harmonogram." : doneText;
+    const confirmed = result?.mode === "record" && !result.recording ? "Zapis nie rozpoczął się — poza godzinami harmonogramu. Sprawdź Ustawienia → Nagrywanie." : doneText;
     setControlAction(confirmed, "ok");
     toastMsg(confirmed);
   } catch (error) {
@@ -2265,7 +2295,9 @@ async function runControl(button, pendingText, doneText, task) {
 }
 $("ctrlStart").addEventListener("click", async () => {
   if (!canControlCamera()) return;
+  const folderPermission = CAN_MANAGE_CAMERA && archive.diskNeedsGrant ? archive.regrantDisk() : Promise.resolve(true);
   await runControl($("ctrlStart"), "Uruchamiam obraz i automatyczny zapis…", "Start potwierdzony — kamera nadaje i zapisuje.", async () => {
+    if(!(await folderPermission))throw new Error("Zatwierdź dostęp do folderu nagrań na tym komputerze.");
     return executeControl("mode-set", { mode: "record" });
   });
 });
@@ -2429,7 +2461,7 @@ for (const id of ["segmentMin", "retentionDays"]) {
 $("recordPlan").value = prefs.recordPlan || "always";
 $("recordPlan").addEventListener("change", e => {
   prefs.recordPlan = e.target.value; savePrefs();
-  sender.applyRecordingPlan();
+  void sender.applyRecordingPlan().catch(error=>toastMsg(error.message));
   toastMsg(`Harmonogram: ${e.target.options[e.target.selectedIndex].text}.`);
 });
 $("cameraSelect").addEventListener("change", async e => {
@@ -2575,7 +2607,7 @@ function paintListeningControls() {
   $("audioHud").dataset.state = muted ? "muted" : "listening";
 }
 $("soundBtn").addEventListener("click", async () => {
-  if (matchMedia("(max-width:950px), (pointer:coarse)").matches) {
+  {
     const expanded = $("audioHud").classList.toggle("audioExpanded");
     $("soundBtn").setAttribute("aria-expanded", String(expanded));
     $("soundBtn").setAttribute("aria-controls", "listenVolume");

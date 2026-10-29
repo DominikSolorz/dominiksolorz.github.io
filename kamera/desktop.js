@@ -405,6 +405,7 @@ if (desktopRequested) {
     eventsScreen.hidden = view !== "events";
     diagnosticsScreen.hidden = view !== "diagnostics";
     if(view==="controls"){controlDeviceDock.prepend(deviceManager);deviceManager.hidden=false;}
+    const audioHud=$("audioHud");if(audioHud)(view==="controls"?controlPreview:liveStage)?.append(audioHud);
     if (eventCard) { eventsDrawer.append(eventCard); eventCard.open = true; }
     if (layout) layout.hidden = true;
     context.querySelector(".desktopContextActions").hidden = view !== "live";
@@ -491,7 +492,7 @@ if (desktopRequested) {
     if ($("desktopSettingsDevice")) $("desktopSettingsDevice").textContent = `Kamera: ${mediaSettings.deviceId ? "PC Camera" : "brak transmisji"}`;
     if ($("desktopSettingsResolution")) $("desktopSettingsResolution").textContent = mediaSettings.width && mediaSettings.height ? `${mediaSettings.width} × ${mediaSettings.height}` : "Rozdzielczość: —";
     if ($("desktopSettingsFps")) $("desktopSettingsFps").textContent = mediaSettings.frameRate ? `${Math.round(mediaSettings.frameRate)} FPS` : "FPS: —";
-    const events = document.querySelectorAll("#viewEvents li,#pcEvents li");
+    const events = systemStore.read("cameraEvents").items || [];
     if ($("desktopEventCount")) $("desktopEventCount").textContent = events.length ? `${events.length} zdarzeń` : "Brak zdarzeń";
   };
   // Obserwujemy wyłącznie prawdziwe źródła stanu. Obserwowanie całego body
