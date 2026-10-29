@@ -8,6 +8,8 @@
 .mobileOwnerMode #stage.fit-cover video{object-fit:cover!important}
 .mobileOwnerMode #stage .placeholder{overflow-wrap:anywhere;box-sizing:border-box}
 /* The 480px desktop phone-preview limit must not constrain an actual touch device. */
+html:is([data-phone-platform="ios"],[data-phone-platform="android"]) body.mobileOwnerMode:not(:has(#publicHome:not([hidden]))) #app{max-width:none!important;width:100%!important}
+html:is([data-phone-platform="ios"],[data-phone-platform="android"]) body.mobileOwnerMode .mobileBottomNav{left:0!important;right:0!important;width:100%!important;max-width:none!important;transform:none!important}
 @media(pointer:coarse){
   body.mobileOwnerMode:not(:has(#publicHome:not([hidden]))) #app{max-width:none!important;width:100%!important}
   body.mobileOwnerMode .mobileBottomNav{left:0!important;right:0!important;width:100%!important;max-width:none!important;transform:none!important}
