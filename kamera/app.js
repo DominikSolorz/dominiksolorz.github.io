@@ -1,4 +1,5 @@
 import {prepareRecordingVideo,recorderActuallyRunning,waitForRecorderData} from "./recording-init.mjs?v=1";
+import {applyCameraFit,fitAction} from './camera-fit.mjs?v=1';
 import "./gallery-viewer.mjs?v=1";
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
@@ -68,7 +69,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "259"; // musi się zgadzać z version.json
+const VERSION = "260"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2036,7 +2037,7 @@ const zoomUi = (() => {
   $("zoomOut").addEventListener("click", () => set({ ...state, z: state.z / 1.25 }));
   $("zoomReset").addEventListener("click", () => set({ z: 1, cx: 0.5, cy: 0.5 }));
   $("zoomMax").addEventListener("click", () => set({ ...state, z: max }));
-  return { apply };
+  return { apply, reset:()=>set({z:1,cx:0.5,cy:0.5}) };
 })();
 
 // ---------- Widoki ----------
@@ -2233,7 +2234,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "169";
+  const SERVICE_WORKER_BUILD = "170";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2551,14 +2552,12 @@ const FIT_MODES = MOBILE_OWNER_APP
   : [["contain", "▣ Cały kadr"], ["cover", "⛶ Wypełnij"], ["fill", "↔ Rozciągnij"]];
 if(MOBILE_OWNER_APP)prefs.fit='contain';
 function applyFit() {
-  const i = Math.max(0, FIT_MODES.findIndex(([k]) => k === prefs.fit));
-  const [mode, label] = FIT_MODES[i];
-  ["contain", "cover", "fill"].forEach(k => $("stage").classList.toggle(`fit-${k}`, k === mode));
-  $("fitBtn").textContent = label; $("fitFull").textContent = label;
+  applyCameraFit({stage:$("stage"),button:$("fitBtn"),fullscreenButton:$("fitFull"),mode:prefs.fit,mobile:MOBILE_OWNER_APP});
 }
 function nextFit() {
-  const i = Math.max(0, FIT_MODES.findIndex(([k]) => k === prefs.fit));
-  prefs.fit = FIT_MODES[(i + 1) % FIT_MODES.length][0]; savePrefs(); applyFit();
+  prefs.fit = fitAction(prefs.fit,MOBILE_OWNER_APP).next;
+  if(prefs.fit==='contain')zoomUi.reset();
+  savePrefs(); applyFit();
   toastMsg(`Obraz: ${FIT_MODES.find(([k]) => k === prefs.fit)[1].slice(2)}`);
 }
 $("fitBtn").addEventListener("click", nextFit);

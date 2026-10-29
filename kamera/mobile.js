@@ -20,6 +20,8 @@ if (isMobileOwnerApp) {
   // Keep original media/control nodes: changing orientation must never reopen the camera.
   const zoomControls=byId('zoomBar');
   if(zoomControls){zoomControls.classList.add('mobileZoomControls');byId('stage').after(zoomControls);}
+  const listeningControls=byId('audioHud');
+  if(listeningControls){listeningControls.classList.add('mobileListeningControls');(zoomControls||byId('stage')).after(listeningControls);}
   byId('watchPanel')?.after(cameraInfo.element);
   const infoToggle=document.createElement('button');
   infoToggle.type='button';infoToggle.className='mobileCameraInfoToggle';infoToggle.textContent='Szczegóły';
@@ -115,7 +117,7 @@ if (isMobileOwnerApp) {
   backSettings.addEventListener("click", () => { document.body.dataset.mobileSettings = "root"; });
 
   const views = {
-    home: ["mobileCameraInfo", "stage", "zoomBar", "watchPanel"],
+    home: ["mobileCameraInfo", "stage", "zoomBar", "audioHud", "watchPanel"],
     alerts: ["mobileEventsWorkspace"],
     recordings: ["dvrCard", "dvrListCard", "mobileRecordingStorage"],
     settings: ["modeCard", "ctrlBar", "systemPanel", "setCard", "diagCard", "mobileDiagnosticWorkspace"]

@@ -24,5 +24,14 @@ const {chromium}=require('playwright');const fs=require('fs');const path=require
  await page.locator('button[data-mobile-view="home"]').click();
  if(await page.locator('#ctrlBar').isVisible())throw Error('Controls leaked into home');
  const retained=await page.evaluate(()=>originalVideo===document.getElementById('video'));
+ const fitChecks=await page.evaluate(async()=>{
+  const {applyCameraFit}=await import('/camera-fit.mjs?v=1');const stage=document.getElementById('stage');
+  const button=document.getElementById('fitBtn'),fullscreenButton=document.getElementById('fitFull'),video=document.getElementById('video');
+  stage.classList.add('fakeFull');
+  applyCameraFit({stage,button,fullscreenButton,mode:'cover',mobile:true});const cover=getComputedStyle(video).objectFit;
+  applyCameraFit({stage,button,fullscreenButton,mode:'contain',mobile:true});const contain=getComputedStyle(video).objectFit;stage.classList.remove('fakeFull');
+  const a=document.getElementById('audioHud').getBoundingClientRect(),s=stage.getBoundingClientRect();return {cover,contain,audioOutside:!stage.contains(document.getElementById('audioHud')),audioBelow:a.top>=s.bottom};
+ });
+ if(fitChecks.cover!=='cover'||fitChecks.contain!=='contain'||!fitChecks.audioOutside||!fitChecks.audioBelow)throw Error(JSON.stringify(fitChecks));
  const report={results,errors,options,retained};fs.writeFileSync('mobile-viewer-report.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));if(errors.length||!options||!retained||results.some(r=>r.overflow||!r.zoomOutside||!r.toolsOutside||!r.frameAboveNavigation||!r.infoAfterCamera||!r.videoRetained||!r.singleSpeaker))process.exitCode=1;
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
