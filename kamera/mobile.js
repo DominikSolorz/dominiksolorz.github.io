@@ -4,6 +4,7 @@
 // aplikację instalowaną oraz zwykły Chrome na telefonie/tablecie.
 import { createRouter } from "./core/router.mjs";
 import { mountMobileCameraFrame } from './mobile-camera-frame.mjs?v=1';
+import { mountMobileCameraInfo } from './mobile-camera-status.mjs?v=1';
 import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { mountEventWorkspace, mountDiagnosticWorkspace } from "./workspace-panels.mjs?v=2";
 const isMobileOwnerApp = document.documentElement.classList.contains("mobileOwnerMode");
@@ -14,14 +15,21 @@ if (isMobileOwnerApp) {
   document.body.classList.add("mobileOwnerMode");
   const disposeCameraFrame=mountMobileCameraFrame(byId('stage'),byId('video'));
   window.addEventListener('pagehide',event=>{if(!event.persisted)disposeCameraFrame();});
+  const cameraInfo=mountMobileCameraInfo({stage:byId('stage'),video:byId('video'),statusNode:byId('topStatus')});
+  window.addEventListener('pagehide',event=>{if(!event.persisted)cameraInfo.dispose();});
 
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
     <img class="mobileBrandLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="48px" width="48" height="48" alt="DS"><div><h1 id="mobilePageTitle">Dom</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
     <button id="deviceLayoutBtn" type="button" aria-label="Zmień układ urządzenia"><span>▣</span><b>Telefon</b></button>
-    <div class="mobileRelease"><small id="mobileBuild"></small><button type="button" data-web-update>Aktualizacje automatyczne</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span></div>`;
+    <details class="mobileRelease"><summary>Opcje aplikacji</summary><div class="mobileOptionsBody"><small id="mobileBuild"></small><button type="button" data-web-update>Aktualizacje automatyczne</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span><div class="mobileAccountOptions"></div></div></details>`;
   app?.insertBefore(mobileHeader, app.firstChild);
+  // Move the original profile/logout controls, retaining their handlers and identity.
+  const accountOptions=mobileHeader.querySelector('.mobileAccountOptions');
+  const moveAccountActions=()=>{const actions=mobileHeader.querySelector('.accountActions');if(actions&&actions.parentElement!==accountOptions)accountOptions.append(actions);};
+  const accountObserver=new MutationObserver(moveAccountActions);accountObserver.observe(mobileHeader,{childList:true});moveAccountActions();
+  window.addEventListener('pagehide',event=>{if(!event.persisted)accountObserver.disconnect();});
   const platformName=({android:'Android',ios:'iPhone / iPad'})[document.documentElement.dataset.phonePlatform]||'Telefon';
   byId('deviceLayoutBtn').querySelector('b').textContent=platformName;
   byId('mobileBuild').textContent=`Panel ${document.querySelector('meta[name="home-security-build"]')?.content||'—'} · ${platformName}`;
@@ -87,7 +95,7 @@ if (isMobileOwnerApp) {
   backSettings.addEventListener("click", () => { document.body.dataset.mobileSettings = "root"; });
 
   const views = {
-    home: ["stage", "watchPanel"],
+    home: ["mobileCameraInfo", "stage", "watchPanel"],
     alerts: ["mobileEventsWorkspace"],
     recordings: ["dvrCard", "dvrListCard", "mobileRecordingStorage"],
     settings: ["modeCard", "systemPanel", "setCard", "diagCard", "mobileDiagnosticWorkspace"]
