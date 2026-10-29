@@ -36,3 +36,10 @@ selection and prompt permission restoration introduced in build 246.
   `coordinate input geometry is unavailable`. No successful real-camera file
   write, user-folder reauthorization or installed-app upgrade is claimed here.
   Existing recordings, browser databases, credentials and live capture were kept.
+
+## Final publication evidence
+
+- Web build 247 was verified after deployment with 56 fresh-browser checks and 93 link targets, all passing.
+- Windows installer 1.4.26 passed the release workflow, including agent crash tests and the isolated WebView2 camera UI test.
+- Synthetic browser test used actual FileSystemHandle persistence in a fresh OPFS directory: a 1502-byte WebM was written, restored after reload and decoded at 320 x 180. It did not access a physical camera or user directory.
+- Installed executable remained 1.4.22. Latest UI observation showed the pre-login page; a real-camera folder write remains unverified.
