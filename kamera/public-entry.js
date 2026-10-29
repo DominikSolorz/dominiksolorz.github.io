@@ -4,7 +4,7 @@
 (() => {
   const params = new URLSearchParams(location.search);
   const fragment = new URLSearchParams(location.hash.replace(/^#/, ''));
-  const privateLink = params.has('auth') || params.has('code') || params.get('panel') === 'owner' ||
+  const privateLink = params.get('section') === 'recordings' || params.get('wroc') === 'nagrania' || params.has('auth') || params.has('code') || params.get('panel') === 'owner' ||
     params.get('app') === 'android' || /^cam-[a-f0-9]{32}$/.test(params.get('odbiorca') || '') ||
     location.hash === '#nadaj' || fragment.has('access_token') || fragment.has('error') ||
     fragment.get('type') === 'recovery';

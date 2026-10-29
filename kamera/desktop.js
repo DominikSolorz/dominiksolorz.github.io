@@ -51,7 +51,7 @@ if (desktopRequested) {
       <p>Stan kamery, zapisu i sieci odczytasz w Diagnostyce.</p>
       <p class="muted">Podgląd obrazu nie potwierdza zapisanego nagrania.</p>
     </section>
-    <div class="desktopSidebarFoot"><span>Alt + 1–6 przełącza moduły</span><a href="./?panel=owner" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
+    <div class="desktopSidebarFoot"><span>Alt + 1–6 przełącza moduły</span><a href="panel.html?panel=owner&ui=phone" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
   document.body.prepend(shell);
   const updateNotice = document.createElement("section");
   updateNotice.id = "desktopUpdateNotice"; updateNotice.className = "desktopUpdateNotice"; updateNotice.hidden = true;
