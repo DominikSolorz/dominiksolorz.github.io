@@ -53,3 +53,35 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSearch { padding:0
 html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSearch input { padding:10px 4px; border:0; background:transparent; outline-offset:2px; }
 html.desktopMode:not(.policeCommand):not(.usMilitary) #ctrlBar .ctrl { flex:1; }
 @media(max-width:950px) { html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock > * { grid-area:auto; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen { max-width:none; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock .desktopDeviceManager { padding:18px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard { background:#15191f; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock .modeGrid { display:grid; grid-template-columns:1fr; gap:8px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock .modeBtn { min-height:54px; border-radius:7px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlPreview { position:relative; background:#050608; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlPreview > p { max-width:380px; text-align:center; line-height:1.6; font-size:14px; color:#a6adb9; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard { grid-area:auto; }
+
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeList { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeBtn { display:flex; align-items:center; gap:12px; padding:12px; text-align:left; width:100%; min-height:62px; background:#1b2028; border:1px solid #303743; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeBtn svg { flex:0 0 24px; width:24px; height:24px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeBtn span { min-width:0; flex:1; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeBtn b { display:block; font-size:13px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeBtn small { display:block; margin-top:3px; font-size:11px; line-height:1.5; color:#a4adba; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeBtn.active { border-color:#e5274b; background:#321821; }
+
+/* Place the real recording actions directly below the preview, independently of the device column height. */
+@media(min-width:1100px) {
+ html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:18px; align-items:start; }
+ html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen > header { grid-column:1 / -1; margin:0; }
+ html.desktopMode:not(.policeCommand):not(.usMilitary) .controlWorkspace { display:contents; }
+ html.desktopMode:not(.policeCommand):not(.usMilitary) .controlPreview { grid-column:1; grid-row:2; }
+ html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock { grid-column:2; grid-row:2 / span 3; }
+ html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen #ctrlBar { grid-column:1; grid-row:3; margin:0; flex-wrap:wrap; }
+ html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen #ctrlBar .ctrlBtns { flex:1 1 100%; }
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeBtn { min-height:44px; padding:9px 12px; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeBtn small { display:none; }
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen > header h2 { font-weight:650; font-size:28px; letter-spacing:-.025em; }

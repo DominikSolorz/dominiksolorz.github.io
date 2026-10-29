@@ -425,6 +425,7 @@ if (desktopRequested) {
     // interfejsu; wybrana kategoria jest widoczna tylko w module Ustawienia.
     if (view === "settings") setSettingsGroup(activeSettingsGroup);
     if(view==="events"){eventsScreen.scrollIntoView({block:"start"});return;}
+    if (view === "controls") { window.scrollTo({top:0,behavior:"instant"}); return; }
     const target = { live: "desktopHomeGuide", controls: "ctrlBar", settings: "setCard", archive: "dvrCard" }[view];
     if (target) {
       main?.classList.remove("focus-live", "focus-controls", "focus-settings", "focus-archive");
