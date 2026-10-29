@@ -13,6 +13,16 @@ const {chromium}=require('playwright');const fs=require('fs');const path=require
   if(width===390||width===844)await page.screenshot({path:`mobile-viewer-${width}x${height}.png`,fullPage:true});
  }
  await page.locator('.mobileRelease>summary').click();const options=await page.locator('.mobileOptionsBody').isVisible();await page.locator('.mobileRelease>summary').click();
- await page.locator('button[data-mobile-view="settings"]').click();if(await page.locator("#zoomBar").isVisible())throw Error("Zoom remained visible in settings");await page.locator('button[data-mobile-view="home"]').click();const retained=await page.evaluate(()=>originalVideo===document.getElementById('video'));
+ await page.evaluate(()=>window.originalControls=document.getElementById('ctrlBar'));
+ await page.locator('button[data-mobile-view="settings"]').click();if(await page.locator("#zoomBar").isVisible())throw Error("Zoom remained visible in settings");
+ await page.locator('[data-setting-section="controls"]').click();
+ if(!await page.locator('#ctrlBar').isVisible())throw Error('Controls unavailable in mobile category');
+ if(!await page.evaluate(()=>originalControls===document.getElementById('ctrlBar')))throw Error('Controls were replaced');
+ await page.evaluate(()=>document.getElementById('ctrlBar').hidden=true);
+ if(await page.locator('#ctrlBar').isVisible())throw Error('Read-only permission hidden controls were exposed');
+ await page.evaluate(()=>document.getElementById('ctrlBar').hidden=false);
+ await page.locator('button[data-mobile-view="home"]').click();
+ if(await page.locator('#ctrlBar').isVisible())throw Error('Controls leaked into home');
+ const retained=await page.evaluate(()=>originalVideo===document.getElementById('video'));
  const report={results,errors,options,retained};fs.writeFileSync('mobile-viewer-report.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));if(errors.length||!options||!retained||results.some(r=>r.overflow||!r.zoomOutside||!r.toolsOutside||!r.frameAboveNavigation||!r.infoAfterCamera||!r.videoRetained||!r.singleSpeaker))process.exitCode=1;
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

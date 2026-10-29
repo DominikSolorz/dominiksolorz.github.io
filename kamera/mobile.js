@@ -100,6 +100,7 @@ if (isMobileOwnerApp) {
   settingsHome.innerHTML = `
     <header><p class="eyebrow">USTAWIENIA</p><h2>Konfiguracja systemu</h2><p>Wybierz kategorię — podgląd i transmisja pozostają aktywne.</p></header>
     <div class="mobileSettingCategories">
+      <button type="button" data-setting-section="controls"><b>⏺</b><span><strong>Sterowanie i zapis</strong><small>start, stop zapisu, restart i tryb kamery</small></span><i>›</i></button>
       <button type="button" data-setting-section="image"><b>◉</b><span><strong>Obraz i jakość</strong><small>jasność, kolor, siatka, jakość</small></span><i>›</i></button>
       <button type="button" data-setting-section="sound"><b>◖</b><span><strong>Dźwięk</strong><small>mikrofon i źródło transmisji</small></span><i>›</i></button>
       <button type="button" data-setting-section="recording"><b>▣</b><span><strong>Nagrywanie</strong><small>tryb, jakość i długość zapisu</small></span><i>›</i></button>
@@ -117,7 +118,7 @@ if (isMobileOwnerApp) {
     home: ["mobileCameraInfo", "stage", "zoomBar", "watchPanel"],
     alerts: ["mobileEventsWorkspace"],
     recordings: ["dvrCard", "dvrListCard", "mobileRecordingStorage"],
-    settings: ["modeCard", "systemPanel", "setCard", "diagCard", "mobileDiagnosticWorkspace"]
+    settings: ["modeCard", "ctrlBar", "systemPanel", "setCard", "diagCard", "mobileDiagnosticWorkspace"]
   };
   const viewMemory=createViewMemory({key:'hs-mobile-view-v2',routes:Object.keys(views),fallback:'home'});
   const eventsWorkspace=document.createElement("section");eventsWorkspace.id="mobileEventsWorkspace";eventsWorkspace.className="card mobileHidden";mountEventWorkspace(eventsWorkspace);
@@ -172,7 +173,7 @@ if (isMobileOwnerApp) {
     const button = event.target.closest("button[data-setting-section]");
     if (!button) return;
     document.body.dataset.mobileSettings = button.dataset.settingSection;
-    const title=({image:'Ustawienia obrazu',sound:'Ustawienia dźwięku',recording:'Ustawienia nagrywania',system:'Ustawienia systemu i diagnostyki'})[button.dataset.settingSection] || 'Ustawienia';
+    const title=({controls:'Sterowanie i zapis na komputerze',image:'Ustawienia obrazu',sound:'Ustawienia dźwięku',recording:'Ustawienia nagrywania',system:'Ustawienia systemu i diagnostyki'})[button.dataset.settingSection] || 'Ustawienia';
     const card=byId('setCard');
     if(card){card.setAttribute('aria-label',title);const heading=card.querySelector('h2');if(heading)heading.textContent=title;}
     window.scrollTo({ top: 0, behavior: "smooth" });
