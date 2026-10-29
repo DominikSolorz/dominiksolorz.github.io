@@ -272,7 +272,13 @@ if (desktopRequested) {
   const previewVideo = document.createElement("video");previewVideo.muted=true;previewVideo.playsInline=true;previewVideo.autoplay=true;
   previewVideo.setAttribute("aria-label","Podgląd aktywnej kamery");
   const previewEmpty=document.createElement("p");previewEmpty.textContent="Oczekiwanie na obraz kamery. Uruchom podgląd przyciskiem Start.";
-  controlPreview.append(previewVideo,previewEmpty);
+  const previewCaption=document.createElement("div");previewCaption.className="controlPreviewCaption";
+  const previewTitle=document.createElement("span");previewTitle.textContent="Podgląd kamery";
+  const previewFormat=document.createElement("output");previewFormat.setAttribute("aria-label","Rozdzielczość obrazu");
+  const updatePreviewFormat=()=>{previewFormat.textContent=previewVideo.videoWidth?`${previewVideo.videoWidth} × ${previewVideo.videoHeight}`:"Oczekiwanie na sygnał";};
+  previewVideo.addEventListener("loadedmetadata",updatePreviewFormat);previewVideo.addEventListener("resize",updatePreviewFormat);updatePreviewFormat();
+  previewCaption.append(previewTitle,previewFormat);
+  controlPreview.append(previewVideo,previewEmpty,previewCaption);
   const controlDeviceDock=document.createElement("aside");controlDeviceDock.className="controlDeviceDock";
   if ($("modeCard")) controlDeviceDock.append($("modeCard"));
   controlWorkspace.append(controlPreview,controlDeviceDock);controlsScreen.querySelector("header").after(controlWorkspace);
@@ -424,8 +430,8 @@ if (desktopRequested) {
     // Po opuszczeniu ustawień przywracamy komplet pól dla innych trybów
     // interfejsu; wybrana kategoria jest widoczna tylko w module Ustawienia.
     if (view === "settings") setSettingsGroup(activeSettingsGroup);
-    if(view==="events"){eventsScreen.scrollIntoView({block:"start"});return;}
-    if (view === "controls") { window.scrollTo({top:0,behavior:"instant"}); return; }
+    if(view==="events"){window.scrollTo({top:0,behavior:"instant"});return;}
+    if (["controls", "settings", "live", "diagnostics"].includes(view)) { window.scrollTo({top:0,behavior:"instant"}); return; }
     const target = { live: "desktopHomeGuide", controls: "ctrlBar", settings: "setCard", archive: "dvrCard" }[view];
     if (target) {
       main?.classList.remove("focus-live", "focus-controls", "focus-settings", "focus-archive");
