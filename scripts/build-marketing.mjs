@@ -31,7 +31,7 @@ const slot=/<(?:section|div)(?: role="group")? id="publicHome"[\s\S]*?<\/(?:sect
 if(!slot.test(index))throw new Error('Public marketing slot not found; private panel not modified.');
 await emit('panel.html',index.replace(slot,home.trimEnd()));
 const publicContent=home;
-const publicHome=head('Monitoring domu i podgląd','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','').replace('</head>','<script src="public-entry.js?v=4"></script><link rel="manifest" href="manifest.webmanifest?v=3"></head>')+publicContent+'\n</body></html>\n';
+const publicHome=head('Monitoring domu i podgląd','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','').replace('</head>','<script src="public-entry.js?v=5"></script><link rel="manifest" href="manifest.webmanifest?v=3"></head>')+publicContent+'\n</body></html>\n';
 await emit('index.html',publicHome);
 // Keep old inbound product links working; canonical points at the single homepage.
 await emit('o-systemie.html',publicHome);

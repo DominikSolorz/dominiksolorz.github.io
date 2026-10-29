@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,follow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#070b16">
-<meta name="home-security-build" content="246">
+<meta name="home-security-build" content="247">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -434,7 +434,7 @@
           <button class="btn primary" id="startBtn" hidden>▶ Uruchom kamerę</button>
           <button class="btn ghost" id="retryCameraBtn" hidden>↻ Spróbuj ponownie</button>
         </div>
-        <div class="row"><a class="btn ghost" href="downloads/HOME-SECURITY-Desktop-Setup-1.4.22.exe" download>⬇ Pobierz instalator HOME SECURITY Desktop (Windows)</a></div>
+        <div class="row"><a class="btn ghost" href="pobierz.html">⬇ Pobierz aktualny instalator HOME SECURITY Desktop (Windows)</a></div>
       </div>
 
       <div class="card">
@@ -472,6 +472,7 @@
         <p id="oldLocalCleanupStatus" class="status" role="status">Usuwanie dotyczy wyłącznie nagrań sprzed dzisiejszej północy. Nie usuwa dzisiejszych materiałów, plików z folderu ani Google Drive.</p>
           </details>
         <p class="muted small">1. Wybierz miejsce na komputerze. 2. Zatwierdź folder i dostęp do zapisu. 3. Kolejne fragmenty zapiszą się tam automatycznie. Możesz wybrać Pulpit → nagrania lub inną lokalizację.</p>
+        <button class="btn" id="saveCurrentFragment" type="button" aria-describedby="archiveFolderSelectionStatus">Zapisz bieżący fragment do folderu</button>
         <div class="row"><button class="btn primary" id="chooseArchiveDir" type="button" aria-describedby="archiveFolderSelectionStatus">📁 Wybierz folder na komputerze…</button><button class="btn" id="restoreArchiveDir" type="button" hidden>Przywróć dostęp do poprzedniego folderu</button></div>
         <p id="archiveFolderSelectionStatus" class="status" role="status" aria-live="polite">Wybierz folder, do którego aplikacja ma automatycznie zapisywać nagrania.</p>
         <details class="archiveAdvanced"><summary>Zarządzanie folderem</summary>
@@ -555,8 +556,8 @@
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=13"></script>
 <script type="module" src="auth-experience.mjs?v=2"></script>
-<script type="module" src="app.js?v=246"></script>
-<script type="module" src="desktop.js?v=42"></script>
+<script type="module" src="app.js?v=247"></script>
+<script type="module" src="desktop.js?v=43"></script>
 <script type="module" src="mobile.js?v=18"></script>
 </template>
 <script type="module" src="panel-entry.mjs?v=2"></script>

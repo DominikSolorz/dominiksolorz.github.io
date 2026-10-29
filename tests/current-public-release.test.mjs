@@ -13,7 +13,7 @@ test('the public homepage stays on the verified GitHub Pages origin, not a delay
   for(const site of [html,alias]){
     assert.ok(site.includes('home-security-build" content="'+version+'"'));
     assert.ok(site.includes('rel="canonical" href="https://dominiksolorz.github.io/kamera/"'));
-    assert.ok(site.includes('public-entry.js?v=4'));
+    assert.ok(site.includes('public-entry.js?v=5'));
     assert.ok(!site.includes('home-security-dominik-solorz.vercel.app'));
   }
   assert.ok(!bridge.includes('vercel.app'),'public entry must never send users to stale external website');
@@ -21,7 +21,7 @@ test('the public homepage stays on the verified GitHub Pages origin, not a delay
   assert.ok(robots.includes('https://dominiksolorz.github.io/kamera/sitemap.xml'));
   assert.ok(sitemap.includes('https://dominiksolorz.github.io/kamera/pobierz.html'));
   assert.ok(!sitemap.includes('vercel.app'));
-  assert.ok(sw.includes('./public-entry.js?v=4'));
+  assert.ok(sw.includes('./public-entry.js?v=5'));
 });
 
 test('download page presents exactly the current signed Windows release without stale hardcoded labels',async()=>{

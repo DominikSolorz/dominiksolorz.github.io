@@ -40,6 +40,8 @@ jobs:
           java -jar "$RUNNER_TEMP/html-validator/node_modules/vnu-jar/build/dist/vnu.jar" --css kamera/*.css styles.css
       - name: Frontend regression tests
         run: node --test tests/*.test.mjs
+      - name: Verify all shipped page links and fragment destinations
+        run: node scripts/verify-site-links.mjs
       - name: Verify public audit script syntax
         run: node --check scripts/verify-live-marketing.mjs
       - name: Verify marketing image optimizer syntax
