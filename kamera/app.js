@@ -530,7 +530,7 @@ const archive = (() => {
     let nativePolicy = null, nativeQueued = false;
     if (recordingStorage.webview) {
       try { nativePolicy = await recordingStorage.refresh(); }
-      catch (error) { lastError = `Nie potwierdzono miejsca zapisu: ${errText(error)}. Zachowuję plik awaryjnie.`; }
+      catch (error) { nativePolicy=recordingStorage.state;lastError = `Nie potwierdzono miejsca zapisu: ${errText(error)}. Zachowuję plik awaryjnie.`; }
       if (nativePolicy?.connected && nativePolicy.mode !== 'local') {
         try {
           await spoolRecording(data,name,nativePolicy); nativeQueued=true;

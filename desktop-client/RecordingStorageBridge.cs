@@ -17,6 +17,8 @@ internal sealed class RecordingStorageBridge : IDisposable
     private readonly CancellationTokenSource lifetime = new();
     private long navigation;
     private bool recordingSessionAuthorized;
+    private readonly object uploadGate=new();
+    private CancellationTokenSource? activeUpload;
     private readonly string? testDocument;
     public RecordingStorageBridge(CoreWebView2 web, Func<bool> unlocked) : this(web,unlocked,null,null) { }
     private RecordingStorageBridge(CoreWebView2 web, Func<bool> unlocked,string? testDirectory,string? testDocument)
@@ -40,10 +42,14 @@ internal sealed class RecordingStorageBridge : IDisposable
         {
             try
             {
-                var policy = storage.Read();
-                if (policy.Connected && policy.Mode != "local") await worker.RunOne(lifetime.Token,policy.IntegrationId);
+                RecordingStoragePolicy policy;CancellationTokenSource iteration;
+                lock(uploadGate){policy=storage.Read();iteration=CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);activeUpload=iteration;}
+                try { if (policy.Connected && policy.Mode != "local") await worker.RunOne(iteration.Token,policy.IntegrationId); }
+                finally {lock(uploadGate){activeUpload=null;iteration.Dispose();}}
                 storage.CleanupConfirmed();
             }
+            catch(OperationCanceledException) when(!lifetime.IsCancellationRequested){/* Owner paused uploads; keep the durable job for reconciliation. */}
+            catch(OperationCanceledException){return;}
             catch (Exception error) when (error is IOException or UnauthorizedAccessException or HttpRequestException or DriveFailure or JsonException or Microsoft.Data.Sqlite.SqliteException) { /* Keep files and retry. */ }
             try { await Task.Delay(5000, lifetime.Token); } catch (OperationCanceledException) { return; }
         }
@@ -82,9 +88,9 @@ internal sealed class RecordingStorageBridge : IDisposable
                         if (!old.Connected) throw new IOException("CONNECT_DRIVE_FIRST");
                         using var api = new GoogleDriveApi(credentials); await api.ValidateFolder(old.IntegrationId, old.FolderId!, lifetime.Token);
                     }
-                    EnsureCurrent(source, generation); StopLegacyScanner(); storage.Write(old with { Mode = mode }); result = storage.Snapshot(); break;
+                    EnsureCurrent(source, generation); StopLegacyScanner();lock(uploadGate){storage.Write(old with { Mode = mode });if(mode=="local")activeUpload?.Cancel();} result = storage.Snapshot(); break;
                 case "disconnect":
-                    StopLegacyScanner(); storage.Write(storage.Read() with { Mode = "local", Connected = false }); result = storage.Snapshot(); break;
+                    StopLegacyScanner();lock(uploadGate){storage.Write(storage.Read() with { Mode = "local", Connected = false });activeUpload?.Cancel();} result = storage.Snapshot(); break;
                 case "connect":
                 case "authorize":
                     var folder = GoogleDriveApi.ValidateId(value.GetProperty("folderId").GetString()!);
