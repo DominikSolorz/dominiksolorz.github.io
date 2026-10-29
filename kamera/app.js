@@ -76,7 +76,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "263"; // musi się zgadzać z version.json
+const VERSION = "264"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -468,6 +468,7 @@ const archive = (() => {
   // Wysyła na Google Drive kolejkę. Element może wskazywać plik w IndexedDB
   // (ref), w tymczasowym folderze Pulpitu (diskRef), albo zawierać starą kopię blob.
   async function pump() {
+    if(globalThis.__HOME_SECURITY_STORAGE_BRIDGE__)return; // Native policy owns all new uploads; preserve the old queue without sending behind its controls.
     if (!cloud.enabled || pumping) return;
     pumping = true; clearTimeout(retryTimer);
     const skip = new Set();
@@ -552,7 +553,7 @@ const archive = (() => {
       }
       else if (disk.selected) { disk.ready = false; disk.error = "Brak zgody na zapis do folderu. Wybierz folder ponownie."; }
     } catch (e) { disk.error = `Nie udało się zapisać do folderu: ${errText(e)}`; }
-    if (!savedToDisk) folderWriteError = disk.error || "Folder nie został wybrany. Brak potwierdzenia zapisu do folderu.";
+    if (!savedToDisk) folderWriteError = nativePolicy?.mode==='cloud' ? 'Przekazanie do bufora Drive niepotwierdzone. Fragment zachowuję w pamięci awaryjnej do ponowienia.' : disk.error || "Folder nie został wybrany. Brak potwierdzenia zapisu do folderu.";
     // Bez folderu archiwum (albo gdy zapis do niego się nie udał) nagranie trafia do pamięci strony —
     // To zapis zapasowy, który również może zawieść, np. przy pełnym dysku.
     if (!savedToDisk || (nativePolicy?.mode==='both'&&!nativeQueued)) {
@@ -2263,7 +2264,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "173";
+  const SERVICE_WORKER_BUILD = "174";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2702,6 +2703,7 @@ if (RECEIVER_ONLY) {
   if(MOBILE_OWNER_APP&&$('mobileRecordingStorage'))$('mobileRecordingStorage').prepend(drivePanel);
   const disposeDrive=mountNativeDriveUI({root:drivePanel,store:systemStore,refresh:refreshDrive});
   const storagePanel=$('recordingStorageChoice');
+  if(recordingStorage.webview)document.querySelector('.archiveLegacy')?.setAttribute('hidden','');
   drivePanel.before(storagePanel);drivePanel.hidden=true;storagePanel.hidden=false;
   const disposeStorage=mountRecordingStorage({root:storagePanel,execute:executeControl,canManage:canControlCamera,
     authorize:recordingStorage.webview?folderId=>recordingStorage.request('authorize',{folderId}):null});
