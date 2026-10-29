@@ -282,7 +282,9 @@ internal static class Program
         private bool downloadingUpdate;
         private bool panelUnlocked;
         private DesktopUpdateManifest? offeredUpdate;
-        private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 60 * 1000 };
+        // Four background checks per 24 hours while the application is running,
+        // plus the existing startup check. A check never restarts the recorder.
+        private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 6 * 60 * 60 * 1000 };
         private readonly ProgressBar updateProgress = new() { Dock = DockStyle.Bottom, Height = 6, Visible = false };
 
         private object updateState = new { type = "desktop.update.state", status = "none" };
@@ -470,7 +472,7 @@ internal static class Program
         {
             updateButton.Text = $"↻ Zaktualizuj do wersji {version}";
             updateButton.Location = new Point(Math.Max(12, updateBar.ClientSize.Width - updateButton.Width - 16), 8);
-            PublishUpdateState("available", "Nowa wersja jest gotowa do pobrania.");
+            PublishUpdateState("available", "Pełna aktualizacja programu jest gotowa. Pobranie i ponowne uruchomienie nastąpi po kliknięciu.");
         }
 
         private async Task DownloadAndPrepareOfferedUpdateAsync()

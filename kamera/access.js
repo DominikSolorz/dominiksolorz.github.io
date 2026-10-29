@@ -1,7 +1,7 @@
 // Wejście na stronę PIN-em. PIN nie jest zapisany w kodzie: z PIN-u powstaje klucz (PBKDF2),
 // a tu jest tylko krótki skrót klucza do sprawdzenia poprawności. Z klucza wyliczana jest też
 // nazwa kanału kamery — bez właściwego PIN-u nie da się znaleźć ani obrazu, ani biblioteki.
-import { verifyAccountPin } from "./auth.js?v=13";
+import { verifyAccountPin } from "./auth.js?v=14";
 const STORE = "kamera-dostep";
 
 async function sha256hex(text) {

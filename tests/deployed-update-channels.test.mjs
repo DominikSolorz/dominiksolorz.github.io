@@ -7,7 +7,7 @@ const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 test('Windows app advertises one-click Zaktualizuj for the exact offered version',async()=>{
   const source=await read('desktop-client/Program.cs');
   assert.ok(source.includes('updateButton.Text = $"↻ Zaktualizuj do wersji {version}";'));
-  assert.ok(source.includes('Interval = 60 * 1000'));
+  assert.ok(source.includes('Interval = 6 * 60 * 60 * 1000'));
   assert.ok(source.includes('if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;'));
   assert.ok(source.includes('SHA256.HashDataAsync'));
   assert.ok(source.includes('RestartIntoPreparedUpdate(manifest.Version)'));

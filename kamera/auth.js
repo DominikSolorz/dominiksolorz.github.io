@@ -172,13 +172,13 @@ async function continueWithSession(deviceChosen = false) {
     form.address_line.value = profile?.address_line || meta.address_line || ""; form.postal_code.value = profile?.postal_code || meta.postal_code || ""; form.phone.value = profile?.phone || meta.phone || "";
     section("profile");
     message(missingProfile
-      ? "Konto zostało potwierdzone. Uzupełnij dane profilu i zaakceptuj dokumenty, aby przejść do wyboru urządzenia i PIN-u."
+      ? "Konto zostało potwierdzone. Uzupełnij dane profilu i zaakceptuj dokumenty, aby przejść do PIN-u. Układ dopasuje się automatycznie."
       : "Logowanie powiodło się. Dane profilu są już zapisane; brakuje jedynie akceptacji Regulaminu i Polityki prywatności. Przeczytaj dokumenty, zaznacz zgodę i kliknij Dalej. Twój dotychczasowy PIN pozostaje bez zmian.");
     return;
   }
   const security = await securityForCurrentUser();
-  // Wybór dotyczy bieżącego urządzenia, nie ostatniego urządzenia konta.
-  if (!deviceChosen) { section("device"); message(""); return; }
+  // Device layout is presentation, not an authentication factor. The account,
+  // profile/consent and PIN checks remain mandatory; no device-choice round trip.
   if (!security?.pin_hash) { section("pin"); message(""); return; }
   enterPanel();
   } finally { continuing = false; }
@@ -244,7 +244,7 @@ $("verificationCodeForm")?.addEventListener("submit", async event => {
     await continueWithSession();
   } catch (error) { message(explainAuthError(error), true); }
 });
-$("profileForm")?.addEventListener("submit", async event => { event.preventDefault(); if (!event.currentTarget.terms.checked) return message("Zaakceptuj Regulamin i Politykę prywatności.", true); try { await saveProfile(event.currentTarget); section("device"); } catch (error) { message(error.message, true); } });
+$("profileForm")?.addEventListener("submit", async event => { event.preventDefault(); if (!event.currentTarget.terms.checked) return message("Zaakceptuj Regulamin i Politykę prywatności.", true); try { await saveProfile(event.currentTarget); await continueWithSession(); } catch (error) { message(error.message, true); } });
 document.querySelectorAll("[data-device]").forEach(button => button.addEventListener("click", () => {
   document.querySelectorAll("[data-device]").forEach(item => { const active = item === button; item.classList.toggle("selected", active); item.setAttribute("aria-pressed", String(active)); });
   $("deviceValue").value = button.dataset.device;

@@ -21,8 +21,8 @@ import { closeRecordingFragment } from './close-recording-fragment.mjs?v=1';
 import { createPictureInPicture } from './picture-in-picture.mjs?v=1';
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
 import { mountDvr } from "./dvr-ui.js?v=106";
-import { accountClient } from "./auth.js?v=13";
-import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=13";
+import { accountClient } from "./auth.js?v=14";
+import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=14";
 import { mountAccountUI } from "./account-ui.mjs?v=3";
 import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
@@ -68,7 +68,7 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "257"; // musi się zgadzać z version.json
+const VERSION = "258"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2233,7 +2233,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "167";
+  const SERVICE_WORKER_BUILD = "168";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
