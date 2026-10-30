@@ -402,7 +402,7 @@ internal static class Program
 
             webView.CoreWebView2.NewWindowRequested += (_, e) => {
                 e.Handled=true;
-                if(!e.IsUserInitiated||!AgentWebViewBridge.Trusted(webView.CoreWebView2.Source)||!ExternalLinks.IsDriveFolder(e.Uri))return;
+                if(!e.IsUserInitiated||!AgentWebViewBridge.Trusted(webView.CoreWebView2.Source)||(!ExternalLinks.IsDriveFolder(e.Uri)&&!ExternalLinks.IsDocumentation(e.Uri)))return;
                 try{Process.Start(new ProcessStartInfo(e.Uri){UseShellExecute=true});}
                 catch(Exception error) when(error is System.ComponentModel.Win32Exception or InvalidOperationException){WriteDiagnostic("external-drive-open-failed",new{code="BROWSER_UNAVAILABLE"});}
             };

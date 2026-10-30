@@ -1,0 +1,25 @@
+import {readFile,writeFile} from 'node:fs/promises';
+const base=new URL('../',import.meta.url),source=new URL('design/documents/',base),out=new URL('kamera/',base);
+const check=process.argv.includes('--check'),read=name=>readFile(new URL(name,source),'utf8');
+const operator=JSON.parse(await read('operator.json'));
+const escape=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
+const pages=[
+ ['polityka-prywatnosci','Polityka prywatności','Jakie dane trafiają do strony, konta, komputera i usług zewnętrznych.'],
+ ['rodo','Informacja RODO','Role administratorów, cele, podstawy prawne, prawa osób i udostępnianie danych.'],
+ ['regulamin','Regulamin','Warunki dostępu do aplikacji, obowiązki użytkownika i zgłaszanie problemów.'],
+ ['zasady-korzystania','Zasady korzystania','Bezpieczny i zgodny z prawem monitoring w codziennym użyciu.'],
+ ['instrukcja','Instrukcja obsługi','Gdzie kliknąć na komputerze i telefonie, jak nagrywać oraz wybrać Google Drive.']
+];
+const links=(active='')=>pages.map(([slug,title])=>`<a href="${slug}.html"${active===slug?' aria-current="page"':''}>${title}</a>`).join('');
+const identity=operator.name&&operator.correspondenceAddress
+ ? `<p><strong>Podmiot prowadzący HOME SECURITY:</strong> ${escape(operator.name)}.<br><strong>Adres do korespondencji:</strong> ${escape(operator.correspondenceAddress)}.<br><strong>Kontakt w sprawie danych i usługi:</strong> <a href="mailto:${escape(operator.email)}">${escape(operator.email)}</a>.</p>`
+ : `<div class="legalNotice"><strong>Identyfikacja operatora wymaga uzupełnienia.</strong> Kontakt: <a href="mailto:${escape(operator.email)}">${escape(operator.email)}</a>. Pełna nazwa albo imię i nazwisko oraz adres do korespondencji podmiotu prowadzącego usługę nie zostały jeszcze potwierdzone. Ta część dokumentacji nie stanowi kompletnej informacji z art. 13 RODO ani kompletnego oznaczenia usługodawcy. Nazwa HOME SECURITY jest nazwą produktu, a nie potwierdzeniem rejestracji spółki.</div>`;
+async function emit(name,content){const file=new URL(name,out);if(check){if((await readFile(file,'utf8')).replaceAll('\r\n','\n')!==content)throw Error('Outdated document: '+name);}else await writeFile(file,content);}
+function page(slug,title,description,body){
+ const sections=[...body.matchAll(/<h2 id="([a-z0-9-]+)">([^<]+)<\/h2>/g)].map(([,id,text])=>`<a href="#${id}">${text}</a>`).join('');
+ return `<!doctype html>\n<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#090b11"><meta name="description" content="${escape(description)}"><title>${escape(title)} — HOME SECURITY</title><link rel="stylesheet" href="style.css?v=185"><link rel="stylesheet" href="legal-premium.css?v=3"><link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml"></head>\n<body class="legalPage"><a class="mktSkip" href="#legal-main">Przejdź do dokumentu</a><header class="legalNav"><a href="o-systemie.html">HOME <b>SECURITY</b></a><a href="dokumenty.html">Dokumenty i instrukcja</a></header><main id="legal-main"><div class="legalHero"><p class="publicEyebrow">DOKUMENTACJA HOME SECURITY</p><h1>${escape(title)}</h1><p>${escape(description)}</p><p class="legalMeta">Aktualizacja: <time datetime="${operator.updated}">30 października 2026</time> · Dokumenty i instrukcja są osobnymi częściami.</p></div><nav class="legalTabs" aria-label="Wybierz dokument">${links(slug)}</nav>${['polityka-prywatnosci','rodo','regulamin'].includes(slug)?identity:''}<nav class="legalToc" aria-label="Spis treści">${sections}</nav><article class="legalContent">${body}</article></main><footer class="legalFooter"><div><strong>HOME SECURITY</strong><p>Dokumentacja obecnego wydania. Funkcje zależą od urządzenia, wersji i uprawnień.</p></div><nav aria-label="Dokumenty i kontakt">${links(slug)}<a href="pomoc.html">Pomoc</a><a href="kontakt.html">Kontakt</a></nav></footer></body></html>\n`;
+}
+for(const [slug,title,description] of pages)await emit(slug+'.html',page(slug,title,description,(await read(slug+'.html')).replaceAll('goldservicepoland@gmail.com',escape(operator.email))));
+const cards=pages.map(([slug,title,description])=>`<li><a href="${slug}.html"><strong>${title}</strong></a><p>${description}</p></li>`).join('');
+await emit('dokumenty.html',page('dokumenty','Dokumenty i instrukcja','Wybierz zagadnienie: dane osobowe, warunki korzystania albo konkretne czynności w aplikacji.',`<h2 id="wybor">Wybierz właściwy dokument</h2><ul class="legalDocumentList">${cards}</ul><h2 id="kontakt">Pytania i wnioski</h2><p>W sprawie usługi i danych konta napisz na <a href="mailto:${escape(operator.email)}">${escape(operator.email)}</a>. W sprawie konkretnego nagrania skontaktuj się przede wszystkim z administratorem danej kamery. <a href="kontakt.html">Formularz kontaktowy</a> nie służy do publicznego udostępniania nagrań.</p>`));
+console.log(`${check?'Verified':'Generated'} six documentation pages.`);

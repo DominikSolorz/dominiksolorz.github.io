@@ -52,7 +52,7 @@ if (desktopRequested) {
       <p>Stan kamery, zapisu i sieci odczytasz w Diagnostyce.</p>
       <p class="muted">Podgląd obrazu nie potwierdza zapisanego nagrania.</p>
     </section>
-    <div class="desktopSidebarFoot"><button type="button" data-open-project-gallery>Projekty interfejsu</button><span>DS Home Security<br>Panel ${document.querySelector('meta[name="home-security-build"]')?.content||'—'}</span><a href="panel.html?panel=owner&layout=manual&ui=phone" title="Ręcznie wybierz interfejs mobilny">Widok Mobile</a><a href="panel.html?panel=owner&layout=auto" title="Dopasuj układ do tego urządzenia">Automatyczny układ</a></div>`;
+    <div class="desktopSidebarFoot"><a href="https://dominiksolorz.github.io/kamera/dokumenty.html" target="_blank" rel="noopener noreferrer">Instrukcja i dokumenty ↗</a><button type="button" data-open-project-gallery>Projekty interfejsu</button><span>DS Home Security<br>Panel ${document.querySelector('meta[name="home-security-build"]')?.content||'—'}</span><a href="panel.html?panel=owner&layout=manual&ui=phone" title="Ręcznie wybierz interfejs mobilny">Widok Mobile</a><a href="panel.html?panel=owner&layout=auto" title="Dopasuj układ do tego urządzenia">Automatyczny układ</a></div>`;
   const navPaths = {
     live: '<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>',
     controls: '<rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/>',

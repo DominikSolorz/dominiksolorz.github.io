@@ -51,7 +51,7 @@ test('account modal has a separate UI layer with usable password toggles',async(
 test('legal documents share a consistent visual layout and practical privacy links',async()=>{
   for(const path of ['polityka-prywatnosci.html','regulamin.html','rodo.html']){
     const html=await read('kamera/'+path);
-    assert.ok(html.includes('legal-premium.css?v=2'),path);
+    assert.ok(html.includes('legal-premium.css?v=3'),path);
     assert.ok(html.includes('class="legalFooter"'),path);
     assert.ok(html.includes('href="pomoc.html"'),path);
   }

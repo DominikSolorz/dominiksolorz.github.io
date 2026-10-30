@@ -28,3 +28,22 @@
 
 .legalPage .mktSkip{position:absolute;z-index:20;top:8px;left:-1000px;padding:11px 15px;border-radius:8px;background:#f4ce8b;color:#131520;text-decoration:none;font-weight:700}
 .legalPage .mktSkip:focus{left:14px}
+.legalPage main{margin-inline:auto;min-width:0}
+.legalPage .legalNav{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.legalPage .legalNav a{text-decoration:none}
+.legalPage .legalTabs{display:flex;flex-wrap:wrap;gap:9px;margin:24px 0}
+.legalPage .legalTabs a{color:#ece9f0;border:1px solid #4c4658;background:#191c28;border-radius:12px;padding:12px 16px;text-decoration:none;font-weight:600}
+.legalPage .legalTabs a[aria-current="page"]{color:#ffe1aa;border-color:#e4b984;background:#402632}
+.legalPage .legalNotice{padding:20px;margin:22px 0;overflow-wrap:anywhere}
+.legalPage .legalNotice a{color:#ffe1aa}
+.legalPage .legalToc{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:20px 24px;margin-bottom:24px;border:1px solid #3e404d;border-radius:16px;background:#111621}
+.legalPage .legalToc a{color:#d6d9e3;text-decoration:underline;text-underline-offset:3px;line-height:1.6}
+.legalPage .legalTableWrap{max-width:100%;overflow-x:auto;margin:24px 0;border:1px solid #4c4658;border-radius:12px}
+.legalPage table{width:100%;min-width:590px;border-collapse:collapse;color:#d7dbe6;font-size:14px;line-height:1.65}
+.legalPage caption{text-align:left;padding:15px;font-weight:700;color:#ffe1aa}
+.legalPage th,.legalPage td{text-align:left;vertical-align:top;padding:16px;border-top:1px solid #404451}
+.legalPage thead{background:#222737}
+.legalPage tbody th{min-width:155px;color:#fff}
+.legalPage .legalDocumentList{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px}
+.legalPage .legalDocumentList li{border:1px solid #4c4658;border-radius:14px;padding:22px;background:#1d2230}
+@media print{.legalPage{background:#fff;color:#111}.legalPage .legalHero,.legalPage .legalContent,.legalPage .legalNotice{box-shadow:none;background:#fff;color:#111;border-color:#777}.legalPage .legalContent p,.legalPage .legalContent li,.legalPage .legalContent h2,.legalPage .legalHero h1,.legalPage .legalHero p{color:#111}.legalPage :is(.legalTabs,.legalToc,.legalNav,.legalFooter,.mktSkip){display:none}.legalPage main{width:100%;padding:0}.legalPage table{min-width:0;color:#111}.legalPage thead{background:#eee}.legalPage tbody th{color:#111}}

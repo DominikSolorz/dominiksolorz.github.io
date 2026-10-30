@@ -2,6 +2,9 @@ namespace HomeSecurityDesktop;
 
 internal static class ExternalLinks
 {
+    internal static bool IsDocumentation(string value) => Uri.TryCreate(value,UriKind.Absolute,out var uri)
+        && uri.Scheme=="https"&&uri.Port==443&&uri.Host=="dominiksolorz.github.io"&&uri.UserInfo.Length==0&&uri.Query.Length==0&&uri.Fragment.Length==0
+        && uri.AbsolutePath is "/kamera/dokumenty.html" or "/kamera/instrukcja.html" or "/kamera/polityka-prywatnosci.html" or "/kamera/rodo.html" or "/kamera/regulamin.html" or "/kamera/zasady-korzystania.html";
     internal static bool IsDriveFolder(string value)
     {
         if(!Uri.TryCreate(value,UriKind.Absolute,out var uri)||uri.Scheme!="https"||uri.Port!=443||uri.Host!="drive.google.com"||uri.UserInfo.Length!=0||uri.Query.Length!=0||uri.Fragment.Length!=0)return false;

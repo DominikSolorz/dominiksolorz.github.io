@@ -28,7 +28,7 @@ test('honest sign-up, offer and assistant actions have actual destinations',asyn
 test('legal pages link related documents and share the public visual system',async()=>{
   for(const file of ['polityka-prywatnosci.html','regulamin.html','rodo.html']){
     const html=await read('kamera/'+file);
-    assert.ok(html.includes('legal-premium.css?v=2'),file);
+    assert.ok(html.includes('legal-premium.css?v=3'),file);
     assert.ok(html.includes('class="legalFooter"'),file);
     assert.ok(html.includes('href="pomoc.html"'),file);
     assert.ok(html.includes('href="#legal-main"'),file);
