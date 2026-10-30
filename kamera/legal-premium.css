@@ -36,6 +36,10 @@
 .legalPage .legalTabs a[aria-current="page"]{color:#ffe1aa;border-color:#e4b984;background:#402632}
 .legalPage .legalNotice{padding:20px;margin:22px 0;overflow-wrap:anywhere}
 .legalPage .legalNotice a{color:#ffe1aa}
+.legalPage .legalIdentity{padding:22px 26px;margin:22px 0;border:1px solid #615341;border-radius:16px;background:#211e26;line-height:1.7}
+.legalPage .legalIdentity h2{font-size:19px;margin-top:0;color:#ffe1aa}
+.legalPage .legalIdentity p{overflow-wrap:anywhere;color:#d8d6df}
+.legalPage .legalIdentity a{color:#ffe1aa}
 .legalPage .legalToc{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:20px 24px;margin-bottom:24px;border:1px solid #3e404d;border-radius:16px;background:#111621}
 .legalPage .legalToc a{color:#d6d9e3;text-decoration:underline;text-underline-offset:3px;line-height:1.6}
 .legalPage .legalTableWrap{max-width:100%;overflow-x:auto;margin:24px 0;border:1px solid #4c4658;border-radius:12px}

@@ -4,7 +4,7 @@ Wdrożenie rozdziela politykę prywatności, informację RODO, regulamin, zasady
 
 ## Informacje wymagające potwierdzenia właściciela
 
-- Pełna tożsamość podmiotu prowadzącego stronę i konta oraz adres do korespondencji. Dopóki nie są podane, trzy dokumenty prawne pokazują widoczne oznaczenie niekompletnej identyfikacji; nie należy przedstawiać ich jako zakończonej klauzuli art. 13 lub finalnego regulaminu komercyjnego.
+- Użytkownik potwierdził tożsamość, adres do korespondencji i kontakt operatora; są centralnie zapisane w `operator.json`. Nie przypisano fikcyjnej formy prawnej ani numerów rejestrowych. Potwierdzenie tych danych nie stanowi samo w sobie oceny zgodności całej usługi.
 - Rzeczywiste umowy z dostawcami, role podmiotów, region konfiguracji i podstawy ewentualnych transferów poza EOG. Publiczna dokumentacja dostawcy nie potwierdza zawarcia umowy dla tego projektu.
 - Okresy obsługi kont i korespondencji oraz wykonywanie usuwania. Dokumentacja nie wprowadza nieistniejącego automatycznego kasowania.
 - Uzasadnienie obowiązkowego adresu i kodu pocztowego w obecnej rejestracji. Sam formularz nie wykazuje niezbędności z art. 6 ust. 1 lit. b RODO. Ten pakiet nie zmienia zakresu zbierania profilu ani schematu danych.
