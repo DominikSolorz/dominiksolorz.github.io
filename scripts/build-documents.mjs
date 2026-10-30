@@ -1,6 +1,6 @@
 import {readFile,writeFile} from 'node:fs/promises';
 const base=new URL('../',import.meta.url),source=new URL('design/documents/',base),out=new URL('kamera/',base);
-const check=process.argv.includes('--check'),read=name=>readFile(new URL(name,source),'utf8');
+const check=process.argv.includes('--check'),read=async name=>(await readFile(new URL(name,source),'utf8')).replaceAll('\r\n','\n');
 const operator=JSON.parse(await read('operator.json'));
 const escape=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
 const pages=[
