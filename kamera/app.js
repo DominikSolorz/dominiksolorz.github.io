@@ -26,7 +26,8 @@ import { mountDvr } from "./dvr-ui.js?v=106";
 import { accountClient } from "./auth.js?v=15";
 import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=15";
 import { mountAccountUI } from "./account-ui.mjs?v=3";
-import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=1';
+import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=2';
+import { createCleanAudioStream } from './audio-cleaner.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { createWebUpdates } from "./core/web-updates.mjs?v=3";
 import { freshUpdateURL } from "./core/update-navigation.mjs?v=1";
@@ -76,7 +77,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "267"; // musi się zgadzać z version.json
+const VERSION = "268"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1176,7 +1177,13 @@ function paintMode(m, until = 0) {
 const sender = (() => {
   const peers = new Map();
   let zoomer = null, cropWidth = 0; // zbliżenie: wycinany kadr z pełnej rozdzielczości kamery
-  let stream = null, live = false, heartbeat = null, reportTimer = null, keepAlive = null, camTimer = null, scheduleTimer = null, camAttempt = 0, wakeLock = null, lastCameraError = "";
+  let stream = null, noisePipeline = null, live = false, heartbeat = null, reportTimer = null, keepAlive = null, camTimer = null, scheduleTimer = null, camAttempt = 0, wakeLock = null, lastCameraError = "";
+  function stopCapture() {
+    stream?.getTracks().forEach(track => track.stop());
+    stream = null;
+    noisePipeline?.close();
+    noisePipeline = null;
+  }
   // Dwa skróty Windows lub dwie przypadkowo otwarte karty nie mogą nagrywać tą samą kamerą równocześnie.
   // Dzierżawa jest odnawiana co 10 s i po 35 s sama wygasa, np. po awarii przeglądarki.
   const senderLockKey = "prywatna-kamera-sender-lock-v1";
@@ -1354,7 +1361,7 @@ const sender = (() => {
       }
       // Starsze/tańsze kamery czasem odrzucają 1080p/30 fps mimo że działają bez dodatkowych wymagań.
       if (e?.name !== "OverconstrainedError") throw e;
-      const s = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId } } : true, audio: prefs.audio ? true : false });
+      const s = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId } } : true, audio: prefs.audio ? audioConstraints(prefs.audioProfile || 'clean') : false });
       return prepareCameraStream(s);
     }
   };
@@ -1401,10 +1408,19 @@ const sender = (() => {
   let camWaitSince = 0; // >0 = czekamy na kamerę (np. okno zgody przeglądarki)
   async function acquireCamera() {
     camWaitSince = Date.now();
+    let captured = null;
     try {
-      const s = await openBestCamera();
+      captured = await openBestCamera();
       camWaitSince = 0;
-      if (!live) { s.getTracks().forEach(t => t.stop()); return false; }
+      if (!live) { captured.getTracks().forEach(t => t.stop()); return false; }
+      const prepared = await createCleanAudioStream(captured, prefs.audioProfile || 'clean');
+      if (!live) {
+        prepared.stream.getTracks().forEach(t => t.stop());
+        prepared.close();
+        return false;
+      }
+      noisePipeline = prepared;
+      const s = prepared.stream;
       stream = s;
       if (s.getAudioTracks().length) {
         try { await setAudioProfile(prefs.audioProfile || 'clean'); }
@@ -1430,6 +1446,8 @@ const sender = (() => {
       return true;
     } catch (e) {
       camWaitSince = 0;
+      if (stream) stopCapture();
+      else captured?.getTracks().forEach(track => track.stop());
       lastCameraError = `${cameraErrorMessage(e)} [${e?.name || "błąd"}]`;
       showPlaceholder(lastCameraError);
       $("retryCameraBtn").hidden = false;
@@ -1441,7 +1459,7 @@ const sender = (() => {
   function cameraLost() {
     archive.stop(); detector.stop(); closeAll();
     zoomer?.stop(); zoomer = null;
-    stream?.getTracks().forEach(t => t.stop()); stream = null;
+    stopCapture();
     video.srcObject = null; showPlaceholder("Utracono obraz z kamery…");
     setStatus("Utracono obraz z kamery — próbuję ją ponownie uruchomić…");
     scheduleCameraRetry();
@@ -1472,12 +1490,14 @@ const sender = (() => {
   }
   async function setAudioProfile(profile) {
     audioConstraints(profile);
-    const result=await applyAudioProfile(stream?.getAudioTracks()[0],profile,navigator.mediaDevices.getSupportedConstraints());
+    const result=await applyAudioProfile(noisePipeline?.sourceTrack || stream?.getAudioTracks()[0],profile,navigator.mediaDevices.getSupportedConstraints());
+    noisePipeline?.setProfile(profile);
+    const configured={...result,software:!!noisePipeline?.filtered};
     prefs.audioProfile=profile;savePrefs();
     if($('audioProfilePick'))$('audioProfilePick').value=profile;
-    if($('audioProfileStatus'))$('audioProfileStatus').textContent=audioStatus(result);
-    systemStore.component('audioProcessing',{status:'configured',...result});
-    return result;
+    if($('audioProfileStatus'))$('audioProfileStatus').textContent=audioStatus(configured);
+    systemStore.component('audioProcessing',{status:'configured',...configured});
+    return configured;
   }
 
   async function setMode(m, minutes) {
@@ -1492,7 +1512,7 @@ const sender = (() => {
       clearTimeout(camTimer);
       await archive.flush(archive.stop()); detector.stop(); closeAll();
       zoomer?.stop(); zoomer = null;
-      stream?.getTracks().forEach(t => t.stop()); stream = null;
+      stopCapture();
       video.srcObject = null; showLive(""); setStatus(""); showPlaceholder("Kamera wyłączona. Otwórz Sterowanie i wybierz Start lub Sam podgląd.");
     } else if (!stream) {
       camAttempt = 0; setStatus("Uruchamiam kamerę i mikrofon…");
@@ -1535,7 +1555,7 @@ const sender = (() => {
     if (!live) return;
     archive.stop(); detector.stop(); closeAll();
     zoomer?.stop(); zoomer = null;
-    stream?.getTracks().forEach(t => t.stop()); stream = null;
+    stopCapture();
     lastCameraError = ""; $("retryCameraBtn").hidden = true;
     if (await acquireCamera()) {
       setStatus("");
@@ -1590,7 +1610,7 @@ const sender = (() => {
     chan.stop();
     closeAll();
     zoomer?.stop(); zoomer = null;
-    stream?.getTracks().forEach(t => t.stop()); stream = null;
+    stopCapture();
     video.srcObject = null;
     wakeLock?.release().catch(() => {}); wakeLock = null;
     $("startBtn").hidden = false; $("stopBtn").hidden = true;
