@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,follow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#070b16">
-<meta name="home-security-build" content="265">
+<meta name="home-security-build" content="266">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -147,13 +147,21 @@
     let enter, opened = false;
     // Boot ma wiedzieć, czy strona główna nadal jest świadomie oglądana.
     // Dzięki temu awaryjne wznowienie nie zamknie strony informacyjnej.
-    window.__publicHomeActive = !isReceiver && !authRoute;
+    window.__publicHomeActive = !isReceiver && !authRoute && p.get("panel") !== "owner";
     window.__waitForPanel = new Promise(resolve => { enter = resolve; });
     const openPanel = () => {
       if (opened) return;
       opened = true;
       window.__publicHomeActive = false;
       home.hidden = true;
+      // Przechodzimy na adres panelu bez przeładowania strony.
+      // Ponowne wejście wraca do konta i ekranu PIN, nie do strony startowej.
+      if (!isReceiver) {
+        const target = new URL(location.href);
+        target.searchParams.delete("auth");
+        target.searchParams.set("panel", "owner");
+        history.replaceState(history.state, "", target.href);
+      }
       enter();
     };
     window.__openSecurePanel = openPanel;
@@ -168,7 +176,7 @@
     // stronę główną. Program Windows stosuje ten sam bezpieczny przebieg co
     // strona: strona główna → logowanie → start → PIN → pulpit.
     if (isReceiver) openPanel();
-    else if (authRoute) {
+    else if (authRoute || p.get("panel") === "owner") {
       home.hidden = true;
       window.__authReady.then(() => authRoute === "register" ? window.__showRegistration?.() : authRoute === "forgot" ? window.__showPasswordReset?.() : requestAccount());
     }
@@ -590,7 +598,7 @@
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=14"></script>
 <script type="module" src="auth-experience.mjs?v=2"></script>
-<script type="module" src="app.js?v=265"></script>
+<script type="module" src="app.js?v=266"></script>
 <script type="module" src="desktop.js?v=50"></script>
 <script type="module" src="mobile.js?v=29"></script>
 </template>
