@@ -52,7 +52,10 @@ test('public site and PWA expose update controls while respecting recording safe
   assert.ok(app.includes('freshUpdateURL(location.href,VERSION,Date.now())'),'private PWA must also refresh the current release');
   assert.ok(sw.includes("fetch(event.request, {cache: 'no-store'})"),'explicit upgrades must bypass stale page cache');
   assert.ok(sw.includes('./core/web-updates.mjs?v=3'));
-  assert.ok(app.includes('autoApply:true'));
+  // Login, profile and PIN must not be interrupted by a background PWA reload.
+  // Updates remain available only through an explicit user action.
+  assert.ok(app.includes('autoApply:false'));
+  assert.ok(app.includes("webUpdates.available?webUpdates.apply():webUpdates.check()"));
   assert.ok(app.includes("button.textContent=webUpdates.available?'Zaktualizuj':'Sprawdź aktualizacje'"));
   assert.ok(marketing.includes("update.textContent = 'Zaktualizuj'"));
   assert.ok(webUpdates.includes('prepareReload'));
