@@ -76,7 +76,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "265"; // musi się zgadzać z version.json
+const VERSION = "266"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2274,7 +2274,8 @@ if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
     const output=$('mobileUpdateStatus');if(output)output.textContent=webUpdateState.message;
   };
   const webUpdates=createWebUpdates({serviceWorker:navigator.serviceWorker,build:SERVICE_WORKER_BUILD,
-    autoApply:true,
+    // Aktualizacja tylko na żądanie: automatyczny restart przerywał logowanie i PIN.
+    autoApply:false,
     // Web pages update without a click, but never while the camera is live,
     // during recording, or while a user is editing a form.
     canAutoApply:()=>!sender.live&&!archive.status().recording&&!(video.srcObject?.getVideoTracks?.()||[]).some(track=>track.readyState==='live')&&!document.querySelector('input:focus,textarea:focus,select:focus,[contenteditable="true"]:focus,dialog[open]'),
