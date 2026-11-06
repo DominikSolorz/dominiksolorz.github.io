@@ -72,6 +72,15 @@ function quietPercentile(values) {
 
 // Low 20th percentile is a rough estimate of quiet portions, NOT calibrated
 // room noise. Speech/music may occur in every sampled window.
+function copyLevels(levels) {
+  if (!levels) return null;
+  return {
+    ...levels,
+    ...(levels.inputTones ? { inputTones: levels.inputTones.map(tone => ({ ...tone })) } : {}),
+    ...(levels.outputTones ? { outputTones: levels.outputTones.map(tone => ({ ...tone })) } : {}),
+  };
+}
+
 export function createAudioLevelHistory(windowMs = 60000) {
   let points = [];
   let last = null;
@@ -79,7 +88,7 @@ export function createAudioLevelHistory(windowMs = 60000) {
     observe(beforeSamples, afterSamples, at = Date.now(), tonal = null) {
       const beforeDb = rmsDbfs(beforeSamples);
       const afterDb = rmsDbfs(afterSamples);
-      if (beforeDb === null || afterDb === null || !Number.isFinite(at)) return last;
+      if (beforeDb === null || afterDb === null || !Number.isFinite(at)) return copyLevels(last);
       points = points.filter(point => at - point.time >= 0 && at - point.time <= windowMs);
       const hasTonal = Array.isArray(tonal?.inputTones) && Array.isArray(tonal?.outputTones);
       points.push({
@@ -100,9 +109,9 @@ export function createAudioLevelHistory(windowMs = 60000) {
           outputTones: stableToneHints(points, 'outputTones'),
         } : {}),
       };
-      return { ...last };
+      return copyLevels(last);
     },
-    snapshot() { return last ? { ...last } : null; },
+    snapshot() { return copyLevels(last); },
     clear() { points = []; last = null; },
   };
 }
