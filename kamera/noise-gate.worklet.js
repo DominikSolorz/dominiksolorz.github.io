@@ -4,6 +4,7 @@ class HomeSecurityNoiseGate extends AudioWorkletProcessor {
     super();
     this.profile = 'clean';
     this.level = 0;
+    this.noiseFloor = null;
     this.gain = 1;
     this.holdSamples = 0;
     this.port.onmessage = event => {
@@ -27,12 +28,20 @@ class HomeSecurityNoiseGate extends AudioWorkletProcessor {
     }
     const rms = Math.sqrt(power / Math.max(1, count));
     this.level += (rms > this.level ? 0.55 : 0.08) * (rms - this.level);
-    const threshold = this.profile === 'voice' ? 0.006 : 0.009;
-    if (this.level > threshold) this.holdSamples = Math.round(sampleRate * 0.35);
+
+    // Follow persistent background sound instead of a single fixed threshold.
+    // Track downward changes quickly, upward changes slowly; short speech bursts
+    // must not train the estimated noise floor into being treated as noise.
+    if (this.noiseFloor === null) this.noiseFloor = rms;
+    else this.noiseFloor += (rms < this.noiseFloor ? 0.20 : 0.003) * (rms - this.noiseFloor);
+    // Bounded threshold prevents a loud room from silencing ordinary speech.
+    const base = this.profile === 'voice' ? 0.003 : 0.005;
+    const threshold = Math.min(0.028, Math.max(base, this.noiseFloor * 1.65));
+    if (this.level > threshold) this.holdSamples = Math.round(sampleRate * 0.45);
     else this.holdSamples = Math.max(0, this.holdSamples - frames);
-    const quiet = this.level < threshold * 0.7 && this.holdSamples === 0;
-    // Preserve low-level ambient cues; never fully hard-mute the microphone.
-    const desired = this.profile === 'environment' || !quiet ? 1 : 0.12;
+    const quiet = this.level < threshold * 0.8 && this.holdSamples === 0;
+    // Reduce steady background hiss; never hard-mute quiet safety-critical cues.
+    const desired = this.profile === 'environment' || !quiet ? 1 : 0.20;
     const smoothing = desired > this.gain ? 0.55 : 0.035;
     const start = this.gain;
     this.gain += (desired - this.gain) * smoothing;
@@ -41,7 +50,9 @@ class HomeSecurityNoiseGate extends AudioWorkletProcessor {
       const target = output[c];
       for (let i = 0; i < frames; i++) {
         const fraction = (i + 1) / frames;
-        target[i] = (input[i] || 0) * (start + (this.gain - start) * fraction);
+        const sample = input[i] || 0;
+        const processed = sample * (start + (this.gain - start) * fraction);
+        target[i] = Number.isFinite(processed) ? Math.max(-1, Math.min(1, processed)) : 0;
       }
     }
     return true;
