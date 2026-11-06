@@ -5,6 +5,9 @@ on:
     paths:
       - 'kamera/app.js'
       - 'kamera/audio-source.mjs'
+      - 'kamera/noise-gate.worklet.js'
+      - 'kamera/audio-cleaner.mjs'
+      - 'kamera/tests/noise-gate.test.mjs'
       - 'kamera/tests/audio-source.test.mjs'
       - '.github/workflows/verify-home-security-audio.yml'
   workflow_dispatch:
@@ -32,5 +35,7 @@ jobs:
         run: |
           node --check kamera/app.js
           node --check kamera/audio-source.mjs
+          node --check kamera/audio-cleaner.mjs
+          node --check kamera/noise-gate.worklet.js
       - name: Run microphone selection regression tests
-        run: node --test kamera/tests/audio-source.test.mjs
+        run: node --test kamera/tests/*.test.mjs
