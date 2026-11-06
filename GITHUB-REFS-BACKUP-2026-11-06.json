@@ -1,0 +1,744 @@
+{
+  "date": "2026-11-06",
+  "repository": "DominikSolorz/dominiksolorz.github.io",
+  "baseRef": "refs/heads/main",
+  "baseSha": "0424054798d62d8dcc8cc83be2f53cfae92755a9",
+  "purpose": "GitHub-only recovery anchor for all Git branch/tag commit histories. Release binaries, repository settings, secrets and offsite copies are NOT included.",
+  "refs": [
+    {
+      "ref": "refs/heads/audit-fix-release-notification-pwa-224-20261028",
+      "sha": "99331e35bd12b00612893a3306ae2c744afca2c5",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/audit-pagespeed-exact-phone-url-20261028",
+      "sha": "7667d56f1b78e3ff0e89e491254d897e2f1c4c71",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/auto-web-update-manual-desktop-offer-20261027",
+      "sha": "8a4ba383379a6c0c65f7b53ce87888b6a4d525f7",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/backup/2026-11-06-main",
+      "sha": "0424054798d62d8dcc8cc83be2f53cfae92755a9",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/build-ui220-one-click-installer-20261027",
+      "sha": "887e6f789057dbbce1cc6cbc3d94e29de3bd0721",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-247",
+      "sha": "5d9eebdc23b12d3efb05e9b2b2fdade5751f492d",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-360p-queue",
+      "sha": "96480d79e8e0fadebb68b96174da8a4881f0494e",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-adaptive-hd",
+      "sha": "8d95a36c3dd2874cb0477ce2e17c360dfa8196f7",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-adres-nadaj",
+      "sha": "1eb53286fe6cc8092ffccd04f8059275755cb7d1",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-audio-progress",
+      "sha": "9652b99ca7c9dba02ab214ae6802c5132537c95c",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-auto-update",
+      "sha": "1dd5d13864afbe144087f4344b16f2e099f5509a",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-base64-fix",
+      "sha": "af27b2e719d79f8111279225efde92940a117979",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-bez-logowania",
+      "sha": "fbee831785905a649b075d4fedb050c697d30e0a",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-bez-wirtualnej",
+      "sha": "72af9ade48157f838a751f089feba9d8476a1a3c",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-biblioteka",
+      "sha": "3742acf8200308f893f1174af11620f05ca12682",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-bright",
+      "sha": "91732ee35b2cc50d6e6d94d5e4ce976096e52dc7",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-clean",
+      "sha": "f6ae693a005c101cf661c3434a0d7a16d406397a",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-cloud-dvr",
+      "sha": "31a46e82b95dcd32452a5de7a5dad9fe6853ab59",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-cpu",
+      "sha": "ef8d7915c2d550040e3c32bfc6699c2d9c803c61",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-cpu2",
+      "sha": "77b203de7ae7450f8fec7c8e375c37530fb05137",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-cpu3",
+      "sha": "9ad7886906a211821d41fefd2d96beeff3112524",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-diag",
+      "sha": "1e6629f38e537613be4d21422b273c29a71d9023",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-diag-v48",
+      "sha": "2197301624782b06f25355618e395498837e3d7e",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-disk-files",
+      "sha": "87325b1373007d07485fe936eed4bddd5d21f9c4",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-disk-grant",
+      "sha": "c9e1d66ac90d1b7a30a54f3eb6a8c8340203082a",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-drive-direct",
+      "sha": "4eedf63c3aad6d63e3534bf6d6492b3899ce84c5",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-drive-url",
+      "sha": "1efaa9f85be3646639dbbf38212a44eac87f13a6",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-dup-yield",
+      "sha": "525a679ec631f6624a6a6f96cae1291debcfbf5a",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-duzy-przycisk",
+      "sha": "6380a493a7be6766387b38aa61b9b526e4f5f310",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-dvr",
+      "sha": "54f0b4eb3878ec29411f0d8df3862fb984c7d0e5",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-epic",
+      "sha": "cb0a14bde1fd13da3ca4aeabaf9da4a26ee8874a",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-fans",
+      "sha": "feffc16deb5b3262f21899260a1e38f465771416",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-fetch-revert",
+      "sha": "498020b98c58d6127ea9e3eb279db8923b0f2df8",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-fit",
+      "sha": "f410545fc08743af3c63d761ffc8d43a8f917511",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-fix-files",
+      "sha": "7aa8e6f3c5672611edc4f247ef729a304f3d434e",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-fix-ios",
+      "sha": "9b0e42c6b48120e3f2f64de8a4d03ce7dfd8415d",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-fix-v47",
+      "sha": "e26e19eb35a9a98eacd08ccfb09c97b17f9dcd49",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-fixes",
+      "sha": "915df0f2f7f7143b9b62f0cef7464b8b55df5d83",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-fullres",
+      "sha": "9a0fe16fa662ecb35656774fa84143f57d575c19",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-fullscreen",
+      "sha": "a40411eef3d8b31bc7eb6e01be6a43ceac02d963",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-jakosc",
+      "sha": "2511db52fbd4a85390560ce0c95ee67fcf19c4f2",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-jasnosc",
+      "sha": "4d6396eb4120971304076075631d31ba4cabe74d",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-layout",
+      "sha": "0ea366cebb02c103dcd80998d1863cfe7bc16a14",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-library-direct",
+      "sha": "c2aad28d99a1b447900ed5bbf9037f8d5881a6a2",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-male-pliki",
+      "sha": "f2b85b63f777d762356f530fc9fbbe21ffb497c6",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-modes2",
+      "sha": "1ea0fd903c37224dcb4135ac8205fc6498da8505",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-next",
+      "sha": "f53b2b15e51c048778b8f60e37f4540d84b27d66",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-once",
+      "sha": "075beebe21a88d8e0c3a8ab43af52ff666e21483",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-pin-wyglad",
+      "sha": "6ae4c815fffbe35c8aa6cb597aa902ead9e8fb25",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-prawdziwa",
+      "sha": "1c37e0d743937e14fe01b8cf5fb699f18f2c8195",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-publiczna",
+      "sha": "afda4b931f3b70719ea2e1119ec7e87fbde17a99",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-q360",
+      "sha": "d150262865872877ea60ca083022292bdd96105f",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-quality",
+      "sha": "913b9ab7fc7edf579ee7a4317492e520403abd38",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-remote-control",
+      "sha": "af76686740a0f112d6c05335d3ab9ddcd4954952",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-resumable",
+      "sha": "472eda80855bf0bbf18df516aaf6cf254b692f50",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-ruch-program",
+      "sha": "32a250c958021afafe1fa78313f53876b166983f",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-save-fallback",
+      "sha": "87e32e4ff6f354dd8d01e2065c68d6ad550c78c7",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-seek",
+      "sha": "60876ad2ab3c5a123631c0945f84de97a4ad00e4",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-sidepanel",
+      "sha": "7b1f25bf149641fe725718c5f98408422bf30d06",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-site-only",
+      "sha": "4af8d96d1211124bfa7675379a62a7ae6cec491c",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-size-cap",
+      "sha": "d67aec9e136791eb80bcef34a0ee5ec918fbc35f",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-smallest-first",
+      "sha": "fb99041df2559be02a35f76bfe8b2c331edd61c4",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-status",
+      "sha": "066cd4aa85b26d9a94e4eeec22403eead3b51b80",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-takeover",
+      "sha": "dbf8848e4c2740dd756ca9767da0b916273e937c",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-tylko-chmura",
+      "sha": "4f3e23863075469c77a891f982d537efdc4bf296",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-uklad",
+      "sha": "c082a0646a24ada89fcf5824c3ec0ddd27cf2617",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-update-reload",
+      "sha": "186c93f11d21dc2e8462f08c2795f82b02395073",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-upload-timeout",
+      "sha": "833422caeedb32e70eed20ebf151d8fb2e137904",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-usuwanie",
+      "sha": "2ce6e1deefa18aa1bf0c8a40ad0786df9e13042c",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-viewer-reason",
+      "sha": "2c292382c19d4b4f5ea6deb5995ee388a424e064",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-visible-wins",
+      "sha": "427740f854dd80fca683fca44d292b37161a58ae",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-zgoda-folder",
+      "sha": "90fcc6f0c4c9905b0f8eb32ccc976ca3d6c413a6",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/kamera-zoom",
+      "sha": "e0e989bdccaf802410b7b14fd01f28a09e9ec0ab",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/claude/prywatna-kamera",
+      "sha": "d3df942a8e20de5b035f0cd47eb502b34910358c",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/deploy-update-channels-consistency-20261028",
+      "sha": "0551dfdba86136c50dd3f011a16a5d6b458253c0",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/desktop-ui-concept-real-implementation-20261027",
+      "sha": "187bd818334013507508b2842507e5e7ca27b84a",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fast-pages-publish-current-stable-149-20261027",
+      "sha": "b5d643c1cf4d22746780d3ee00fa5f5e3f7ce52e",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/finish-marketing-guided-start-live-qa-20261027",
+      "sha": "89bc3105387c7764801169c3a3b386e49161bac1",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix/home-security-usb-mic-2026-11-06",
+      "sha": "748ebb2c247a36548b2405a7fa6eefdcc0f462e8",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix/public-hosting-review",
+      "sha": "cc1cdd31843a778dbadd44135b9521fa6d3f324c",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-220-live-audit-test-version-20261027",
+      "sha": "89df9c7476c64d8c68062b7c92df303f3aa092cc",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-220-live-smoke-version-test-20261027",
+      "sha": "2e3c8a74bf70bce6f1e2ae0f5f683ada60bcc16e",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-224-service-worker-test-order-20261028",
+      "sha": "982348f6e685789b9cff4cb2d2b60a58d9f8632b",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-240-deployed-upgrade-checks-dynamic-20261028",
+      "sha": "3e1b51ee3085d9b56756e9fa5e761cf031767fca",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-browser-update-cache-busting-20261028",
+      "sha": "3657937f181ce44839b37c90b8b855e3f3907eca",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-crlf-double-conversion-release-test-20261028",
+      "sha": "abe677f63ea05d263bd2eb02551fa00ea5ed47a3",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-duplicate-desktop-workflow-checkout-20261027",
+      "sha": "9627daeb91a4befb7a14919f184370092ef0902d",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-dynamic-installer-smoke-test-20261028",
+      "sha": "05a7c9dc25d9551ea4d42388fe81edcef57d26b3",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-home-security-premium-ci-20261027",
+      "sha": "b013594325ba4597cded63665fe7f17f0a8db9b7",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-homepage-release-disclaimer-20261027",
+      "sha": "121dc2125aa29c07073be6a590b3a80210ba8b4b",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-lighthouse-auth-browser-retries-20261028",
+      "sha": "cab40263a9ae3bcf0de937b0e727444ea817aa30",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-lighthouse-github-pages-independent-20261028",
+      "sha": "748044f3cc8ac9f3878efff270aac41b0808ef27",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-live-update-audit-dynamic-20261028",
+      "sha": "46ea146c0adb3d0510d52d63dcb8f7ba38acd907",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-live-windows-manifest-regex-20261028",
+      "sha": "c6ad87a45d60166a448eeef34b224012591078c4",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-live-windows-semver-regex-20261028",
+      "sha": "029acbf770c63d917a7778ba59773bfebbdddcdd",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-manifest-driven-installer-smoke-test-20261028",
+      "sha": "3fc8068f950987f10eb3bb1d344065c22219268a",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-marketing-build-and-cache-20261027",
+      "sha": "76d46564dc59601de62e8989d307c67505f79a51",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-marketing-html-newline-20261027",
+      "sha": "44044ee97f6c904a8a07bdaa87c8fbf939634d7d",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-minified-production-bridge-audit-20261028",
+      "sha": "2d297503bee0efc5412c3325a658dff2deb026e0",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-mobile-settings-section-labels-20261027",
+      "sha": "60848df0dd085719941f32f2e5b90b2054777e14",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-motion-release-test-dynamic-20261027",
+      "sha": "65a5a12e7c576cfc483e72cd2c788e8f18d75e40",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-pages-deployment-cancellation-20261027",
+      "sha": "edbc37397471f5028ec0eb4eb73b25aed3f71c57",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-pagespeed-wait-curl-pipe-20261028",
+      "sha": "274a1dc433a6ee4f3cd4cc7b95bc2e080ca65b9a",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-preview-build-check-after-web-auto-221-20261027",
+      "sha": "7101fa86937ca364bf020d8ae0b2951f78d8128b",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-production-semver-matcher-20261028",
+      "sha": "059c62d977ec2d5603d37d29751ccd1ab0f77247",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-public-entry-csp-inline-v242-20261028",
+      "sha": "fe3854e8b240d8e4d743ef88fe2f76761cf36967",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-public-entry-versioned-csp-20261028",
+      "sha": "7fa518b008bc3967761bfb2ed24b5fefc1d8608a",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-public-redirect-to-stale-vercel-20261028",
+      "sha": "2cfe6c2e729e96d0ddd9000b148abfae9621a36f",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-release-242-seo-and-navigation-checks-20261028",
+      "sha": "d3e00c10d07efedb28b6f5438985299e4b6f8922",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-ui220-preserve-camera-filters-20261027",
+      "sha": "e1a1bd99a125a68a7950a023269bf1b96b2ee528",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-win-crlf-update-test-225-20261028",
+      "sha": "b6c6c6150650b73705d6e4550e3effbc5d31606c",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-windows-gallery-release-line-endings-20261028",
+      "sha": "00af5f8f12524dbd46f0fdd8f62cf815ac2a6482",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-windows-public-hardening-file-url-20261028",
+      "sha": "7c8b88c559b620b1b32c56e04276a826cc52a2e5",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-windows-release-dynamic-audit-20261028",
+      "sha": "9c4f74df570a621c3818812baf597b0bf31bf521",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/fix-windows-release-prepare-dynamic-audit-20261028",
+      "sha": "8e3258ae5eed998ab488116979091e2e1b30c11f",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/home-security-100-improvements-roadmap-20261027",
+      "sha": "c93494aae811d1dfd0846b12ecd6c709fafae150",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/homepage-product-gallery-conversion-20261027",
+      "sha": "573dc9e639f5df4bfb96d00bf2a8bfa89cd2cb06",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/improve-homepage-redirect-20261027",
+      "sha": "1ad04b4a3e3a05b9dc89a2e2b3228a4747c52903",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/improve-iphone-mobile-navigation-20261027",
+      "sha": "ff872e6e06d74ef135a1a4210eee42feabb57569",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/improve-premium-deploy-and-search-20261027",
+      "sha": "3da2d504df008d1e74036bbb8138593e6aa3502b",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/keep-desktop-preview-aligned-with-149-20261027",
+      "sha": "3af2faa0185511580e5a60daecd639e5abbd7ddc",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/main",
+      "sha": "0424054798d62d8dcc8cc83be2f53cfae92755a9",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/marketing-navigation-ia-mobile-drawer-20261028",
+      "sha": "0c53fae62506fde98b6ece0a0f1d7c828682f08d",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/marketing-visual-polish-20261027",
+      "sha": "d1243baa584645ab8cdf9b3b475ef2dd001e342f",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/marketing-visual-story-accessibility-20261027",
+      "sha": "117b75a3c92415454b507cd0b8995920abc00db9",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/measure-phone-route-fix-scroll-reflow-20261028",
+      "sha": "16188f039b15ff46d22484f331d87643ce205f17",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/optimize-pagespeed-mobile-images-seo-20261028",
+      "sha": "a723d306de204e32faa8191d50ca2f2b933b63c1",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/pagespeed-lighthouse-audit-20261028",
+      "sha": "235a115caf4cd012e2048166dacdbe057af7f7d6",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/pagespeed-optimize-images-webp-20261028",
+      "sha": "6d09bbd8bc44a267ecdece7e97e0d977caddc368",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/polish-home-security-owner-ui-20261027",
+      "sha": "69cc1b2efc234b62f426a9d86c2ab239847a4910",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/polish-motion-microinteractions-20261027",
+      "sha": "29d0728e2add6933b12bde62abdc810b332b669c",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/protect-live-viewer-pwa-update-225-20261028",
+      "sha": "e8163d182d9ab410483a499a9ec240b05129e5e5",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/redesign-home-security-homepage-20261027",
+      "sha": "e952bbeb0f0d58056eccfc6e93b8de8e29475bea",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/reduce-private-entry-logo-jpg-loads-20261028",
+      "sha": "b456beaf53e8079644d866920e8c4bcaa9d9ff25",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/restore-current-public-homepage-v242-20261028",
+      "sha": "81ad8b9eb5fd052576cd2b2975eac25891c1cf98",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/router-navigation-regression-tests-20261027",
+      "sha": "5078e589eb07f9e4a6a9d288bb941fec78b5513a",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/safe-one-click-updates-rollback-20261027",
+      "sha": "9d3d5cb4529d599f14b0dc60ff0b013a97998113",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/speed-up-desktop-ui220-preview-checkout-20261027",
+      "sha": "189c8e0ec3f11859985b683bd2020b3f4ce9d9ae",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/speedup-ui220-windows-preview-build-20261027",
+      "sha": "a076538a2d1bf3d451089ffd835a0a3fd8cd24a2",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/stable-windows-149-release-automation-20261027",
+      "sha": "f73890aae2fa914364b1452a70c8308bf6f80553",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/unblock-pages-fast-static-deploy-20261027",
+      "sha": "448b066687c3d27e47d624b96f260f9fbb07d8c3",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/unified-click-updates-final-20261027",
+      "sha": "f52bf8a2f7a0e8340c43d883633d391de7ddfdc6",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/unified-click-updates-web-win-20261027",
+      "sha": "8130f16d5cfa035c8a8f41277fe67c02e7c8cee7",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/updates-fallback-foreground-native-20261028",
+      "sha": "b93f56c1175ea6c57f0c6ff9e0ac911dd2eda8b9",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/upgrade-home-security-premium-experience-20261027",
+      "sha": "df3dea7e18e7142a3576e60c489f0a2b10606dae",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/validated-stable-1.4.9-f2af361ddd",
+      "sha": "00ab57927658e5d793294d16c3fa710594f5e129",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/tags/ui220-preview-ff86eede74ad",
+      "sha": "ff86eede74add6db739330150359de22e2ac975b",
+      "type": "commit"
+    }
+  ]
+}
