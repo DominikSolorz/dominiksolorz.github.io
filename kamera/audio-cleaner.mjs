@@ -18,7 +18,7 @@ export async function createCleanAudioStream(captured, profile = 'clean', enviro
   try {
     context = new Context({ latencyHint: 'interactive' });
     if (!context.audioWorklet?.addModule) throw new Error('AudioWorklet unavailable');
-    await context.audioWorklet.addModule(new URL('./noise-gate.worklet.js?v=1', import.meta.url).href);
+    await context.audioWorklet.addModule(new URL('./noise-gate.worklet.js?v=2', import.meta.url).href);
     const source = context.createMediaStreamSource(new Media([sourceTrack]));
     const high = context.createBiquadFilter();
     high.type = 'highpass';
