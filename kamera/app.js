@@ -22,7 +22,7 @@ import * as diskstore from "./diskstore.js?v=12";
 import { closeRecordingFragment } from './close-recording-fragment.mjs?v=1';
 import { createPictureInPicture } from './picture-in-picture.mjs?v=1';
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=106";
+import { mountDvr } from "./dvr-ui.js?v=107";
 import { accountClient } from "./auth.js?v=15";
 import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=15";
 import { mountAccountUI } from "./account-ui.mjs?v=3";
@@ -33,7 +33,7 @@ import { createWebUpdates } from "./core/web-updates.mjs?v=3";
 import { freshUpdateURL } from "./core/update-navigation.mjs?v=1";
 import { NativeAgentClient } from "./communication/native-agent-client.mjs";
 import { createAgentTelemetry } from "./communication/agent-telemetry.mjs?v=2";
-import { captureEventFrame } from "./workspace-panels.mjs?v=3";
+import { captureEventFrame } from "./workspace-panels.mjs?v=4";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
 import { createPeerDiagnostics } from "./core/peer-diagnostics.mjs";
 import { sealFolder, openFolder } from "./communication/folder-channel.mjs";
@@ -77,7 +77,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "268"; // musi się zgadzać z version.json
+const VERSION = "269"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1641,13 +1641,9 @@ const sender = (() => {
       const last = Number(sessionStorage.getItem("kamera-update") || 0);
       if (Date.now() - last < 30 * 60000) return;
       sessionStorage.setItem("kamera-update", String(Date.now()));
-      setStatus("Nowa wersja strony kamery — domykam bieżące nagranie przed odświeżeniem…");
-      const saved = archive.stop();
-      releaseSenderLock();
-      // Adres z numerem wersji: przeglądarka pobiera świeżą stronę zamiast starej z pamięci podręcznej.
-      const u = new URL(location.href); u.searchParams.set("v", String(v));
-      await archive.flush(saved);
-      location.replace(u.href);
+      // Native UI is bundled with its installed release. A web version change
+      // must never stop recording or reload that older, coherent bundle.
+      setStatus("Dostępna nowa wersja panelu. Kamera i nagrywanie pracują dalej; aktualizacja zostanie wczytana przy następnym uruchomieniu.");
     } catch { /* brak internetu — sprawdzimy później */ }
   }
 
@@ -2284,7 +2280,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "178";
+  const SERVICE_WORKER_BUILD = "179";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2645,6 +2641,21 @@ function setListeningAvailable(available) {
 }
 function paintListeningControls() {
   if (!listeningAvailable) return;
+  // Playing the captured microphone on its own computer feeds the speakers
+  // back into capture. Remote listeners and recordings retain the audio track.
+  if (sender.live) {
+    video.muted = true;
+    $("soundBtn").disabled = true;
+    $("listenVolume").disabled = true;
+    $("soundBtn").textContent = "Mikrofon nadawany bez lokalnego odsłuchu";
+    $("soundBtn").setAttribute("aria-pressed", "false");
+    $("soundBtn").title = "Odsłuch na komputerze z mikrofonem jest wyłączony, aby zapobiec echu. Użyj telefonu.";
+    $("listenState").textContent = "Ochrona przed echem aktywna";
+    $("audioHud").dataset.state = "muted";
+    return;
+  }
+  $("soundBtn").disabled = false;
+  $("listenVolume").disabled = false;
   const muted = video.muted;
   const volume = Math.round((Number(video.volume) || 0) * 100);
   const button = $("soundBtn");
@@ -2662,7 +2673,7 @@ $("soundBtn").addEventListener("click", async () => {
     $("soundBtn").setAttribute("aria-expanded", String(expanded));
     $("soundBtn").setAttribute("aria-controls", "listenVolume");
   }
-  if (!listeningAvailable) return;
+  if (!listeningAvailable || sender.live) return;
   video.muted = !video.muted;
   if (!video.muted && !video.volume) video.volume = 1;
   // Odtwarzanie dźwięku wymaga świadomego kliknięcia użytkownika.
@@ -2671,6 +2682,7 @@ $("soundBtn").addEventListener("click", async () => {
   toastMsg(video.muted ? "Odsłuch wyłączony." : `Odsłuch włączony — głośność ${Math.round(video.volume * 100)}%.`);
 });
 $("listenVolume").addEventListener("input", event => {
+  if (sender.live) { video.muted = true; paintListeningControls(); return; }
   const volume = Math.max(0, Math.min(100, Number(event.target.value) || 0)) / 100;
   video.volume = volume;
   if (volume > 0 && video.muted) video.muted = false;

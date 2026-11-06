@@ -11,7 +11,7 @@ namespace HomeSecurityDesktop;
 internal static class Program
 {
     private const string DesktopVersion = "1.4.42";
-    private const string WebPanelBuild = "268";
+    private const string WebPanelBuild = "269";
     // Desktop serves its installed Panel bundle at the existing trusted origin.
     // The website and installed UI can now be released independently without
     // migrating the user's existing session, PIN or IndexedDB recordings.
@@ -380,6 +380,8 @@ internal static class Program
                         if (type.GetString() == "desktop.update.visibility") {
                             panelUnlocked = root.TryGetProperty("visible", out var visible) && visible.ValueKind == JsonValueKind.True;
                             updateBar.Visible = panelUnlocked && offeredUpdate is not null;
+                            if (panelUnlocked && offeredUpdate is not null && !File.Exists(PendingUpdatePath))
+                                await DownloadAndPrepareOfferedUpdateAsync();
                             webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); return;
                         }
                         if (type.GetString() == "desktop.update.query") {
@@ -466,25 +468,27 @@ internal static class Program
                 if (manifest is null || !Version.TryParse(manifest.Version, out var available) || available <= Version.Parse(DesktopVersion)) return;
                 if (!Uri.TryCreate(manifest.PackageUrl, UriKind.Absolute, out var packageUri) || packageUri.Scheme != "https" || packageUri.Host != PublicHost || packageUri.Port != 443 || packageUri.UserInfo.Length != 0 || !packageUri.AbsolutePath.StartsWith("/kamera/updates/", StringComparison.Ordinal) || manifest.Sha256?.Length != 64 || !manifest.Sha256.All(Uri.IsHexDigit)) return;
                 offeredUpdate = manifest;
-                BeginInvoke(() => ShowUpdateOffer(manifest.Version));
+                ShowUpdateOffer(manifest.Version);
+                if (panelUnlocked) await DownloadAndPrepareOfferedUpdateAsync();
                 WriteDiagnostic("update-offered", new { manifest.Version });
             }
             catch (Exception ex) { WriteDiagnostic("update-check-failed", new { error = ex.Message }); }
             finally { checkingUpdate = false; }
         }
 
-        // Samo sprawdzenie wersji nie pobiera plików i nie restartuje programu.
-        // Aktualizacja następuje dopiero po wyraźnym kliknięciu użytkownika.
+        // Download in the background after unlock; install at the next normal
+        // launch. Never stop the active recorder to prepare an update.
         private void ShowUpdateOffer(string version)
         {
             updateButton.Text = $"↻ Zaktualizuj do wersji {version}";
             updateButton.Location = new Point(Math.Max(12, updateBar.ClientSize.Width - updateButton.Width - 16), 8);
-            PublishUpdateState("available", "Pełna aktualizacja programu jest gotowa. Pobranie i ponowne uruchomienie nastąpi po kliknięciu.");
+            PublishUpdateState("available", "Aktualizacja pobierze się w tle po odblokowaniu panelu. Kamera będzie nadal pracować.");
         }
 
         private async Task DownloadAndPrepareOfferedUpdateAsync()
         {
             if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;
+            if (File.Exists(PendingUpdatePath)) return;
             downloadingUpdate = true;
             var manifest = offeredUpdate;
             updateButton.Enabled = false;
@@ -528,21 +532,12 @@ internal static class Program
                     throw new InvalidDataException("Pobrany pakiet ma nieprawidłową sumę kontrolną.");
                 }
                 File.Move(temporaryPath, packagePath, true);
-                PublishUpdateState("preparing", "Zapisywanie bieżącego fragmentu nagrania…");
-                updatePreparationId = Guid.NewGuid().ToString();
-                updatePrepared = new(TaskCreationOptions.RunContinuationsAsynchronously);
-                webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { type = "desktop.update.prepare", id = updatePreparationId }));
-                bool prepared;
-                try { prepared = await updatePrepared.Task.WaitAsync(TimeSpan.FromSeconds(60)); }
-                catch (TimeoutException) { prepared = false; }
-                if (!prepared) {
-                    webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { type = "desktop.update.abort", id = updatePreparationId }));
-                    throw new InvalidDataException("Brak potwierdzenia bezpiecznego zapisu nagrania. Aktualizacja wstrzymana.");
-                }
-                File.WriteAllText(PendingUpdatePath, JsonSerializer.Serialize(new PendingUpdate(packagePath, manifest.Version, manifest.Sha256)));
+                var pendingTemporaryPath = PendingUpdatePath + ".tmp";
+                File.WriteAllText(pendingTemporaryPath, JsonSerializer.Serialize(new PendingUpdate(packagePath, manifest.Version, manifest.Sha256)));
+                File.Move(pendingTemporaryPath, PendingUpdatePath, true);
                 WriteDiagnostic("update-ready", new { manifest.Version, packagePath });
-                RestartIntoPreparedUpdate(manifest.Version);
-                PublishUpdateState("installing", "Pakiet sprawdzony. Ponowne uruchamianie programu…");
+                updateButton.Text = $"Wersja {manifest.Version} gotowa";
+                PublishUpdateState("staged", "Aktualizacja pobrana i sprawdzona. Zainstaluje się przy następnym uruchomieniu programu. Kamera i nagrywanie nadal pracują.");
             }
             catch (Exception ex)
             {
@@ -557,18 +552,6 @@ internal static class Program
             finally { downloadingUpdate = false; updateProgress.Visible = false; updatePrepared = null; updatePreparationId = null; }
         }
 
-        private void RestartIntoPreparedUpdate(string version)
-        {
-            Text = $"HOME SECURITY Desktop · instaluję aktualizację {version}…";
-            var timer = new System.Windows.Forms.Timer { Interval = 2500 };
-            timer.Tick += (_, _) =>
-            {
-                timer.Stop();
-                timer.Dispose();
-                Application.Restart();
-            };
-            timer.Start();
-        }
     }
 
     private sealed record DesktopUpdateManifest(string Version, string PackageUrl, string Sha256);

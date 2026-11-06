@@ -10,7 +10,8 @@ test('Windows app advertises one-click Zaktualizuj for the exact offered version
   assert.ok(source.includes('Interval = 6 * 60 * 60 * 1000'));
   assert.ok(source.includes('if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;'));
   assert.ok(source.includes('SHA256.HashDataAsync'));
-  assert.ok(source.includes('RestartIntoPreparedUpdate(manifest.Version)'));
+  assert.ok(source.includes('PublishUpdateState("staged"'));
+  assert.ok(!source.includes('Application.Restart'));
 });
 
 test('post-deployment verification compares both public update channels with immutable release sources',async()=>{

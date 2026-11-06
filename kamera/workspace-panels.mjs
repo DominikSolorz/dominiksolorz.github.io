@@ -66,6 +66,6 @@ export function captureEventFrame(video) {
  try{const canvas=document.createElement('canvas');const scale=Math.min(320/video.videoWidth,180/video.videoHeight);canvas.width=Math.max(1,Math.round(video.videoWidth*scale));canvas.height=Math.max(1,Math.round(video.videoHeight*scale));const context=canvas.getContext('2d');if(!context)return null;context.drawImage(video,0,0,canvas.width,canvas.height);const data=canvas.toDataURL('image/jpeg',.55);return validThumbnail(data)?data:null;}catch{return null;}
 }
 export function mirrorLivePreview(source,target,placeholder){
- const sync=()=>{if(!source||!target)return;const stream=source.srcObject;if(target.srcObject!==stream)target.srcObject=stream;const available=!!stream&&source.readyState>=2;target.hidden=!available;if(placeholder)placeholder.hidden=available;if(available&&target.paused)target.play().catch(()=>{});};
+ const sync=()=>{if(!source||!target)return;target.muted=true;target.defaultMuted=true;const stream=source.srcObject;if(target.srcObject!==stream)target.srcObject=stream;const available=!!stream&&source.readyState>=2;target.hidden=!available;if(placeholder)placeholder.hidden=available;if(available&&target.paused)target.play().catch(()=>{});};
  source?.addEventListener('loadedmetadata',sync);source?.addEventListener('emptied',sync);const timer=setInterval(sync,1500);sync();return()=>{clearInterval(timer);source?.removeEventListener('loadedmetadata',sync);source?.removeEventListener('emptied',sync);target.srcObject=null;};
 }

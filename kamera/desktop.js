@@ -7,7 +7,7 @@ import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { operatorStatus } from "./core/operator-status.mjs?v=1";
 import { mountCameraWorkspace } from './camera-workspace.mjs?v=2';
-import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=3";
+import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=4";
 const isTransmitter = location.hash === "#nadaj";
 // Tryb urządzenia jest rozstrzygany raz, przed załadowaniem CSS w index.html.
 // Dzięki temu Chrome w telefonie i wersja instalowana PWA nie rozchodzą się
@@ -76,7 +76,7 @@ if (desktopRequested) {
     if (state?.type !== "desktop.update.state") return;
     updateNotice.hidden = state.status === "none";
     $("desktopUpdateAction").disabled = !["available", "error"].includes(state.status);
-    $("desktopUpdateAction").textContent = state.status === "available" ? `↻ Zaktualizuj do ${state.version}` : state.status === "error" ? "↻ Spróbuj ponownie" : "↻ Aktualizacja programu";
+    $("desktopUpdateAction").textContent = state.status === "available" ? `↻ Zaktualizuj do ${state.version}` : state.status === "error" ? "↻ Spróbuj ponownie" : state.status === "staged" ? `Wersja ${state.version} gotowa` : "↻ Aktualizacja programu";
     $("desktopUpdateStatus").textContent = state.message || "";
     const progress = $("desktopUpdateProgress"); progress.hidden = state.status !== "downloading";
     if (Number.isFinite(state.percent)) progress.value = Math.max(0, Math.min(100, state.percent));

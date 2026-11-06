@@ -140,7 +140,7 @@ test('marketing pages poll the published build but preserve unsent forms',async(
  assert.ok(generated.includes('home-security-build" content="'+version+'"'));
 });
 
-test('native Windows update remains strictly opt-in via the left-hand sidebar',async()=>{
+test('native Windows update retains retry control in the left-hand sidebar',async()=>{
  const [native,desktop]=await Promise.all([
    readFile(new URL('../desktop-client/Program.cs',import.meta.url),'utf8'),
    read('desktop.js')
