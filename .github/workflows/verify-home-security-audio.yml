@@ -1,0 +1,36 @@
+name: Verify HOME SECURITY USB microphone selection
+
+on:
+  pull_request:
+    paths:
+      - 'kamera/app.js'
+      - 'kamera/audio-source.mjs'
+      - 'kamera/tests/audio-source.test.mjs'
+      - '.github/workflows/verify-home-security-audio.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out only camera source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kamera
+      - name: Set up Node 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Syntax-check camera application and audio helper
+        run: |
+          node --check kamera/app.js
+          node --check kamera/audio-source.mjs
+      - name: Run microphone selection regression tests
+        run: node --test kamera/tests/audio-source.test.mjs
