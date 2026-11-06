@@ -1,4 +1,4 @@
-import { createAudioLevelHistory } from './audio-meter.mjs?v=1';
+import { createAudioLevelHistory, spectralToneHints } from './audio-meter.mjs?v=2';
 
 // Captured microphone -> filters -> worklet noise gate -> one shared output track.
 // The same processed track is used for live WebRTC and recordings; never play it locally.
@@ -36,8 +36,14 @@ export async function createCleanAudioStream(captured, profile = 'clean', enviro
       // and the other is after the filtered/raw branches have been mixed.
       inputMeter = context.createAnalyser();
       outputMeter = context.createAnalyser();
-      inputMeter.fftSize = 2048;
-      outputMeter.fftSize = 2048;
+      // 8192 points resolve 100/200 Hz and narrow ~3.8 kHz peaks.
+      // The analysers remain in the existing audio path without extra output.
+      inputMeter.fftSize = 8192;
+      outputMeter.fftSize = 8192;
+      inputMeter.minDecibels = -140;
+      outputMeter.minDecibels = -140;
+      inputMeter.maxDecibels = 0;
+      outputMeter.maxDecibels = 0;
       levelHistory = createAudioLevelHistory();
     } catch {
       // Older embedded browsers continue recording with the normal audio graph.
@@ -92,12 +98,28 @@ export async function createCleanAudioStream(captured, profile = 'clean', enviro
     if (inputMeter && outputMeter && typeof environment.setInterval === 'function') {
       const before = new Float32Array(inputMeter.fftSize);
       const after = new Float32Array(outputMeter.fftSize);
+      const canInspectSpectrum = Number.isFinite(context.sampleRate) && context.sampleRate > 0
+        && typeof inputMeter.getFloatFrequencyData === 'function'
+        && typeof outputMeter.getFloatFrequencyData === 'function';
+      const inputSpectrum = canInspectSpectrum ? new Float32Array(inputMeter.fftSize / 2) : null;
+      const outputSpectrum = canInspectSpectrum ? new Float32Array(outputMeter.fftSize / 2) : null;
       const sampleLevel = () => {
         if (context.state !== 'running') return;
         try {
           inputMeter.getFloatTimeDomainData(before);
           outputMeter.getFloatTimeDomainData(after);
-          levelHistory.observe(before, after);
+          let tonal = null;
+          if (canInspectSpectrum) {
+            try {
+              inputMeter.getFloatFrequencyData(inputSpectrum);
+              outputMeter.getFloatFrequencyData(outputSpectrum);
+              tonal = {
+                inputTones: spectralToneHints(inputSpectrum, context.sampleRate, inputMeter.fftSize),
+                outputTones: spectralToneHints(outputSpectrum, context.sampleRate, outputMeter.fftSize),
+              };
+            } catch { /* Spectrum diagnostics are optional; RMS continues. */ }
+          }
+          levelHistory.observe(before, after, Date.now(), tonal);
         } catch { /* Diagnostics must never interrupt audio capture. */ }
       };
       levelTimer = environment.setInterval(sampleLevel, 1000);
