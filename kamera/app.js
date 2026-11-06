@@ -28,6 +28,7 @@ import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./au
 import { mountAccountUI } from "./account-ui.mjs?v=3";
 import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=2';
 import { createCleanAudioStream } from './audio-cleaner.mjs?v=1';
+import { preferCameraMicrophone } from './audio-source.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { createWebUpdates } from "./core/web-updates.mjs?v=3";
 import { freshUpdateURL } from "./core/update-navigation.mjs?v=1";
@@ -1346,7 +1347,16 @@ const sender = (() => {
   async function prepareCameraStream(s) {
     const track = s.getVideoTracks()[0];
     if (track) { track.contentHint = "motion"; await optimizeCameraLight(track); }
-    return s;
+    // Web browsers otherwise capture the Windows default microphone even when
+    // a different physical USB webcam was selected. Never guess by device name.
+    const result = await preferCameraMicrophone(
+      s, navigator.mediaDevices, audioConstraints(prefs.audioProfile || 'clean'), window.MediaStream
+    );
+    systemStore.component('microphoneSource', {
+      status: result.selected ? 'matched' : result.reason,
+      note: result.selected ? 'Mikrofon dobrany do kamery USB.' : 'Zachowano dostępny mikrofon.'
+    });
+    return result.stream;
   }
   const getMedia = async deviceId => {
     try {
