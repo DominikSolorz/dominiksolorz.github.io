@@ -1,4 +1,4 @@
-name: Verify HOME SECURITY USB microphone selection
+name: Verify HOME SECURITY microphone and noise diagnostics
 
 on:
   pull_request:
@@ -7,6 +7,9 @@ on:
       - 'kamera/audio-source.mjs'
       - 'kamera/noise-gate.worklet.js'
       - 'kamera/audio-cleaner.mjs'
+      - 'kamera/audio-meter.mjs'
+      - 'kamera/tests/audio-cleaner.test.mjs'
+      - 'kamera/tests/audio-meter.test.mjs'
       - 'kamera/tests/noise-gate.test.mjs'
       - 'kamera/tests/audio-source.test.mjs'
       - '.github/workflows/verify-home-security-audio.yml'
@@ -36,6 +39,7 @@ jobs:
           node --check kamera/app.js
           node --check kamera/audio-source.mjs
           node --check kamera/audio-cleaner.mjs
+          node --check kamera/audio-meter.mjs
           node --check kamera/noise-gate.worklet.js
-      - name: Run microphone selection regression tests
+      - name: Run microphone and noise diagnostics regression tests
         run: node --test kamera/tests/*.test.mjs
