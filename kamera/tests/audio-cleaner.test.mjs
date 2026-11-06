@@ -118,3 +118,71 @@ test('absence of WebAudio returns original recording stream without diagnostic c
   assert.equal(pipeline.filtered, false);
   assert.equal(pipeline.getLevels(), null);
 });
+
+test('WebAudio reports recurring tonal peaks separately before and after processing', async () => {
+  class ContextWithSpectrum extends MockContext {
+    constructor() { super(); this.sampleRate = 48000; }
+    createAnalyser() {
+      const analyser = super.createAnalyser();
+      analyser.getFloatFrequencyData = data => {
+        assert.equal(data.length, 4096, '8192-point FFT needed for low-frequency tones');
+        data.fill(-98);
+        if (analyser.name === 'input-meter') {
+          data[Math.round(100 * 8192 / 48000)] = -57;
+          data[Math.round(3800 * 8192 / 48000)] = -63;
+        }
+      };
+      return analyser;
+    }
+  }
+  let sample;
+  let stopped = false;
+  const captured = makeCapture();
+  const pipe = await createCleanAudioStream(captured.captured, 'clean', {
+    AudioContext: ContextWithSpectrum,
+    AudioWorkletNode: MockWorklet,
+    MediaStream: MockStream,
+    setInterval(fn) { sample = fn; return 17; },
+    clearInterval(id) { assert.equal(id, 17); stopped = true; },
+  });
+  assert.equal(pipe.filtered, true);
+  assert.equal(pipe.getLevels(), null);
+  sample();
+  sample();
+  sample();
+  const levels = pipe.getLevels();
+  assert.deepEqual(levels.inputTones.map(t => t.hz), [100, 3800]);
+  assert.deepEqual(levels.outputTones, [], 'processed stream should be inspected separately');
+  assert.equal(levels.beforeDb, -20);
+  assert.equal(levels.afterDb, -32);
+  assert.equal(pipe.stream.getVideoTracks()[0], captured.video);
+  pipe.close();
+  assert.equal(stopped, true);
+});
+
+test('spectrum measurement failure never stops RMS diagnostics or the recording', async () => {
+  class ContextWithBrokenSpectrum extends MockContext {
+    constructor() { super(); this.sampleRate = 48000; }
+    createAnalyser() {
+      const node = super.createAnalyser();
+      node.getFloatFrequencyData = () => { throw new Error('Spectrum unavailable'); };
+      return node;
+    }
+  }
+  let poll;
+  const { captured } = makeCapture();
+  const pipe = await createCleanAudioStream(captured, 'clean', {
+    AudioContext: ContextWithBrokenSpectrum,
+    AudioWorkletNode: MockWorklet,
+    MediaStream: MockStream,
+    setInterval(fn) { poll = fn; return 3; },
+    clearInterval() {},
+  });
+  poll();
+  const levels = pipe.getLevels();
+  assert.equal(levels.beforeDb, -20);
+  assert.equal(levels.afterDb, -32);
+  assert.equal(levels.inputTones, undefined);
+  assert.equal(pipe.stream.getAudioTracks().length, 1);
+  pipe.close();
+});
