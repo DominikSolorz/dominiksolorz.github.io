@@ -27,7 +27,8 @@ import { accountClient } from "./auth.js?v=15";
 import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=15";
 import { mountAccountUI } from "./account-ui.mjs?v=3";
 import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=2';
-import { createCleanAudioStream } from './audio-cleaner.mjs?v=1';
+import { createCleanAudioStream } from './audio-cleaner.mjs?v=3';
+import { preferCameraMicrophone } from './audio-source.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { createWebUpdates } from "./core/web-updates.mjs?v=3";
 import { freshUpdateURL } from "./core/update-navigation.mjs?v=1";
@@ -1099,6 +1100,12 @@ function renderDiag(d, extra = []) {
   const rows = [
     row(capture === "error" ? "error" : "info", d.camLive ? `Ścieżka kamery aktywna: ${d.cam || "kamera"} · ${d.w || "?"}×${d.h || "?"} · ustawienie ${d.fps || "?"} FPS` : capture === "disabled" ? "Kamera wyłączona wybranym trybem." : d.camError || "Oczekiwanie na telemetrię kamery."),
     row("info", d.micOn ? `Mikrofon aktywny: ${d.mic || "mikrofon"}` : "Mikrofon nieużywany — nie jest to błąd kamery."),
+    ...(d.micOn && d.audioLevels ? [
+      row("info", `Poziom mikrofonu przed/po filtrze: ${d.audioLevels.beforeDb} / ${d.audioLevels.afterDb} dBFS. Najcichsze fragmenty ostatniej minuty: ${d.audioLevels.quietBeforeDb} / ${d.audioLevels.quietAfterDb} dBFS. To pomiary cyfrowe, nie natężenie hałasu w pokoju.`)
+    ] : []),
+    ...(d.micOn && (d.audioLevels?.inputTones?.length || d.audioLevels?.outputTones?.length) ? [
+      row("info", `Powtarzające się wąskie tony (przed / po filtrze): ${(d.audioLevels.inputTones || []).map(p => `${p.hz} Hz (+${p.excessDb} dB)`).join(", ") || "brak"} / ${(d.audioLevels.outputTones || []).map(p => `${p.hz} Hz (+${p.excessDb} dB)`).join(", ") || "brak"}. To wskazówka z widma, nie rozpoznanie uszkodzenia sprzętu.`)
+    ] : []),
     row("info", d.recording ? "Nagrywanie aktywne." : ["preview", "off"].includes(d.mode) ? "Zapis wyłączony wybranym trybem." : "Oczekiwanie na zapis lub harmonogram."),
     row(rtc.failed ? "error" : "info", `WebRTC tego ekranu: ${rtc.last}`),
     row("info", d.lastFile ? `Ostatni zamknięty plik: ${d.lastFile}` : "Brak zamkniętego segmentu w tej sesji."),
@@ -1346,7 +1353,16 @@ const sender = (() => {
   async function prepareCameraStream(s) {
     const track = s.getVideoTracks()[0];
     if (track) { track.contentHint = "motion"; await optimizeCameraLight(track); }
-    return s;
+    // Web browsers otherwise capture the Windows default microphone even when
+    // a different physical USB webcam was selected. Never guess by device name.
+    const result = await preferCameraMicrophone(
+      s, navigator.mediaDevices, audioConstraints(prefs.audioProfile || 'clean'), window.MediaStream
+    );
+    systemStore.component('microphoneSource', {
+      status: result.selected ? 'matched' : result.reason,
+      note: result.selected ? 'Mikrofon dobrany do kamery USB.' : 'Zachowano dostępny mikrofon.'
+    });
+    return result.stream;
   }
   const getMedia = async deviceId => {
     try {
@@ -1667,7 +1683,8 @@ const sender = (() => {
     const v = stream?.getVideoTracks()[0], a = stream?.getAudioTracks()[0], st = v?.getSettings?.() || {}, r = archive.status();
     return { cam: v ? (v.label || "kamera") : "", camLive: v?.readyState === "live", w: st.width, h: st.height, fps: Math.round(st.frameRate || 0),
       mic: a ? (a.label || "mikrofon") : "", micOn: !!a && a.enabled && a.readyState === "live", recording: r.recording, lastFile: r.lastFile,
-      quality: recQuality().short, recordingError:r.recordingError, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem(), light: cameraLight, webrtc: webRtcDiagnostics.snapshot() };
+      quality: recQuality().short, recordingError:r.recordingError, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem(), light: cameraLight, webrtc: webRtcDiagnostics.snapshot(),
+      audioLevels: a?.enabled && a.readyState === "live" ? (noisePipeline?.getLevels?.() || null) : null };
   }
   const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", nativeDrive: nativeDriveSummary(systemStore.snapshot().components.nativeDrive), rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, light: clampLight(prefs.light), lightSw, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, visible: document.visibilityState === "visible", diag: diag() }), reportNativePanelState({ role: "transmitter", live: !!stream, cameraError: camProblem(), recording: archive.status().recording, camera: diag().cam, resolution: `${diag().w || 0}x${diag().h || 0}`, fps: diag().fps || 0 }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream, quality: prefs.recQuality }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.

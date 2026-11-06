@@ -1,3 +1,5 @@
+import { createAudioLevelHistory, spectralToneHints } from './audio-meter.mjs?v=2';
+
 // Captured microphone -> filters -> worklet noise gate -> one shared output track.
 // The same processed track is used for live WebRTC and recordings; never play it locally.
 const MODES = Object.freeze({
@@ -8,17 +10,17 @@ const MODES = Object.freeze({
 export async function createCleanAudioStream(captured, profile = 'clean', environment = globalThis) {
   if (!Object.hasOwn(MODES, profile)) throw new Error('Nieprawidłowy tryb mikrofonu.');
   const sourceTrack = captured.getAudioTracks()[0] || null;
-  const fallback = { stream: captured, sourceTrack, filtered: false, setProfile() {}, close() {} };
+  const fallback = { stream: captured, sourceTrack, filtered: false, setProfile() {}, getLevels() { return null; }, close() {} };
   if (!sourceTrack || sourceTrack.readyState !== 'live') return fallback;
   const Context = environment.AudioContext || environment.webkitAudioContext;
   const Worklet = environment.AudioWorkletNode;
   const Media = environment.MediaStream;
   if (!Context || !Worklet || !Media) return fallback;
-  let context, destination;
+  let context, destination, levelTimer = null;
   try {
     context = new Context({ latencyHint: 'interactive' });
     if (!context.audioWorklet?.addModule) throw new Error('AudioWorklet unavailable');
-    await context.audioWorklet.addModule(new URL('./noise-gate.worklet.js?v=1', import.meta.url).href);
+    await context.audioWorklet.addModule(new URL('./noise-gate.worklet.js?v=2', import.meta.url).href);
     const source = context.createMediaStreamSource(new Media([sourceTrack]));
     const high = context.createBiquadFilter();
     high.type = 'highpass';
@@ -28,13 +30,47 @@ export async function createCleanAudioStream(captured, profile = 'clean', enviro
     const cleanLevel = context.createGain();
     const rawLevel = context.createGain();
     destination = context.createMediaStreamDestination();
-    source.connect(high);
+    let inputMeter = null, outputMeter = null, levelHistory = null;
+    try {
+      // These analysers are transparent: one is on the original microphone path
+      // and the other is after the filtered/raw branches have been mixed.
+      inputMeter = context.createAnalyser();
+      outputMeter = context.createAnalyser();
+      // 8192 points resolve 100/200 Hz and narrow ~3.8 kHz peaks.
+      // The analysers remain in the existing audio path without extra output.
+      inputMeter.fftSize = 8192;
+      outputMeter.fftSize = 8192;
+      inputMeter.minDecibels = -140;
+      outputMeter.minDecibels = -140;
+      inputMeter.maxDecibels = 0;
+      outputMeter.maxDecibels = 0;
+      levelHistory = createAudioLevelHistory();
+    } catch {
+      // Older embedded browsers continue recording with the normal audio graph.
+      inputMeter = null;
+      outputMeter = null;
+    }
+    if (inputMeter && outputMeter) {
+      source.connect(inputMeter);
+      inputMeter.connect(high);
+      inputMeter.connect(rawLevel);
+    } else {
+      source.connect(high);
+      source.connect(rawLevel);
+    }
     high.connect(low);
     low.connect(gate);
     gate.connect(cleanLevel);
-    cleanLevel.connect(destination);
-    source.connect(rawLevel);
-    rawLevel.connect(destination);
+    if (inputMeter && outputMeter) {
+      const mix = context.createGain();
+      cleanLevel.connect(mix);
+      rawLevel.connect(mix);
+      mix.connect(outputMeter);
+      outputMeter.connect(destination);
+    } else {
+      cleanLevel.connect(destination);
+      rawLevel.connect(destination);
+    }
     const outputTrack = destination.stream.getAudioTracks()[0];
     if (!outputTrack) throw new Error('No processed audio track');
     function setProfile(next) {
@@ -58,15 +94,48 @@ export async function createCleanAudioStream(captured, profile = 'clean', enviro
       ]);
       if (context.state !== 'running') throw new Error('Audio context is not running');
     }
+    // Periodic, numeric-only snapshots. No sound data is stored or sent anywhere.
+    if (inputMeter && outputMeter && typeof environment.setInterval === 'function') {
+      const before = new Float32Array(inputMeter.fftSize);
+      const after = new Float32Array(outputMeter.fftSize);
+      const canInspectSpectrum = Number.isFinite(context.sampleRate) && context.sampleRate > 0
+        && typeof inputMeter.getFloatFrequencyData === 'function'
+        && typeof outputMeter.getFloatFrequencyData === 'function';
+      const inputSpectrum = canInspectSpectrum ? new Float32Array(inputMeter.fftSize / 2) : null;
+      const outputSpectrum = canInspectSpectrum ? new Float32Array(outputMeter.fftSize / 2) : null;
+      const sampleLevel = () => {
+        if (context.state !== 'running') return;
+        try {
+          inputMeter.getFloatTimeDomainData(before);
+          outputMeter.getFloatTimeDomainData(after);
+          let tonal = null;
+          if (canInspectSpectrum) {
+            try {
+              inputMeter.getFloatFrequencyData(inputSpectrum);
+              outputMeter.getFloatFrequencyData(outputSpectrum);
+              tonal = {
+                inputTones: spectralToneHints(inputSpectrum, context.sampleRate, inputMeter.fftSize),
+                outputTones: spectralToneHints(outputSpectrum, context.sampleRate, outputMeter.fftSize),
+              };
+            } catch { /* Spectrum diagnostics are optional; RMS continues. */ }
+          }
+          levelHistory.observe(before, after, Date.now(), tonal);
+        } catch { /* Diagnostics must never interrupt audio capture. */ }
+      };
+      levelTimer = environment.setInterval(sampleLevel, 1000);
+    }
     const stream = new Media([...captured.getVideoTracks(), outputTrack]);
     const onEnded = () => outputTrack.stop();
     sourceTrack.addEventListener?.('ended', onEnded);
     let closed = false;
     return {
       stream, sourceTrack, filtered: true, setProfile,
+      getLevels() { return levelHistory?.snapshot() || null; },
       close() {
         if (closed) return;
         closed = true;
+        if (levelTimer !== null) { environment.clearInterval?.(levelTimer); levelTimer = null; }
+        levelHistory?.clear();
         sourceTrack.removeEventListener?.('ended', onEnded);
         gate.port.close?.();
         outputTrack.stop();
@@ -75,6 +144,7 @@ export async function createCleanAudioStream(captured, profile = 'clean', enviro
       },
     };
   } catch (_) {
+    if (levelTimer !== null) environment.clearInterval?.(levelTimer);
     destination?.stream.getAudioTracks().forEach(track => track.stop());
     context?.close().catch(() => {});
     return fallback;

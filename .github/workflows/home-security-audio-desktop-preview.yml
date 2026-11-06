@@ -1,0 +1,110 @@
+name: Build HOME SECURITY audio fix Windows preview
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'kamera/app.js'
+      - 'kamera/audio-*.mjs'
+      - 'kamera/noise-gate.worklet.js'
+      - 'kamera/tests/*.test.mjs'
+      - 'desktop-client/**'
+      - '.github/workflows/home-security-audio-desktop-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audio-windows-preview:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out application without historical binary releases
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - name: Set up Node 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test microphone, noise gate, native app and updater
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          node --test kamera/tests/*.test.mjs tests/desktop-bundle.test.mjs tests/update-flow.test.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'Microphone or desktop tests failed' }
+          node --check kamera/app.js
+          node --check kamera/audio-source.mjs
+          node --check kamera/audio-cleaner.mjs
+          node --check kamera/audio-meter.mjs
+          node --check kamera/noise-gate.worklet.js
+      - name: Compile genuine Windows desktop and native camera agent
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $match=[regex]::Match((Get-Content -Raw 'desktop-client/Program.cs'),'DesktopVersion = "([0-9.]+)"')
+          if (-not $match.Success) { throw 'Desktop version missing' }
+          $version=$match.Groups[1].Value
+          & ./desktop-client/build-release.ps1 -Version $version
+          if ($LASTEXITCODE -ne 0) { throw 'Windows app build failed' }
+          $dir="desktop-client/publish-$version"
+          foreach ($path in @(
+            'HomeSecurityDesktop.exe',
+            'Panel/panel.html',
+            'Panel/app.js',
+            'Panel/audio-source.mjs',
+            'Panel/audio-cleaner.mjs',
+            'Panel/audio-meter.mjs',
+            'Panel/noise-gate.worklet.js',
+            "Agent/$version/HomeSecurityAgent.exe"
+          )) {
+            if (-not (Test-Path (Join-Path $dir $path))) { throw "Missing bundled component: $path" }
+          }
+          $app=Get-Content -Raw (Join-Path $dir 'Panel/app.js')
+          foreach ($required in @('preferCameraMicrophone','getLevels','audioLevels')) {
+            if (-not $app.Contains($required)) { throw "New microphone source missing from bundled app: $required" }
+          }
+          $meter=Get-Content -Raw (Join-Path $dir 'Panel/audio-meter.mjs')
+          if (-not $meter.Contains('spectralToneHints')) { throw 'Spectral diagnostic module missing from Windows bundle' }
+          @'
+          HOME SECURITY Desktop — prywatna wersja testowa poprawki mikrofonu.
+
+          To nie jest oficjalna aktualizacja ani instalator. Nie podmieniaj
+          plików obecnej instalacji, nie publikuj tej paczki w internecie.
+          Nie uruchamiaj obok działającego HOME SECURITY Desktop.
+          Przed próbą sprawdź, że aktualne nagranie zostało zamknięte.
+          Uruchamiaj wyłącznie po rozpakowaniu całego ZIP-a w osobnym folderze.
+          Pamiętaj, że aplikacja testowa może używać wspólnego profilu
+          %LOCALAPPDATA%\HomeSecurityDesktop i tego samego katalogu archiwum.
+          Najbezpieczniej uruchomić ją na osobnym koncie testowym Windows.
+          Jeżeli nie możesz wydzielić środowiska, nie uruchamiaj tej wersji.
+
+          Przed wdrożeniem produkcyjnym sprawdź działanie mikrofonu, PIN-u,
+          dostępu do kamery, zapisu i odtwarzania krótkiego nagrania.
+          '@ | Set-Content -Path (Join-Path $dir 'PRZECZYTAJ-PRZED-TESTEM.txt') -Encoding utf8
+          $zip='home-security-audio-windows-preview.zip'
+          Compress-Archive -Path "$dir/*" -DestinationPath $zip -CompressionLevel Optimal
+          $sha=(Get-FileHash $zip -Algorithm SHA256).Hash
+          "SHA256 $sha" | Set-Content -Path 'audio-windows-preview-sha256.txt'
+          Add-Content $env:GITHUB_STEP_SUMMARY "Isolated audio-fix Windows candidate, NOT production update. SHA256: $sha"
+      - name: Upload Windows preview, no deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-security-audio-windows-preview
+          path: |
+            home-security-audio-windows-preview.zip
+            audio-windows-preview-sha256.txt
+          if-no-files-found: error
+          retention-days: 7
