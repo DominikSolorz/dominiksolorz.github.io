@@ -1103,6 +1103,9 @@ function renderDiag(d, extra = []) {
     ...(d.micOn && d.audioLevels ? [
       row("info", `Poziom mikrofonu przed/po filtrze: ${d.audioLevels.beforeDb} / ${d.audioLevels.afterDb} dBFS. Najcichsze fragmenty ostatniej minuty: ${d.audioLevels.quietBeforeDb} / ${d.audioLevels.quietAfterDb} dBFS. To pomiary cyfrowe, nie natężenie hałasu w pokoju.`)
     ] : []),
+    ...(d.micOn && (d.audioLevels?.inputTones?.length || d.audioLevels?.outputTones?.length) ? [
+      row("info", `Powtarzające się wąskie tony (przed / po filtrze): ${(d.audioLevels.inputTones || []).map(p => `${p.hz} Hz (+${p.excessDb} dB)`).join(", ") || "brak"} / ${(d.audioLevels.outputTones || []).map(p => `${p.hz} Hz (+${p.excessDb} dB)`).join(", ") || "brak"}. To wskazówka z widma, nie rozpoznanie uszkodzenia sprzętu.`)
+    ] : []),
     row("info", d.recording ? "Nagrywanie aktywne." : ["preview", "off"].includes(d.mode) ? "Zapis wyłączony wybranym trybem." : "Oczekiwanie na zapis lub harmonogram."),
     row(rtc.failed ? "error" : "info", `WebRTC tego ekranu: ${rtc.last}`),
     row("info", d.lastFile ? `Ostatni zamknięty plik: ${d.lastFile}` : "Brak zamkniętego segmentu w tej sesji."),
