@@ -43,3 +43,8 @@ jobs:
         run: node --test tests/mobile-camera-frame.test.mjs tests/streaming.test.mjs
       - name: Verify public navigation and marketing did not regress
         run: node --test tests/marketing.test.mjs tests/public-subpages.test.mjs
+      - name: Verify all release regression tests and generated marketing files
+        run: |
+          node scripts/build-marketing.mjs --check
+          node --test tests/*.test.mjs
+          node scripts/verify-site-links.mjs
