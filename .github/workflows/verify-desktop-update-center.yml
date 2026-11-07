@@ -1,4 +1,4 @@
-name: Verify HOME SECURITY manual Windows update center
+name: DESKTOP | Windows | Test aktualizatora
 
 on:
   push:
