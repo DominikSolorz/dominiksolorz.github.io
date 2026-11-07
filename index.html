@@ -4,11 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<meta http-equiv="refresh" content="0; url=./kamera/?start=home-v142">
-<title>Prywatna Kamera</title>
-<script>location.replace("./kamera/?start=home-v142" + location.hash);</script>
+<meta name="theme-color" content="#0b1120">
+<meta http-equiv="refresh" content="0; url=./kamera/">
+<title>HOME SECURITY — monitoring domowy</title>
+<script>
+(() => {
+  const params = new URLSearchParams(location.search);
+  // Marketing is the public homepage. Explicit app/auth links keep their routing.
+  const toPanel = [...params.keys()].some(key => ["auth","app","view","ui","desktop","bootRetry","theme","start","code","odbiorca","panel"].includes(key))
+      || location.hash === "#nadaj" || /(?:^#|&)(?:access_token|error|type)=/.test(location.hash);
+  const destination = new URL(toPanel ? "./kamera/panel.html" : "./kamera/", location.href);
+  destination.search = params.toString();
+  destination.hash = location.hash;
+  location.replace(destination.href);
+})();
+</script>
 </head>
-<body style="background:#0b1120;color:#e8edf6;font-family:system-ui,sans-serif">
-<p>Otwieram stronę startową <a href="./kamera/?start=home-v142" style="color:#a78bfa">HOME SECURITY</a>…</p>
+<body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1120;color:#e8edf6;font-family:system-ui,sans-serif;text-align:center">
+<main style="padding:24px">
+<h1 style="font-size:1.5rem">HOME SECURITY</h1>
+<p>Otwieranie strony HOME SECURITY…</p>
+<p><a href="./kamera/" style="color:#c4b5fd">Przejdź do strony HOME SECURITY</a></p>
+</main>
 </body>
 </html>

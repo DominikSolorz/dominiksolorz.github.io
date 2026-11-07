@@ -1,11 +1,15 @@
 // Zmieniaj wersję tylko wtedy, gdy aktualizujemy powłokę aplikacji.
 // Dzięki temu zainstalowany panel nie otworzy przestarzałego index.html.
-const CACHE = "kamera-domowa-shell-v121";
-const SHELL = ["./", "./index.html", "./style.css?v=184", "./workspace-ui.css?v=13", "./workspace-panels.mjs?v=2", "./account-ui.mjs?v=3", "./auth.js?v=11", "./account-security.mjs?v=1", "./access.js?v=19", "./lock.js?v=19", "./app.js?v=212", "./zoom.js?v=17", "./audio-profile.mjs?v=1", "./diskstore.js?v=11", "./local-retention.mjs?v=1", "./dvr-ui.js?v=105", "./remote-folder-ui.mjs", "./communication/folder-channel.mjs", "./communication/folder-readiness.mjs", "./desktop.js?v=34", "./mobile.js?v=17", "./core/store.mjs", "./core/router.mjs", "./core/peer-diagnostics.mjs", "./communication/commands.mjs", "./manifest.webmanifest?v=2", "./icons/kamera-192.svg", "./icons/kamera-512.svg", "./vendor/supabase.js?v=2.117.2"];
+const CACHE = "kamera-domowa-shell-v190";
+const SHELL = ["./panel-entry.mjs?v=2", "./", "./index.html", "./panel.html", "./public-entry.js?v=6", "./style.css?v=185", "./workspace-ui.css?v=13", "./workspace-panels.mjs?v=4", "./account-ui.mjs?v=3", "./auth.js?v=15", "./account-security.mjs?v=1", "./access.js?v=21", "./lock.js?v=22", "./app.js?v=272", "./core/reconnecting-channel.mjs?v=1", "./zoom.js?v=17", "./audio-profile.mjs?v=2", "./audio-cleaner.mjs?v=1", "./noise-gate.worklet.js?v=1", "./diskstore.js?v=12", "./close-recording-fragment.mjs?v=1", "./local-retention.mjs?v=1", "./dvr-ui.js?v=108", "./core/dvr-navigation.mjs?v=1", "./remote-folder-ui.mjs", "./communication/folder-channel.mjs", "./communication/folder-readiness.mjs", "./desktop.js?v=51", "./camera-workspace.css?v=2", "./camera-workspace.mjs?v=2", "./core/camera-catalog.mjs?v=2", "./core/camera-sources.mjs?v=2", "./mobile.js?v=30", "./mobile-camera-frame.css?v=6", "./mobile-camera-frame.mjs?v=1", "./mobile-camera-status.mjs?v=1", "./picture-in-picture.mjs?v=1", "./core/store.mjs", "./core/router.mjs", "./core/peer-diagnostics.mjs", "./communication/commands.mjs", "./auth-experience.css?v=2", "./auth-experience.mjs?v=2", "./manifest.webmanifest?v=4", "./icons/kamera-192.svg", "./icons/apple-touch-icon.png", "./icons/kamera-512.svg", "./vendor/supabase.js?v=2.117.2"];
 
-SHELL.push("./core/view-memory.mjs?v=1", "./recording-view-state.mjs?v=1", "./recording-time.mjs?v=1", "./recording-actions.mjs?v=2", "./native-drive-ui.mjs?v=2", "./interface-theme.css?v=2", "./core/client-layout.js?v=2", "./core/web-updates.mjs?v=1", "./core/operator-status.mjs?v=1", "./communication/agent-telemetry.mjs?v=2", "./communication/native-agent-client.mjs");
+SHELL.push("./dokumenty.html", "./instrukcja.html", "./zasady-korzystania.html", "./polityka-prywatnosci.html", "./rodo.html", "./regulamin.html", "./legal-premium.css?v=4", "./recording-storage.mjs?v=1", "./recstore.js?v=78", "./camera-fit.mjs?v=1", "./mobile-viewer.css?v=5", "./recording-init.mjs?v=1", "./audio-listen.css?v=1", "./reference-ui.css?v=1", "./ui-icons.mjs?v=1", "./assets/ds-shield.svg", "./gallery-viewer.css?v=1", "./gallery-viewer.mjs?v=1", "./gallery-catalog.mjs?v=2", "./desktop-product.css?v=1", "./core/view-memory.mjs?v=1", "./recording-view-state.mjs?v=1", "./recording-time.mjs?v=1", "./recording-actions.mjs?v=2", "./native-drive-ui.mjs?v=2", "./interface-theme.css?v=3", "./interface-concept.css?v=3", "./premium-dark-pro.css?v=1", "./remote-unlock-ui.css?v=1", "./tech-ops.css?v=2", "./operator-layout.css?v=3", "./remote-unlock-crypto.mjs?v=1", "./remote-unlock-protocol.mjs?v=2", "./remote-unlock-device-store.mjs?v=1", "./remote-unlock-host.mjs?v=2", "./remote-unlock-phone.mjs?v=2", "./core/client-layout.js?v=3", "./core/web-updates.mjs?v=3", "./core/update-navigation.mjs?v=1", "./communication/agent-telemetry.mjs?v=2", "./communication/native-agent-client.mjs");
+// Reklamowy obraz startowy dostępny także w zainstalowanej PWA.
+SHELL.push("./assets/home-security-loading.webp");
+// Trzy lekkie banery otwarcia mobilnego oraz ich kod: dostepne rowniez w PWA.
+SHELL.push("./mobile-app-splash.css?v=3","./mobile-app-splash.js?v=3","./assets/home-security-ad-02.webp","./assets/home-security-ad-03.webp","./assets/splash-placeholder.svg");
 self.addEventListener("install", event => {
-  SHELL.push("./marketing.css?v=2", "./marketing-contact.js?v=7");
+  SHELL.push("./marketing.css?v=18", "./marketing-motion.css?v=2", "./marketing-motion.mjs?v=3", "./marketing-navigation.css?v=1", "./marketing-navigation.mjs?v=1", "./marketing-gallery.css?v=4", "./marketing-gallery.mjs?v=2", "./marketing-start.css?v=3", "./marketing-start.mjs?v=2", "./marketing-auto-update.css?v=2", "./marketing-auto-update.mjs?v=6", "./marketing-contact.js?v=8", "./tech-theme.css?v=3");
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", event => {
@@ -18,16 +22,30 @@ self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+  // Release metadata must never be frozen by the offline asset cache.
+  if (/\/(?:desktop-update|version)\.json$/.test(url.pathname)) {
+    event.respondWith(fetch(event.request, {cache: 'no-store'}));
+    return;
+  }
   if (event.request.mode === "navigate") {
     const panelPath = new URL("./", self.location.href).pathname;
-    const panelNavigation = url.pathname === panelPath || url.pathname === panelPath + "index.html";
-    const pageKey = panelNavigation ? "./index.html" : url.origin + url.pathname;
-    event.respondWith(fetch(event.request).then(async response => {
+    const homeNavigation = url.pathname === panelPath || url.pathname === panelPath + "index.html";
+    const panelNavigation = url.pathname === panelPath + "panel.html";
+    const pageKey = panelNavigation ? "./panel.html" : homeNavigation ? "./index.html" : url.origin + url.pathname;
+    // A user-requested upgrade must not reuse the browser's old HTML cache.
+    // Ordinary navigation stays network-first as before.
+    const upgradeNavigation = url.searchParams.has('hs_release');
+    const navigationRequest = upgradeNavigation
+      ? fetch(event.request, {cache: 'no-store'})
+      : fetch(event.request);
+    event.respondWith(navigationRequest.then(async response => {
       if (response.ok && response.headers.get("content-type")?.includes("text/html")) {
         try { const cache = await caches.open(CACHE); await cache.put(pageKey, response.clone()); } catch { /* A full cache must not hide a working network response. */ }
       }
       return response;
     }).catch(async () => {
+      // Never report a successful new release while offline or serving old HTML.
+      if (upgradeNavigation) return new Response('Aktualizacja wymaga połączenia z internetem. Spróbuj ponownie.', {status:503,headers:{"Content-Type":"text/plain; charset=utf-8"}});
       const cached = await caches.match(pageKey);
       if (cached) return cached;
       return new Response('<!doctype html><html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Brak połączenia — HOME SECURITY</title><h1>Ta strona nie jest dostępna offline</h1><p>Połącz się z internetem i spróbuj ponownie.</p><a href="' + panelPath + '">Wróć do HOME SECURITY</a></html>', {status:503,headers:{"Content-Type":"text/html; charset=utf-8"}});
