@@ -42,7 +42,8 @@ test('grant requires a real 32-byte key and nonextractable device private keys',
  const f=await fixture();
  assert.equal(f.host.privateKey.extractable,false);
  assert.equal(f.phone.privateKey.extractable,false);
+ const verifiedHostPublic=await exportHostPublicKey(f.host);
  for(const bad of ['1234','123456','',randomBytes(12).toString('base64')]){
-   await assert.rejects(()=>encryptUnlockGrant({accessKey:bad,hostPublicKey:await exportHostPublicKey(f.host),phonePrivateKey:f.phone.privateKey,userId:f.accountId,hostId:f.hostId,phoneId:f.phoneId,now:f.now}),/Invalid unlocked access key/);
+   await assert.rejects(()=>encryptUnlockGrant({accessKey:bad,hostPublicKey:verifiedHostPublic,phonePrivateKey:f.phone.privateKey,userId:f.accountId,hostId:f.hostId,phoneId:f.phoneId,now:f.now}),/Invalid unlocked access key/);
  }
 });
