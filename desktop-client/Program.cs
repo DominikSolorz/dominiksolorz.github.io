@@ -278,7 +278,10 @@ internal static class Program
     private sealed class HomeSecurityWindow : Form
     {
         private readonly WebView2 webView = new() { Dock = DockStyle.Fill };
-        private readonly Panel updateBar = new() { Dock = DockStyle.Top, Height = 48, Visible = false, BackColor = Color.FromArgb(43, 14, 19) };
+        private readonly Panel updateBar = new() { Dock = DockStyle.Top, Height = 56, Visible = false, BackColor = Color.FromArgb(19, 27, 47) };
+        private readonly Label updateInfo = new() { ForeColor = Color.FromArgb(229, 235, 249), AutoEllipsis = true, TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 9F) };
+        private readonly Button checkUpdateButton = new() { AutoSize = true, Height = 36, FlatStyle = FlatStyle.Flat, ForeColor = Color.White, BackColor = Color.FromArgb(46, 60, 96), Text = "Sprawdź aktualizacje", UseVisualStyleBackColor = false };
+        private readonly Button cancelUpdateButton = new() { AutoSize = true, Height = 36, FlatStyle = FlatStyle.Flat, ForeColor = Color.White, BackColor = Color.FromArgb(78, 53, 64), Text = "Anuluj pobraną aktualizację", Visible = false, UseVisualStyleBackColor = false };
         private readonly Button updateButton = new() { AutoSize = true, Anchor = AnchorStyles.Top | AnchorStyles.Right, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(190, 27, 50), ForeColor = Color.White, Font = new Font("Segoe UI", 10F, FontStyle.Bold), Text = "↻ Aktualizacja", UseVisualStyleBackColor = false };
         private bool checkingUpdate;
         private AgentWebViewBridge? agentBridge;
@@ -291,16 +294,45 @@ internal static class Program
         private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 6 * 60 * 60 * 1000 };
         private readonly ProgressBar updateProgress = new() { Dock = DockStyle.Bottom, Height = 6, Visible = false };
 
+        private DateTimeOffset? lastSuccessfulUpdateCheckUtc;
         private object updateState = new { type = "desktop.update.state", status = "none" };
         private TaskCompletionSource<bool>? updatePrepared;
         private string? updatePreparationId;
 
+        private void LayoutUpdateCenter()
+        {
+            var right = updateBar.ClientSize.Width - 16;
+            foreach (var button in new[] { updateButton, cancelUpdateButton, checkUpdateButton })
+            {
+                if (!button.Visible) continue;
+                button.Width = Math.Max(120, button.PreferredSize.Width + 12);
+                button.Height = 36;
+                button.Location = new Point(Math.Max(12, right - button.Width), 8);
+                right -= button.Width + 9;
+            }
+            updateInfo.SetBounds(16, 4, Math.Max(100, right - 24), 42);
+        }
+
         private void PublishUpdateState(string status, string message = "", double? percent = null)
         {
-            updateState = new { type = "desktop.update.state", status, version = offeredUpdate?.Version, message, percent };
+            updateState = new {
+                type = "desktop.update.state", status, version = offeredUpdate?.Version,
+                installedVersion = DesktopVersion,
+                lastCheckedUtc = lastSuccessfulUpdateCheckUtc.HasValue ? lastSuccessfulUpdateCheckUtc.Value.ToString("O") : null,
+                checkIntervalHours = 6,
+                message, percent
+            };
             try { if (AgentWebViewBridge.Trusted(webView.CoreWebView2.Source)) webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); } catch { }
-            // Updates are offered only inside the unlocked account panel.
-            updateBar.Visible = panelUnlocked && status != "none";
+            var checkedText = lastSuccessfulUpdateCheckUtc.HasValue
+                ? lastSuccessfulUpdateCheckUtc.Value.ToLocalTime().ToString("dd.MM HH:mm")
+                : "jeszcze nie sprawdzono";
+            updateInfo.Text = $"Zainstalowana {DesktopVersion} · ostatnie sprawdzenie: {checkedText} · {message}";
+            updateButton.Visible = offeredUpdate is not null;
+            cancelUpdateButton.Visible = File.Exists(PendingUpdatePath);
+            checkUpdateButton.Enabled = !checkingUpdate && !downloadingUpdate && !File.Exists(PendingUpdatePath);
+            // The owner sees the update center only after unlocking the panel.
+            updateBar.Visible = panelUnlocked;
+            LayoutUpdateCenter();
         }
 
         public HomeSecurityWindow()
@@ -315,17 +347,26 @@ internal static class Program
             Icon = File.Exists(brandIconPath) ? new Icon(brandIconPath) : SystemIcons.Shield;
             FormBorderStyle = FormBorderStyle.Sizable;
             KeyPreview = true;
+            updateBar.Controls.Add(updateInfo);
+            updateBar.Controls.Add(checkUpdateButton);
+            updateBar.Controls.Add(cancelUpdateButton);
             updateBar.Controls.Add(updateButton);
             updateBar.Controls.Add(updateProgress);
+            updateButton.Visible = false;
+            checkUpdateButton.FlatAppearance.BorderColor = Color.FromArgb(120, 140, 185);
+            cancelUpdateButton.FlatAppearance.BorderColor = Color.FromArgb(173, 103, 115);
+            checkUpdateButton.Click += async (_, _) => { if (panelUnlocked) await CheckForUpdateAsync(); };
+            cancelUpdateButton.Click += (_, _) => CancelPreparedUpdate();
             updateCheckTimer.Tick += async (_, _) => await CheckForUpdateAsync();
             FormClosed += (_, _) => { updateCheckTimer.Dispose(); agentRuntime.Dispose(); };
-            updateBar.Resize += (_, _) => updateButton.Location = new Point(Math.Max(12, updateBar.ClientSize.Width - updateButton.Width - 16), 8);
+            updateBar.Resize += (_, _) => LayoutUpdateCenter();
             updateButton.FlatAppearance.BorderColor = Color.FromArgb(255, 112, 128);
             updateButton.Click += async (_, _) => await DownloadAndPrepareOfferedUpdateAsync();
             Controls.Add(webView);
             Controls.Add(updateBar);
             Shown += async (_, _) => await StartPanelAsync();
             KeyDown += (_, e) => { if (e.KeyCode == Keys.F11) ToggleFullScreen(); };
+            PublishUpdateState("none", "Aktualizacje są sprawdzane co 6 godzin. Pobieranie wymaga Twojego kliknięcia.");
             WriteDiagnostic("desktop-start", new { version = DesktopVersion, process = Environment.ProcessId });
         }
 
