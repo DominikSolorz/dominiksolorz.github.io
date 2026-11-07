@@ -1,14 +1,19 @@
-name: Verify HOME SECURITY manual Windows update center
+name: DESKTOP | Windows | Test aktualizatora
 
 on:
   push:
     branches:
       - feat/manual-desktop-update-center-2026-11-07
       - fix/windows-update-center-integrated-2026-11-07
+      - fix/windows-one-click-safe-install-relaunch-2026-11-07
   pull_request:
     paths:
       - 'desktop-client/Program.cs'
       - 'tests/desktop-update-center.test.mjs'
+      - 'tests/deployed-update-channels.test.mjs'
+      - 'tests/update-flow.test.mjs'
+      - 'tests/native-update-rollback.test.mjs'
+      - 'tests/desktop-one-click-restart.test.mjs'
       - '.github/workflows/verify-desktop-update-center.yml'
   workflow_dispatch:
 
@@ -38,4 +43,4 @@ jobs:
         with:
           node-version: '22'
       - name: Verify explicit owner control and rollback compatibility
-        run: node --test tests/desktop-update-center.test.mjs tests/deployed-update-channels.test.mjs tests/native-update-rollback.test.mjs
+        run: node --test tests/desktop-update-center.test.mjs tests/deployed-update-channels.test.mjs tests/native-update-rollback.test.mjs tests/update-flow.test.mjs tests/mobile-updates.test.mjs tests/desktop-one-click-restart.test.mjs

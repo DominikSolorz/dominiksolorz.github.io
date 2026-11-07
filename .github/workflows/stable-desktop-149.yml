@@ -1,4 +1,4 @@
-name: Prepare verified HOME SECURITY Desktop 1.4.9 stable update
+name: ARCHIWUM | Windows 1.4.9 | Stare wydanie stabilne
 on:
   push:
     branches: [main]

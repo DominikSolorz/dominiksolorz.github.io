@@ -29,16 +29,25 @@ test('short landscape enlarges the camera preview and preserves 48px navigation 
 test('mobile layout switch remains a 48px touch target and refreshed CSS is precached',()=>{
  assert.match(viewerCss,/mobileAppHeader #deviceLayoutBtn\{min-width:48px!important;min-height:48px!important\}/);
  assert.match(panelHtml,/mobile-viewer\.css\?v=5/);
- assert.match(panelHtml,/mobile-camera-frame\.css\?v=5/);
+ assert.match(panelHtml,/mobile-camera-frame\.css\?v=6/);
  assert.match(panelHtml,/mobile\.js\?v=30/);
- assert.match(panelHtml,/app\.js\?v=270/);
+ const version=appJs.match(/const VERSION = "(\d+)"/)?.[1];
+ assert.ok(version);
+ assert.match(panelHtml,new RegExp('app\\.js\\?v='+version));
  const rev=appJs.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
  assert.ok(rev);
  assert.match(serviceWorker,new RegExp(`kamera-domowa-shell-v${rev}`));
  assert.ok(serviceWorker.includes('./mobile-viewer.css?v=5'));
- assert.ok(serviceWorker.includes('./mobile-camera-frame.css?v=5'));
+ assert.ok(serviceWorker.includes('./mobile-camera-frame.css?v=6'));
  assert.ok(serviceWorker.includes('./mobile.js?v=30'));
- assert.ok(serviceWorker.includes('./app.js?v=270'));
+ assert.ok(serviceWorker.includes('./app.js?v='+version));
+});
+test('device layout button hides decorative square but keeps accessible layout selection',()=>{
+ assert.match(frameCss,/mobileAppHeader #deviceLayoutBtn span\{display:none\}/);
+ assert.match(frameCss,/mobileAppHeader #deviceLayoutBtn b\{display:block/);
+ assert.match(mobileJs,/id="deviceLayoutBtn"/);
+ assert.match(mobileJs,/byId\("deviceLayoutBtn"\)\?\.addEventListener\("click"/);
+ assert.match(mobileJs,/querySelector\('b'\)\.textContent=platformName/);
 });
 test('mobile navigation opens camera only from an explicit camera view and starts at overview',()=>{
  assert.match(mobileJs,/data-mobile-view="home"><b>⌂<\/b><span>Panel<\/span>/);

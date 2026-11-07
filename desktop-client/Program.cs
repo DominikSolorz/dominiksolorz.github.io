@@ -10,15 +10,15 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.4.52";
-    private const string WebPanelBuild = "270";
+    private const string DesktopVersion = "1.4.70";
+    private const string WebPanelBuild = "272";
     // Desktop serves its installed Panel bundle at the existing trusted origin.
     // The website and installed UI can now be released independently without
     // migrating the user's existing session, PIN or IndexedDB recordings.
     private const string PanelUrl = "https://dominiksolorz.github.io/kamera/?desktop=1&native=windows&host=computer&ui_build=" + WebPanelBuild;
     private const string PublicHost = "dominiksolorz.github.io";
     private const string UpdateManifestUrl = "https://dominiksolorz.github.io/kamera/desktop-update.json";
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(4) };
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(16) };
 
     [STAThread]
     private static void Main(string[] args)
@@ -289,12 +289,14 @@ internal static class Program
         private bool downloadingUpdate;
         private bool panelUnlocked;
         private DesktopUpdateManifest? offeredUpdate;
-        // Four background checks per 24 hours while the application is running,
-        // plus the existing startup check. A check never restarts the recorder.
-        private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 6 * 60 * 60 * 1000 };
+        // Check at startup, every 10 minutes and when the owner returns to the app.
+        // Detection never downloads, installs or interrupts camera recording.
+        private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 10 * 60 * 1000 };
         private readonly ProgressBar updateProgress = new() { Dock = DockStyle.Bottom, Height = 6, Visible = false };
 
         private DateTimeOffset? lastSuccessfulUpdateCheckUtc;
+        private DateTimeOffset? lastAttemptedUpdateCheckUtc;
+        private string? lastPromptedUpdateVersion;
         private object updateState = new { type = "desktop.update.state", status = "none" };
         private TaskCompletionSource<bool>? updatePrepared;
         private string? updatePreparationId;
@@ -319,7 +321,7 @@ internal static class Program
                 type = "desktop.update.state", status, version = offeredUpdate?.Version,
                 installedVersion = DesktopVersion,
                 lastCheckedUtc = lastSuccessfulUpdateCheckUtc.HasValue ? lastSuccessfulUpdateCheckUtc.Value.ToString("O") : null,
-                checkIntervalHours = 6,
+                checkIntervalMinutes = 10,
                 message, percent
             };
             try { if (AgentWebViewBridge.Trusted(webView.CoreWebView2.Source)) webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); } catch { }
@@ -327,7 +329,12 @@ internal static class Program
                 ? lastSuccessfulUpdateCheckUtc.Value.ToLocalTime().ToString("dd.MM HH:mm")
                 : "jeszcze nie sprawdzono";
             updateInfo.Text = $"Zainstalowana {DesktopVersion} · ostatnie sprawdzenie: {checkedText} · {message}";
-            updateButton.Visible = offeredUpdate is not null;
+            updateButton.Visible = offeredUpdate is not null || File.Exists(PendingUpdatePath);
+            if (status == "staged")
+            {
+                updateButton.Text = "↻ Zainstaluj teraz";
+                updateButton.Enabled = panelUnlocked && !downloadingUpdate;
+            }
             cancelUpdateButton.Visible = File.Exists(PendingUpdatePath);
             checkUpdateButton.Enabled = !checkingUpdate && !downloadingUpdate && !File.Exists(PendingUpdatePath);
             // The owner sees the update center only after unlocking the panel.
@@ -358,6 +365,15 @@ internal static class Program
             checkUpdateButton.Click += async (_, _) => { if (panelUnlocked) await CheckForUpdateAsync(); };
             cancelUpdateButton.Click += (_, _) => CancelPreparedUpdate();
             updateCheckTimer.Tick += async (_, _) => await CheckForUpdateAsync();
+            Activated += async (_, _) =>
+            {
+                // Catch newly published versions promptly after the computer was idle.
+                if (webView.CoreWebView2 is null || checkingUpdate || downloadingUpdate) return;
+                if (lastAttemptedUpdateCheckUtc.HasValue &&
+                    DateTimeOffset.UtcNow - lastAttemptedUpdateCheckUtc.Value < TimeSpan.FromMinutes(2)) return;
+                await CheckForUpdateAsync();
+                PromptForAvailableUpdate();
+            };
             FormClosed += (_, _) => { updateCheckTimer.Dispose(); agentRuntime.Dispose(); };
             updateBar.Resize += (_, _) => LayoutUpdateCenter();
             updateButton.FlatAppearance.BorderColor = Color.FromArgb(255, 112, 128);
@@ -366,7 +382,7 @@ internal static class Program
             Controls.Add(updateBar);
             Shown += async (_, _) => await StartPanelAsync();
             KeyDown += (_, e) => { if (e.KeyCode == Keys.F11) ToggleFullScreen(); };
-            PublishUpdateState("none", "Aktualizacje są sprawdzane co 6 godzin. Pobieranie wymaga Twojego kliknięcia.");
+            PublishUpdateState("none", "Sprawdzam przy uruchomieniu, co 10 minut i po powrocie do okna. Pobieranie tylko za zgodą.");
             WriteDiagnostic("desktop-start", new { version = DesktopVersion, process = Environment.ProcessId });
         }
 
@@ -422,7 +438,9 @@ internal static class Program
                             panelUnlocked = root.TryGetProperty("visible", out var visible) && visible.ValueKind == JsonValueKind.True;
                             updateBar.Visible = panelUnlocked;
                             // Unlocking does NOT authorize an update download.
-                            webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); return;
+                            webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState));
+                            if (panelUnlocked) PromptForAvailableUpdate();
+                            return;
                         }
                         if (type.GetString() == "desktop.update.query") {
                             // A query does not prove the HTML sidebar is visible. Keep the native offer.
@@ -511,14 +529,16 @@ internal static class Program
             if (checkingUpdate || downloadingUpdate) return;
             if (File.Exists(PendingUpdatePath))
             {
-                PublishUpdateState("staged", "Pobrana aktualizacja czeka na następne uruchomienie. Możesz ją anulować przed zamknięciem programu.");
+                PublishUpdateState("staged", "Aktualizacja jest pobrana. Kliknij „Zainstaluj teraz”, aby bezpiecznie zapisać nagranie, zainstalować nową wersję i uruchomić program ponownie.");
                 return;
             }
             checkingUpdate = true;
+            lastAttemptedUpdateCheckUtc = DateTimeOffset.UtcNow;
             PublishUpdateState("checking", "Sprawdzam oficjalny kanał aktualizacji Windows…");
             try
             {
-                var manifest = await Http.GetFromJsonAsync<DesktopUpdateManifest>($"{UpdateManifestUrl}?t={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
+                using var manifestDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                var manifest = await Http.GetFromJsonAsync<DesktopUpdateManifest>($"{UpdateManifestUrl}?t={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}", manifestDeadline.Token);
                 if (manifest is null || !Version.TryParse(manifest.Version, out var available))
                     throw new InvalidDataException("Kanał aktualizacji nie podał poprawnej wersji.");
                 var installed = Version.Parse(DesktopVersion);
@@ -534,7 +554,7 @@ internal static class Program
                 if (available <= installed)
                 {
                     offeredUpdate = null;
-                    PublishUpdateState("current", $"Wersja {DesktopVersion} jest aktualna. Automatyczne sprawdzanie co 6 godzin podczas pracy programu.");
+                    PublishUpdateState("current", $"Wersja {DesktopVersion} jest aktualna. Kolejna kontrola automatycznie za 10 minut lub po powrocie do programu.");
                     return;
                 }
                 offeredUpdate = manifest;
@@ -557,13 +577,41 @@ internal static class Program
             }
         }
 
-        // Download only after explicit owner click; install at the next normal
-        // launch. Never stop the active recorder to prepare an update.
+        // Download only after explicit owner click. Once verified, ask the recorder to
+        // flush its last segment before launching the existing rollback-safe updater.
         private void ShowUpdateOffer(string version)
         {
             updateButton.Text = $"↻ Zaktualizuj do wersji {version}";
             updateButton.Enabled = true;
-            PublishUpdateState("available", "Nowa wersja jest dostępna. Kliknij „Zaktualizuj”, aby pobrać ją po swojej decyzji. Nagrywanie będzie kontynuowane.");
+            PublishUpdateState("available", "NOWA WERSJA. Wybierz „Zaktualizuj”, aby ją pobrać, bezpiecznie domknąć nagranie, zainstalować i automatycznie uruchomić program ponownie.");
+            PromptForAvailableUpdate();
+        }
+
+        // Announce every NEW version once per running desktop session.
+        // The owner can defer it; the normal toolbar remains available afterwards.
+        // Only a confirmed click may download. No modal before account + PIN unlock.
+        private void PromptForAvailableUpdate()
+        {
+            if (!panelUnlocked || offeredUpdate is null || downloadingUpdate ||
+                File.Exists(PendingUpdatePath) || !IsHandleCreated || IsDisposed) return;
+            var version = offeredUpdate.Version;
+            if (lastPromptedUpdateVersion == version) return;
+            lastPromptedUpdateVersion = version;
+            BeginInvoke(new Action(async () =>
+            {
+                if (IsDisposed || !panelUnlocked || downloadingUpdate ||
+                    offeredUpdate?.Version != version || File.Exists(PendingUpdatePath)) return;
+                var answer = MessageBox.Show(this,
+                    $"Dostępna jest aktualizacja HOME SECURITY Desktop {version}.\n\n" +
+                    $"Zainstalowana wersja: {DesktopVersion}.\n\n" +
+                    "Pobrać i zainstalować teraz? Przed restartem ostatni fragment nagrania zostanie zapisany. " +
+                    "Program zamknie się, zaktualizuje i uruchomi ponownie. Jeśli nie można zapisać nagrania, instalacja nie ruszy.",
+                    "HOME SECURITY · Dostępna aktualizacja",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Information,
+                    MessageBoxDefaultButton.Button2);
+                if (answer == DialogResult.Yes)
+                    await DownloadAndPrepareOfferedUpdateAsync();
+            }));
         }
 
         private void CancelPreparedUpdate()
@@ -586,10 +634,82 @@ internal static class Program
             }
         }
 
+        // The user consented by clicking "Zaktualizuj" or Yes on the offered-version prompt.
+        // Do not exit until the camera confirms that its current recording fragment was saved.
+        // If anything fails, leave the verified package staged for retry and keep Windows running.
+        private async Task<bool> RestartIntoPreparedUpdateAsync()
+        {
+            if (!panelUnlocked || !File.Exists(PendingUpdatePath) ||
+                webView.CoreWebView2 is null || !AgentWebViewBridge.Trusted(webView.CoreWebView2.Source))
+            {
+                PublishUpdateState("staged", "Pakiet jest pobrany, ale panel nie jest gotowy do bezpiecznego restartu. Odblokuj HOME SECURITY i wybierz „Zainstaluj teraz”.");
+                return false;
+            }
+            updatePreparationId = Guid.NewGuid().ToString("N");
+            updatePrepared = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            try
+            {
+                PublishUpdateState("preparing", "Zapisuję ostatni fragment nagrania przed instalacją. Nie wyłączaj komputera.");
+                webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new {
+                    type = "desktop.update.prepare", id = updatePreparationId
+                }));
+                var recorderReady = await updatePrepared.Task.WaitAsync(TimeSpan.FromMinutes(2));
+                if (!recorderReady)
+                    throw new IOException("Nagranie nie zostało bezpiecznie zapisane. Aktualizacja wstrzymana.");
+                if (!panelUnlocked || IsDisposed || !File.Exists(PendingUpdatePath))
+                    throw new InvalidOperationException("Sesja została zamknięta przed instalacją.");
+                PublishUpdateState("installing", "Nagranie zapisane. Zamykanie, instalowanie i automatyczne ponowne uruchamianie programu…");
+                WriteDiagnostic("update-restart-authorized", new { installed = DesktopVersion });
+                // Spawn the already implemented independent helper. It waits until our process
+                // has exited, verifies SHA-256 again, backs up installed files, and relaunches.
+                if (!StartPreparedUpdateIfAny())
+                    throw new IOException("Nie udało się uruchomić instalatora aktualizacji.");
+                Close();
+                return true;
+            }
+            catch (Exception error)
+            {
+                WriteDiagnostic("update-auto-restart-blocked", new { error = error.Message });
+                if (webView.CoreWebView2 is not null && updatePreparationId is not null)
+                {
+                    try
+                    {
+                        webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new {
+                            type = "desktop.update.abort", id = updatePreparationId
+                        }));
+                    }
+                    catch { /* Manual PIN and camera must remain available. */ }
+                }
+                if (!IsDisposed)
+                    PublishUpdateState("staged", "Aktualizacja pobrana, ale automatyczny restart nie powiódł się: " +
+                        error.Message + " Kliknij „Zainstaluj teraz”, aby ponowić po sprawdzeniu nagrań.");
+                return false;
+            }
+            finally
+            {
+                updatePrepared = null;
+                updatePreparationId = null;
+            }
+        }
+
         private async Task DownloadAndPrepareOfferedUpdateAsync()
         {
-            if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;
-            if (File.Exists(PendingUpdatePath)) return;
+            if (!panelUnlocked || downloadingUpdate) return;
+            // A previous download may already be verified; the same button retries
+            // the safe restart, never redownloads or silently abandons a package.
+            if (File.Exists(PendingUpdatePath))
+            {
+                downloadingUpdate = true;
+                try { await RestartIntoPreparedUpdateAsync(); }
+                finally
+                {
+                    downloadingUpdate = false;
+                    if (!IsDisposed)
+                        updateButton.Enabled = panelUnlocked && File.Exists(PendingUpdatePath);
+                }
+                return;
+            }
+            if (offeredUpdate is null) return;
             downloadingUpdate = true;
             var manifest = offeredUpdate;
             updateButton.Enabled = false;
@@ -602,7 +722,7 @@ internal static class Program
                 PublishUpdateState("downloading", "Pobieranie aktualizacji…");
                 updateProgress.Visible = true;
                 using (var response = await Http.GetAsync(manifest.PackageUrl, HttpCompletionOption.ResponseHeadersRead)) {
-                    using var downloadDeadline = new CancellationTokenSource(TimeSpan.FromMinutes(4));
+                    using var downloadDeadline = new CancellationTokenSource(TimeSpan.FromMinutes(15));
                     response.EnsureSuccessStatusCode();
                     var total = response.Content.Headers.ContentLength;
                     await using var source = await response.Content.ReadAsStreamAsync();
@@ -638,7 +758,8 @@ internal static class Program
                 File.Move(pendingTemporaryPath, PendingUpdatePath, true);
                 WriteDiagnostic("update-ready", new { manifest.Version, packagePath });
                 updateButton.Text = $"Wersja {manifest.Version} gotowa";
-                PublishUpdateState("staged", "Aktualizacja pobrana i sprawdzona. Zainstaluje się przy następnym uruchomieniu programu. Kamera i nagrywanie nadal pracują.");
+                PublishUpdateState("staged", "Pakiet sprawdzony. Zapisuję nagranie i przygotowuję automatyczny restart…");
+                await RestartIntoPreparedUpdateAsync();
             }
             catch (Exception ex)
             {
@@ -650,7 +771,19 @@ internal static class Program
                 updateButton.Text = $"↻ Spróbuj ponownie: {manifest.Version}";
                 PublishUpdateState("error", "Aktualizacja nie została zainstalowana. " + ex.Message);
             }
-            finally { downloadingUpdate = false; updateProgress.Visible = false; updatePrepared = null; updatePreparationId = null; checkUpdateButton.Enabled = !File.Exists(PendingUpdatePath); }
+            finally
+            {
+                downloadingUpdate = false;
+                updatePrepared = null;
+                updatePreparationId = null;
+                if (!IsDisposed)
+                {
+                    updateProgress.Visible = false;
+                    checkUpdateButton.Enabled = !File.Exists(PendingUpdatePath);
+                    if (File.Exists(PendingUpdatePath))
+                        updateButton.Enabled = panelUnlocked;
+                }
+            }
         }
 
     }

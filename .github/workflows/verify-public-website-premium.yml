@@ -1,4 +1,4 @@
-name: Verify HOME SECURITY public website redesign
+name: WWW | Strona publiczna | Test wyglądu
 
 on:
   pull_request:
