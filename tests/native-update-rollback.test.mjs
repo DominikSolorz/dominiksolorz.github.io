@@ -51,7 +51,8 @@ test('background updates verify integrity and never stop recording',async()=>{
  const src=await read('desktop-client/Program.cs');
  const update=src.slice(src.indexOf('private async Task DownloadAndPrepareOfferedUpdateAsync()'),src.indexOf('private sealed record DesktopUpdateManifest'));
  assert.ok(src.includes('updateButton.Click += async (_, _) => await DownloadAndPrepareOfferedUpdateAsync()'));
- assert.ok(update.includes('if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;'));
+ assert.ok(update.includes('if (!panelUnlocked || downloadingUpdate) return;'));
+ assert.ok(update.includes('if (offeredUpdate is null) return;'));
  assert.ok(update.indexOf('SHA256.HashDataAsync(packageStream)')<update.indexOf('File.Move(pendingTemporaryPath, PendingUpdatePath, true)'));
  assert.ok(update.includes('await RestartIntoPreparedUpdateAsync();'),'verified download must immediately attempt a safe native restart');
  assert.ok(src.includes('type = "desktop.update.prepare"'),'recording must acknowledge safe shutdown');
