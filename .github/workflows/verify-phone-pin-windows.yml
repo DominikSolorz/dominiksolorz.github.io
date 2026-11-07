@@ -1,4 +1,4 @@
-name: Verify HOME SECURITY remote phone PIN to Windows
+name: WSPÓLNE | Telefon do Windows | Test zdalnego PIN
 on:
   push:
     branches:
