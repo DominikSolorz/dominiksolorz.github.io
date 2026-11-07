@@ -55,3 +55,11 @@ test('the existing checksum and next-startup update/rollback path is retained',(
  assert.match(source,/update-rollback-failed/);
  assert.doesNotMatch(source,/Application\.Restart/);
 });
+
+test('failed manifest discovery retries the check instead of a no-op download',()=>{
+ const handler=source.split('if (type.GetString() == "desktop.update.request")')[1]?.split('if (type.GetString() == "desktop.update.prepared")')[0];
+ assert.ok(handler,'native update request handler must exist');
+ assert.match(handler,/if \(!panelUnlocked\) return/,'locked panels cannot trigger update checks');
+ assert.match(handler,/if \(offeredUpdate is null\) await CheckForUpdateAsync\(\)/,'retry must recheck the manifest without an offered version');
+ assert.match(handler,/else await DownloadAndPrepareOfferedUpdateAsync\(\)/,'offered versions still download after explicit click');
+});
