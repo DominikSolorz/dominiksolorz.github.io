@@ -1,0 +1,65 @@
+name: Verify HOME SECURITY Premium Dark Pro integration
+
+on:
+  pull_request:
+    paths:
+      - 'kamera/panel.html'
+      - 'kamera/premium-dark-pro.css'
+      - 'kamera/sw.js'
+      - 'tests/premium-dark-pro.test.mjs'
+      - '.github/workflows/verify-premium-dark-pro.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  functional-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify real recorder controls, PIN gate, layout and offline style cache
+        run: node --test tests/premium-dark-pro.test.mjs tests/panel-entry.test.mjs tests/owner-theme.test.mjs tests/workspace-ui.test.mjs tests/desktop-bundle.test.mjs
+      - name: Run all frontend regression tests
+        run: node --test tests/*.test.mjs
+      - name: Validate new stylesheet syntax
+        run: |
+          npm install --prefix "$RUNNER_TEMP/html-validator" --no-save --no-package-lock vnu-jar@26.10.12
+          java -jar "$RUNNER_TEMP/html-validator/node_modules/vnu-jar/build/dist/vnu.jar" --css kamera/premium-dark-pro.css
+  native-windows-build:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Compile real HOME SECURITY Desktop with the bundled new stylesheet
+        run: dotnet build desktop-client/HomeSecurityDesktop.csproj -c Release
+      - name: Validate HTML template still references the secure stylesheet
+        shell: pwsh
+        run: |
+          $panel = Get-Content -Raw kamera/panel.html
+          $theme = Get-Content -Raw kamera/premium-dark-pro.css
+          if (-not $panel.Contains('premium-dark-pro.css?v=1')) { throw 'New UI stylesheet not linked in secure panel' }
+          if (-not $theme.Contains('#ctrlStart') -or -not $theme.Contains('#ctrlStop')) { throw 'Real recording controls not covered by theme' }
