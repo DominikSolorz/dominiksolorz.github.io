@@ -27,7 +27,7 @@ test('one click starts the native update without a second confirmation dialog',(
  assert.ok(flow.includes('if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;'));
  assert.ok(flow.includes('File.Move(pendingTemporaryPath, PendingUpdatePath, true)'));
  assert.ok(!flow.includes('Application.Restart'));
- assert.ok(native.includes('Interval = 6 * 60 * 60 * 1000'));
+ assert.ok(native.includes('Interval = 10 * 60 * 1000'));
 });
 test('native update notification and start require the unlocked account panel',()=>{
  assert.ok(native.includes('updateBar.Visible = panelUnlocked;'),'update center must be available only after account and PIN unlock');
