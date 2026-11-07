@@ -1,5 +1,5 @@
 /* HOME SECURITY: kampania WWW. Wizualne sekcje tylko na publicznej stronie.
-   Bez ingerencji w #app, #stage, transmisje i aplikacje mobilna. */
+   Bez ingerencji w prywatny panel, transmisję i aplikację mobilną. */
 #publicHome.mktSite .hsCampaign{margin-block:18px 48px;padding:0;display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);min-height:360px;overflow:hidden;border:1px solid rgba(44,207,243,.34);border-radius:24px;background:linear-gradient(118deg,#07172b,#09233a 57%,#07101e);box-shadow:0 28px 70px -40px rgba(34,211,238,.3)}
 #publicHome.mktSite .hsCampaignCopy{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:14px;padding:clamp(22px,4vw,54px)}
 #publicHome.mktSite .hsCampaign .hsCampaignEyebrow{margin:0;color:#58dcf9;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
