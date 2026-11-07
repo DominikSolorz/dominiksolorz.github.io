@@ -35,3 +35,7 @@ odblokowywać logowania w osadzonej przeglądarce ani przekazywać tokenów w UR
 ```powershell
 dotnet publish .\HomeSecurityDesktop.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o .\publish
 ```
+
+## Nawigacja po kodzie Windows
+
+[Kompletny spis plików i folderów aplikacji Windows](KATALOG-PLIKOW.md). Używaj tego indeksu przed zmianą projektu, okien testowych, mostka agenta lub instalatora.
