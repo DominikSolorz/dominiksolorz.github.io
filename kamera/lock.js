@@ -1,7 +1,7 @@
 // Ekran blokady z klawiaturą PIN (telefon) i wpisywaniem z klawiatury (komputer).
 import { unlock } from "./access.js?v=21";
 
-export function requireAccess() {
+export function requireAccess({bindRemote} = {}) {
   const root = document.getElementById("lock");
   root.hidden = false;
   const dots = root.querySelector(".pinDots");
@@ -12,6 +12,24 @@ export function requireAccess() {
   render();
 
   return new Promise(resolve => {
+    let finished=false;
+    function complete(key) {
+      if(finished||typeof key!=='string')return false;
+      finished=true;
+      try{bindRemote?.(null);}catch{} // Stop accepting new remote grants immediately.
+      root.hidden=true;
+      document.removeEventListener("keydown",onKey);
+      resolve(key);
+      return true;
+    }
+    // The caller keeps the capability private; no global unlock function or URL parameter.
+    try{bindRemote?.(key=>{
+      try {
+        if(busy||typeof key!=='string'||Uint8Array.from(atob(key),c=>c.charCodeAt(0)).length!==32)return false;
+        sessionStorage.setItem('kamera-dostep',key);
+        return complete(key);
+      }catch{return false;}
+    });}catch{/* Local PIN always remains functional. */}
     async function submit() {
       if (busy || pin.length < 4) return;
       busy = true; msg.textContent = "Sprawdzam…"; msg.className = "pinMsg";
@@ -22,7 +40,7 @@ export function requireAccess() {
       try { key = await unlock(pin, false); }
       catch { busy = false; pin = ''; render(); msg.textContent = 'Nie udało się sprawdzić PIN-u. Sprawdź połączenie i wersję aplikacji, a następnie spróbuj ponownie.'; msg.className = 'pinMsg bad'; return; }
       busy = false;
-      if (key) { root.hidden = true; document.removeEventListener("keydown", onKey); resolve(key); return; }
+      if (key) { complete(key); return; }
       pin = ""; render(); msg.textContent = "Zły PIN. Spróbuj ponownie."; msg.className = "pinMsg bad";
       root.querySelector(".pinCard").classList.remove("shake"); void root.offsetWidth; root.querySelector(".pinCard").classList.add("shake");
     }

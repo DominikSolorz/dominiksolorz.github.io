@@ -1,0 +1,49 @@
+name: Verify HOME SECURITY remote phone PIN to Windows
+on:
+  push:
+    branches:
+      - feat/phone-pin-unlock-windows-2026-11-07
+  pull_request:
+    paths:
+      - 'kamera/remote-unlock*'
+      - 'kamera/app.js'
+      - 'kamera/lock.js'
+      - 'kamera/panel.html'
+      - 'kamera/sw.js'
+      - 'supabase/migrations/*remote_phone_unlock.sql'
+      - 'tests/remote-phone-pin-e2e.test.mjs'
+      - '.github/workflows/verify-phone-pin-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cryptographic-and-frontend-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test cryptographic phone PIN protocol and replay protections
+        run: node --test tests/remote-phone-pin-e2e.test.mjs tests/remote-unlock-crypto.test.mjs
+      - name: Restore exact published Windows installer and rollback package for link checks
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/desktop-release.mjs fetch --rollback
+      - name: Test existing PIN, account, UI, recording and remote camera regressions
+        run: node --test tests/*.test.mjs
+      - name: Verify generated website, PWA manifest and assets
+        run: |
+          node scripts/build-marketing.mjs --check
+          node scripts/verify-site-links.mjs

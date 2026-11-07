@@ -8,7 +8,9 @@ const { createClient } = window.supabase;
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=34";
 import { b64, sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=23";
-import { requireAccess } from "./lock.js?v=21";
+import { requireAccess } from "./lock.js?v=22";
+import { createRemoteUnlockHost } from "./remote-unlock-host.mjs?v=1";
+import { mountRemoteUnlockPhone } from "./remote-unlock-phone.mjs?v=1";
 import { channelFor, lock } from "./access.js?v=21";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=17";
@@ -79,7 +81,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "270"; // musi się zgadzać z version.json
+const VERSION = "271"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2289,7 +2291,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "186";
+  const SERVICE_WORKER_BUILD = "187";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2734,7 +2736,12 @@ if (RECEIVER_ONLY) {
   $("app").hidden = false;
   showViewer();
 } else {
-  ACCESS_KEY = await requireAccess();
+  // A Windows host listens while its PIN screen is locked. Local PIN never waits on network.
+  const remoteHost= NATIVE_HOST&&panelAccount?.id
+    ? createRemoteUnlockHost({client:accountClient,ownerId:panelAccount.id})
+    : null;
+  if(remoteHost)void remoteHost.start();
+  ACCESS_KEY = await requireAccess({bindRemote:callback=>remoteHost?.bindUnlock(callback)});
   const drivePanel=$('nativeDrivePanel');drivePanel.hidden=false;
   let refreshDrive=null;
   if (window.__HOME_SECURITY_AGENT_BRIDGE__ && window.chrome?.webview) {
@@ -2769,6 +2776,12 @@ if (RECEIVER_ONLY) {
   // ekranem; obraz pokaże wtedy czytelny stan oczekiwania.
   document.body.classList.remove("accessPending");
   $("app").hidden = false; $("lockBtn").hidden = false;
+  // Pairing is available only AFTER local Windows PIN unlock, not on the login screen.
+  if(remoteHost){try{remoteHost.mountUI();}catch{/* Keep local camera operational. */}}
+  if(MOBILE_OWNER_APP&&panelAccount?.id&&!NATIVE_HOST){
+    try{mountRemoteUnlockPhone({client:accountClient,ownerId:panelAccount.id});}
+    catch{/* Phone viewing and recordings must not depend on pairing UI. */}
+  }
   mountAccountUI({
     requestReset: async expectedUserId => {
       const user = await currentAccountUser();
