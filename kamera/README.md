@@ -59,3 +59,7 @@ Nie przenoś tych plików, jeśli istnieją na nie aktywne odnośniki.
 Najpierw przeczytaj [../AGENTS.md](../AGENTS.md), [../AGENT-SHORTCUTS.md](../AGENT-SHORTCUTS.md) i [../docs/REPO-MAP.md](../docs/REPO-MAP.md). Wybierz obszar, znajdź źródło zmian, sprawdź zależności i uruchom odpowiednie testy z [../tests/](../tests/). Nie zmieniaj jednocześnie kilku różnych części aplikacji bez uzasadnienia.
 
 Ten dokument jest **mapą nawigacji**, a nie poleceniem przeniesienia istniejącego kodu.
+
+## Pełny spis plików w tym katalogu
+
+[Otwórz KATALOG-PLIKOW.md](KATALOG-PLIKOW.md), aby znaleźć każdy plik bezpośrednio w `kamera/`, z linkiem i krótkim opisem odpowiedzialności.
