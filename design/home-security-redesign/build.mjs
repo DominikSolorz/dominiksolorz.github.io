@@ -7,6 +7,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 const here = new URL('./', import.meta.url);
 const docs = new URL('../documents/', import.meta.url);
 const check = process.argv.includes('--check');
+const publish = process.argv.includes('--publish');
 const LIVE = 'https://dominiksolorz.github.io/kamera/';
 
 const escape = v => String(v).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
@@ -30,4 +31,14 @@ if (check) {
 } else {
   await writeFile(out, html);
   console.log('Projekt graficzny: zapisano index.html.');
+}
+
+// --publish: kopia do kamera/projekt/ (publiczny podgląd demo na GitHub Pages).
+if (publish) {
+  const { mkdir, copyFile, readdir } = await import('node:fs/promises');
+  const dest = new URL('../../kamera/projekt/', import.meta.url);
+  await mkdir(new URL('assets/', dest), { recursive: true });
+  for (const f of ['index.html', 'style.css', 'app.js']) await copyFile(new URL(f, here), new URL(f, dest));
+  for (const f of await readdir(new URL('assets/', here))) await copyFile(new URL('assets/' + f, here), new URL('assets/' + f, dest));
+  console.log('Projekt graficzny: opublikowano kopię w kamera/projekt/.');
 }
