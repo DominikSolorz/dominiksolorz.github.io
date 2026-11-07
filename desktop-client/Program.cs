@@ -701,7 +701,12 @@ internal static class Program
             {
                 downloadingUpdate = true;
                 try { await RestartIntoPreparedUpdateAsync(); }
-                finally { downloadingUpdate = false; }
+                finally
+                {
+                    downloadingUpdate = false;
+                    if (!IsDisposed)
+                        updateButton.Enabled = panelUnlocked && File.Exists(PendingUpdatePath);
+                }
                 return;
             }
             if (offeredUpdate is null) return;
@@ -775,6 +780,8 @@ internal static class Program
                 {
                     updateProgress.Visible = false;
                     checkUpdateButton.Enabled = !File.Exists(PendingUpdatePath);
+                    if (File.Exists(PendingUpdatePath))
+                        updateButton.Enabled = panelUnlocked;
                 }
             }
         }
