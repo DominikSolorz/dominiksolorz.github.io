@@ -38,6 +38,20 @@ Automaty GitHub mają ten sam podział w [.github/workflows/README.md](.github/w
 
 **Pełna mapa:** [docs/REPO-MAP.md](docs/REPO-MAP.md). **Wersje, adresy i proces publikacji:** [docs/RELEASE-MAP.md](docs/RELEASE-MAP.md). **Zasady dla Codexa i innych agentów:** [AGENTS.md](AGENTS.md).
 
+## Szczegółowa nawigacja po katalogach
+
+Po wejściu w folder GitHub wyświetla jego plik `README.md` z opisem przeznaczenia i linkami do najważniejszych źródeł. Jeśli nie znasz nazwy pliku, rozpocznij tutaj:
+
+| Katalog | Co w nim znajdziesz |
+| --- | --- |
+| [kamera/](kamera/) | Strona publiczna, panel, PWA, kamery, konta i nagrania |
+| [scripts/](scripts/) | Generatory, skrypty publikacji, audytu i kontroli |
+| [tests/](tests/) | Testy pogrupowane według działania aplikacji |
+| [docs/](docs/) | Mapa projektu, wersje, instrukcje i historia decyzji |
+| [.github/workflows/](.github/workflows/) | Automaty GitHub opisane pojedynczo i pogrupowane tematycznie |
+
+Nazwy plików wykonywalnych pozostają niezmienione. Ich fizyczne przeniesienie wymaga osobnej kontroli importów, adresów internetowych i procesu publikacji.
+
 ## Ważne
 
 `app.js` w katalogu głównym **nie jest** tym samym plikiem co `kamera/app.js`. Podawaj agentowi pełną ścieżkę, a nie tylko nazwę pliku. Nie przenoś ani nie zmieniaj nazw działających plików, instalatorów lub manifestów bez poprawienia wszystkich importów, ścieżek, konfiguracji i testów.
