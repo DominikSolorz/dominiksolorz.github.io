@@ -63,7 +63,9 @@ test('background updates verify integrity and never stop recording',async()=>{
  assert.ok(!visibility.includes('DownloadAndPrepareOfferedUpdateAsync()'),'unlock never authorizes an unattended download');
  const check=src.split('private async Task CheckForUpdateAsync()')[1]?.split('// Download only after explicit owner click')[0];
  assert.ok(check&&!check.includes('DownloadAndPrepareOfferedUpdateAsync()'),'background check never authorizes download');
- assert.ok(update.includes('if (File.Exists(PendingUpdatePath)) return;'));
+ assert.ok(update.includes('if (File.Exists(PendingUpdatePath))'),'a staged package must be recognized');
+ assert.ok(update.includes('await RestartIntoPreparedUpdateAsync();'),'repeated click should install without another download');
+ assert.ok(update.includes('if (offeredUpdate is null) return;'),'no new or verified release means no install');
  assert.ok(!update.includes('MessageBox.Show'),'one click must not require a second confirmation');
 });
 
