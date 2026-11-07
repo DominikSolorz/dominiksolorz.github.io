@@ -22,6 +22,8 @@ To repozytorium zawiera cały system monitoringu HOME SECURITY: aplikację Windo
 | Supabase | `supabase/migrations/`, `supabase/functions/` |
 | Testy i publikację | `tests/`, `scripts/`, `.github/workflows/` |
 
+**Krótkie nazwy zadań dla agentów:** [AGENT-SHORTCUTS.md](AGENT-SHORTCUTS.md).
+
 **Pełna mapa:** [docs/REPO-MAP.md](docs/REPO-MAP.md). **Wersje, adresy i proces publikacji:** [docs/RELEASE-MAP.md](docs/RELEASE-MAP.md). **Zasady dla Codexa i innych agentów:** [AGENTS.md](AGENTS.md).
 
 ## Ważne
