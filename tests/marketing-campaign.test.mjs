@@ -50,5 +50,6 @@ test('campaign loads optimized local illustrations lazily without JavaScript or 
   const photo=await stat(new URL('kamera/assets/site-hero-dom.webp',root));
   assert.ok(photo.size<110000,'campaign hero image too large');
   assert.doesNotMatch(home,/setTimeout|setInterval|load-delay|8s|8000/);
-  assert.doesNotMatch(home,/250\s?000|4,8\s?\/\s?5|Google Play/i);
+  assert.doesNotMatch(home,/250\s?000|4,8\s?\/\s?5|Pobierz z Google Play/i);
+  assert.match(home,/nie są jeszcze opublikowane/);
 });
