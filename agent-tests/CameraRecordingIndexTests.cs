@@ -34,6 +34,10 @@ static class CameraRecordingIndexTests
         check(index.Gaps(cameras[0],t,t.AddMinutes(30)).Count==1 &&
               index.Gaps(cameras[0],t,t.AddMinutes(30))[0].StartUtc==t.AddMinutes(10),
             "gaps are reported after the actual closed file ends");
+        bool limitRejected=false;
+        try { index.Gaps(cameras[0],t,t.AddMinutes(30),limit:1); }
+        catch(InvalidOperationException){limitRejected=true;}
+        check(limitRejected,"bounded queries cannot silently report unexamined clips as gaps");
         var file=Path.Combine(recordings,cameras[0].ToString("N"),"clip-0001.mp4");
         check(index.RegisterClosed(ids[cameras[0]],cameras[0],file,t,t.AddMinutes(10)).Id==ids[cameras[0]],
             "retry of the same closed segment is idempotent");
