@@ -1,31 +1,43 @@
+import {prepareRecordingVideo,recorderActuallyRunning,waitForRecorderData} from "./recording-init.mjs?v=1";
+import {applyCameraFit,fitAction} from './camera-fit.mjs?v=1';
+import {RecordingStorageClient,mountRecordingStorage,storageDescription} from './recording-storage.mjs?v=1';
+import "./gallery-viewer.mjs?v=1";
 // vendor/supabase.js (@supabase/supabase-js 2.117.2) ładowany w index.html przed tym modułem.
 // Pliki mają numer wersji w adresie (?v=…), bo GitHub Pages trzyma je w pamięci podręcznej przez 10 min.
 const { createClient } = window.supabase;
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=34";
 import { b64, sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=23";
-import { requireAccess } from "./lock.js?v=19";
-import { channelFor, lock } from "./access.js?v=19";
+import { requireAccess } from "./lock.js?v=22";
+import { createRemoteUnlockHost } from "./remote-unlock-host.mjs?v=2";
+import { mountRemoteUnlockPhone } from "./remote-unlock-phone.mjs?v=2";
+import { channelFor, lock } from "./access.js?v=21";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=17";
-import * as recstore from "./recstore.js?v=77";
+import * as recstore from "./recstore.js?v=78";
 import { oldRecordingPlan } from "./local-retention.mjs?v=1";
 import { createRecordingDeletion } from "./recording-actions.mjs?v=2";
 import { localRecordingView } from './recording-view-state.mjs?v=1';
 import { mountNativeDriveUI, nativeDriveSummary } from './native-drive-ui.mjs?v=2';
 import { fixMp4Duration } from "./mp4fix.js?v=2";
-import * as diskstore from "./diskstore.js?v=11";
+import * as diskstore from "./diskstore.js?v=12";
+import { closeRecordingFragment } from './close-recording-fragment.mjs?v=1';
+import { createPictureInPicture } from './picture-in-picture.mjs?v=1';
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=105";
-import { accountClient } from "./auth.js?v=11";
-import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=11";
+import { mountDvr } from "./dvr-ui.js?v=108";
+import { accountClient } from "./auth.js?v=15";
+import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=15";
 import { mountAccountUI } from "./account-ui.mjs?v=3";
-import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=1';
+import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=2';
+import { createCleanAudioStream } from './audio-cleaner.mjs?v=3';
+import { preferCameraMicrophone } from './audio-source.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { createWebUpdates } from "./core/web-updates.mjs?v=3";
+import { freshUpdateURL } from "./core/update-navigation.mjs?v=1";
 import { NativeAgentClient } from "./communication/native-agent-client.mjs";
 import { createAgentTelemetry } from "./communication/agent-telemetry.mjs?v=2";
-import { captureEventFrame } from "./workspace-panels.mjs?v=2";
+import { createReconnectingChannel } from "./core/reconnecting-channel.mjs?v=1";
+import { captureEventFrame } from "./workspace-panels.mjs?v=4";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
 import { createPeerDiagnostics } from "./core/peer-diagnostics.mjs";
 import { sealFolder, openFolder } from "./communication/folder-channel.mjs";
@@ -62,8 +74,14 @@ const NATIVE_DESKTOP = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chr
 // pochodzi z powłoki Windows i pozostaje ważna na każdej stronie konta.
 const NATIVE_HOST = NATIVE_DESKTOP;
 const CAN_MANAGE_CAMERA = NATIVE_HOST;
+const recordingStorage = new RecordingStorageClient();
+let storageSaveTail = Promise.resolve();
+function spoolRecording(data,name,state) {
+  const saving=storageSaveTail.then(()=>recordingStorage.save(data,name,state));
+  storageSaveTail=saving.catch(()=>{});return saving;
+}
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "226"; // musi się zgadzać z version.json
+const VERSION = "272"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -380,6 +398,7 @@ const archive = (() => {
   let localSaveFailures = 0, updateSource = null;
   let folderReceipt = null, folderWriteError = "";
   let source = null, recStream = null, running = false, rec = null, segTimer = null, clock = null;
+  let starting = null, startGeneration = 0, recordingError = "", firstDataReady = false, recordingMime = REC_MIME;
   let recSince = 0, saved = 0, lastName = "", lastError = "", queued = 0, sentToDrive = 0, verifiedToDrive = 0, lastVerified = "", pumping = false, retryTimer = null, looped = 0;
   let local = { count: 0, bytes: 0, oldest: 0 }, free = Infinity, persisted = false;
   let diskFiles = { count: 0, bytes: 0, oldest: 0 };
@@ -445,7 +464,7 @@ const archive = (() => {
       } catch { /* spróbujemy przy następnym uruchomieniu */ }
     }
     await refreshLocal();
-    resume();
+    void resume().catch(() => {});
     pump();
     clearInterval(init.timer);
     init.timer = setInterval(refreshLocal, 60000);
@@ -454,6 +473,7 @@ const archive = (() => {
   // Wysyła na Google Drive kolejkę. Element może wskazywać plik w IndexedDB
   // (ref), w tymczasowym folderze Pulpitu (diskRef), albo zawierać starą kopię blob.
   async function pump() {
+    if(globalThis.__HOME_SECURITY_STORAGE_BRIDGE__)return; // Native policy owns all new uploads; preserve the old queue without sending behind its controls.
     if (!cloud.enabled || pumping) return;
     pumping = true; clearTimeout(retryTimer);
     const skip = new Set();
@@ -513,9 +533,24 @@ const archive = (() => {
   async function save(data, name, events, start, end) {
     // Długość nagrania wpisana od razu do pliku — przewijanie działa w każdym odtwarzaczu (telefon, WhatsApp, Windows).
     data = await fixMp4Duration(data).catch(() => data);
+    let nativePolicy = null, nativeQueued = false;
+    if (recordingStorage.webview) {
+      try { nativePolicy = await recordingStorage.refresh(); }
+      catch (error) { nativePolicy=recordingStorage.state;lastError = `Nie potwierdzono miejsca zapisu: ${errText(error)}. Zachowuję plik awaryjnie.`; }
+      if (nativePolicy?.connected && nativePolicy.mode !== 'local') {
+        try {
+          await spoolRecording(data,name,nativePolicy); nativeQueued=true;
+          if(nativePolicy.mode==='cloud') {
+            saved++;lastName=name;folderWriteError='';
+            folderReceipt={name,bytes:data.size,folder:'bufor Google Drive — oczekuje na wysłanie',verifiedAt:Date.now()};
+            render(); return;
+          }
+        } catch(error) { lastError=`Wysyłka Drive oczekuje na ponowienie: ${errText(error)}`; }
+      }
+    }
     let savedToDisk = false;
     try {
-      savedToDisk = await diskstore.save(name, data);
+      savedToDisk = nativePolicy?.mode==='cloud' ? false : await diskstore.save(name, data);
       if (savedToDisk) {
         folderReceipt = { name, bytes: data.size, folder: disk.name, verifiedAt: Date.now() };
         folderWriteError = "";
@@ -523,18 +558,19 @@ const archive = (() => {
       }
       else if (disk.selected) { disk.ready = false; disk.error = "Brak zgody na zapis do folderu. Wybierz folder ponownie."; }
     } catch (e) { disk.error = `Nie udało się zapisać do folderu: ${errText(e)}`; }
-    if (!savedToDisk) folderWriteError = disk.error || "Folder nie został wybrany. Brak potwierdzenia zapisu do folderu.";
+    if (!savedToDisk) folderWriteError = nativePolicy?.mode==='cloud' ? 'Przekazanie do bufora Drive niepotwierdzone. Fragment zachowuję w pamięci awaryjnej do ponowienia.' : disk.error || "Folder nie został wybrany. Brak potwierdzenia zapisu do folderu.";
     // Bez folderu archiwum (albo gdy zapis do niego się nie udał) nagranie trafia do pamięci strony —
     // To zapis zapasowy, który również może zawieść, np. przy pełnym dysku.
-    if (!savedToDisk) {
+    if (!savedToDisk || (nativePolicy?.mode==='both'&&!nativeQueued)) {
       try {
-        await recstore.put({ name, start, end, events: events || [], thumbnail:captureEventFrame(video), type: data.type, uploaded: false }, data);
+        await recstore.put({ name, start, end, events: events || [], thumbnail:captureEventFrame(video), type: data.type, uploaded: false,
+          pendingNative:!!recordingStorage.webview&&!nativeQueued&&(!nativePolicy||nativePolicy.mode!=='local'), cloudOnly:nativePolicy?.mode==='cloud' }, data);
         saved++; lastName = name; lastError = "";
       } catch (e) { localSaveFailures++; lastError = `Nie udało się zapisać ${name}: ${errText(e)}`; }
     }
     // Kolejka powstaje dopiero po pełnym lokalnym zapisie. Gdy nie ma internetu,
     // plik pozostaje na Pulpicie i wysyłka zostanie ponowiona automatycznie.
-    if (prefs.driveAuto && cloud.enabled && (savedToDisk || await recstore.meta(name))) {
+    if (!recordingStorage.webview && prefs.driveAuto && cloud.enabled && (savedToDisk || await recstore.meta(name))) {
       await idb.qPut(name, savedToDisk
         ? { diskRef: name, events: events || [], cleanupLocal: false }
         : { ref: name, events: events || [], cleanupLocal: false });
@@ -552,10 +588,9 @@ const archive = (() => {
     if (v) { try { await v.applyConstraints({ frameRate: { ideal: fast ? FAST_FPS : SLOW_FPS } }); } catch { /* zostaje bieżąca płynność kamery */ } }
     if (!v || !HTMLCanvasElement.prototype.captureStream) return new MediaStream([...(v ? [v] : []), ...s.getAudioTracks()]);
     const input = document.createElement("video");
-    input.muted = true; input.playsInline = true; input.srcObject = new MediaStream([v]);
+    input.muted = true; input.playsInline = true;
     try {
-      await new Promise((resolve, reject) => { input.onloadedmetadata = resolve; input.onerror = reject; });
-      await input.play();
+      await prepareRecordingVideo(input, new MediaStream([v]));
       const settings = v.getSettings();
       // Nie twórz sztucznie dodatkowych klatek, kiedy kamera fizycznie daje
       // mniej niż 60 FPS. Zapis zachowuje Full HD i każdą prawdziwą klatkę,
@@ -612,7 +647,7 @@ const archive = (() => {
     if (!running || !recStream) return;
     const startedAt = new Date();
     segStart = startedAt.getTime();
-    const opts = { ...(REC_MIME ? { mimeType: REC_MIME } : {}), videoBitsPerSecond: recQuality().bps, audioBitsPerSecond: REC_AUDIO_BPS, ...(recQuality().cbr ? { videoBitrateMode: "constant" } : {}) };
+    const opts = { ...(recordingMime ? { mimeType: recordingMime } : {}), videoBitsPerSecond: recQuality().bps, audioBitsPerSecond: REC_AUDIO_BPS, ...(recQuality().cbr ? { videoBitrateMode: "constant" } : {}) };
     let r;
     try { r = new MediaRecorder(recStream, opts); }
     catch {
@@ -622,7 +657,7 @@ const archive = (() => {
     }
     const chunks = [], events = [];
     segEvents = events;
-    r.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    r.ondataavailable = e => { if (e.data.size) {chunks.push(e.data);if(rec===r&&!firstDataReady){firstDataReady=true;render();}} };
     let resolveStopped;
     const finished = new Promise(resolve => { resolveStopped = resolve; });
     stopped.set(r, finished);
@@ -642,10 +677,12 @@ const archive = (() => {
       } finally { resolveStopped(); }
     };
     r.onerror = e => { lastError = `Błąd nagrywania: ${errText(e.error || e)}`; render(); };
-    r.start(5000);
+    firstDataReady=false;
+    r.start(1000);
     rec = r;
     clearTimeout(segTimer);
     segTimer = setTimeout(rotate, Number(prefs.segmentMin) * 60000);
+    return r;
   }
 
   // Nowy plik startuje zanim zamkniemy poprzedni — bez dziury w nagraniu.
@@ -656,18 +693,42 @@ const archive = (() => {
   }
 
   async function resume() {
-    if (!running && source && REC_MIME !== null) {
-      running = true; recSince = Date.now();
-      recStream = await makeRecStream(source);
-      if (!running) { recStream.getVideoTracks().forEach(t => t.stop()); recStream = null; return; }
-      startSegment();
-      clearInterval(clock);
-      clock = setInterval(() => { $("recTime").textContent = fmtTime(Math.floor((Date.now() - recSince) / 1000)); }, 1000);
-    }
-    render();
+    if (starting) { await starting; if (!running && source) return resume(); return; }
+    if (running || !source) { render(); return; }
+    if (REC_MIME === null) throw new Error("Ta przeglądarka nie obsługuje nagrywania.");
+    const generation=startGeneration;
+    const currentSource=source;
+    recordingError="";
+    starting=(async()=>{
+      let prepared=null;
+      try {
+        prepared=await makeRecStream(currentSource);
+        if (generation!==startGeneration || source!==currentSource) { watermarkStop?.();watermarkStop=null;prepared.getVideoTracks().forEach(track=>track.stop()); return; }
+        recStream=prepared;running=true;recSince=Date.now();
+        const fallback="video/webm;codecs=vp8,opus";
+        const candidates=[...new Set([recordingMime,MediaRecorder.isTypeSupported(fallback)?fallback:""])];
+        let startFailure=null,accepted=false;
+        for(const candidate of candidates){
+          if(generation!==startGeneration)break;
+          recordingMime=candidate;const attempt=startSegment();
+          try{await waitForRecorderData(attempt);accepted=true;break;}
+          catch(error){startFailure=error;clearTimeout(segTimer);if(attempt.state!=="inactive")attempt.stop();await stopped.get(attempt);if(rec===attempt)rec=null;}
+        }
+        if(!accepted)throw startFailure||new Error("Rejestrator nie potwierdził rozpoczęcia zapisu.");
+        if(generation!==startGeneration)return;
+        recordingError="";
+        clearInterval(clock);
+        clock=setInterval(()=>{$("recTime").textContent=fmtTime(Math.floor((Date.now()-recSince)/1000));},1000);
+      } catch(error) {
+        if(generation===startGeneration){running=false;recSince=0;clearInterval(clock);clearTimeout(segTimer);recordingError=errText(error);lastError=`Nie uruchomiono nagrywania: ${recordingError}`;watermarkStop?.();watermarkStop=null;prepared?.getVideoTracks().forEach(track=>track.stop());recStream=null;rec=null;}
+        throw error;
+      } finally {render();}
+    })();
+    try {await starting;} finally {starting=null;render();}
   }
 
   function halt() {
+    startGeneration++;
     running = false;
     clearTimeout(segTimer); clearInterval(clock); clearTimeout(slowTimer);
     const active = rec, done = active ? stopped.get(active) : null;
@@ -679,9 +740,9 @@ const archive = (() => {
     return done || Promise.resolve();
   }
 
-  function start(s) { source = s; resume(); }
+  function start(s) { source = s; return resume(); }
   function stop() { const done = halt(); source = null; render(); return done; }
-  function restart() { if (running) { halt(); resume(); } else render(); }
+  function restart() { if (running) { halt(); return resume(); } else render(); }
   async function flush(done = Promise.resolve()) {
     await done;
     // Obrót segmentu może domykać poprzedni plik równolegle — poczekaj także
@@ -697,6 +758,10 @@ const archive = (() => {
     await pump();
     return status();
   }
+  function saveCurrentFragment() {
+    return closeRecordingFragment({current:()=>running&&rec,ready:()=>disk.ready||recordingStorage.state?.mode==='cloud',receipt:()=>folderReceipt,
+      rotate:active=>{const done=stopped.get(active);rotate();return done;},flush,error:()=>folderWriteError});
+  }
   async function prepareUpdate() {
     updateSource = source;
     const failures = localSaveFailures;
@@ -709,16 +774,18 @@ const archive = (() => {
 
   const gb = n => `${(n / 1073741824).toFixed(1)} GB`;
   function describe() {
+    const activeRecording=firstDataReady && recorderActuallyRunning(rec);
     if (REC_MIME === null) return "Ta przeglądarka nie obsługuje nagrywania.";
     let text = prefs.mode === "off" ? "Kamera wstrzymana z telefonu — nie nagrywa i nie nadaje."
       : prefs.mode === "preview" ? "Tylko na żywo — bez zapisu plików."
-      : prefs.mode === "rec-only" && running ? `Tylko zapis (bez transmisji na żywo), pliki co ${prefs.segmentMin} min.`
-      : running && prefs.recordUntil > Date.now() ? `Nagranie jednorazowe do ${new Date(prefs.recordUntil).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}, potem tylko podgląd.`
-      : running ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
-    if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; plików na dysku: ${diskFiles.count} (${gb(diskFiles.bytes)}).`;
+      : prefs.mode === "rec-only" && activeRecording ? `Tylko zapis (bez transmisji na żywo), pliki co ${prefs.segmentMin} min.`
+      : activeRecording && prefs.recordUntil > Date.now() ? `Nagranie jednorazowe do ${new Date(prefs.recordUntil).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}, potem tylko podgląd.`
+      : activeRecording ? `Nagrywa bez przerwy (pliki co ${prefs.segmentMin} min).` : "Nagrywanie ruszy, gdy kamera będzie włączona.";
+    if (recordingStorage.state?.mode==='cloud') text += ' Nowe nagrania trafiają do bufora wysyłania Drive; nie powstaje stałe archiwum w wybranym folderze komputera.';
+    else if (disk.ready) text += ` Trwałe archiwum: folder „${disk.name}”; plików na dysku: ${diskFiles.count} (${gb(diskFiles.bytes)}).`;
     else if (disk.selected) text += ` ⚠ Folder „${disk.name}” czeka na ponowną zgodę Chrome (po odświeżeniu strony) — na komputerze kliknij „Przywróć dostęp do folderu”. Pliki w folderze są bezpieczne; do tego czasu nagrania zapisują się w pamięci strony.`;
     else text += " Nagrania zapisują się w pamięci strony (folder archiwum nie jest ustawiony).";
-    text += prefs.driveAuto
+    text += recordingStorage.state ? ` ${storageDescription(recordingStorage.state)}` : prefs.driveAuto
       ? " Kopia zapasowa: lokalny folder komputera → Google Drive. Lokalna kopia pozostaje na komputerze."
       : " Nagrania pozostają lokalnie na komputerze; kopia Google Drive jest wyłączona.";
     if (local.count) text += ` W pamięci strony: ${local.count} nagrań (${gb(local.bytes)}).`;
@@ -727,7 +794,7 @@ const archive = (() => {
     if (set.width) {
       const actualFps = Math.max(1, Math.round(set.frameRate || recordingFps || FAST_FPS));
       const outputFps = recordingFps || actualFps;
-      text += ` Obraz: ${set.width}×${set.height}, kamera ${actualFps} kl./s · zapis ${outputFps} kl./s, ${(REC_MIME || "").split(";")[0] || "domyślny kodek"}, jakość ${recQuality().short}.`;
+      text += ` Obraz: ${set.width}×${set.height}, kamera ${actualFps} kl./s · zapis ${outputFps} kl./s, ${(recordingMime || "").split(";")[0] || "domyślny kodek"}, jakość ${recQuality().short}.`;
     }
     if (cloud.enabled) {
       if (queued) text += ` Kolejka Google Drive: ${queued}.`;
@@ -740,15 +807,16 @@ const archive = (() => {
     return `${text}${disk.error ? ` ${disk.error}` : ""}${lastError ? ` ${lastError}` : ""}`;
   }
 
-  const status = () => ({ recording: running, since: running ? recSince : 0, reason: describe(), folder: disk.ready ? disk.name : "nieustawiony", folderReceipt, folderWriteError, lastFile: lastName, saved, queued, migrated: sentToDrive, verifiedToDrive, lastVerified });
+  const status = () => ({ recording: firstDataReady && recorderActuallyRunning(rec), starting: !!starting, recordingError, since: firstDataReady && recorderActuallyRunning(rec) ? recSince : 0, reason: describe(), folder: disk.ready ? disk.name : "nieustawiony", folderReceipt, folderWriteError, lastFile: lastName, saved, queued, migrated: sentToDrive, verifiedToDrive, lastVerified });
 
   function render() {
     systemStore.component("cloudQueue", { status: pumping ? "uploading" : queued ? "queued" : "idle", queued, verified: verifiedToDrive });
     const previousStorage=systemStore.read("storage");
-    const storageState={status:disk.error?"error":disk.ready?"ready":disk.selected?"permission_required":"unselected",name:disk.name||"",message:disk.error||"",saved};
+    const cloudStorage=recordingStorage.state?.mode==='cloud';
+    const storageState={status:cloudStorage?'ready':disk.error?"error":disk.ready?"ready":disk.selected?"permission_required":"unselected",name:cloudStorage?'Google Drive — bufor wysyłania':disk.name||"",message:cloudStorage?storageDescription(recordingStorage.state):disk.error||"",saved};
     systemStore.component("storage",storageState);
     if(previousStorage.status!==storageState.status||previousStorage.name!==storageState.name)systemStore.event({component:"storage",level:disk.error?"error":"info",message:disk.error||`Miejsce zapisu: ${disk.ready?disk.name:disk.selected?"wymagana zgoda":"nie wybrano folderu"}.`});
-    if(Number.isFinite(previousStorage.saved)&&saved>previousStorage.saved)systemStore.event({component:"storage",level:"info",message:`Potwierdzono lokalny zapis segmentu: ${lastName}`});
+    if(Number.isFinite(previousStorage.saved)&&saved>previousStorage.saved)systemStore.event({component:"storage",level:"info",message:`Potwierdzono ${cloudStorage?'bufor wysyłania Drive':'lokalny zapis'} segmentu: ${lastName}`});
     $("recBadge").hidden = !running;
     $("archiveInfo").textContent = describe();
     const confirmation = $("localSaveConfirmation");
@@ -761,7 +829,7 @@ const archive = (() => {
       confirmation.dataset.state = folderWriteError ? "error" : folderReceipt ? "verified" : "pending";
     }
     const operational = $("opArchive");
-    if (operational) operational.textContent = disk.ready ? `Dysk: ${diskFiles.count} pl.` : disk.selected ? "Przywróć dostęp" : "Wybierz folder";
+    if (operational) operational.textContent = cloudStorage ? 'Google Drive — sprawdź wysyłkę' : disk.ready ? `Dysk: ${diskFiles.count} pl.` : disk.selected ? "Przywróć dostęp" : "Wybierz folder";
     const btn = $("chooseArchiveDir");
     if (btn && !btn.disabled) btn.textContent = CAN_MANAGE_CAMERA ? "📁 Wybierz folder na komputerze…" : "📁 Wybierz folder komputera nadającego…";
     const restore = $("restoreArchiveDir");
@@ -829,7 +897,7 @@ const archive = (() => {
   // Chrome po odświeżeniu strony pyta ponownie o zgodę na zapis do folderu — wymaga kliknięcia.
   async function regrantDisk() {
     disk = { ...disk, ...(await diskstore.status(true)) };
-    if (disk.ready) { disk.error = ""; await refreshLocal(); }
+    if (disk.ready) { disk.error = ""; folderWriteError = ""; void refreshLocal(); }
     render();
     return disk.ready;
   }
@@ -837,8 +905,10 @@ const archive = (() => {
   async function chooseDisk(options) {
     const name = await diskstore.choose(options);
     disk = { ...disk, selected: true, name, ready: true, error: "" };
-    await refreshLocal();
+    folderWriteError = ""; folderReceipt = null;
     render();
+    // Folder is already persisted and write-tested. Listing a large archive is background work.
+    void refreshLocal();
     return name;
   }
   async function disconnectDisk(removeEmpty = false) {
@@ -851,10 +921,11 @@ const archive = (() => {
     if ((await idb.qKeys()).length) throw new Error("Najpierw zakończ wysyłanie kolejki Drive. Zmiana folderu mogłaby odłączyć jej pliki.");
     const result = await diskstore.selectRemoteFolder(path);
     disk = { selected:true, ready:true, name:result.name, error:"" };
+    folderWriteError = ""; folderReceipt = null;
     await refreshLocal(); render(); return result;
   }
 
-  return { init, chooseDisk, disconnectDisk, selectRemoteFolder, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, flush, sendCurrentFragment, prepareUpdate, abortUpdate, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
+  return { init, chooseDisk, disconnectDisk, selectRemoteFolder, regrantDisk, get diskNeedsGrant() { return disk.selected && !disk.ready; }, start, stop, restart, flush, saveCurrentFragment, sendCurrentFragment, prepareUpdate, abortUpdate, needsGrant: () => false, listDays, listDay, remove, markEvent, activity, status, local: local_, localHours, shareLocal };
 })();
 window.chrome?.webview?.addEventListener("message", async event => {
   const message = event.data;
@@ -868,38 +939,22 @@ window.chrome?.webview?.addEventListener("message", async event => {
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
 function reconnectingChannel({ onSignal, onSubscribed, label }) {
-  let channel = null, attempt = 0, timer = null, active = false;
-  function connect() {
-    if (!active) return;
-    clearTimeout(timer);
-    const old = channel; channel = null;
-    if (old) supabase.removeChannel(old);
-    const ch = supabase.channel(CHANNEL, { config: { broadcast: { self: false } } });
-    ch.on("broadcast", { event: "signal" }, ({ payload }) => Promise.resolve(onSignal(payload)).catch(e => setStatus(`Błąd połączenia: ${errText(e)}`)));
-    channel = ch;
-    ch.subscribe(s => {
-      if (channel !== ch) return;
-      if (s === "SUBSCRIBED") { attempt = 0; onSubscribed(ch); }
-      else if (s === "CHANNEL_ERROR" || s === "TIMED_OUT" || s === "CLOSED") {
-        const d = retryDelay(attempt++);
-        setStatus(`${label}: utracono połączenie z serwerem. Ponawiam za ${Math.round(d / 1000)} s…`);
-        clearTimeout(timer); timer = setTimeout(connect, d);
-      }
-    });
-  }
-  return {
-    get channel() { return channel; },
-    start() { active = true; attempt = 0; connect(); },
-    reconnect() { attempt = 0; connect(); },
-    stop() { active = false; clearTimeout(timer); const c = channel; channel = null; if (c) supabase.removeChannel(c); },
-  };
+  return createReconnectingChannel({
+    client: supabase,
+    name: CHANNEL,
+    onSignal,
+    onSubscribed,
+    delayForAttempt: retryDelay,
+    onError: error => setStatus(`Błąd połączenia: ${errText(error)}`),
+    onRetry: delay => setStatus(`${label}: utracono połączenie z serwerem. Ponawiam za ${Math.round(delay / 1000)} s…`),
+  });
 }
 const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", payload });
 
 // Polecenia zmieniające pracę komputera-kamery muszą być podpisane kluczem z PIN-u.
 // Link odbiorcy zawiera tylko nazwę kanału, dlatego nie wystarcza jako uprawnienie do sterowania.
-const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "audio-profile-set", "light-set", "restart", "reload", "folder-browse", "folder-create", "folder-select", "folder-delete-empty", "recording-delete"]);
-const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}${sig.type === "light-set" ? `|L${clampLight(sig.light)}` : ""}${(sig.type.startsWith("folder-") || sig.type === "recording-delete") ? `|F${JSON.stringify(sig.folderEnvelope)}` : ""}`;
+const OWNER_CONTROL = new Set(["mode-set", "quality-set", "media-set", "audio-profile-set", "light-set", "restart", "reload", "folder-browse", "folder-create", "folder-select", "folder-delete-empty", "recording-delete", "storage-snapshot", "storage-set", "storage-connect", "storage-disconnect"]);
+const controlText = sig => `${sig.type}|${sig.mode || ""}|${Number(sig.minutes) || 0}|${sig.q || ""}${sig.media ? `|${sig.media}` : ""}${sig.type === "light-set" ? `|L${clampLight(sig.light)}` : ""}${(sig.type.startsWith("folder-") || sig.type.startsWith("storage-") || sig.type === "recording-delete") ? `|F${JSON.stringify(sig.folderEnvelope)}` : ""}`;
 const controlSignatureText = sig => controlText(sig) + (sig.type === 'audio-profile-set' ? `|A${sig.audioProfile}` : '') + (sig.commandId ? `|v1|${sig.commandId}|${sig.clientId}|${sig.expiresAt}` : "");
 async function signedOwnerControl(payload) {
   if (!ACCESS_KEY) return null;
@@ -1021,7 +1076,7 @@ function renderDiag(d, extra = []) {
   if (!$("diagList") || !d) return;
   const capture = d.camLive ? "track_live" : d.mode === "off" ? "disabled" : d.camError ? "error" : "waiting";
   systemStore.component("capture", { status: capture, camera: d.cam, width: d.w, height: d.h, fps: d.fps, message: d.camError || "" });
-  systemStore.component("recording", { status: d.recording ? "recording" : ["preview", "off"].includes(d.mode) ? "idle" : "waiting", lastFile: d.lastFile || null });
+  systemStore.component("recording", { status: d.recordingError ? "error" : d.recording ? "recording" : ["preview", "off"].includes(d.mode) ? "idle" : "waiting", message:d.recordingError||"", lastFile: d.lastFile || null });
   systemStore.component("microphone", { status: d.micOn ? "active" : "unused", device: d.mic || null });
   const row = (status, text) => Object.assign(document.createElement("li"), {
     className: status === "error" ? "bad" : status === "warning" ? "warn" : "ok",
@@ -1032,6 +1087,12 @@ function renderDiag(d, extra = []) {
   const rows = [
     row(capture === "error" ? "error" : "info", d.camLive ? `Ścieżka kamery aktywna: ${d.cam || "kamera"} · ${d.w || "?"}×${d.h || "?"} · ustawienie ${d.fps || "?"} FPS` : capture === "disabled" ? "Kamera wyłączona wybranym trybem." : d.camError || "Oczekiwanie na telemetrię kamery."),
     row("info", d.micOn ? `Mikrofon aktywny: ${d.mic || "mikrofon"}` : "Mikrofon nieużywany — nie jest to błąd kamery."),
+    ...(d.micOn && d.audioLevels ? [
+      row("info", `Poziom mikrofonu przed/po filtrze: ${d.audioLevels.beforeDb} / ${d.audioLevels.afterDb} dBFS. Najcichsze fragmenty ostatniej minuty: ${d.audioLevels.quietBeforeDb} / ${d.audioLevels.quietAfterDb} dBFS. To pomiary cyfrowe, nie natężenie hałasu w pokoju.`)
+    ] : []),
+    ...(d.micOn && (d.audioLevels?.inputTones?.length || d.audioLevels?.outputTones?.length) ? [
+      row("info", `Powtarzające się wąskie tony (przed / po filtrze): ${(d.audioLevels.inputTones || []).map(p => `${p.hz} Hz (+${p.excessDb} dB)`).join(", ") || "brak"} / ${(d.audioLevels.outputTones || []).map(p => `${p.hz} Hz (+${p.excessDb} dB)`).join(", ") || "brak"}. To wskazówka z widma, nie rozpoznanie uszkodzenia sprzętu.`)
+    ] : []),
     row("info", d.recording ? "Nagrywanie aktywne." : ["preview", "off"].includes(d.mode) ? "Zapis wyłączony wybranym trybem." : "Oczekiwanie na zapis lub harmonogram."),
     row(rtc.failed ? "error" : "info", `WebRTC tego ekranu: ${rtc.last}`),
     row("info", d.lastFile ? `Ostatni zamknięty plik: ${d.lastFile}` : "Brak zamkniętego segmentu w tej sesji."),
@@ -1090,7 +1151,7 @@ function paintCtrl() {
     : ctrlState.mode === "off" ? "kamera wyłączona"
     : !ctrlState.hasCam ? "brak obrazu z kamery"
     : rec ? (ctrlState.until > now ? `na żywo · nagrywa jednorazowo (do ${new Date(ctrlState.until).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })})` : "na żywo · nagrywa bez przerwy")
-    : ctrlState.mode === "preview" ? "na żywo · bez nagrywania" : ctrlState.mode === "rec-only" ? "tylko zapis · bez transmisji na żywo" : "na żywo · nagrywanie zaraz ruszy";
+    : ctrlState.mode === "preview" ? "na żywo · bez nagrywania" : ctrlState.mode === "rec-only" ? "tylko zapis · bez transmisji na żywo" : "na żywo · zapis nieaktywny — sprawdź status i harmonogram";
   $("ctrlBar").dataset.state = ctrlState.mode === "off" ? "off" : rec ? "rec" : ctrlState.mode ? "live" : "";
 }
 setInterval(paintCtrl, 1000);
@@ -1110,7 +1171,13 @@ function paintMode(m, until = 0) {
 const sender = (() => {
   const peers = new Map();
   let zoomer = null, cropWidth = 0; // zbliżenie: wycinany kadr z pełnej rozdzielczości kamery
-  let stream = null, live = false, heartbeat = null, reportTimer = null, keepAlive = null, camTimer = null, scheduleTimer = null, camAttempt = 0, wakeLock = null, lastCameraError = "";
+  let stream = null, noisePipeline = null, live = false, heartbeat = null, reportTimer = null, keepAlive = null, camTimer = null, scheduleTimer = null, camAttempt = 0, wakeLock = null, lastCameraError = "";
+  function stopCapture() {
+    stream?.getTracks().forEach(track => track.stop());
+    stream = null;
+    noisePipeline?.close();
+    noisePipeline = null;
+  }
   // Dwa skróty Windows lub dwie przypadkowo otwarte karty nie mogą nagrywać tą samą kamerą równocześnie.
   // Dzierżawa jest odnawiana co 10 s i po 35 s sama wygasa, np. po awarii przeglądarki.
   const senderLockKey = "prywatna-kamera-sender-lock-v1";
@@ -1195,7 +1262,7 @@ const sender = (() => {
       if (!(await validOwnerControl(sig))) return;
       if (sig.commandId) {
         if (typeof sig.clientId !== "string" || sig.clientId.length > 80) return;
-        const isFolder = (sig.type.startsWith("folder-") || sig.type === "recording-delete");
+        const isFolder = (sig.type.startsWith("folder-") || sig.type.startsWith("storage-") || sig.type === "recording-delete");
         const args = isFolder ? await openFolder(sig.folderEnvelope, ACCESS_KEY, sig.clientId, sig.commandId)
           : { mode: sig.mode, minutes: sig.minutes, q: sig.q, media: sig.media, light: sig.light, audioProfile: sig.audioProfile };
         const result = await commandDispatcher.execute({ v: 1, id: sig.commandId, name: sig.type, args, expiresAt: sig.expiresAt }, sig.clientId);
@@ -1273,7 +1340,16 @@ const sender = (() => {
   async function prepareCameraStream(s) {
     const track = s.getVideoTracks()[0];
     if (track) { track.contentHint = "motion"; await optimizeCameraLight(track); }
-    return s;
+    // Web browsers otherwise capture the Windows default microphone even when
+    // a different physical USB webcam was selected. Never guess by device name.
+    const result = await preferCameraMicrophone(
+      s, navigator.mediaDevices, audioConstraints(prefs.audioProfile || 'clean'), window.MediaStream
+    );
+    systemStore.component('microphoneSource', {
+      status: result.selected ? 'matched' : result.reason,
+      note: result.selected ? 'Mikrofon dobrany do kamery USB.' : 'Zachowano dostępny mikrofon.'
+    });
+    return result.stream;
   }
   const getMedia = async deviceId => {
     try {
@@ -1288,7 +1364,7 @@ const sender = (() => {
       }
       // Starsze/tańsze kamery czasem odrzucają 1080p/30 fps mimo że działają bez dodatkowych wymagań.
       if (e?.name !== "OverconstrainedError") throw e;
-      const s = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId } } : true, audio: prefs.audio ? true : false });
+      const s = await navigator.mediaDevices.getUserMedia({ video: deviceId ? { deviceId: { exact: deviceId } } : true, audio: prefs.audio ? audioConstraints(prefs.audioProfile || 'clean') : false });
       return prepareCameraStream(s);
     }
   };
@@ -1335,10 +1411,19 @@ const sender = (() => {
   let camWaitSince = 0; // >0 = czekamy na kamerę (np. okno zgody przeglądarki)
   async function acquireCamera() {
     camWaitSince = Date.now();
+    let captured = null;
     try {
-      const s = await openBestCamera();
+      captured = await openBestCamera();
       camWaitSince = 0;
-      if (!live) { s.getTracks().forEach(t => t.stop()); return false; }
+      if (!live) { captured.getTracks().forEach(t => t.stop()); return false; }
+      const prepared = await createCleanAudioStream(captured, prefs.audioProfile || 'clean');
+      if (!live) {
+        prepared.stream.getTracks().forEach(t => t.stop());
+        prepared.close();
+        return false;
+      }
+      noisePipeline = prepared;
+      const s = prepared.stream;
       stream = s;
       if (s.getAudioTracks().length) {
         try { await setAudioProfile(prefs.audioProfile || 'clean'); }
@@ -1358,12 +1443,14 @@ const sender = (() => {
       s.getVideoTracks()[0]?.addEventListener("ended", () => { if (live && stream === s) cameraLost(); });
       camAttempt = 0;
       applyMedia();
-      if (prefs.mode !== "preview" && recordingScheduledNow()) archive.start(s);
+      if (prefs.mode !== "preview" && recordingScheduledNow()) await archive.start(s);
       else archive.stop();
       if (prefs.detect) detector.start(s, video);
       return true;
     } catch (e) {
       camWaitSince = 0;
+      if (stream) stopCapture();
+      else captured?.getTracks().forEach(track => track.stop());
       lastCameraError = `${cameraErrorMessage(e)} [${e?.name || "błąd"}]`;
       showPlaceholder(lastCameraError);
       $("retryCameraBtn").hidden = false;
@@ -1375,7 +1462,7 @@ const sender = (() => {
   function cameraLost() {
     archive.stop(); detector.stop(); closeAll();
     zoomer?.stop(); zoomer = null;
-    stream?.getTracks().forEach(t => t.stop()); stream = null;
+    stopCapture();
     video.srcObject = null; showPlaceholder("Utracono obraz z kamery…");
     setStatus("Utracono obraz z kamery — próbuję ją ponownie uruchomić…");
     scheduleCameraRetry();
@@ -1406,12 +1493,14 @@ const sender = (() => {
   }
   async function setAudioProfile(profile) {
     audioConstraints(profile);
-    const result=await applyAudioProfile(stream?.getAudioTracks()[0],profile,navigator.mediaDevices.getSupportedConstraints());
+    const result=await applyAudioProfile(noisePipeline?.sourceTrack || stream?.getAudioTracks()[0],profile,navigator.mediaDevices.getSupportedConstraints());
+    noisePipeline?.setProfile(profile);
+    const configured={...result,software:!!noisePipeline?.filtered};
     prefs.audioProfile=profile;savePrefs();
     if($('audioProfilePick'))$('audioProfilePick').value=profile;
-    if($('audioProfileStatus'))$('audioProfileStatus').textContent=audioStatus(result);
-    systemStore.component('audioProcessing',{status:'configured',...result});
-    return result;
+    if($('audioProfileStatus'))$('audioProfileStatus').textContent=audioStatus(configured);
+    systemStore.component('audioProcessing',{status:'configured',...configured});
+    return configured;
   }
 
   async function setMode(m, minutes) {
@@ -1426,13 +1515,13 @@ const sender = (() => {
       clearTimeout(camTimer);
       await archive.flush(archive.stop()); detector.stop(); closeAll();
       zoomer?.stop(); zoomer = null;
-      stream?.getTracks().forEach(t => t.stop()); stream = null;
+      stopCapture();
       video.srcObject = null; showLive(""); setStatus(""); showPlaceholder("Kamera wyłączona. Otwórz Sterowanie i wybierz Start lub Sam podgląd.");
     } else if (!stream) {
       camAttempt = 0; setStatus("Uruchamiam kamerę i mikrofon…");
       if (await acquireCamera()) { setStatus(""); send(chan.channel, { type: "broadcaster-ready" }); }
       else if (live) scheduleCameraRetry();
-    } else if (RECORDING_MODES.has(m) && recordingScheduledNow()) archive.start(stream);
+    } else if (RECORDING_MODES.has(m) && recordingScheduledNow()) await archive.start(stream);
     else await archive.flush(archive.stop());
     beat();
     report();
@@ -1446,11 +1535,11 @@ const sender = (() => {
     else if (live) scheduleCameraRetry();
   }
 
-  function applyRecordingPlan() {
+  async function applyRecordingPlan() {
     // Koniec nagrania jednorazowego → sam podgląd.
     if (prefs.recordUntil && prefs.recordUntil <= Date.now()) { prefs.recordUntil = 0; savePrefs(); if (prefs.mode === "record") return setMode("preview"); }
     if (!live || !stream) return;
-    if (RECORDING_MODES.has(prefs.mode) && recordingScheduledNow()) archive.start(stream);
+    if (RECORDING_MODES.has(prefs.mode) && recordingScheduledNow()) await archive.start(stream);
     else archive.stop();
     report();
   }
@@ -1469,7 +1558,7 @@ const sender = (() => {
     if (!live) return;
     archive.stop(); detector.stop(); closeAll();
     zoomer?.stop(); zoomer = null;
-    stream?.getTracks().forEach(t => t.stop()); stream = null;
+    stopCapture();
     lastCameraError = ""; $("retryCameraBtn").hidden = true;
     if (await acquireCamera()) {
       setStatus("");
@@ -1498,7 +1587,7 @@ const sender = (() => {
     clearInterval(heartbeat);
     heartbeat = setInterval(beat, HEARTBEAT_MS);
     clearInterval(scheduleTimer);
-    scheduleTimer = setInterval(applyRecordingPlan, 30000);
+    scheduleTimer = setInterval(()=>{void applyRecordingPlan().catch(error=>setStatus(`Nie uruchomiono nagrywania: ${errText(error)}`));}, 30000);
     clearInterval(reportTimer);
     reportTimer = setInterval(report, 60000);
     setTimeout(report, 5000);
@@ -1524,7 +1613,7 @@ const sender = (() => {
     chan.stop();
     closeAll();
     zoomer?.stop(); zoomer = null;
-    stream?.getTracks().forEach(t => t.stop()); stream = null;
+    stopCapture();
     video.srcObject = null;
     wakeLock?.release().catch(() => {}); wakeLock = null;
     $("startBtn").hidden = false; $("stopBtn").hidden = true;
@@ -1555,13 +1644,9 @@ const sender = (() => {
       const last = Number(sessionStorage.getItem("kamera-update") || 0);
       if (Date.now() - last < 30 * 60000) return;
       sessionStorage.setItem("kamera-update", String(Date.now()));
-      setStatus("Nowa wersja strony kamery — domykam bieżące nagranie przed odświeżeniem…");
-      const saved = archive.stop();
-      releaseSenderLock();
-      // Adres z numerem wersji: przeglądarka pobiera świeżą stronę zamiast starej z pamięci podręcznej.
-      const u = new URL(location.href); u.searchParams.set("v", String(v));
-      await archive.flush(saved);
-      location.replace(u.href);
+      // Native UI is bundled with its installed release. A web version change
+      // must never stop recording or reload that older, coherent bundle.
+      setStatus("Dostępna nowa wersja panelu. Kamera i nagrywanie pracują dalej; aktualizacja zostanie wczytana przy następnym uruchomieniu.");
     } catch { /* brak internetu — sprawdzimy później */ }
   }
 
@@ -1585,7 +1670,8 @@ const sender = (() => {
     const v = stream?.getVideoTracks()[0], a = stream?.getAudioTracks()[0], st = v?.getSettings?.() || {}, r = archive.status();
     return { cam: v ? (v.label || "kamera") : "", camLive: v?.readyState === "live", w: st.width, h: st.height, fps: Math.round(st.frameRate || 0),
       mic: a ? (a.label || "mikrofon") : "", micOn: !!a && a.enabled && a.readyState === "live", recording: r.recording, lastFile: r.lastFile,
-      quality: recQuality().short, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem(), light: cameraLight, webrtc: webRtcDiagnostics.snapshot() };
+      quality: recQuality().short, recordingError:r.recordingError, mode: prefs.mode, viewers: peers.size, version: VERSION, camError: camProblem(), light: cameraLight, webrtc: webRtcDiagnostics.snapshot(),
+      audioLevels: a?.enabled && a.readyState === "live" ? (noisePipeline?.getLevels?.() || null) : null };
   }
   const beat = () => (renderDiag(diag(), [diagRow(true, `Strona nadaje obraz · oglądających teraz: ${peers.size}`)]), paintMode(prefs.mode, prefs.recordUntil), $("viewQuality").value = REC_QUALITY[prefs.recQuality] ? prefs.recQuality : "high", send(chan.channel, { type: "heartbeat", nativeDrive: nativeDriveSummary(systemStore.snapshot().components.nativeDrive), rec: archive.status(), mode: prefs.mode, until: prefs.recordUntil > Date.now() ? prefs.recordUntil : 0, quality: prefs.recQuality, media: prefs.media, light: clampLight(prefs.light), lightSw, now: Date.now(), camError: camProblem(), from: INSTANCE, hasCam: !!stream, visible: document.visibilityState === "visible", diag: diag() }), reportNativePanelState({ role: "transmitter", live: !!stream, cameraError: camProblem(), recording: archive.status().recording, camera: diag().cam, resolution: `${diag().w || 0}x${diag().h || 0}`, fps: diag().fps || 0 }), setCtrlState({ ...archive.status(), mode: prefs.mode, until: prefs.recordUntil, skew: 0, hasCam: !!stream, quality: prefs.recQuality }));
   // Zmiana jakości nagrań: bieżący plik zostaje domknięty, następny nagrywa się już w nowej jakości.
@@ -1643,7 +1729,7 @@ const viewer = (() => {
   const commandClient = new CommandClient({
     send: async command => {
       if (!chan.channel) throw new Error("Brak połączenia z nadajnikiem.");
-      const args = (command.name.startsWith("folder-") || command.name === "recording-delete") ? {folderEnvelope:await sealFolder(command.args,ACCESS_KEY,viewerId,command.id)} : command.args;
+      const args = (command.name.startsWith("folder-") || command.name.startsWith("storage-") || command.name === "recording-delete") ? {folderEnvelope:await sealFolder(command.args,ACCESS_KEY,viewerId,command.id)} : command.args;
       const payload = await signedOwnerControl({ type: command.name, ...args,
         commandId: command.id, clientId: viewerId, expiresAt: command.expiresAt });
       if (!payload) throw new Error("Panel jest zablokowany.");
@@ -1829,6 +1915,10 @@ function requireCommandSuccess(result) {
   throw error;
 }
 const commandDispatcher = new CommandDispatcher({ handlers: {
+  'storage-snapshot': () => recordingStorage.refresh(),
+  'storage-set': async ({mode}) => {const result=await recordingStorage.request('set',{mode});recordingStorage.state=result;return result;},
+  'storage-connect': async ({folderId}) => {const result=await recordingStorage.request('connect',{folderId});recordingStorage.state=result;return result;},
+  'storage-disconnect': async () => {const result=await recordingStorage.request('disconnect');recordingStorage.state=result;return result;},
   'recording-delete': async ({recordingName})=>{
     if(!CAN_MANAGE_CAMERA)throw new Error('Usunięcie wykonuje wyłącznie komputer z archiwum.');
     return archive.local.remove(recordingName);
@@ -1856,7 +1946,9 @@ const commandDispatcher = new CommandDispatcher({ handlers: {
     if (!sender.live && mode !== "off") await sender.start();
     await sender.setMode(mode, minutes);
     if (mode !== "off" && !sender.hasCamera) throw new Error("Brak aktywnej ścieżki kamery.");
-    return { mode: prefs.mode, recording: archive.status().recording, hasCamera: sender.hasCamera };
+    const state=archive.status();
+    if(RECORDING_MODES.has(prefs.mode)&&recordingScheduledNow()&&!state.recording)throw new Error(state.recordingError||"Rejestrator nie potwierdził startu zapisu.");
+    return { mode: prefs.mode, recording: state.recording, hasCamera: sender.hasCamera, reason:state.reason };
   },
   restart: async () => {
     await sender.restart();
@@ -1995,7 +2087,7 @@ const zoomUi = (() => {
   $("zoomOut").addEventListener("click", () => set({ ...state, z: state.z / 1.25 }));
   $("zoomReset").addEventListener("click", () => set({ z: 1, cx: 0.5, cy: 0.5 }));
   $("zoomMax").addEventListener("click", () => set({ ...state, z: max }));
-  return { apply };
+  return { apply, reset:()=>set({z:1,cx:0.5,cy:0.5}) };
 })();
 
 // ---------- Widoki ----------
@@ -2081,7 +2173,14 @@ function showViewer() {
   $("roleBtn").textContent = "To jest komputer z kamerą — nadawaj z niego";
   $("roleBtn").hidden = !IS_DESKTOP;
   applyControlVisibility();
-  viewer.start();
+  if (MOBILE_OWNER_APP) {
+    document.addEventListener("hs-mobile-view-change", event => {
+      if (event.detail?.view === "camera") viewer.start();
+      else viewer.stop();
+    });
+  } else {
+    viewer.start();
+  }
 }
 
 // ---------- Przyciski ----------
@@ -2192,7 +2291,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "136";
+  const SERVICE_WORKER_BUILD = "190";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2202,12 +2301,14 @@ if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
     const output=$('mobileUpdateStatus');if(output)output.textContent=webUpdateState.message;
   };
   const webUpdates=createWebUpdates({serviceWorker:navigator.serviceWorker,build:SERVICE_WORKER_BUILD,
-    autoApply:true,
+    // Aktualizacja tylko na żądanie: automatyczny restart przerywał logowanie i PIN.
+    autoApply:false,
     // Web pages update without a click, but never while the camera is live,
     // during recording, or while a user is editing a form.
     canAutoApply:()=>!sender.live&&!archive.status().recording&&!(video.srcObject?.getVideoTracks?.()||[]).some(track=>track.readyState==='live')&&!document.querySelector('input:focus,textarea:focus,select:focus,[contenteditable="true"]:focus,dialog[open]'),
     onState:state=>{webUpdateState=state;paintWebUpdate();},
-    prepareReload:()=>archive.prepareUpdate(),abortReload:()=>archive.abortUpdate(),reload:()=>location.reload()});
+    prepareReload:()=>archive.prepareUpdate(),abortReload:()=>archive.abortUpdate(),
+    reload:()=>location.replace(freshUpdateURL(location.href,VERSION,Date.now()))});
   document.addEventListener('hs-web-update-ui-ready',paintWebUpdate);
   document.addEventListener('hs-check-web-update',()=>{void(webUpdates.available?webUpdates.apply():webUpdates.check());});
   const checkWebUpdate=()=>{void webUpdates.check({background:true});};
@@ -2239,7 +2340,7 @@ async function runControl(button, pendingText, doneText, task) {
   setControlAction(pendingText, "pending");
   try {
     const result = await task();
-    const confirmed = result?.mode === "record" && !result.recording ? "Tryb zapisu ustawiony — oczekiwanie na inicjalizację lub harmonogram." : doneText;
+    const confirmed = result?.mode === "record" && !result.recording ? "Zapis nie rozpoczął się — poza godzinami harmonogramu. Sprawdź Ustawienia → Nagrywanie." : doneText;
     setControlAction(confirmed, "ok");
     toastMsg(confirmed);
   } catch (error) {
@@ -2253,7 +2354,9 @@ async function runControl(button, pendingText, doneText, task) {
 }
 $("ctrlStart").addEventListener("click", async () => {
   if (!canControlCamera()) return;
+  const folderPermission = CAN_MANAGE_CAMERA && archive.diskNeedsGrant ? archive.regrantDisk() : Promise.resolve(true);
   await runControl($("ctrlStart"), "Uruchamiam obraz i automatyczny zapis…", "Start potwierdzony — kamera nadaje i zapisuje.", async () => {
+    if(!(await folderPermission))throw new Error("Zatwierdź dostęp do folderu nagrań na tym komputerze.");
     return executeControl("mode-set", { mode: "record" });
   });
 });
@@ -2382,6 +2485,15 @@ $("viewQuality").addEventListener("change", e => executeControl("quality-set", {
 $("retentionDays").closest("label").hidden = false;
 $("driveAuto").checked = !!prefs.driveAuto;
 $("driveAuto").disabled = !CAN_MANAGE_CAMERA || !cloud.enabled;
+$("saveCurrentFragment").disabled = !CAN_MANAGE_CAMERA;
+$("saveCurrentFragment").addEventListener("click", async event => {
+  if(!CAN_MANAGE_CAMERA)return;
+  const button=event.currentTarget,output=$("archiveFolderSelectionStatus");button.disabled=true;
+  output.textContent="Domykam plik w wybranym miejscu zapisu. Podgląd kamery pozostaje aktywny.";
+  try { const receipt=await archive.saveCurrentFragment();output.textContent=`Potwierdzono plik „${receipt.name}” w folderze „${receipt.folder}”: ${receipt.bytes.toLocaleString('pl-PL')} bajtów. Kolejny fragment nagrywa się dalej.`; }
+  catch(error){output.textContent=`Zapis do folderu niepotwierdzony: ${errText(error)}`;}
+  finally{button.disabled=false;}
+});
 $("sendCurrentFragment").disabled = !CAN_MANAGE_CAMERA || !cloud.enabled;
 $("driveAuto").addEventListener("change", e => {
   if (!CAN_MANAGE_CAMERA || !cloud.enabled) return;
@@ -2408,7 +2520,7 @@ for (const id of ["segmentMin", "retentionDays"]) {
 $("recordPlan").value = prefs.recordPlan || "always";
 $("recordPlan").addEventListener("change", e => {
   prefs.recordPlan = e.target.value; savePrefs();
-  sender.applyRecordingPlan();
+  void sender.applyRecordingPlan().catch(error=>toastMsg(error.message));
   toastMsg(`Harmonogram: ${e.target.options[e.target.selectedIndex].text}.`);
 });
 $("cameraSelect").addEventListener("change", async e => {
@@ -2451,13 +2563,14 @@ $("reconnectBtn").addEventListener("click", () => {
 });
 // Pełny ekran: cały kadr (obraz na żywo albo odtwarzane nagranie, z zegarem i przyciskami).
 // iPhone nie pozwala stronie na pełny ekran elementu — tam kadr rozciąga się na cały ekran (z przyciskiem ✕).
+let panelOrientationLocked=false;
 function toggleFullscreen() {
   const stage = $("stage");
   if (document.fullscreenElement || document.webkitFullscreenElement) return (document.exitFullscreen || document.webkitExitFullscreen).call(document);
   if (stage.classList.contains("fakeFull")) return setFakeFull(false);
   const req = stage.requestFullscreen || stage.webkitRequestFullscreen;
   if (req) {
-    Promise.resolve(req.call(stage)).then(() => screen.orientation?.lock?.("landscape").catch(() => {})).catch(() => setFakeFull(true));
+    Promise.resolve(req.call(stage)).then(async()=>{try{if(screen.orientation?.lock){await screen.orientation.lock('landscape');if(document.fullscreenElement||document.webkitFullscreenElement)panelOrientationLocked=true;else screen.orientation.unlock?.();}}catch{}}).catch(() => setFakeFull(true));
   } else setFakeFull(true);
 }
 function setFakeFull(on) {
@@ -2468,54 +2581,48 @@ function setFakeFull(on) {
 }
 // Przycisk dopasowania widoczny także w prawdziwym pełnym ekranie.
 ["fullscreenchange", "webkitfullscreenchange"].forEach(ev => document.addEventListener(ev, () => {
-  $("fitFull").hidden = !(document.fullscreenElement || document.webkitFullscreenElement || $("stage").classList.contains("fakeFull"));
+  const on=!!(document.fullscreenElement || document.webkitFullscreenElement || $("stage").classList.contains("fakeFull"));
+  $("fitFull").hidden = !on;$("exitFull").hidden=!on;
+  if(!on&&panelOrientationLocked){screen.orientation?.unlock?.();panelOrientationLocked=false;}
 }));
 $("fullBtn").addEventListener("click", toggleFullscreen);
 // Mini-okno (Picture-in-Picture): użytkownik uruchamia je dotknięciem, więc
 // przeglądarka może bezpiecznie pokazać obraz nad innymi aplikacjami. To nie
 // zatrzymuje transmisji ani nagrywania na komputerze-kamerze.
-async function togglePictureInPicture() {
-  if (!video.srcObject && !video.currentSrc) return toastMsg("Mini-okno będzie dostępne, gdy dotrze obraz z kamery.");
-  try {
-    if (document.pictureInPictureElement) {
-      await document.exitPictureInPicture();
-      return;
-    }
-    await video.play().catch(() => {});
-    if (typeof video.requestPictureInPicture === "function") {
-      await video.requestPictureInPicture();
-      return;
-    }
-    // Safari/iPhone używa własnego trybu prezentacji wideo.
-    if (typeof video.webkitSetPresentationMode === "function") {
-      video.webkitSetPresentationMode(video.webkitPresentationMode === "picture-in-picture" ? "inline" : "picture-in-picture");
-      return;
-    }
-    toastMsg("Ta przeglądarka nie pozwala stronie otworzyć mini-okna. Otwórz monitoring w Safari/Chrome z obsługą obrazu w obrazie albo użyj pełnego ekranu.");
-  } catch (e) {
-    toastMsg(`Nie udało się otworzyć mini-okna: ${errText(e)}.`);
-  }
-}
+const pipPreferences=document.createElement('section');pipPreferences.className='pipPreferences';pipPreferences.setAttribute('aria-label','Ustawienia mini-okna');
+pipPreferences.innerHTML='<h3>Mini-okno kamery</h3><label><input type="checkbox" id="autoPip"> Automatyczne mini-okno</label><p id="pipPreferenceStatus" role="status" aria-live="polite"></p><p>Okno nad innymi aplikacjami otwiera system telefonu. Aby mieć pewność, naciśnij „Mini-okno” przy działającym obrazie, zanim schowasz przeglądarkę. Zamykanie karty kończy podgląd na tym urządzeniu.</p>';
+(document.querySelector('.mobileOptionsBody')||$('setCard')).append(pipPreferences);
+const pipCheckbox=pipPreferences.querySelector('input'),pipMessage=pipPreferences.querySelector('[role=status]');
+let automaticPip=true;try{automaticPip=localStorage.getItem('hs-auto-pip-v1')!=='off';}catch{}
+pipCheckbox.checked=automaticPip;
+const pipController=createPictureInPicture(video,{onError:message=>{pipMessage.textContent=message;toastMsg(message);},onState:state=>{
+  for(const button of [$('pipBtn'),$('menuPip')]){button.disabled=state.busy||(!state.active&&(!state.ready||!state.supported));button.textContent=state.active?'▣ Zamknij mini-okno':'▣ Mini-okno';button.setAttribute('aria-pressed',String(state.active));button.title=!state.ready?'Poczekaj na obraz z kamery':!state.supported?'System nie udostępnia mini-okna dla tego źródła':'Otwórz podgląd nad innymi aplikacjami';}
+  pipMessage.textContent=!state.ready?'Poczekaj na obraz z kamery.':!state.supported?'Mini-okno jest niedostępne dla tego źródła w tej przeglądarce.':state.active?'Podgląd działa w systemowym mini-oknie.':state.automatic&&state.autoHandler?'Automatyczne mini-okno zgłoszone przeglądarce. System może poprosić o zgodę i decyduje, kiedy je otworzyć.':state.automatic?'Automatyczne przejście nie jest potwierdzone w tej przeglądarce. Włącz Mini-okno przyciskiem przed schowaniem strony.':'Automatyczne przejście wyłączone. Mini-okno możesz otworzyć przyciskiem.';
+}});
+pipController.setAutomatic(automaticPip);
+pipCheckbox.addEventListener('change',()=>{try{localStorage.setItem('hs-auto-pip-v1',pipCheckbox.checked?'on':'off');}catch{}pipController.setAutomatic(pipCheckbox.checked);});
+function togglePictureInPicture(){return pipController.toggle();}
 $("pipBtn").addEventListener("click", togglePictureInPicture);
-video.addEventListener("enterpictureinpicture", () => { $("pipBtn").textContent = "▣ Zamknij mini-okno"; });
-video.addEventListener("leavepictureinpicture", () => { $("pipBtn").textContent = "▣ Mini-okno"; });
+window.addEventListener('pagehide',event=>{if(!event.persisted)pipController.dispose();});
 // Dopasowanie obrazu do ekranu (np. telefon obrócony w lewo/prawo): cały kadr / wypełnij / rozciągnij.
-const FIT_MODES = [["contain", "▣ Cały kadr"], ["cover", "⛶ Wypełnij"], ["fill", "↔ Rozciągnij"]];
+const FIT_MODES = MOBILE_OWNER_APP
+  ? [["contain", "▣ Cały kadr"], ["cover", "⛶ Wypełnij"]]
+  : [["contain", "▣ Cały kadr"], ["cover", "⛶ Wypełnij"], ["fill", "↔ Rozciągnij"]];
+if(MOBILE_OWNER_APP)prefs.fit='contain';
 function applyFit() {
-  const i = Math.max(0, FIT_MODES.findIndex(([k]) => k === prefs.fit));
-  const [mode, label] = FIT_MODES[i];
-  ["contain", "cover", "fill"].forEach(k => $("stage").classList.toggle(`fit-${k}`, k === mode));
-  $("fitBtn").textContent = label; $("fitFull").textContent = label;
+  applyCameraFit({stage:$("stage"),button:$("fitBtn"),fullscreenButton:$("fitFull"),mode:prefs.fit,mobile:MOBILE_OWNER_APP});
 }
 function nextFit() {
-  const i = Math.max(0, FIT_MODES.findIndex(([k]) => k === prefs.fit));
-  prefs.fit = FIT_MODES[(i + 1) % FIT_MODES.length][0]; savePrefs(); applyFit();
+  prefs.fit = fitAction(prefs.fit,MOBILE_OWNER_APP).next;
+  if(prefs.fit==='contain')zoomUi.reset();
+  savePrefs(); applyFit();
   toastMsg(`Obraz: ${FIT_MODES.find(([k]) => k === prefs.fit)[1].slice(2)}`);
 }
 $("fitBtn").addEventListener("click", nextFit);
 $("fitFull").addEventListener("click", e => { e.stopPropagation(); nextFit(); });
 applyFit();
-$("exitFull").addEventListener("click", e => { e.stopPropagation(); setFakeFull(false); });
+$("exitFull").addEventListener("click", e => { e.stopPropagation();if(document.fullscreenElement||document.webkitFullscreenElement)toggleFullscreen();else setFakeFull(false); });
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('stage').classList.contains('fakeFull'))setFakeFull(false);});
 // Dwukrotne stuknięcie w obraz = pełny ekran / powrót.
 let lastTap = 0;
 $("stage").addEventListener("pointerup", e => {
@@ -2545,6 +2652,21 @@ function setListeningAvailable(available) {
 }
 function paintListeningControls() {
   if (!listeningAvailable) return;
+  // Playing the captured microphone on its own computer feeds the speakers
+  // back into capture. Remote listeners and recordings retain the audio track.
+  if (sender.live) {
+    video.muted = true;
+    $("soundBtn").disabled = true;
+    $("listenVolume").disabled = true;
+    $("soundBtn").textContent = "Mikrofon nadawany bez lokalnego odsłuchu";
+    $("soundBtn").setAttribute("aria-pressed", "false");
+    $("soundBtn").title = "Odsłuch na komputerze z mikrofonem jest wyłączony, aby zapobiec echu. Użyj telefonu.";
+    $("listenState").textContent = "Ochrona przed echem aktywna";
+    $("audioHud").dataset.state = "muted";
+    return;
+  }
+  $("soundBtn").disabled = false;
+  $("listenVolume").disabled = false;
   const muted = video.muted;
   const volume = Math.round((Number(video.volume) || 0) * 100);
   const button = $("soundBtn");
@@ -2557,12 +2679,12 @@ function paintListeningControls() {
   $("audioHud").dataset.state = muted ? "muted" : "listening";
 }
 $("soundBtn").addEventListener("click", async () => {
-  if (matchMedia("(max-width:950px), (pointer:coarse)").matches) {
+  {
     const expanded = $("audioHud").classList.toggle("audioExpanded");
     $("soundBtn").setAttribute("aria-expanded", String(expanded));
     $("soundBtn").setAttribute("aria-controls", "listenVolume");
   }
-  if (!listeningAvailable) return;
+  if (!listeningAvailable || sender.live) return;
   video.muted = !video.muted;
   if (!video.muted && !video.volume) video.volume = 1;
   // Odtwarzanie dźwięku wymaga świadomego kliknięcia użytkownika.
@@ -2571,6 +2693,7 @@ $("soundBtn").addEventListener("click", async () => {
   toastMsg(video.muted ? "Odsłuch wyłączony." : `Odsłuch włączony — głośność ${Math.round(video.volume * 100)}%.`);
 });
 $("listenVolume").addEventListener("input", event => {
+  if (sender.live) { video.muted = true; paintListeningControls(); return; }
   const volume = Math.max(0, Math.min(100, Number(event.target.value) || 0)) / 100;
   video.volume = volume;
   if (volume > 0 && video.muted) video.muted = false;
@@ -2613,7 +2736,12 @@ if (RECEIVER_ONLY) {
   $("app").hidden = false;
   showViewer();
 } else {
-  ACCESS_KEY = await requireAccess();
+  // A Windows host listens while its PIN screen is locked. Local PIN never waits on network.
+  const remoteHost= NATIVE_HOST&&panelAccount?.id
+    ? createRemoteUnlockHost({client:accountClient,ownerId:panelAccount.id})
+    : null;
+  if(remoteHost)void remoteHost.start();
+  ACCESS_KEY = await requireAccess({bindRemote:callback=>remoteHost?.bindUnlock(callback)});
   const drivePanel=$('nativeDrivePanel');drivePanel.hidden=false;
   let refreshDrive=null;
   if (window.__HOME_SECURITY_AGENT_BRIDGE__ && window.chrome?.webview) {
@@ -2623,12 +2751,37 @@ if (RECEIVER_ONLY) {
   }
   if(MOBILE_OWNER_APP&&$('mobileRecordingStorage'))$('mobileRecordingStorage').prepend(drivePanel);
   const disposeDrive=mountNativeDriveUI({root:drivePanel,store:systemStore,refresh:refreshDrive});
+  const storagePanel=$('recordingStorageChoice');
+  if(recordingStorage.webview)document.querySelector('.archiveLegacy')?.setAttribute('hidden','');
+  drivePanel.before(storagePanel);drivePanel.hidden=true;storagePanel.hidden=false;
+  const disposeStorage=mountRecordingStorage({root:storagePanel,execute:executeControl,canManage:canControlCamera,
+    authorize:recordingStorage.webview?folderId=>recordingStorage.request('authorize',{folderId}):null});
+  let retryingNative=false;
+  const nativeRetryTimer=recordingStorage.webview?setInterval(async()=>{
+    if(retryingNative)return;retryingNative=true;
+    try {
+      const state=await recordingStorage.refresh();if(!state.connected||state.mode==='local')return;
+      for(const item of (await recstore.list()).filter(item=>item.pendingNative)) {
+        const data=await recstore.blob(item.name);if(!data)continue;
+        await spoolRecording(data,item.name,state);
+        // Native spool acknowledged the complete bytes. Its uploader retains them until Google confirms checksum and size.
+        if(item.cloudOnly)await recstore.remove(item.name);else await recstore.update(item.name,{pendingNative:false});
+      }
+    }catch{/* Preserve every pending recording and retry later. */}finally{retryingNative=false;}
+  },60000):null;
+  window.addEventListener('pagehide',()=>{disposeStorage();clearInterval(nativeRetryTimer);recordingStorage.dispose();},{once:true});
   window.addEventListener('pagehide',disposeDrive,{once:true});
   // Pulpit ma pojawić się natychmiast po poprawnym PIN-ie. Obliczenie kanału
   // lub późniejsze łączenie sieciowe nie może zostawić użytkownika z pustym
   // ekranem; obraz pokaże wtedy czytelny stan oczekiwania.
   document.body.classList.remove("accessPending");
   $("app").hidden = false; $("lockBtn").hidden = false;
+  // Pairing is available only AFTER local Windows PIN unlock, not on the login screen.
+  if(remoteHost){try{remoteHost.mountUI();}catch{/* Keep local camera operational. */}}
+  if(MOBILE_OWNER_APP&&panelAccount?.id&&!NATIVE_HOST){
+    try{mountRemoteUnlockPhone({client:accountClient,ownerId:panelAccount.id});}
+    catch{/* Phone viewing and recordings must not depend on pairing UI. */}
+  }
   mountAccountUI({
     requestReset: async expectedUserId => {
       const user = await currentAccountUser();

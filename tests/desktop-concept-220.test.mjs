@@ -6,7 +6,7 @@ const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
 test('real HOME SECURITY 220 owner interface loads the UI-concept design last and offline',async()=>{
  const [html,sw,css,version,app]=await Promise.all([
-  'kamera/index.html','kamera/sw.js','kamera/interface-concept.css',
+  'kamera/panel.html','kamera/sw.js','kamera/interface-concept.css',
   'kamera/version.json','kamera/app.js'].map(read));
  const release=JSON.parse(version).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
@@ -16,11 +16,11 @@ test('real HOME SECURITY 220 owner interface loads the UI-concept design last an
  assert.ok(sw.includes('kamera-domowa-shell-v'+shell));
  assert.ok(html.includes('home-security-build" content="'+release+'"'));
  assert.ok(html.includes('app.js?v='+release));
- assert.ok(html.includes('desktop.js?v=39'));
- assert.ok(sw.includes('./desktop.js?v=39'));
- assert.ok(html.includes('href="interface-concept.css?v=2"'));
- assert.ok(sw.includes('./interface-concept.css?v=2'));
- assert.ok(html.indexOf('interface-concept.css?v=2')>html.indexOf('interface-theme.css?v=3'));
+ const desktopScript=html.match(/desktop\.js\?v=\d+/)?.[0];assert.ok(desktopScript);
+ assert.ok(sw.includes('./'+desktopScript));
+ assert.ok(html.includes('href="interface-concept.css?v=3"'));
+ assert.ok(sw.includes('./interface-concept.css?v=3'));
+ assert.ok(html.indexOf('interface-concept.css?v=3')>html.indexOf('interface-theme.css?v=3'));
  assert.ok(css.length>10000,'design is implemented in production CSS, not merely a concept document');
 });
 
@@ -59,7 +59,7 @@ test('special-purpose police and military themes remain independent and user mot
 
 test('desktop navigation derives current location from real router and never claims recording success',async()=>{
  const [desktop,panels,html]=await Promise.all([
-  'kamera/desktop.js','kamera/workspace-panels.mjs','kamera/index.html'].map(read));
+  'kamera/desktop.js','kamera/workspace-panels.mjs','kamera/panel.html'].map(read));
  assert.ok(desktop.includes('setAttribute("aria-current", "page")'));
  assert.ok(desktop.includes('removeAttribute("aria-current")'));
  assert.ok(desktop.includes('desktopSummaryCamera">Sprawdzam…'));

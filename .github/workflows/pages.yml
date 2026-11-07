@@ -1,4 +1,4 @@
-name: Deploy DS Stream Support to GitHub Pages
+name: WWW | GitHub Pages | Publikacja strony i panelu
 
 on:
   push:
@@ -33,8 +33,15 @@ jobs:
         run: node scripts/desktop-release.mjs fetch
       - name: Generate consistent public marketing pages
         run: node scripts/build-marketing.mjs
+      - name: Validate application HTML and CSS with Nu Html Checker
+        run: |
+          npm install --prefix "$RUNNER_TEMP/html-validator" --no-save --no-package-lock vnu-jar@26.10.12
+          java -jar "$RUNNER_TEMP/html-validator/node_modules/vnu-jar/build/dist/vnu.jar" --skip-non-html kamera
+          java -jar "$RUNNER_TEMP/html-validator/node_modules/vnu-jar/build/dist/vnu.jar" --css kamera/*.css styles.css
       - name: Frontend regression tests
         run: node --test tests/*.test.mjs
+      - name: Verify all shipped page links and fragment destinations
+        run: node scripts/verify-site-links.mjs
       - name: Verify public audit script syntax
         run: node --check scripts/verify-live-marketing.mjs
       - name: Verify marketing image optimizer syntax
@@ -95,22 +102,62 @@ jobs:
         shell: bash
         run: |
           mkdir -p _site
-          rsync -a --exclude='.git/' --exclude='_site/' --exclude='kamera/updates/*.zip' ./ _site/
+          # GitHub Pages must publish only web content, not backend/desktop sources.
+          # Shipping the full 650-file repository stalls Pages file synchronization.
+          rsync -a \
+            --exclude='.git/' \
+            --exclude='_site/' \
+            --exclude='kamera/updates/*.zip' \
+            --exclude='/.github/' \
+            --exclude='/agent/' \
+            --exclude='/agent-client/' \
+            --exclude='/agent-contracts/' \
+            --exclude='/agent-tests/' \
+            --exclude='/desktop-client/' \
+            --exclude='/drive-sync/' \
+            --exclude='/native-mobile/' \
+            --exclude='/tests/' \
+            --exclude='/scripts/' \
+            --exclude='/hosting/' \
+            --exclude='/supabase/' \
+            --exclude='/design/' \
+            ./ _site/
           mkdir -p _site/kamera/updates
           current=$(node -p 'JSON.parse(require("fs").readFileSync("kamera/desktop-update.json","utf8")).version')
           cp "kamera/updates/HomeSecurityDesktop-${current}-win-x64.zip" _site/kamera/updates/
           # Keep the previous verified release as a rollback package. Older
           # binaries remain in Git, not in the size-limited Pages artifact.
           cp kamera/updates/HomeSecurityDesktop-1.4.7-win-x64.zip _site/kamera/updates/
+          # Abort before upload if the released PWA or current native packages are missing.
+          for required in \
+            _site/index.html \
+            _site/kamera/index.html \
+            _site/kamera/panel.html \
+            _site/kamera/sw.js \
+            _site/kamera/desktop-update.json \
+            "_site/kamera/downloads/HOME-SECURITY-Desktop-Setup-${current}.exe" \
+            "_site/kamera/updates/HomeSecurityDesktop-${current}-win-x64.zip" \
+            _site/kamera/updates/HomeSecurityDesktop-1.4.7-win-x64.zip; do
+            test -s "$required" || { echo "Missing required release file: $required"; exit 1; }
+          done
+          test ! -e _site/desktop-client
+          test ! -e _site/native-mobile
+          printf 'Pages distribution files: '
+          find _site -type f | wc -l
+          du -sh _site
       - name: Produce responsive WebP images for public pages
         shell: bash
         run: |
           set -euo pipefail
           # Install AFTER rsync so node_modules are not added to the Pages artifact.
-          npm install --no-save --no-package-lock sharp@0.34
+          npm install --no-save --no-package-lock sharp@0.34 esbuild@0.25
           node scripts/optimize-marketing-images.mjs _site
+          node scripts/minify-web-assets.mjs _site
+          node scripts/bundle-public-enhancements.mjs _site
+          node scripts/harden-public-pages.mjs _site
           test -s _site/kamera/assets/home-security-hero-640.webp
           test -s _site/kamera/assets/ds-logo-96.webp
+          test -s _site/kamera/assets/ds-logo-192.webp
           test -s _site/docs/ui-193/01-pulpit-960.webp
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3

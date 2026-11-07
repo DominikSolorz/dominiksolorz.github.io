@@ -1,0 +1,11 @@
+**/.gradle/
+**/build/
+**/local.properties
+**/*.keystore
+**/*.jks
+**/DerivedData/
+**/*.p12
+**/*.mobileprovision
+**/*.xcuserstate
+**/HomeSecurity.xcodeproj/
+**/DeviceBuild/

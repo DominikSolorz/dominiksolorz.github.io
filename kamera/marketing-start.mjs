@@ -11,7 +11,7 @@ if(checklist){
       const checked=inputs.filter(input=>input.checked).length;
       count.textContent=checked+' / '+inputs.length;
       progress.setAttribute('aria-valuenow',String(checked));
-      bar.style.width=(100*checked/inputs.length)+'%';
+      bar.style.transform='scaleX('+(checked/inputs.length)+')';
       summary.textContent=checked===4
         ? 'Lista ukończona. To potwierdzenie Twoich wyborów, nie automatyczny test kamery. Teraz możesz skorzystać z instrukcji i sprawdzić rzeczywisty obraz oraz zapis.'
         : checked===0

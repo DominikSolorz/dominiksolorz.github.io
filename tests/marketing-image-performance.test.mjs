@@ -2,28 +2,36 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,stat} from 'node:fs/promises';
 
-const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
+const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
 test('public LCP hero uses responsive WebP candidates with original fallback and priority',async()=>{
  const [source,index,brochure]=await Promise.all([
-  read('design/marketing/home.html'),read('kamera/index.html'),read('kamera/o-systemie.html')]);
+  read('design/marketing/home.html'),read('kamera/panel.html'),read('kamera/o-systemie.html')]);
  const hero=source.match(/<img src="assets\/home-security-hero\.png"[^>]+>/)?.[0];
  assert.ok(hero,'original PNG remains the fallback');
  assert.ok(hero.includes('assets/home-security-hero-640.webp 640w'));
  assert.ok(hero.includes('assets/home-security-hero.webp 1024w'));
  assert.ok(hero.includes('fetchpriority="high"'));
  assert.ok(hero.includes('sizes="(max-width: 700px)'));
- assert.ok(source.includes('assets/home-security-how-it-works-640.webp 640w'));
- assert.ok(source.includes('loading="lazy" decoding="async"'));
+ const explanation=await read('design/marketing/jak-dziala.html');
+ assert.ok(explanation.includes('assets/home-security-how-it-works-640.webp 640w'));
+ assert.ok(explanation.includes('loading="lazy" decoding="async"'));
  assert.ok(index.includes(source.trimEnd()));
  assert.ok(brochure.includes(source.trimEnd()));
 });
 
-test('all 8 gallery thumbnails have lightweight previews and retain full-resolution links',async()=>{
+test('gallery uses the eight requested full-resolution URLs while presentation retains lightweight previews',async()=>{
  const [home,gallery,full]=await Promise.all([
-  read('design/marketing/home.html'),read('design/marketing/gallery.html'),read('kamera/galeria.html')]);
+  read('design/marketing/prezentacja.html'),read('design/marketing/gallery.html'),read('kamera/galeria.html')]);
  assert.equal((home.match(/-960\.webp 960w/g)||[]).length,4);
- assert.equal((gallery.match(/-960\.webp 960w/g)||[]).length,8);
+ const {galleryBoards}=await import('../kamera/gallery-catalog.mjs');
+ assert.equal(galleryBoards.length,8);
+ for(const board of galleryBoards){
+  assert.ok(gallery.includes(`href="${board.url}"`));
+  assert.ok(gallery.includes(`src="${board.url}"`));
+  assert.ok(gallery.includes(board.title));assert.ok(gallery.includes(board.caption));
+ }
+ assert.equal((gallery.match(/<figure /g)||[]).length,8);
  assert.ok(full.includes(gallery.trimEnd()));
  for(const x of [home,gallery]){
   for(const [,url] of x.matchAll(/href="(\.\.\/docs\/ui-193\/[^"]+\.png)" data-mkt-image-view/g)){
@@ -47,15 +55,29 @@ test('build generates optimized images only from local public illustrations, aft
 test('marketing updates retain SW version consistency and original image links',async()=>{
  const [sw,app,manifest,index,source]=await Promise.all([
   read('kamera/sw.js'),read('kamera/app.js'),read('kamera/version.json'),
-  read('kamera/index.html'),read('design/marketing/home.html')]);
+  read('kamera/panel.html'),read('design/marketing/home.html')]);
  const build=JSON.parse(manifest).version;
- assert.equal(build,'226');
+ assert.ok(/^\d+$/.test(build));
  assert.ok(app.includes('const VERSION = "'+build+'"'));
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
- assert.equal(shell,'136');
+ assert.ok(/^\d+$/.test(shell));
  assert.ok(sw.includes('kamera-domowa-shell-v'+shell));
  assert.ok(sw.includes('./app.js?v='+build));
  assert.ok(index.includes('home-security-build" content="'+build+'"'));
  assert.ok(index.includes('app.js?v='+build));
  assert.ok(source.includes('src="assets/home-security-hero.png"'));
+});
+
+test('public branding retains optimized assets and locked screens use a compact vector shield',async()=>{
+ const [html,optimizer,workflow]=await Promise.all([
+   read('kamera/panel.html'),read('scripts/optimize-marketing-images.mjs'),
+   read('.github/workflows/pages.yml')
+ ]);
+ const privateLogos=[...html.matchAll(/<img class="(?:dsBrandLogo|dsPanelLogo)"[^>]+>/g)];
+ assert.equal(privateLogos.length,4);
+ for(const logo of privateLogos)assert.ok(logo[0].includes('src="assets/ds-shield.svg"'));
+ const shield=await read('kamera/assets/ds-shield.svg');
+ assert.ok(shield.includes('<svg'));assert.ok(shield.length<4096);
+ assert.ok(optimizer.includes("out:'kamera/assets/ds-logo-192.webp'"));
+ assert.ok(workflow.includes('_site/kamera/assets/ds-logo-192.webp'));
 });

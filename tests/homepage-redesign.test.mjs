@@ -4,8 +4,10 @@ import {readFile} from 'node:fs/promises';
 
 const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
-test('homepage explains real use cases and privacy responsibilities without fictitious footage',async()=>{
- const [home,brochure]=await Promise.all(['design/marketing/home.html','kamera/o-systemie.html'].map(read));
+test('public topic pages explain real use cases and privacy responsibilities without fictitious footage',async()=>{
+ const names=['jak-dziala','mozliwosci','przygotowanie','wymagania','stan-projektu','prezentacja','pytania'];
+ const home=(await Promise.all(['design/marketing/home.html',...names.map(n=>'design/marketing/'+n+'.html')].map(read))).join('\n');
+ const brochure=(await Promise.all(names.map(n=>read('kamera/'+n+'.html')))).join('\n');
  for(const html of [home,brochure]){
   for(const id of ['zobacz-panel','w-praktyce','zastosowania','prywatnosc','jak-dziala','specyfikacja','stan-projektu','wybierz-start','faq','asystent'])
    assert.ok(html.includes('id="'+id+'"'),id);
@@ -22,19 +24,20 @@ test('homepage explains real use cases and privacy responsibilities without fict
 
 test('new homepage conversion actions point to actual account and contact paths',async()=>{
  const home=await read('design/marketing/home.html');
- assert.ok(home.includes('href="./?auth=register"'));
- assert.ok(home.includes('href="pomoc.html?temat=produkt"'));
- assert.ok(home.includes('href="#zobacz-panel"'));
- assert.ok(home.includes('data-hs-open-support'));
+ assert.ok(home.includes('href="panel.html?auth=register"'));
+ assert.ok(home.includes('href="kontakt.html?temat=produkt"'));
+ assert.ok(home.includes('href="prezentacja.html"'));
+ assert.ok((await read('design/marketing/pytania.html')).includes('data-hs-open-support'));
  assert.ok(home.includes('polityka-prywatnosci.html'));
  assert.ok(home.includes('rodo.html'));
- const app=await read('kamera/index.html');
+ const app=await read('kamera/panel.html');
  assert.equal((app.match(/id="authDialog"/g)||[]).length,1);
  assert.equal((app.match(/id="app"/g)||[]).length,1);
 });
 
 test('responsive feature diagrams disclose illustration status and avoid false telemetry',async()=>{
- const [home,css]=await Promise.all(['design/marketing/home.html','kamera/marketing.css'].map(read));
+ const home=(await read('design/marketing/mozliwosci.html'))+(await read('design/marketing/jak-dziala.html'));
+ const css=await read('kamera/marketing.css');
  assert.equal((home.match(/class="mktScenarioCard"/g)||[]).length,3);
  assert.ok(home.includes('mktScenarioVisualFoot">OBRAZ · SCHEMAT'));
  assert.ok(home.includes('mktPrivacyNote'));
@@ -46,15 +49,15 @@ test('responsive feature diagrams disclose illustration status and avoid false t
 });
 
 test('standalone brochure and embedded public homepage match source',async()=>{
- const [src,app,brochure]=await Promise.all(['design/marketing/home.html','kamera/index.html','kamera/o-systemie.html'].map(read));
- const slot=/<section id="publicHome"[\s\S]*?<\/section>(?=\s*<section id="authDialog")/;
+ const [src,app,brochure]=await Promise.all(['design/marketing/home.html','kamera/panel.html','kamera/o-systemie.html'].map(read));
+ const slot=/<(?:section|div)(?: role="group")? id="publicHome"[\s\S]*?<\/(?:section|div)>(?=\s*<section id="authDialog")/;
  assert.equal(app.match(slot)?.[0],src.trimEnd());
  assert.ok(brochure.includes(src.trimEnd()));
- assert.ok(brochure.includes('Podgląd domu z telefonu i archiwum nagrań — HOME SECURITY'));
+ assert.ok(brochure.includes('Monitoring domu i podgląd — HOME SECURITY'));
 });
 
 test('PWA shell and every marketing page have consistent revisions',async()=>{
- const paths=['kamera/index.html','kamera/o-systemie.html','kamera/pomoc.html','kamera/blog/index.html','kamera/blog/pierwsze-uruchomienie.html','kamera/blog/zapis-lokalny-i-drive.html','kamera/blog/diagnostyka-monitoringu.html'];
+ const paths=['kamera/panel.html','kamera/o-systemie.html','kamera/pomoc.html','kamera/blog/index.html','kamera/blog/pierwsze-uruchomienie.html','kamera/blog/zapis-lokalny-i-drive.html','kamera/blog/diagnostyka-monitoringu.html'];
  const content=await Promise.all(paths.map(read));
  const [sw,app,version,source]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/version.json','scripts/build-marketing.mjs'].map(read));
  const appVersion=JSON.parse(version).version;
