@@ -25,7 +25,8 @@ test('one click starts the native update without a second confirmation dialog',(
  const end=native.indexOf('private sealed record DesktopUpdateManifest',begin);
  const flow=native.slice(begin,end);
  assert.ok(!flow.includes('MessageBox.Show'), 'the update button must not require a second click');
- assert.ok(flow.includes('if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;'));
+ assert.ok(flow.includes('if (!panelUnlocked || downloadingUpdate) return;'));
+ assert.ok(flow.includes('if (offeredUpdate is null) return;'));
  assert.ok(flow.includes('File.Move(pendingTemporaryPath, PendingUpdatePath, true)'));
  assert.ok(!flow.includes('Application.Restart'));
  assert.ok(flow.includes('await RestartIntoPreparedUpdateAsync();'),'install automatically after verified download');
@@ -33,7 +34,7 @@ test('one click starts the native update without a second confirmation dialog',(
 });
 test('native update notification and start require the unlocked account panel',()=>{
  assert.ok(native.includes('updateBar.Visible = panelUnlocked;'),'update center must be available only after account and PIN unlock');
- assert.ok(native.includes('updateButton.Visible = offeredUpdate is not null;'),'download action must be hidden without an offered version');
+ assert.ok(native.includes('updateButton.Visible = offeredUpdate is not null || File.Exists(PendingUpdatePath);'),'offer must appear only for a newer version or already verified pending package');
  assert.ok(native.includes('webView.CoreWebView2.NavigationStarting += (_, _) => { panelUnlocked = false; updateBar.Visible = false; }'),'navigation and logout must re-lock native controls');
  const query=native.slice(native.indexOf('if (type.GetString() == "desktop.update.query")'),native.indexOf('if (type.GetString() == "desktop.update.request")'));
  assert.ok(!query.includes('updateBar.Visible = false'));
