@@ -1,0 +1,268 @@
+/*
+ * HOME SECURITY — motyw „Tech Ops” (strona publiczna i dokumenty).
+ * Grafit, cyjan i zieleń statusu, monospace dla etykiet i liczb, ostre narożniki,
+ * siatka tła oraz ramki w stylu podglądu kamery. Wyłącznie prezentacja:
+ * nie zmienia treści, linków, formularzy ani skryptów. Ładowany jako ostatni.
+ */
+:is(#publicHome.mktSite,.marketingPage,.legalPage){
+  --t-bg:#06080b;
+  --t-bg2:#0a0e13;
+  --t-surface:#0d1218;
+  --t-raised:#121a22;
+  --t-line:#1c2731;
+  --t-line2:#2a3a47;
+  --t-text:#e8eef3;
+  --t-muted:#93a4b3;
+  --t-dim:#6b7d8c;
+  --t-cyan:#22d3ee;
+  --t-cyan2:#67e8f9;
+  --t-green:#34d399;
+  --t-red:#fb3b5b;
+  --t-amber:#fbbf24;
+  --t-mono:ui-monospace,"JetBrains Mono","Cascadia Mono","Cascadia Code",Consolas,"SFMono-Regular",Menlo,monospace;
+  --t-sans:"Segoe UI Variable Display","Segoe UI",Inter,system-ui,-apple-system,sans-serif;
+  --t-radius:6px;
+  --t-corner:linear-gradient(var(--t-cyan),var(--t-cyan));
+  --m-bg:var(--t-bg);--m-surface:var(--t-surface);--m-line:var(--t-line);--m-text:var(--t-text);--m-muted:var(--t-muted);--m-gold:var(--t-cyan);--m-red:var(--t-red);
+  --m-blue:var(--t-cyan);--m-purple:#0891b2;--m-teal:var(--t-green);
+  font-family:var(--t-sans);
+  color:var(--t-text);
+  background:
+    radial-gradient(ellipse 900px 520px at 78% -8%,rgba(34,211,238,.13),transparent 70%),
+    radial-gradient(ellipse 700px 480px at -10% 40%,rgba(52,211,153,.06),transparent 70%),
+    linear-gradient(rgba(148,163,184,.045) 1px,transparent 1px) 0 0/44px 44px,
+    linear-gradient(90deg,rgba(148,163,184,.045) 1px,transparent 1px) 0 0/44px 44px,
+    var(--t-bg)!important;
+  background-attachment:fixed!important;
+}
+body.marketingPage,body.legalPage{background-color:var(--t-bg)!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktMain,.mktPageMain,main){background:transparent!important}
+:is(#publicHome.mktSite,.marketingPage,.legalPage) ::selection{background:rgba(34,211,238,.35);color:#fff}
+
+/* ---------- Typografia ---------- */
+:is(#publicHome.mktSite,.marketingPage,.legalPage) :is(h1,h2,h3,.mktPageTitle){color:#f4f8fb;font-family:var(--t-sans);font-weight:700}
+:is(#publicHome.mktSite,.marketingPage) .mktHero h1{letter-spacing:-.045em;font-weight:800;line-height:1.02}
+:is(#publicHome.mktSite,.marketingPage) :is(h1,h2) em{
+  font-style:normal;
+  background:linear-gradient(92deg,var(--t-cyan2) 0%,var(--t-cyan) 45%,var(--t-green) 100%)!important;
+  -webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:var(--t-cyan)!important;
+}
+:is(#publicHome.mktSite,.marketingPage) :is(h2,.mktPageTitle){letter-spacing:-.035em}
+:is(#publicHome.mktSite,.marketingPage,.legalPage) :is(p,li,.mktLead,.mktPageLead){color:var(--t-muted)}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktLead,.mktPageLead){color:#b3c2cf}
+:is(#publicHome.mktSite,.marketingPage) strong{color:#eef4f8}
+
+/* Etykiety w stylu konsoli */
+:is(#publicHome.mktSite,.marketingPage,.legalPage) :is(.mktEyebrow,.publicEyebrow,.mktImageLabel,.mktPublicFeatureLabel,.mktFeatureNumber,.mktPublicFeatureNumber,.mktScenarioNumber,.mktMenuGroupLabel,.mktPostCategory,.mktArticleMeta,.mktBreadcrumb,.mktDemoEyebrow,.mktSetupCounter){
+  font-family:var(--t-mono)!important;
+  letter-spacing:.14em!important;
+  text-transform:uppercase;
+  font-weight:600!important;
+  color:var(--t-cyan)!important;
+}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktEyebrow,.publicEyebrow){font-size:12px!important;display:inline-flex;align-items:center;gap:10px}
+:is(#publicHome.mktSite,.marketingPage) .mktEyebrow>span:empty,
+:is(#publicHome.mktSite,.marketingPage) .mktEyebrow:not(:has(>span:empty))::before{
+  content:"";display:inline-block;width:8px;height:8px;border-radius:50%;flex:none;
+  background:var(--t-green)!important;box-shadow:0 0 0 3px rgba(52,211,153,.16),0 0 12px rgba(52,211,153,.7);
+  animation:techPulse 2.4s ease-in-out infinite;
+}
+:is(#publicHome.mktSite,.marketingPage) .mktBreadcrumb{font-size:11px!important;color:var(--t-dim)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktBreadcrumb a{color:var(--t-muted)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktBreadcrumb a:hover{color:var(--t-cyan)!important}
+@keyframes techPulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ---------- Nagłówek ---------- */
+:is(#publicHome.mktSite,.marketingPage) .mktHeader{
+  position:sticky;top:0;z-index:50;max-width:none;
+  padding-inline:max(24px,calc((100% - 1240px)/2));
+  background:rgba(6,8,11,.78)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);
+  border-bottom:1px solid var(--t-line)!important;
+  box-shadow:0 1px 0 rgba(34,211,238,.06);
+}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand{font-family:var(--t-mono);letter-spacing:.12em;font-weight:700;color:#f4f8fb}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand b{color:var(--t-cyan)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand small{font-family:var(--t-mono);font-size:10px!important;letter-spacing:.2em;color:var(--t-dim)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand img{border-radius:4px;box-shadow:0 0 0 1px var(--t-line2)}
+:is(#publicHome.mktSite,.marketingPage) .mktHeader>nav a{font-family:var(--t-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--t-muted)!important;position:relative;transition:color .16s}
+:is(#publicHome.mktSite,.marketingPage) .mktHeader>nav a:hover,:is(#publicHome.mktSite,.marketingPage) .mktHeader>nav a[aria-current="page"]{color:var(--t-cyan)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktLogin{
+  font-family:var(--t-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  border:1px solid rgba(34,211,238,.45)!important;border-radius:4px!important;
+  background:rgba(34,211,238,.06)!important;color:var(--t-cyan2)!important;
+  transition:background-color .16s,border-color .16s,color .16s;
+}
+:is(#publicHome.mktSite,.marketingPage) .mktLogin:hover{background:var(--t-cyan)!important;border-color:var(--t-cyan)!important;color:#03141a!important}
+
+/* Menu mobilne */
+:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu summary{border:1px solid var(--t-line2)!important;border-radius:4px!important;background:var(--t-surface)!important;color:var(--t-text)!important;font-family:var(--t-mono)}
+:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu summary i{background:var(--t-cyan)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu>nav{background:rgba(8,11,15,.98)!important;border:1px solid var(--t-line2)!important;border-radius:var(--t-radius)!important;box-shadow:0 24px 60px rgba(0,0,0,.6)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktMenuGroup a{color:var(--t-text)!important;border-radius:4px!important}
+:is(#publicHome.mktSite,.marketingPage) .mktMenuGroup a:hover{background:rgba(34,211,238,.08)!important;color:var(--t-cyan2)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktMenuGroup{border-color:var(--t-line)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktMenuRegister{background:var(--t-cyan)!important;color:#03141a!important}
+
+/* ---------- Przyciski ---------- */
+:is(#publicHome.mktSite,.marketingPage) .mktButton{
+  border-radius:4px!important;
+  font-family:var(--t-mono);font-size:13px;letter-spacing:.05em;text-transform:uppercase;font-weight:700!important;
+  background:var(--t-cyan)!important;color:#021218!important;border:1px solid var(--t-cyan)!important;
+  box-shadow:0 0 0 1px rgba(34,211,238,.25),0 10px 30px -10px rgba(34,211,238,.65)!important;
+  transition:transform .16s,box-shadow .16s,background-color .16s;
+}
+:is(#publicHome.mktSite,.marketingPage) .mktButton:hover{background:var(--t-cyan2)!important;transform:translateY(-1px);box-shadow:0 0 0 1px rgba(103,232,249,.5),0 16px 36px -12px rgba(34,211,238,.8)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktButton *{color:inherit!important}
+:is(#publicHome.mktSite,.marketingPage) .mktButton.mktButtonQuiet{background:transparent!important;color:var(--t-text)!important;border-color:var(--t-line2)!important;box-shadow:none!important}
+:is(#publicHome.mktSite,.marketingPage) .mktButton.mktButtonQuiet:hover{border-color:var(--t-cyan)!important;color:var(--t-cyan2)!important;background:rgba(34,211,238,.06)!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktButton,.mktLogin,a,summary,button):focus-visible{outline:2px solid var(--t-cyan)!important;outline-offset:3px!important}
+:is(#publicHome.mktSite,.marketingPage) .mktTextLink{color:var(--t-cyan)!important;font-family:var(--t-mono);font-size:12px!important;letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+:is(#publicHome.mktSite,.marketingPage) .mktTextLink:hover{color:var(--t-cyan2)!important}
+:is(#publicHome.mktSite,.marketingPage) :is(p,li,.mktFine,.mktNote) a:not(.mktButton):not(.mktTextLink){color:var(--t-cyan2)!important;text-decoration-color:rgba(34,211,238,.45)!important}
+
+/* ---------- Karty i panele: ramka kamery z narożnikami ---------- */
+:is(#publicHome.mktSite,.marketingPage) :is(.mktFeature,.mktPublicFeatureCard,.mktPublicSpotlight,.mktScenarioCard,.mktHomeDestinations article,.downloadCard,.mktReadingGuide,.mktPost,.mktConceptCard,.mktFaq details,.mktContactForm,.mktArticleAside,.mktSetupItem,.mktPrivacyPanel,.mktPrivacyNode,.mktDecisionOptions>*,.mktSpecs,.mktDownload,.mktOfferNotice,.mktHelpChoices>*,.mktRoadmap>*,.mktAiExample,.mktSetup,.downloadStore){
+  border-radius:var(--t-radius)!important;
+  border:1px solid var(--t-line)!important;
+  background:
+    var(--t-corner) top left/14px 1px no-repeat,var(--t-corner) top left/1px 14px no-repeat,
+    var(--t-corner) bottom right/14px 1px no-repeat,var(--t-corner) bottom right/1px 14px no-repeat,
+    linear-gradient(180deg,rgba(18,26,34,.92),rgba(11,16,21,.92))!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.02) inset,0 18px 40px -24px rgba(0,0,0,.8)!important;
+  transition:opacity .72s var(--mkt-ease,ease) var(--mkt-delay,0ms),transform .72s var(--mkt-ease,ease) var(--mkt-delay,0ms),border-color .2s,box-shadow .2s;
+}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktFeature,.mktPublicFeatureCard,.mktPublicSpotlight,.mktScenarioCard,.mktHomeDestinations article,.downloadCard,.mktPost,.mktConceptCard):hover{
+  border-color:rgba(34,211,238,.42)!important;
+  box-shadow:0 0 0 1px rgba(34,211,238,.12),0 24px 50px -24px rgba(34,211,238,.35)!important;
+}
+:is(#publicHome.mktSite,.marketingPage) .downloadStore{background:var(--t-bg2)!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktPublicFeatureIcon,.mktSetupCheck){border-radius:4px!important;border:1px solid rgba(34,211,238,.35)!important;background:rgba(34,211,238,.07)!important;color:var(--t-cyan)!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktPublicFeatureIcon,.mktSetupCheck) *{color:var(--t-cyan)!important;stroke:currentColor}
+
+/* Podgląd/mini ekran wewnątrz karty */
+:is(#publicHome.mktSite,.marketingPage) :is(.mktPublicPreview,.mktDemoScreen,.mktScenarioVisual,.mktFeatureDiagram span,.mktScenarioArt){border-radius:4px!important;border-color:var(--t-line2)!important;background-color:#070b0f!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktPublicPreviewTop,.mktPublicPreviewBottom,.mktScenarioVisualFoot,.mktDemoTop){font-family:var(--t-mono)!important;letter-spacing:.1em;color:var(--t-dim)!important;border-color:var(--t-line)!important;background:transparent!important}
+:is(#publicHome.mktSite,.marketingPage) .mktPublicPreviewStage{
+  background:
+    linear-gradient(rgba(34,211,238,.05) 1px,transparent 1px) 0 0/100% 4px,
+    radial-gradient(circle at 50% 45%,rgba(34,211,238,.12),transparent 60%),#05080b!important;
+}
+:is(#publicHome.mktSite,.marketingPage) .mktPublicPreviewMark{border-color:var(--t-cyan)!important;color:var(--t-cyan)!important;box-shadow:0 0 24px rgba(34,211,238,.35)!important;background:rgba(34,211,238,.06)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktScenarioTimeline *{border-radius:2px!important}
+
+/* ---------- Hero ---------- */
+:is(#publicHome.mktSite,.marketingPage) .mktHeroVisual{
+  border-radius:var(--t-radius)!important;
+  border:1px solid var(--t-line2)!important;
+  box-shadow:0 0 0 1px rgba(34,211,238,.08),0 40px 90px -40px rgba(34,211,238,.45),0 30px 60px -30px #000!important;
+  position:relative;
+}
+:is(#publicHome.mktSite,.marketingPage) .mktHeroVisual img{filter:saturate(.85) contrast(1.06)}
+:is(#publicHome.mktSite,.marketingPage) .mktHeroVisual figcaption{
+  background:linear-gradient(180deg,transparent,rgba(4,7,10,.9) 42%)!important;
+}
+:is(#publicHome.mktSite,.marketingPage) .mktHeroVisual .mktImageLabel{display:inline-flex;align-items:center;gap:8px;color:var(--t-green)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktHeroVisual .mktImageLabel::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--t-red);box-shadow:0 0 10px var(--t-red);animation:techPulse 1.6s ease-in-out infinite}
+:is(#publicHome.mktSite,.marketingPage) .mktHeroVisual strong{color:#fff!important}
+:is(#publicHome.mktSite,.marketingPage) .mktHeroFacts span{
+  border-radius:3px!important;border:1px solid var(--t-line2)!important;background:rgba(13,18,24,.8)!important;
+  font-family:var(--t-mono);font-size:11px!important;letter-spacing:.05em;color:#c6d3dd!important;
+}
+:is(#publicHome.mktSite,.marketingPage) .mktHeroFacts span::before,:is(#publicHome.mktSite,.marketingPage) .mktHeroFacts span>i{background:var(--t-green)!important;box-shadow:0 0 8px rgba(52,211,153,.8)}
+
+/* Pasek możliwości */
+:is(#publicHome.mktSite,.marketingPage) .mktCapabilityStrip{background:rgba(10,14,19,.85)!important;border-color:var(--t-line)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktCapabilityStrip span{font-family:var(--t-mono);font-size:12px!important;letter-spacing:.04em;color:#c6d3dd!important}
+:is(#publicHome.mktSite,.marketingPage) .mktCapabilityStrip :is(b,small,em,strong){color:var(--t-cyan)!important}
+
+/* Sekcje pasmowe */
+:is(#publicHome.mktSite,.marketingPage) :is(.mktPublicJourney,.mktProcess,.mktStage,.mktAiBand,.mktContactBand){background:linear-gradient(180deg,rgba(10,14,19,.65),rgba(6,8,11,.2))!important;border-color:var(--t-line)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktPublicJourneySteps li{border-color:var(--t-line)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktPublicJourneySteps li>:first-child{font-family:var(--t-mono)!important;color:var(--t-cyan)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktPublicFinal{
+  border-radius:var(--t-radius)!important;border:1px solid rgba(34,211,238,.3)!important;
+  background:
+    var(--t-corner) top left/18px 1px no-repeat,var(--t-corner) top left/1px 18px no-repeat,
+    var(--t-corner) top right/18px 1px no-repeat,var(--t-corner) top right/1px 18px no-repeat,
+    var(--t-corner) bottom left/18px 1px no-repeat,var(--t-corner) bottom left/1px 18px no-repeat,
+    var(--t-corner) bottom right/18px 1px no-repeat,var(--t-corner) bottom right/1px 18px no-repeat,
+    radial-gradient(ellipse at 100% 0%,rgba(34,211,238,.16),transparent 60%),
+    linear-gradient(135deg,#0d151c,#081016)!important;
+  box-shadow:0 40px 80px -40px rgba(34,211,238,.35)!important;
+}
+
+/* Tabele / specyfikacje / FAQ */
+:is(#publicHome.mktSite,.marketingPage) .mktSpecs>div{border-color:var(--t-line)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktSpecs>div>:first-child{font-family:var(--t-mono);color:var(--t-cyan)!important;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+:is(#publicHome.mktSite,.marketingPage) .mktFaq summary{color:var(--t-text)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktFaq details[open]{border-color:rgba(34,211,238,.35)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktBadge{border-radius:3px!important;font-family:var(--t-mono);letter-spacing:.06em;border-color:rgba(52,211,153,.4)!important;color:var(--t-green)!important;background:rgba(52,211,153,.08)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktBadgeAmber{border-color:rgba(251,191,36,.4)!important;color:var(--t-amber)!important;background:rgba(251,191,36,.08)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktBadgeMuted{border-color:var(--t-line2)!important;color:var(--t-muted)!important;background:transparent!important}
+
+/* Formularze */
+:is(#publicHome.mktSite,.marketingPage) :is(input,select,textarea){background:#070b0f!important;border:1px solid var(--t-line2)!important;border-radius:4px!important;color:var(--t-text)!important}
+:is(#publicHome.mktSite,.marketingPage) :is(input,select,textarea):focus{border-color:var(--t-cyan)!important;box-shadow:0 0 0 3px rgba(34,211,238,.18)!important;outline:none}
+
+/* Galeria / koncepcje */
+:is(#publicHome.mktSite,.marketingPage) :is(.mktConceptCard img,.mktVisualImage,.mktDemoImage){border-radius:4px!important}
+:is(#publicHome.mktSite,.marketingPage) .mktGalleryDialog{background:#05080b!important;border:1px solid var(--t-line2)!important;border-radius:var(--t-radius)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktPostArt{border-radius:4px!important;border-color:var(--t-line2)!important;background:linear-gradient(rgba(34,211,238,.05) 1px,transparent 1px) 0 0/100% 4px,radial-gradient(ellipse at 100% 100%,rgba(34,211,238,.2),transparent 70%),#081016!important;color:var(--t-cyan)!important;font-family:var(--t-mono)}
+
+/* ---------- Stopka ---------- */
+:is(#publicHome.mktSite,.marketingPage) .mktFooter{border-top:1px solid var(--t-line)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktFooter nav b{font-family:var(--t-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--t-cyan)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktFooter nav a{color:var(--t-muted)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktFooter nav a:hover{color:var(--t-cyan2)!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktFooterNote,.mktCopyright){color:var(--t-dim)!important;font-family:var(--t-mono);font-size:11px!important;letter-spacing:.03em;border-color:var(--t-line)!important}
+
+/* ---------- Dokumenty ---------- */
+.legalPage{font-family:var(--t-sans)}
+.legalPage .legalNav{background:rgba(6,8,11,.8)!important;border-bottom-color:var(--t-line)!important}
+.legalPage .legalNav a{font-family:var(--t-mono);letter-spacing:.08em}
+.legalPage .legalNav a:first-child b{color:var(--t-cyan)!important}
+.legalPage .legalNav a:last-child{font-size:12px;text-transform:uppercase;border-radius:4px!important;border-color:rgba(34,211,238,.45)!important;background:rgba(34,211,238,.06)!important;color:var(--t-cyan2)!important}
+.legalPage .legalNav a:last-child:hover{background:var(--t-cyan)!important;color:#03141a!important}
+.legalPage :is(.legalHero,.legalContent,.legalToc,.legalIdentity,.legalNotice,.legalDocumentList li){border-radius:var(--t-radius)!important;border-color:var(--t-line)!important}
+.legalPage .legalHero{background:
+    var(--t-corner) top left/18px 1px no-repeat,var(--t-corner) top left/1px 18px no-repeat,
+    var(--t-corner) bottom right/18px 1px no-repeat,var(--t-corner) bottom right/1px 18px no-repeat,
+    radial-gradient(ellipse at 100% 0%,rgba(34,211,238,.14),transparent 60%),linear-gradient(135deg,#0d151c,#081016)!important}
+.legalPage .legalHero h1{letter-spacing:-.04em}
+.legalPage .legalMeta{font-family:var(--t-mono);font-size:12px;color:var(--t-dim)!important}
+.legalPage :is(.legalContent,.legalToc,.legalIdentity,.legalDocumentList li){background:rgba(11,16,21,.92)!important}
+.legalPage .legalTabs a{border-radius:4px!important;border-color:var(--t-line2)!important;background:rgba(13,18,24,.9)!important;font-family:var(--t-mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.legalPage .legalTabs a:hover{border-color:var(--t-cyan)!important}
+.legalPage .legalTabs a[aria-current="page"]{background:var(--t-cyan)!important;border-color:var(--t-cyan)!important;color:#03141a!important}
+.legalPage .legalToc a{border-radius:3px!important;color:#c6d3dd!important}
+.legalPage .legalToc a:hover{background:rgba(34,211,238,.08)!important;color:var(--t-cyan2)!important}
+.legalPage .legalContent h2{border-top:1px solid var(--t-line);padding-top:26px!important}
+.legalPage .legalContent h2:first-child{border-top:0;padding-top:0!important}
+.legalPage .legalContent a,.legalPage .legalNotice a,.legalPage .legalIdentity a{color:var(--t-cyan2)!important}
+.legalPage .legalNotice{background:rgba(251,191,36,.06)!important;border-left:3px solid var(--t-amber)!important;color:#f3e6c4!important}
+.legalPage .legalIdentity h2,.legalPage caption{color:var(--t-cyan)!important;font-family:var(--t-mono);letter-spacing:.06em}
+.legalPage .legalTableWrap{border-radius:var(--t-radius)!important;border-color:var(--t-line2)!important}
+.legalPage thead{background:#0d151c!important}
+.legalPage thead th{font-family:var(--t-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--t-cyan)!important}
+.legalPage :is(th,td){border-top-color:var(--t-line)!important}
+.legalPage :is(a,button):focus-visible{outline:2px solid var(--t-cyan)!important}
+.legalPage .mktSkip{background:var(--t-cyan)!important;color:#03141a!important}
+.legalFooter{border-top-color:var(--t-line)!important}
+.legalFooter strong{font-family:var(--t-mono)}
+.legalFooter nav a{font-family:var(--t-mono);color:var(--t-muted)!important}
+.legalFooter nav a:hover{color:var(--t-cyan2)!important}
+
+@media(max-width:700px){
+  :is(#publicHome.mktSite,.marketingPage) .mktHeader{padding-inline:16px}
+  :is(#publicHome.mktSite,.marketingPage) .mktHero h1{letter-spacing:-.035em}
+  :is(#publicHome.mktSite,.marketingPage,.legalPage){background-attachment:scroll!important}
+}
+@media(prefers-reduced-motion:reduce){
+  :is(#publicHome.mktSite,.marketingPage) :is(.mktEyebrow,.mktImageLabel)::before{animation:none}
+  :is(#publicHome.mktSite,.marketingPage) :is(.mktButton,.mktFeature,.mktPublicFeatureCard){transition:none}
+  :is(#publicHome.mktSite,.marketingPage) .mktButton:hover{transform:none}
+}
+@media print{
+  .legalPage{background:#fff!important}
+}
