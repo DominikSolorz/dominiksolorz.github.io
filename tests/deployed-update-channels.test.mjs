@@ -8,9 +8,12 @@ test('Windows app advertises one-click Zaktualizuj for the exact offered version
   const source=await read('desktop-client/Program.cs');
   assert.ok(source.includes('updateButton.Text = $"↻ Zaktualizuj do wersji {version}";'));
   assert.ok(source.includes('Interval = 10 * 60 * 1000'));
-  assert.ok(source.includes('if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;'));
+  assert.ok(source.includes('if (!panelUnlocked || downloadingUpdate) return;'));
+  assert.ok(source.includes('if (offeredUpdate is null) return;'));
   assert.ok(source.includes('SHA256.HashDataAsync'));
   assert.ok(source.includes('PublishUpdateState("staged"'));
+  assert.ok(source.includes('await RestartIntoPreparedUpdateAsync();'));
+  assert.ok(source.includes('type = "desktop.update.prepare"'));
   assert.ok(!source.includes('Application.Restart'));
 });
 

@@ -22,7 +22,8 @@ test('unlocked panel does not trigger unattended download',()=>{
  assert.ok(check);
  assert.doesNotMatch(check,/DownloadAndPrepareOfferedUpdateAsync/);
  assert.match(source,/updateButton\.Click \+= async \(_, _\) => await DownloadAndPrepareOfferedUpdateAsync\(\)/);
- assert.match(source,/if \(!panelUnlocked \|\| downloadingUpdate \|\| offeredUpdate is null\) return/);
+ assert.match(source,/if \(!panelUnlocked \|\| downloadingUpdate\) return/);
+ assert.match(source,/if \(offeredUpdate is null\) return/);
 });
 
 test('manual checks distinguish installed build, latest offer and transient errors',()=>{
