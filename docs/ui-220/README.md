@@ -6,7 +6,7 @@ Data: 27.10.2026. Punktem odniesienia są makiety UI 193 z galerii strony głów
 
 - Ciemniejsza stylistyka: grafit, bordo i subtelne złoto w istniejących zakładkach pulpitu, sterowania, nagrań, alarmów, ustawień i diagnostyki.
 - Spójne menu boczne, nagłówek, formularze, karty stanu, pole wyszukiwania i responsywny widok telefonu.
-- Nadal jedna prawdziwa instancja wideo, oryginalne przyciski Start/Stop/Restart oraz prawdziwa telemetria stanu; nie wstawiono wygenerowanych plansz zamiast obrazu.
+- Nadal jedna prawdziwa instancja wideo, oryginalne przyciski Start/Stop/Restart oraz prawdziwa telemetria stanu; nie wstawiono wygenerowanych plansz zamiast obrazu. Zachowano też ręcznie wybrane tryby obrazu (np. kontrast i tryb nocny).
 - Czytelniejsze ostrzeżenia, focus klawiatury, rozróżnienie stanu błędu i wymaganych uprawnień, prefers-reduced-motion.
 - Aktywna zakładka ma także aria-current=page, a nie wyłącznie klasę active. Usunięto statyczne deklaracje o gotowości ochrony, gdy brak potwierdzenia.
 - Motywy specjalne Police i US Military pozostają nietknięte.
