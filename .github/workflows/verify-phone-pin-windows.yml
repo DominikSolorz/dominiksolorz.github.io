@@ -37,6 +37,10 @@ jobs:
           node-version: '22'
       - name: Test cryptographic phone PIN protocol and replay protections
         run: node --test tests/remote-phone-pin-e2e.test.mjs tests/remote-unlock-crypto.test.mjs
+      - name: Restore exact published Windows installer and rollback package for link checks
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/desktop-release.mjs fetch --rollback
       - name: Test existing PIN, account, UI, recording and remote camera regressions
         run: node --test tests/*.test.mjs
       - name: Verify generated website, PWA manifest and assets
