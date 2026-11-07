@@ -58,23 +58,23 @@
     </div>
 
     <nav class="nav" id="nav" aria-label="Widoki panelu">
-      <button class="navItem" type="button" data-view="dashboard" aria-current="page"><svg><use href="#i-home"/></svg><span>Pulpit</span></button>
-      <button class="navItem" type="button" data-view="cameras"><svg><use href="#i-camera"/></svg><span>Kamery</span></button>
-      <button class="navItem" type="button" data-view="map"><svg><use href="#i-map"/></svg><span>Mapa</span><em class="tag">brak</em></button>
-      <button class="navItem" type="button" data-view="events"><svg><use href="#i-bell"/></svg><span>Zdarzenia</span></button>
-      <button class="navItem" type="button" data-view="analytics"><svg><use href="#i-chart"/></svg><span>Analityka</span><em class="tag">brak</em></button>
-      <button class="navItem" type="button" data-view="detection"><svg><use href="#i-scan"/></svg><span>Detekcja</span></button>
-      <button class="navItem" type="button" data-view="alerts"><svg><use href="#i-alert"/></svg><span>Alarmy</span></button>
-      <button class="navItem" type="button" data-view="reports"><svg><use href="#i-report"/></svg><span>Raporty</span><em class="tag">brak</em></button>
+      <button class="navItem" type="button" data-view="pulpit" aria-current="page"><svg><use href="#i-home"/></svg><span>Pulpit</span></button>
+      <button class="navItem" type="button" data-view="kamery"><svg><use href="#i-camera"/></svg><span>Kamery</span></button>
+      <button class="navItem" type="button" data-view="mapa"><svg><use href="#i-map"/></svg><span>Mapa</span><em class="tag">brak</em></button>
+      <button class="navItem" type="button" data-view="zdarzenia"><svg><use href="#i-bell"/></svg><span>Zdarzenia</span></button>
+      <button class="navItem" type="button" data-view="analityka"><svg><use href="#i-chart"/></svg><span>Analityka</span><em class="tag">brak</em></button>
+      <button class="navItem" type="button" data-view="detekcja"><svg><use href="#i-scan"/></svg><span>Detekcja</span></button>
+      <button class="navItem" type="button" data-view="alarmy"><svg><use href="#i-alert"/></svg><span>Alarmy</span></button>
+      <button class="navItem" type="button" data-view="raporty"><svg><use href="#i-report"/></svg><span>Raporty</span><em class="tag">brak</em></button>
       <button class="navItem hasSub" type="button" data-view="system" aria-expanded="false" aria-controls="sub-system"><svg><use href="#i-cpu"/></svg><span>System</span><svg class="chev"><use href="#i-chevron"/></svg></button>
       <div class="subNav" id="sub-system" hidden>
         <button type="button" data-view="system" data-section="diagnostics">Diagnostyka</button>
         <button type="button" data-view="system" data-section="updates">Aktualizacje</button>
       </div>
-      <button class="navItem hasSub" type="button" data-view="settings" aria-expanded="false" aria-controls="sub-settings"><svg><use href="#i-gear"/></svg><span>Ustawienia</span><svg class="chev"><use href="#i-chevron"/></svg></button>
+      <button class="navItem hasSub" type="button" data-view="ustawienia" aria-expanded="false" aria-controls="sub-settings"><svg><use href="#i-gear"/></svg><span>Ustawienia</span><svg class="chev"><use href="#i-chevron"/></svg></button>
       <div class="subNav" id="sub-settings" hidden>
-        <button type="button" data-view="settings" data-section="image">Obraz i dźwięk</button>
-        <button type="button" data-view="settings" data-section="storage">Miejsce zapisu</button>
+        <button type="button" data-view="ustawienia" data-section="image">Obraz i dźwięk</button>
+        <button type="button" data-view="ustawienia" data-section="storage">Miejsce zapisu</button>
       </div>
     </nav>
 
@@ -124,7 +124,7 @@
       <div class="topActions">
         <button class="iconBtn" id="notifyBtn" type="button" aria-label="Powiadomienia" aria-haspopup="true" aria-expanded="false" data-hs-source="#toast, #viewEvents"><svg><use href="#i-bell"/></svg></button>
         <button class="iconBtn" id="messagesBtn" type="button" aria-label="Wiadomości" aria-haspopup="true" aria-expanded="false"><svg><use href="#i-mail"/></svg></button>
-        <button class="iconBtn" type="button" data-go="settings" aria-label="Ustawienia"><svg><use href="#i-gear"/></svg></button>
+        <button class="iconBtn" type="button" data-go="ustawienia" aria-label="Ustawienia"><svg><use href="#i-gear"/></svg></button>
         <button class="iconBtn" id="themeBtn" type="button" aria-label="Przełącz jasny motyw" aria-pressed="false"><svg class="ic-moon"><use href="#i-moon"/></svg><svg class="ic-sun"><use href="#i-sun"/></svg></button>
         <div class="clock" aria-live="off" data-hs-source="#monitorTime, #monitorDate">
           <strong id="clockTime">--:--:--</strong>
@@ -148,7 +148,7 @@
 
     <main class="main" id="main" tabindex="-1">
       <!-- ============ PULPIT ============ -->
-      <section class="view" data-view-panel="dashboard" aria-label="Pulpit">
+      <section class="view" data-view-panel="pulpit" aria-label="Pulpit">
         <div class="dashGrid">
           <section class="card feeds" aria-labelledby="feedsTitle" data-hs-source="#stage, #video, #liveBadge, #recBadge, core/camera-catalog.mjs, camera-workspace.mjs">
             <header class="cardHead">
@@ -159,7 +159,7 @@
                   <button type="button" data-cols="2" aria-pressed="false">4</button>
                   <button type="button" data-cols="3" aria-pressed="true">6</button>
                 </div>
-                <button class="ghostBtn" type="button" data-go="cameras">Wszystkie</button>
+                <button class="ghostBtn" type="button" data-go="kamery">Wszystkie</button>
               </div>
             </header>
             <div class="cameraGrid" id="cameraGrid" data-cols="3"></div>
@@ -168,7 +168,7 @@
           <section class="card alerts" aria-labelledby="alertsTitle" data-hs-source="#status, #recStatus, #diagList, operator-status.mjs">
             <header class="cardHead">
               <h2 id="alertsTitle">Alarmy systemu</h2>
-              <button class="ghostBtn" type="button" data-go="alerts">Wszystkie</button>
+              <button class="ghostBtn" type="button" data-go="alarmy">Wszystkie</button>
             </header>
             <ul class="feedList" id="alertsList" aria-live="polite"></ul>
           </section>
@@ -203,7 +203,7 @@
           <section class="card events" aria-labelledby="eventsTitle" data-hs-source="#viewEvents, #pcEvents, workspace-panels.mjs: mountEventWorkspace">
             <header class="cardHead">
               <h2 id="eventsTitle">Ostatnie zdarzenia</h2>
-              <button class="ghostBtn" type="button" data-go="events">Wszystkie</button>
+              <button class="ghostBtn" type="button" data-go="zdarzenia">Wszystkie</button>
             </header>
             <ul class="feedList" id="eventsList" aria-live="polite"></ul>
           </section>
@@ -211,7 +211,7 @@
       </section>
 
       <!-- ============ KAMERY ============ -->
-      <section class="view" data-view-panel="cameras" aria-label="Kamery" hidden>
+      <section class="view" data-view-panel="kamery" aria-label="Kamery" hidden>
         <section class="card">
           <header class="cardHead"><h2><svg><use href="#i-camera"/></svg>Wszystkie kamery</h2><span class="pill off">źródła niepodłączone</span></header>
           <div class="cameraGrid large" id="cameraGridAll" data-cols="2"></div>
@@ -220,7 +220,7 @@
       </section>
 
       <!-- ============ MAPA ============ -->
-      <section class="view" data-view-panel="map" aria-label="Mapa" hidden>
+      <section class="view" data-view-panel="mapa" aria-label="Mapa" hidden>
         <section class="card emptyCard">
           <svg><use href="#i-map"/></svg>
           <h2>Mapa obiektu</h2>
@@ -229,7 +229,7 @@
       </section>
 
       <!-- ============ ZDARZENIA ============ -->
-      <section class="view" data-view-panel="events" aria-label="Zdarzenia" hidden>
+      <section class="view" data-view-panel="zdarzenia" aria-label="Zdarzenia" hidden>
         <section class="card">
           <header class="cardHead">
             <h2><svg><use href="#i-bell"/></svg>Zdarzenia</h2>
@@ -245,7 +245,7 @@
       </section>
 
       <!-- ============ ANALITYKA ============ -->
-      <section class="view" data-view-panel="analytics" aria-label="Analityka" hidden>
+      <section class="view" data-view-panel="analityka" aria-label="Analityka" hidden>
         <section class="card emptyCard">
           <svg><use href="#i-chart"/></svg>
           <h2>Analityka</h2>
@@ -254,7 +254,7 @@
       </section>
 
       <!-- ============ DETEKCJA ============ -->
-      <section class="view" data-view-panel="detection" aria-label="Detekcja" hidden>
+      <section class="view" data-view-panel="detekcja" aria-label="Detekcja" hidden>
         <section class="card">
           <header class="cardHead"><h2><svg><use href="#i-scan"/></svg>Detekcja ruchu i dźwięku</h2><span class="pill off">niepodłączone</span></header>
           <div class="formGrid">
@@ -267,7 +267,7 @@
       </section>
 
       <!-- ============ ALARMY ============ -->
-      <section class="view" data-view-panel="alerts" aria-label="Alarmy" hidden>
+      <section class="view" data-view-panel="alarmy" aria-label="Alarmy" hidden>
         <section class="card">
           <header class="cardHead"><h2><svg><use href="#i-alert"/></svg>Alarmy systemu</h2></header>
           <ul class="feedList tall" id="alertsListAll" aria-live="polite"></ul>
@@ -276,7 +276,7 @@
       </section>
 
       <!-- ============ RAPORTY ============ -->
-      <section class="view" data-view-panel="reports" aria-label="Raporty" hidden>
+      <section class="view" data-view-panel="raporty" aria-label="Raporty" hidden>
         <section class="card emptyCard">
           <svg><use href="#i-report"/></svg>
           <h2>Raporty</h2>
@@ -307,7 +307,7 @@
       </section>
 
       <!-- ============ USTAWIENIA ============ -->
-      <section class="view" data-view-panel="settings" aria-label="Ustawienia" hidden>
+      <section class="view" data-view-panel="ustawienia" aria-label="Ustawienia" hidden>
         <div class="twoCol">
           <section class="card" id="section-image" aria-labelledby="setImgTitle" data-hs-source="#setCard">
             <header class="cardHead"><h2 id="setImgTitle"><svg><use href="#i-gear"/></svg>Wygląd tego projektu</h2></header>

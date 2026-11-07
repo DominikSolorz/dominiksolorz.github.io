@@ -14,16 +14,16 @@
   };
 
   const VIEWS = {
-    dashboard: ['Pulpit', 'Podgląd na żywo i stan systemu'],
-    cameras: ['Kamery', 'Wszystkie źródła obrazu'],
-    map: ['Mapa', 'Plan obiektu i położenie kamer'],
-    events: ['Zdarzenia', 'Wykrycia ruchu i dźwięku'],
-    analytics: ['Analityka', 'Statystyki pracy systemu'],
-    detection: ['Detekcja', 'Ustawienia wykrywania'],
-    alerts: ['Alarmy', 'Komunikaty o stanie systemu'],
-    reports: ['Raporty', 'Zestawienia i eksport'],
+    pulpit: ['Pulpit', 'Podgląd na żywo i stan systemu'],
+    kamery: ['Kamery', 'Wszystkie źródła obrazu'],
+    mapa: ['Mapa', 'Plan obiektu i położenie kamer'],
+    zdarzenia: ['Zdarzenia', 'Wykrycia ruchu i dźwięku'],
+    analityka: ['Analityka', 'Statystyki pracy systemu'],
+    detekcja: ['Detekcja', 'Ustawienia wykrywania'],
+    alarmy: ['Alarmy', 'Komunikaty o stanie systemu'],
+    raporty: ['Raporty', 'Zestawienia i eksport'],
     system: ['System', 'Diagnostyka i aktualizacje'],
-    settings: ['Ustawienia', 'Wygląd i miejsce zapisu']
+    ustawienia: ['Ustawienia', 'Wygląd i miejsce zapisu']
   };
 
   // Sześć miejsc na kamery. Nazwy są opisem miejsca w siatce, nie prawdziwymi kamerami.
@@ -167,7 +167,7 @@
 
   /* ---------- Widoki ---------- */
   function showView(view, section) {
-    if (!VIEWS[view]) view = 'dashboard';
+    if (!VIEWS[view]) view = 'pulpit';
     $$('[data-view-panel]').forEach(p => { p.hidden = p.dataset.viewPanel !== view; });
     $$('.navItem').forEach(b => {
       if (b.dataset.view === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
@@ -320,6 +320,6 @@
   $('#cameraGrid').dataset.cols = cols;
   $$('.segmented button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cols === cols)));
   renderAll();
-  showView(location.hash.slice(1) || store.get('view', 'dashboard'));
+  showView(location.hash.slice(1) || store.get('view', 'pulpit'));
   setInterval(tick, 1000);
 })();
