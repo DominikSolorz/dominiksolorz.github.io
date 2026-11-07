@@ -68,8 +68,8 @@ test('public marketing accents use the blue-purple-teal theme without recoloring
 
 test('PWA refreshes marketing appearance without changing versioned recorder runtime',async()=>{
   const [sw,app,panel]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/panel.html'].map(read));
-  assert.match(sw,/kamera-domowa-shell-v181/);
-  assert.match(app,/SERVICE_WORKER_BUILD = "181"/);
+  assert.match(sw,/kamera-domowa-shell-v182/);
+  assert.match(app,/SERVICE_WORKER_BUILD = "182"/);
   const css=panel.match(/marketing\.css\?v=\d+/)?.[0];
   assert.ok(css);
   assert.ok(sw.includes('./'+css));
