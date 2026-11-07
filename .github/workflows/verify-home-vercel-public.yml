@@ -1,0 +1,46 @@
+name: WWW | Vercel | Test publicznej strony
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/build-documents.mjs'
+      - 'design/documents/**'
+      - 'kamera/polityka-prywatnosci.html'
+      - 'kamera/rodo.html'
+      - 'kamera/regulamin.html'
+      - 'kamera/zasady-korzystania.html'
+      - 'kamera/instrukcja.html'
+      - 'kamera/dokumenty.html'
+      - 'hosting/public-site/**'
+      - 'tests/legal-apple-icons.test.mjs'
+      - '.github/workflows/verify-home-vercel-public.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vercel-static-site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify every generated document agrees with its source
+        run: node scripts/build-documents.mjs --check
+      - name: Verify the actual 180px icon in six public documents
+        run: node --test tests/legal-apple-icons.test.mjs
+      - name: Install exact public-build dependencies
+        run: npm install --no-save --no-package-lock sharp@0.34.5 esbuild@0.25.12
+      - name: Build and validate the actual static Vercel release
+        run: node hosting/public-site/vercel-build.mjs

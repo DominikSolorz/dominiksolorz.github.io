@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const read = name => readFile(new URL('../kamera/'+name,import.meta.url),'utf8');
 test('workspace stylesheet loads after legacy styles and is cached',async()=>{
- const [html,sw,css]=await Promise.all(['index.html','sw.js','workspace-ui.css'].map(read));
+ const [html,sw,css]=await Promise.all(['panel.html','sw.js','workspace-ui.css'].map(read));
  const workspace=html.match(/workspace-ui.css\?v=\d+/)[0];
  assert.ok(html.indexOf(workspace)>html.indexOf('style.css?v='));
  assert.ok(sw.includes(workspace));assert.ok(css.includes(':focus-visible'));
@@ -18,7 +18,7 @@ test('events navigation reuses actual card rather than copying event data',async
  const render=desktop.slice(desktop.indexOf('const openExistingView'),desktop.indexOf('const sync ='));
  assert.ok(!/getTracks|\.stop\(|srcObject\s*=|sender\./.test(render));
 });
-test('original DS asset remains the application brand',async()=>{
+test('reference DS shield is used without turning concept boards into application backgrounds',async()=>{
  const desktop=await read('desktop.js');
- assert.ok(desktop.includes('src="assets/ds-logo.jpg"'));assert.ok(!desktop.includes('01-pulpit.png'));
+ assert.ok(desktop.includes('src="assets/ds-shield.svg"'));assert.ok(!desktop.includes('01-pulpit.png'));
 });

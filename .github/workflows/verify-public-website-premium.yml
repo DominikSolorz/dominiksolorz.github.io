@@ -1,0 +1,52 @@
+name: WWW | Strona publiczna | Test wyglądu
+
+on:
+  pull_request:
+    paths:
+      - 'design/marketing/**'
+      - 'kamera/marketing.css'
+      - 'kamera/index.html'
+      - 'kamera/o-systemie.html'
+      - 'kamera/panel.html'
+      - 'kamera/sw.js'
+      - 'kamera/app.js'
+      - 'tests/public-website-premium.test.mjs'
+      - '.github/workflows/verify-public-website-premium.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-website:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify generated public pages exactly match marketing source
+        run: node scripts/build-marketing.mjs --check
+      - name: Verify public homepage and secure camera shell isolation
+        run: node --test tests/public-website-premium.test.mjs tests/homepage-redesign.test.mjs tests/panel-entry.test.mjs tests/marketing-visual.test.mjs
+      - name: Verify public links, marketing and SEO with current release
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          node scripts/desktop-release.mjs fetch
+          node --test tests/marketing.test.mjs tests/marketing-premium.test.mjs tests/marketing-navigation.test.mjs tests/public-seo.test.mjs
+          node scripts/verify-site-links.mjs
+      - name: Validate real public HTML and stylesheet
+        run: |
+          npm install --prefix "$RUNNER_TEMP/html-validator" --no-save --no-package-lock vnu-jar@26.10.12
+          java -jar "$RUNNER_TEMP/html-validator/node_modules/vnu-jar/build/dist/vnu.jar" --skip-non-html kamera/index.html kamera/o-systemie.html
+          java -jar "$RUNNER_TEMP/html-validator/node_modules/vnu-jar/build/dist/vnu.jar" --css kamera/marketing.css
