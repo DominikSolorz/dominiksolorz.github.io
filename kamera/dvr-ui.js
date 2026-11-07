@@ -4,10 +4,11 @@
 // i biblioteka z przyciskami Udostępnij / Pobierz / ☁️ Wyślij na Google Drive.
 // Pliki pobierane są z komputera przez kanał danych WebRTC (recproto.js) — działa też na internecie komórkowym.
 import { fixMp4Duration } from "./mp4fix.js?v=2";
-import {validThumbnail,captureEventFrame} from "./workspace-panels.mjs?v=1";
+import {validThumbnail,captureEventFrame} from "./workspace-panels.mjs?v=4";
 import {localDayRange,previousLocalDay} from './recording-time.mjs?v=1';
 import {confirmRecordingDeletion} from './recording-actions.mjs?v=2';
 import {archiveEmptyText} from './recording-view-state.mjs?v=1';
+import {localPlaybackTimestamp,completedRecordingAt,nextCompletedRecording,seekLocalPlayback} from './core/dvr-navigation.mjs?v=1';
 const pad = n => String(n).padStart(2, "0");
 const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const hm = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
@@ -107,6 +108,24 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
   const jump = sec => el("button", { className: "dvrBtn", textContent: sec < 0 ? `− ${-sec / 60} min` : `+ ${sec / 60} min`, onclick: () => seekTo((cursor ?? now) + sec * 1000) });
   const todayBtn = el("button", { className: "dvrBtn", textContent: "Dziś", onclick: () => setDay(dayKey(new Date())) });
   const yestBtn = el("button", { className: "dvrBtn", textContent: "Wczoraj", onclick: () => setDay(dayKey(previousLocalDay())) });
+  const clockInput = el("input", {type:"time",step:1,value:hms(Date.now()),ariaLabel:"Godzina nagrania, z sekundami"});
+  const jumpClock = () => {
+    try { void seekTo(localPlaybackTimestamp(day,clockInput.value),{snapGaps:false}); }
+    catch(error) { toast(error?.message || "Nieprawidłowa godzina nagrania."); }
+  };
+  const preciseControls=el("div",{className:"dvrGroup dvrPrecisionControls",role:"group",ariaLabel:"Dokładne przeglądanie istniejących nagrań"},
+    el("button",{type:"button",className:"dvrBtn",textContent:"5 min temu",onclick:()=>seekTo(Date.now()-5*60000,{snapGaps:false})}),
+    el("button",{type:"button",className:"dvrBtn",textContent:"10 min temu",onclick:()=>seekTo(Date.now()-10*60000,{snapGaps:false})}),
+    el("button",{type:"button",className:"dvrBtn",textContent:"− 1 s",onclick:()=>seekTo((cursor??Date.now())-1000,{snapGaps:false})}),
+    el("button",{type:"button",className:"dvrBtn",textContent:"+ 1 s",onclick:()=>seekTo((cursor??Date.now())+1000,{snapGaps:false})}),
+    el("button",{type:"button",className:"dvrBtn",textContent:"− 1 h",onclick:()=>seekTo((cursor??Date.now())-3600000,{snapGaps:false})}),
+    el("button",{type:"button",className:"dvrBtn",textContent:"+ 1 h",onclick:()=>seekTo((cursor??Date.now())+3600000,{snapGaps:false})}),
+    el("label",{className:"dvrPrecisionClock"},"Godzina: ",clockInput),
+    el("button",{type:"button",className:"dvrBtn",textContent:"Pokaż godzinę",onclick:jumpClock}),
+    el("button",{type:"button",className:"dvrBtn",textContent:"◀ klatka ≈",onclick:()=>stepFrame(-1)}),
+    el("button",{type:"button",className:"dvrBtn",textContent:"klatka ≈ ▶",onclick:()=>stepFrame(1)})
+  );
+  const precisionNote=el("p",{className:"muted small dvrPrecisionNote",textContent:"Dokładne przewijanie dotyczy zapisanych plików lokalnych. Krok klatki to orientacyjnie 1/25 s, zależnie od kodowania i odtwarzacza. Plik Google Drive może wymagać ręcznego użycia suwaka; bieżący fragment jest dostępny po zamknięciu."});
 
   root.replaceChildren(
     el("div", { className: "dvrTop" },
@@ -115,6 +134,7 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
         el("button", { className: "dvrBtn dvrOpenArchive", textContent: "Otwórz odtwarzanie nagrań ↗", onclick: openArchive }),
         el("div", { className: "dvrGroup" }, todayBtn, yestBtn, dateInput),
         el("div", { className: "dvrGroup" }, jump(-300), jump(-60), liveBtn, jump(60), jump(300)))),
+    preciseControls, precisionNote,
     bar, el("div", { className: "dvrTickWrap" }, ticks, posLabel),
     el("div", { className: "dvrFoot" },
       el("span", { className: "dvrLegend", ariaLabel: "Legenda osi czasu" },
@@ -217,7 +237,7 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
       playback.pause(); playing = f; cursor = f.start; draw();
       frame.src = `https://drive.google.com/file/d/${encodeURIComponent(f.id)}/preview`;
       showPlayback(true, true);
-      if (offsetMs > 30000) toast(`Nagranie ${hm(f.start)}–${hm(f.end)} z Google Drive — przewiń w odtwarzaczu do ${hms(f.start + offsetMs)}.`);
+      if (offsetMs > 0) toast(`Nagranie z Google Drive: aby dotrzeć do ${hms(f.start + offsetMs)}, przesuń suwak w odtwarzaczu. Automatyczne przewinięcie tego źródła nie jest dostępne.`);
       return;
     }
     try {
@@ -241,16 +261,33 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
     } catch (e) { toast(`Nie udało się pobrać nagrania: ${e.message || e}`); }
   }
 
-  function fileAt(t) { return files.find(f => t >= f.start && t < f.end) || null; }
-  async function seekTo(t) {
-    cursor = t; draw();
-    const f = fileAt(t);
-    if (!f) {
-      const next = files.find(f2 => f2.start > t);
-      if (next && next.start - t < 15 * 60000) return seekTo(next.start);
-      return toast(`O ${hm(t)} kamera nie nagrywała (albo nagranie skasowała pętla zapisu).`);
+  function fileAt(t) { return completedRecordingAt(files,t) || files.find(f=>f.recording&&t>=f.start&&t<f.end) || null; }
+  async function seekTo(t,{snapGaps=true}={}) {
+    if(!Number.isFinite(t))return;
+    const targetDay=dayKey(new Date(t));
+    if(targetDay!==day)await setDay(targetDay,true);
+    cursor=t;draw();
+    const f=fileAt(t);
+    if(!f){
+      const next=snapGaps?nextCompletedRecording(files,t):null;
+      if(next)return seekTo(next.start,{snapGaps:false});
+      toast(`O ${hms(t)} nie znaleziono dostępnego nagrania z tej kamery. Sprawdź dzień, połączenie i miejsce zapisu.`);
+      return;
     }
-    play(f, t - f.start);
+    if(f.recording){
+      toast("Ten fragment jest jeszcze zapisywany. Będzie dostępny po zamknięciu pliku. Nie przełączam kamery i nie przerywam zapisu.");
+      return;
+    }
+    await play(f,t-f.start);
+  }
+  function stepFrame(direction){
+    if(!playing?.local||playback.hidden||!playback.src){
+      toast("Przeglądanie klatek wymaga otwartego lokalnego nagrania. Google Drive nie obsługuje dokładnego kroku z tego panelu.");
+      return;
+    }
+    const seconds=seekLocalPlayback(playback,direction/25);
+    if(seconds===null){toast("Odtwarzacz nie potwierdził długości pliku. Nie można teraz przejść do następnej klatki.");return;}
+    cursor=playing.start+seconds*1000;draw();
   }
 
   playback.addEventListener("timeupdate", () => { if (playing && !dragging) { cursor = playing.start + playback.currentTime * 1000; draw(); } });
@@ -370,7 +407,7 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
     draw(); drawLib();drawThumbnails();
   }
 
-  function setDay(d) { day = d; dateInput.value = d; cursor = null; refresh(); }
+  async function setDay(d,preserveCursor=false) { day = d; dateInput.value = d; if(!preserveCursor)cursor = null; await refresh(); }
 
   // Odświeżanie listy co minutę (nowe pliki pojawiają się co 10 min).
   function start() { clearInterval(refreshTimer); refresh(); refreshTimer = setInterval(() => { now = Date.now(); refresh(); }, 60000); }

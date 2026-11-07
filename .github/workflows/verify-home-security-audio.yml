@@ -1,0 +1,45 @@
+name: WSPÓLNE | Audio | Test mikrofonu i redukcji szumu
+
+on:
+  pull_request:
+    paths:
+      - 'kamera/app.js'
+      - 'kamera/audio-source.mjs'
+      - 'kamera/noise-gate.worklet.js'
+      - 'kamera/audio-cleaner.mjs'
+      - 'kamera/audio-meter.mjs'
+      - 'kamera/tests/audio-cleaner.test.mjs'
+      - 'kamera/tests/audio-meter.test.mjs'
+      - 'kamera/tests/noise-gate.test.mjs'
+      - 'kamera/tests/audio-source.test.mjs'
+      - '.github/workflows/verify-home-security-audio.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out only camera source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            kamera
+      - name: Set up Node 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Syntax-check camera application and audio helper
+        run: |
+          node --check kamera/app.js
+          node --check kamera/audio-source.mjs
+          node --check kamera/audio-cleaner.mjs
+          node --check kamera/audio-meter.mjs
+          node --check kamera/noise-gate.worklet.js
+      - name: Run microphone and noise diagnostics regression tests
+        run: node --test kamera/tests/*.test.mjs

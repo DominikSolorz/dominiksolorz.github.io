@@ -3,6 +3,7 @@ export function needsPanelRuntime({ search = '', hash = '', native = false, pend
   const params = new URLSearchParams(search);
   const callback = new URLSearchParams(hash.replace(/^#/, ''));
   return native || pendingEntry || params.has('auth') || params.has('code') ||
+    params.get('panel') === 'owner' || params.get('panel') === 'wlasciciel' ||
     /^cam-[a-f0-9]{32}$/.test(params.get('odbiorca') || '') || hash === '#nadaj' ||
     callback.has('access_token') || callback.has('error') || callback.get('type') === 'recovery';
 }
@@ -53,6 +54,12 @@ if (typeof document !== 'undefined') {
   });
   let pendingEntry = false;
   try { pendingEntry = !!sessionStorage.getItem('hs-device-entry-v1'); } catch { /* private mode */ }
+  const ownerEntry = ['owner', 'wlasciciel'].includes(new URLSearchParams(location.search).get('panel'));
+  if (ownerEntry) {
+    // Direct owner links bypass the public landing page. Release app.js's secure
+    // entry gate as well as loading its runtime, otherwise it waits forever.
+    window.__openSecurePanel?.();
+  }
   if (needsPanelRuntime({ search: location.search, hash: location.hash,
-    native: location.pathname.endsWith("/panel.html") || window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview, pendingEntry })) start();
+    native: location.pathname.endsWith('/panel.html') || window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview, pendingEntry })) start();
 }

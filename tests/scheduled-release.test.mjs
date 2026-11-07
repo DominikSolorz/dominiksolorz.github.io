@@ -40,10 +40,35 @@ test('Windows patch preparation never rewrites metadata-driven production releas
  const script=await readFile(new URL('../scripts/desktop-release.mjs',import.meta.url),'utf8');
  const prepare=script.slice(script.indexOf("if(command==='prepare')"),script.indexOf("if(command==='finish')"));
  assert.ok(prepare.includes('desktop-client/Program.cs'));
- assert.ok(prepare.includes('kamera/panel.html'));
+ assert.ok(prepare.includes('scripts/build-marketing.mjs'),'generated public pages must use the release renderer');
  assert.ok(!prepare.includes("'scripts/verify-live-marketing.mjs'"),
    'the production checker is manifest-driven and must not be treated as release-number template');
  const live=await readFile(new URL('../scripts/verify-live-marketing.mjs',import.meta.url),'utf8');
  assert.ok(live.includes('expectedDesktop.version'),'live checker uses current manifest version');
  assert.ok(live.includes("await get('desktop-update.json')"),'live checker verifies published version');
+});
+
+
+test('finishing a Windows release regenerates download pages before fingerprinting',async()=>{
+ const {mkdtemp,mkdir,writeFile,rm,copyFile}=await import('node:fs/promises');
+ const {tmpdir}=await import('node:os');
+ const {join}=await import('node:path');
+ const {execFileSync}=await import('node:child_process');
+ const root=await mkdtemp(join(tmpdir(),'hs-release-sync-'));
+ try {
+  for(const dir of ['scripts','kamera/updates','kamera/downloads'])await mkdir(join(root,dir),{recursive:true});
+  await copyFile(new URL('../scripts/desktop-release.mjs',import.meta.url),join(root,'scripts/desktop-release.mjs'));
+  await writeFile(join(root,'scripts/build-marketing.mjs'),`import {readFile,writeFile} from 'node:fs/promises';const m=JSON.parse(await readFile('kamera/desktop-update.json','utf8'));await writeFile('kamera/pobierz.html','Windows '+m.version);`);
+  await writeFile(join(root,'kamera/desktop-update.json'),JSON.stringify({version:'1.2.3'}));
+  await writeFile(join(root,'kamera/pobierz.html'),'Windows 1.2.3');
+  await writeFile(join(root,'kamera/updates/HomeSecurityDesktop-1.2.4-win-x64.zip'),'package');
+  await writeFile(join(root,'kamera/downloads/HOME-SECURITY-Desktop-Setup-1.2.4.exe'),'installer');
+  execFileSync('git',['init','-q'],{cwd:root});execFileSync('git',['add','.'],{cwd:root});
+  execFileSync(process.execPath,['scripts/desktop-release.mjs','finish'],{cwd:root});
+  const manifest=JSON.parse(await readFile(join(root,'kamera/desktop-update.json'),'utf8'));
+  assert.equal(manifest.version,'1.2.4');
+  assert.equal(await readFile(join(root,'kamera/pobierz.html'),'utf8'),'Windows 1.2.4');
+  const paths=execFileSync('git',['ls-files','-z','--','kamera'],{cwd:root,encoding:'utf8'}).split('\0').filter(p=>p&&!/^kamera\/(updates|downloads)\//.test(p)&&p!=='kamera/desktop-update.json');
+  assert.equal(manifest.sourceFingerprint,fingerprintEntries(await Promise.all(paths.map(async p=>[p,await readFile(join(root,p))]))));
+ }finally{await rm(root,{recursive:true,force:true});}
 });

@@ -31,14 +31,15 @@ test('the setup checklist actually responds to four user choices without trackin
  assert.ok(!/localStorage|sessionStorage|fetch\(|XMLHttpRequest|navigator\.mediaDevices/.test(script),'checklist does not collect data or access camera');
 });
 
-test('public home makes no fake sales promises and always marks concept material',async()=>{
+test('public topic pages preserve honest sales and concept disclosures',async()=>{
  const home=await read('design/marketing/home.html');
+ const details=(await Promise.all(['przygotowanie','stan-projektu','pytania','prezentacja'].map(n=>read('kamera/'+n+'.html')))).join('\n');
  for(const part of ['id="przygotowanie"','Ile kosztuje HOME SECURITY?','nie jest zakupem','publicznego cennika','Wydanie rozwojowe','nie są rzeczywiste zrzuty ekranu']){
-  assert.ok(home.includes(part),'missing explicit disclosure: '+part);
+  assert.ok((home+details).includes(part),'missing explicit disclosure: '+part);
  }
- assert.equal((home.match(/data-mkt-setup/g)||[]).length,4);
- assert.ok(home.includes('marketing-start.css?v=3'));
- assert.ok(home.includes('marketing-start.mjs?v=2'));
+ assert.equal((details.match(/data-mkt-setup/g)||[]).length,4);
+ assert.ok(details.includes('marketing-start.css?v=3'));
+ assert.ok(details.includes('marketing-start.mjs?v=2'));
  assert.ok(!home.includes('Kup teraz'));
  assert.ok(!home.includes('Zapłać teraz'));
  const [page,app]=await Promise.all(['kamera/o-systemie.html','kamera/panel.html'].map(read));

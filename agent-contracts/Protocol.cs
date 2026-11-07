@@ -16,7 +16,7 @@ public static class AgentProtocol
     public static bool IsTrustedPanel(string source) => Uri.TryCreate(source, UriKind.Absolute, out var uri)
         && uri.Scheme == Uri.UriSchemeHttps && uri.Port == 443 && string.IsNullOrEmpty(uri.UserInfo)
         && uri.Host.Equals("dominiksolorz.github.io", StringComparison.OrdinalIgnoreCase)
-        && uri.AbsolutePath is "/kamera/" or "/kamera/index.html";
+        && uri.AbsolutePath is "/kamera/" or "/kamera/index.html" or "/kamera/panel.html";
     public static string PipeName => "HomeSecurity.Agent.v1." + Convert.ToHexString(
         SHA256.HashData(Encoding.UTF8.GetBytes(WindowsIdentity.GetCurrent().User!.Value)))[..24];
     public static string TestPipeName(string directory) => PipeName + ".test." +
