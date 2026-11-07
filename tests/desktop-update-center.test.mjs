@@ -8,8 +8,8 @@ test('Windows update center is visible only after account and PIN access',()=>{
  assert.match(source,/updateBar\.Visible = panelUnlocked;/);
  assert.match(source,/updateInfo\.Text = \$"Zainstalowana \{DesktopVersion\}/);
  assert.match(source,/lastSuccessfulUpdateCheckUtc/);
- assert.match(source,/checkIntervalHours = 6/);
- assert.match(source,/Interval = 6 \* 60 \* 60 \* 1000/);
+ assert.match(source,/checkIntervalMinutes = 10/);
+ assert.match(source,/Interval = 10 \* 60 \* 1000/);
  assert.match(source,/checkUpdateButton\.Click \+= async/);
  assert.match(source,/if \(panelUnlocked\) await CheckForUpdateAsync\(\)/);
 });
