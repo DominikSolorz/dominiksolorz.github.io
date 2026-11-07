@@ -5,6 +5,8 @@
   if (!root.classList.contains('hsMobileLaunch')) return;
   const splash = document.getElementById('hsMobileSplash');
   if (!splash) { root.classList.remove('hsMobileLaunch'); return; }
+  const preview = splash.querySelector("img[data-src]");
+  if (preview) preview.src = preview.dataset.src;
   const started = Number(window.__hsMobileSplashStarted) || performance.now();
   let finished = false;
   const finish = () => {
