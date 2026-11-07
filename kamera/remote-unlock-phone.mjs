@@ -1,6 +1,6 @@
 import {generatePhoneIdentity,exportPhonePublicKey,encryptUnlockGrant} from './remote-unlock-crypto.mjs?v=1';
 import {getDeviceState,setDeviceState} from './remote-unlock-device-store.mjs?v=1';
-import {pairingProof,unlockWithDerivedPinKey,normalizePairingCode} from './remote-unlock-protocol.mjs?v=1';
+import {pairingProof,unlockWithDerivedPinKey,normalizePairingCode,equalsConstantTime,createUnlockReceipt} from './remote-unlock-protocol.mjs?v=2';
 import {deriveKey} from './pin.js?v=14';
 
 const storageKey=owner=>'phone:'+owner;
@@ -54,14 +54,18 @@ export function mountRemoteUnlockPhone({client,ownerId}){
    });
    if(error)throw error;
  };
- const awaitHost=async(id,okState)=>{
+ const awaitHost=async(id,okState,expectedReceipt=null)=>{
    for(let i=0;i<36&&!stopped;i++){
      await delay(2000);
      const {data,error}=await client.from('hs_remote_requests')
-       .select('state,expires_at').eq('id',id).eq('owner_id',ownerId).maybeSingle();
+       .select('state,expires_at,payload').eq('id',id).eq('owner_id',ownerId).maybeSingle();
      if(error)throw error;
      if(!data)throw new Error('Nie znaleziono potwierdzenia komputera.');
-     if(data.state===okState)return;
+     if(data.state===okState){
+       if(expectedReceipt!==null&&!equalsConstantTime(data.payload?.receipt,expectedReceipt))
+         throw new Error('Brak kryptograficznego potwierdzenia z komputera. Nie uznaję sesji za odblokowaną.');
+       return;
+     }
      if(['denied','failed'].includes(data.state))throw new Error('Komputer odrzucił żądanie. Sprawdź PIN, kod parowania i zaufane urządzenia.');
      if(Date.parse(data.expires_at)<Date.now())break;
    }
@@ -110,16 +114,18 @@ export function mountRemoteUnlockPhone({client,ownerId}){
    const accessKey=await unlockWithDerivedPinKey(pinKey,security,ownerId);
    if(!accessKey){pinKey=null;throw new Error('Nieprawidłowy PIN lub czasowa blokada konta.');}
    // PIN and the derived key never go over the network in plaintext.
-   const grant=await encryptUnlockGrant({
-     accessKey:pinKey,hostPublicKey:pairing.publicKey,
-     phonePrivateKey:record.keyPair.privateKey,userId:ownerId,
-     hostId:host.id,phoneId:record.phoneId
-   });
-   pinKey=null;
-   await request({id:grant.id,hostId:host.id,phoneId:record.phoneId,kind:'unlock',payload:{grant}});
-   msg('PIN potwierdzony. Czekam, aż komputer odblokuje panel…');
-   await awaitHost(grant.id,'approved');
-   msg('Program HOME SECURITY na komputerze potwierdził odblokowanie.');
+   try{
+     const grant=await encryptUnlockGrant({
+       accessKey:pinKey,hostPublicKey:pairing.publicKey,
+       phonePrivateKey:record.keyPair.privateKey,userId:ownerId,
+       hostId:host.id,phoneId:record.phoneId
+     });
+     const expectedReceipt=await createUnlockReceipt(pinKey,{requestId:grant.id,userId:ownerId,hostId:host.id,phoneId:record.phoneId});
+     await request({id:grant.id,hostId:host.id,phoneId:record.phoneId,kind:'unlock',payload:{grant}});
+     msg('PIN potwierdzony. Czekam na kryptograficzne potwierdzenie komputera…');
+     await awaitHost(grant.id,'approved',expectedReceipt);
+     msg('Program HOME SECURITY na komputerze potwierdził odblokowanie.');
+   }finally{pinKey=null;}
  };
  const run=fn=>async()=>{
    if(working)return;
