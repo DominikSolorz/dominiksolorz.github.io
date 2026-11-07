@@ -13,12 +13,14 @@ const LIVE = 'https://dominiksolorz.github.io/kamera/';
 const escape = v => String(v).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 // Odnośniki względne w dokumentach (np. "instrukcja.html") prowadzą do opublikowanej strony.
 const absolutize = html => html.replace(/href="(?!https?:|mailto:|tel:|#)([^"]+)"/g, (_, p) => `href="${LIVE}${p}"`);
+// Trzy dokumenty na jednej stronie: identyfikatory sekcji z przedrostkiem dokumentu (bez zmiany treści).
+const scopeIds = (html, slug) => html.replace(/ id="([^"]+)"/g, (_, id) => ` id="${slug}-${id}"`);
 
 let html = (await readFile(new URL('index.template.html', here), 'utf8')).replaceAll('\r\n', '\n');
 const operator = JSON.parse(await readFile(new URL('operator.json', docs), 'utf8'));
 for (const slug of ['polityka-prywatnosci', 'rodo', 'regulamin']) {
   const body = (await readFile(new URL(slug + '.html', docs), 'utf8')).replaceAll('\r\n', '\n').trim();
-  html = html.replace(`<!--DOC:${slug}-->`, `\n<!-- BEGIN design/documents/${slug}.html -->\n${absolutize(body)}\n<!-- END design/documents/${slug}.html -->\n`);
+  html = html.replace(`<!--DOC:${slug}-->`, `\n<!-- BEGIN design/documents/${slug}.html -->\n${scopeIds(absolutize(body), slug)}\n<!-- END design/documents/${slug}.html -->\n`);
 }
 html = html.replace(/<!--OPERATOR:(\w+)-->/g, (_, k) => escape(operator[k] ?? ''));
 if (/<!--(DOC|OPERATOR):/.test(html)) throw new Error('Niewypełniony znacznik w szablonie');

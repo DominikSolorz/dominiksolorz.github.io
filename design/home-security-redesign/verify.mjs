@@ -40,12 +40,13 @@ ok('bez nieprawdziwych obietnic z makiet', () => {
   assert.match(text, /aplikacja sklepowa nie jest jeszcze opublikowana/i);
 });
 
+const scopeIds = (s, slug) => s.replace(/ id="([^"]+)"/g, (_, id) => ` id="${slug}-${id}"`);
 const absolutize = s => s.replace(/href="(?!https?:|mailto:|tel:|#)([^"]+)"/g, (_, p) => `href="https://dominiksolorz.github.io/kamera/${p}"`);
 for (const slug of ['polityka-prywatnosci', 'rodo', 'regulamin']) {
   const src = (await readFile(new URL(`../documents/${slug}.html`, here), 'utf8')).replaceAll('\r\n', '\n').trim();
   const m = html.match(new RegExp(`<!-- BEGIN design/documents/${slug}\\.html -->\\n([\\s\\S]*?)\\n<!-- END`));
   assert.ok(m, 'brak dokumentu ' + slug);
-  assert.equal(m[1], absolutize(src), 'treść dokumentu różni się od źródła: ' + slug);
+  assert.equal(m[1], scopeIds(absolutize(src), slug), 'treść dokumentu różni się od źródła: ' + slug);
 }
 console.log('✓ treści prawne skopiowane 1:1 z design/documents');
 const operator = JSON.parse(await readFile(new URL('../documents/operator.json', here), 'utf8'));
@@ -59,3 +60,5 @@ for (const m of (css + html + js).matchAll(/assets\/([\w-]+\.webp)/g)) assert.ok
 assert.ok(total < 600_000, 'grafiki za ciężkie: ' + total);
 console.log(`✓ grafiki DEMO (${assets.length} plików, ${Math.round(total / 1024)} KB)`);
 console.log(`Wynik: ${passed + 3} kontroli zaliczonych.`);
+// Ten sam walidator co workflow publikacji (pages.yml) — uruchom ręcznie, jeśli masz Javę:
+// npx vnu-jar && java -jar node_modules/vnu-jar/build/dist/vnu.jar --skip-non-html kamera/projekt
