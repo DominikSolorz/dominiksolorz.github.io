@@ -1,6 +1,6 @@
 import {generateHostIdentity,exportHostPublicKey,decryptUnlockGrant} from './remote-unlock-crypto.mjs?v=1';
 import {getDeviceState,setDeviceState} from './remote-unlock-device-store.mjs?v=1';
-import {createPairingCode,pairingProof,equalsConstantTime,isFreshRequest,unlockWithDerivedPinKey} from './remote-unlock-protocol.mjs?v=1';
+import {createPairingCode,pairingProof,equalsConstantTime,isFreshRequest,unlockWithDerivedPinKey,createUnlockReceipt} from './remote-unlock-protocol.mjs?v=2';
 
 const keyOf=ownerId=>'host:'+ownerId;
 const nowIso=()=>new Date().toISOString();
@@ -19,10 +19,13 @@ export function createRemoteUnlockHost({client,ownerId}){
    if(query?.error)throw query.error;
    return query?.data;
  };
- const mark=async(row,state)=>{
-   const {error}=await client.from('hs_remote_requests').update({state,processed_at:nowIso()})
-     .eq('id',row.id).eq('owner_id',ownerId).eq('host_id',record.hostId).eq('state','pending');
-   if(error)throw error;
+ const mark=async(row,state,receipt=null)=>{
+   const fields={state,processed_at:nowIso()};
+   if(receipt!==null)fields.payload={...row.payload,receipt};
+   const {data,error}=await client.from('hs_remote_requests').update(fields)
+     .eq('id',row.id).eq('owner_id',ownerId).eq('host_id',record.hostId).eq('state','pending')
+     .select('id');
+   if(error||data?.length!==1)throw error||new Error('Unlock request was already changed');
  };
  const save=async()=>setDeviceState(keyOf(ownerId),record);
  const heartbeat=async()=>{
@@ -82,13 +85,18 @@ export function createRemoteUnlockHost({client,ownerId}){
    if(securityError||!security){await mark(row,'failed');return;}
    let accessKey=null;
    try{accessKey=await unlockWithDerivedPinKey(pinKey,security,ownerId);}catch{}
-   pinKey=null;
-   if(!accessKey){await mark(row,'denied');return;}
+   if(!accessKey){pinKey=null;await mark(row,'denied');return;}
    record.usedIds=[...usedIds].slice(-250);
    await save(); // Persist nonce BEFORE unlocking; never accept replay after restart.
    const callback=unlockCallback;unlockCallback=null;
-   if(callback(accessKey))await mark(row,'approved');
-   else {
+   if(callback(accessKey)){
+     // A state flag alone can be altered by another signed-in client.
+     // The phone requires a MAC derived from the CURRENT, accepted PIN key.
+     const receipt=await createUnlockReceipt(pinKey,{requestId:row.id,userId:ownerId,hostId:record.hostId,phoneId:row.phone_id});
+     pinKey=null;
+     await mark(row,'approved',receipt);
+   }else{
+     pinKey=null;
      await mark(row,'failed');
      status('Komputer nie przyjął odblokowania. Użyj lokalnego PIN-u.');
    }
