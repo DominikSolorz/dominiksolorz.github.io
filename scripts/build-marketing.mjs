@@ -58,11 +58,11 @@ const mobileSplashHead = '<link rel="stylesheet" href="mobile-app-splash.css?v=3
   '})();</script><script defer src="mobile-app-splash.js?v=3"></script>';
 const mobileSplashBody = '<aside id="hsMobileSplash" aria-label="Reklama HOME SECURITY przed strona glowna">'+
   '<div class="hsMobileSplashSlides" role="group" aria-label="Trzy grafiki promocyjne HOME SECURITY">'+
-  '<img class="hsMobileSplashImage is-active" width="900" height="506" data-src="assets/home-security-loading.webp"'+
+  '<img class="hsMobileSplashImage is-active" width="900" height="506" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs" data-src="assets/home-security-loading.webp"'+
   ' alt="HOME SECURITY: Inteligentna ochrona domu. Ilustracja reklamowa, nie transmisja z kamery.">'+
-  '<img class="hsMobileSplashImage" width="900" height="506" data-src="assets/home-security-ad-02.webp"'+
+  '<img class="hsMobileSplashImage" width="900" height="506" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs" data-src="assets/home-security-ad-02.webp"'+
   ' alt="Twój dom i Twoje bezpieczeństwo. Ilustracja promocyjna domu, nie aktywny system alarmowy.">'+
-  '<img class="hsMobileSplashImage" width="900" height="506" data-src="assets/home-security-ad-03.webp"'+
+  '<img class="hsMobileSplashImage" width="900" height="506" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs" data-src="assets/home-security-ad-03.webp"'+
   ' alt="Ilustracja monitorowanego domu z graficzną kopułą ochronną.">'+
   '</div><div class="hsMobileSplashStatus"><div><strong>HOME SECURITY</strong>'+
   '<small>Prezentacja aplikacji · chwilę i przejdziesz do strony głównej</small>'+
