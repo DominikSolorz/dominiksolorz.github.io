@@ -73,8 +73,8 @@ test('public site retains the same dark system identity as Windows and Android/i
   assert.ok(css.includes('color-scheme:dark'));
   assert.ok(!css.includes('@media(prefers-color-scheme:light)'),
     'light phone preference must not turn only the landing page white');
-  assert.ok(css.includes('backdrop-filter:blur(16px)'),
-    'mobile navigation remains translucent, but dark');
+  assert.ok(css.includes('backdrop-filter:blur(22px)'),
+    'dark navigation stays translucent');
   assert.ok(!css.includes('#app .mktButton'),
     'marketing styles must never overwrite the authenticated camera UI');
 });
