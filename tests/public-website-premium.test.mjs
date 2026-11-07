@@ -74,6 +74,8 @@ test('public pages follow the system light preference and preserve dark illustra
   assert.ok(light.includes('backdrop-filter:blur(16px)'));
   assert.ok(light.includes('.mktPublicJourney'));
   assert.ok(light.includes('.mktMobileMenu>nav'));
+  assert.ok(light.includes('.mktPublicFeatureLabel'));
+  assert.ok(light.includes('.mktArticleAside a'));
   assert.ok(!light.includes('#app'),'light theme must never target the authenticated camera workspace');
   assert.ok(!light.includes('.mktDemo')&&!light.includes('.mktPublicPreviewStage'),
     'illustrative product previews retain their dark, high-contrast UI');

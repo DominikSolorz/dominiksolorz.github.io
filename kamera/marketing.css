@@ -728,6 +728,7 @@
    color:#172033;
  }
  #publicHome .mktPublicSectionHead h2 em,#publicHome .mktPublicJourney h2 em{color:#4f46e5}
+ #publicHome .mktPublicFeatureLabel,#publicHome .mktPublicFeatureNumber{color:#4338ca}
  #publicHome .mktPublicSectionHead>p,#publicHome .mktPublicFeatureGrid p,
  #publicHome .mktPublicJourneyIntro>p:not(.mktEyebrow),
  #publicHome .mktPublicJourneySteps p,.marketingPage .mktArticle p,
@@ -755,8 +756,12 @@
  #publicHome .mktFooter p,.marketingPage .mktFooter p,
  #publicHome .mktFooter nav,.marketingPage .mktFooter nav{color:#47536a}
  #publicHome .mktFooter nav b,.marketingPage .mktFooter nav b{color:#172033}
+ #publicHome .mktFooter .mktFooterNote strong,.marketingPage .mktFooter .mktFooterNote strong{color:#312e81}
  .marketingPage .mktNote{color:#334155;background:#eef2ff;border-color:#6366f1}
  .marketingPage .mktArticleMeta{color:#47536a;border-color:var(--m-line)}
+ .marketingPage .mktArticleAside a{color:#4338ca}
+ .marketingPage .mktContactBand h2{color:#fff}
+ .marketingPage .mktContactBand p:not(.mktEyebrow){color:#f3dbe1}
  .marketingPage .mktContactForm :is(input,select,textarea){
    color:#172033;background:#fff;border-color:#b9c4d6;
  }
