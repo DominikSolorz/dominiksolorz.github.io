@@ -1,0 +1,44 @@
+name: Verify HOME SECURITY real DVR time navigation
+
+on:
+  pull_request:
+    paths:
+      - 'kamera/dvr-ui.js'
+      - 'kamera/core/dvr-navigation.mjs'
+      - 'kamera/app.js'
+      - 'kamera/sw.js'
+      - 'tests/dvr-time-navigation.test.mjs'
+      - 'tests/public-website-premium.test.mjs'
+      - '.github/workflows/verify-dvr-time-navigation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dvr-navigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax check for live DVR and timeline module
+        run: |
+          node --check kamera/dvr-ui.js
+          node --check kamera/core/dvr-navigation.mjs
+      - name: Verify recorded time selection, frame limits, update safety and recorder regressions
+        run: node --test tests/dvr-time-navigation.test.mjs tests/recording-actions.test.mjs tests/recording-view-state.test.mjs tests/recording-time.test.mjs tests/premium-dark-pro.test.mjs tests/public-website-premium.test.mjs tests/camera-workspace.test.mjs tests/update-flow.test.mjs
+      - name: Fetch exact released installer metadata and archive assets for full regression suite
+        run: node scripts/desktop-release.mjs fetch
+      - name: Run all frontend and release regression tests
+        run: node --test tests/*.test.mjs
