@@ -6,7 +6,7 @@ public sealed class JournalCapacityException : Exception;
 
 public sealed partial class AgentDatabase
 {
-    public const int CurrentSchema = 4;
+    public const int CurrentSchema = 5;
     private static readonly string[] Migrations = [
         """
         CREATE TABLE component_state(id TEXT PRIMARY KEY, json TEXT NOT NULL, updated_at TEXT NOT NULL);
@@ -47,6 +47,10 @@ public sealed partial class AgentDatabase
             attempts INTEGER NOT NULL DEFAULT 0, next_ms INTEGER NOT NULL, lease TEXT, lease_until_ms INTEGER,
             code TEXT, updated_ms INTEGER NOT NULL);
         CREATE INDEX drive_uploads_ready ON drive_uploads(status,next_ms);
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS segments_camera_time
+          ON segments(camera_id,start_utc,end_utc,status);
         """
     ];
     private static void Migrate(SqliteConnection db)

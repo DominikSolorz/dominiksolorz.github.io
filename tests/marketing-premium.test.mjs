@@ -7,18 +7,18 @@ const read=path=>readFile(new URL(path,root),'utf8');
 
 test('public entry directs visitors to marketing while explicit auth links keep the panel',async()=>{
   const rootHtml=await read('index.html');
-  assert.ok(rootHtml.includes('new URL(toPanel ? "./kamera/" : "./kamera/o-systemie.html"'));
+  assert.ok(rootHtml.includes('new URL(toPanel ? "./kamera/panel.html" : "./kamera/"'));
   assert.ok(rootHtml.includes('"auth","app","view","ui","desktop"'));
   assert.ok(rootHtml.includes('destination.hash = location.hash'));
 });
 
 test('conversion buttons lead to registration or a real prefilled contact form',async()=>{
-  const html=await read('design/marketing/home.html');
+  const html=(await Promise.all(['home','prezentacja','stan-projektu','pytania'].map(name=>read('design/marketing/'+name+'.html')))).join('\n');
   assert.ok(html.includes('id="zobacz-panel"'));
   assert.ok(html.includes('id="wybierz-start"'));
   assert.ok(html.includes('id="asystent"'));
-  assert.ok(html.includes('href="./?auth=register"'));
-  assert.ok(html.includes('href="pomoc.html?temat=produkt"'));
+  assert.ok(html.includes('href="panel.html?auth=register"'));
+  assert.ok(html.includes('href="kontakt.html?temat=produkt"'));
   assert.ok(!html.includes('Kup teraz'));
   assert.ok(html.includes('nie transmisja z kamery'));
   const contact=await read('kamera/marketing-contact.js');
@@ -27,19 +27,19 @@ test('conversion buttons lead to registration or a real prefilled contact form',
 });
 
 test('AI CTA opens real support assistant, not a fake success or access to camera',async()=>{
-  const html=await read('design/marketing/home.html');
+  const html=await read('design/marketing/pytania.html');
   const launcher=await read('kamera/support-entry.mjs');
   assert.ok(html.includes('data-hs-open-support'));
   assert.ok(html.includes('Nie podawaj mu haseł, kodów PIN'));
   assert.ok(launcher.includes("link.addEventListener('click',()=>button.click())"));
-  assert.ok(launcher.includes("import('./support-view.mjs?v=1')"));
+  assert.ok(launcher.includes("import('./support-view.mjs?v=2')"));
 });
 
 test('account modal has a separate UI layer with usable password toggles',async()=>{
   const [html,auth,styles]=await Promise.all([
-    read('kamera/index.html'),read('kamera/auth-experience.mjs'),read('kamera/auth-experience.css')]);
-  assert.ok(html.includes('auth-experience.mjs?v=1'));
-  assert.ok(html.includes('auth-experience.css?v=1'));
+    read('kamera/panel.html'),read('kamera/auth-experience.mjs'),read('kamera/auth-experience.css')]);
+  assert.ok(html.includes('auth-experience.mjs?v=2'));
+  assert.ok(html.includes('auth-experience.css?v=2'));
   assert.ok(html.includes('name="terms" type="checkbox" required'));
   assert.ok(html.includes('href="rodo.html"'));
   assert.ok(auth.includes("input.type=visible?'text':'password'"));
@@ -51,7 +51,7 @@ test('account modal has a separate UI layer with usable password toggles',async(
 test('legal documents share a consistent visual layout and practical privacy links',async()=>{
   for(const path of ['polityka-prywatnosci.html','regulamin.html','rodo.html']){
     const html=await read('kamera/'+path);
-    assert.ok(html.includes('legal-premium.css?v=1'),path);
+    assert.ok(html.includes('legal-premium.css?v=4'),path);
     assert.ok(html.includes('class="legalFooter"'),path);
     assert.ok(html.includes('href="pomoc.html"'),path);
   }
