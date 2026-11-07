@@ -1,4 +1,4 @@
-name: Deploy DS Stream Support to GitHub Pages
+name: WWW | GitHub Pages | Publikacja strony i panelu
 
 on:
   push:
