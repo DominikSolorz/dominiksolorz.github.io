@@ -2,6 +2,8 @@
 
 Zakres wyłącznie `DominikSolorz/dominiksolorz.github.io`. Nie wykonuj zmian w LinkTalk ani LinkTalk-Releases bez wyraźnego osobnego zadania.
 
+Jeśli użytkownik poda alias typu `HS-PANEL`, `HS-TELEFON` lub `HS-AKTUALIZATOR`, rozwiąż go przez [AGENT-SHORTCUTS.md](AGENT-SHORTCUTS.md), a następnie sprawdź dokładne ścieżki i zależności.
+
 **Zawsze zacznij od:** `README.md`, `docs/REPO-MAP.md` i `docs/RELEASE-MAP.md`. Domyślna gałąź docelowa: `main`; pracuj na osobnej gałęzi i używaj PR.
 
 ## Wyznaczanie celu
