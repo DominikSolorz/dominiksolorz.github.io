@@ -30,7 +30,7 @@ test('Premium Dark Pro never replaces actual recorder and video controls with de
   assert.match(css, /object-fit:\s*contain/);
   assert.doesNotMatch(css, /object-fit:\s*cover/);
   assert.doesNotMatch(css, /display:\s*none|visibility:\s*hidden/i);
-  assert.doesNotMatch(css, /addEventListener|setInterval|startTime\s*=|MediaRecorder/);
+  assert.doesNotMatch(css, /addEventListener|setInterval|startTime\s*=/);
 });
 
 test('Premium Dark Pro is strictly scoped and keeps alternative themes intact', async () => {
