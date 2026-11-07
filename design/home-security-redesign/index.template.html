@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>HOME SECURITY — projekt graficzny (wersja demonstracyjna)</title>
+<!--
+  Własna implementacja projektu graficznego HOME SECURITY na podstawie makiet właściciela
+  (design/home-security-redesign). To NIE jest działający panel ani kod żadnej innej strony.
+  Plik index.html jest generowany przez build.mjs z index.template.html — edytuj szablon.
+-->
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg class="sprite" aria-hidden="true">
+ <defs><linearGradient id="ringG" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#1f7bff"/></linearGradient></defs>
+ <symbol id="logo" viewBox="0 0 48 48"><path d="M24 4 4 20v4h4v18h32V24h4v-4z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><rect x="15" y="22" width="18" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="2.6"/><circle cx="24" cy="28" r="3" fill="currentColor"/></symbol>
+ <symbol id="home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+ <symbol id="cam" viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="m15.5 10 6-3.5v11l-6-3.5"/></symbol>
+ <symbol id="map" viewBox="0 0 24 24"><path d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5zM9 4v13.5M15 6.5V20"/></symbol>
+ <symbol id="cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+ <symbol id="chart" viewBox="0 0 24 24"><path d="M5 20V12M10 20V8M15 20v-6M20 20V5"/></symbol>
+ <symbol id="ai" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+ <symbol id="bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></symbol>
+ <symbol id="doc" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></symbol>
+ <symbol id="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+ <symbol id="layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5"/></symbol>
+ <symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+ <symbol id="userplus" viewBox="0 0 24 24"><circle cx="10" cy="8.5" r="4"/><path d="M3 21a7 7 0 0 1 14 0M19 8v6M16 11h6"/></symbol>
+ <symbol id="lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></symbol>
+ <symbol id="mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></symbol>
+ <symbol id="phone" viewBox="0 0 24 24"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></symbol>
+ <symbol id="mobile" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/></symbol>
+ <symbol id="win" viewBox="0 0 24 24"><path d="M3 5.5 10.5 4.5v7H3zM12 4.3 21 3v8.5h-9zM3 12.5h7.5v7L3 18.5zM12 12.5h9V21l-9-1.3z"/></symbol>
+ <symbol id="shield" viewBox="0 0 24 24"><path d="M12 2.5 4 5.5v6c0 5 3.4 8.8 8 10 4.6-1.2 8-5 8-10v-6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+ <symbol id="shieldlock" viewBox="0 0 24 24"><path d="M12 2.5 4 5.5v6c0 5 3.4 8.8 8 10 4.6-1.2 8-5 8-10v-6z"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/></symbol>
+ <symbol id="check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></symbol>
+ <symbol id="tick" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
+ <symbol id="bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+ <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+ <symbol id="down" viewBox="0 0 24 24"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></symbol>
+ <symbol id="play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m10 8.5 6 3.5-6 3.5z"/></symbol>
+ <symbol id="pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+ <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+ <symbol id="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></symbol>
+ <symbol id="expand" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></symbol>
+ <symbol id="snap" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+ <symbol id="more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18.5" cy="12" r="1.4"/></symbol>
+ <symbol id="grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1"/><rect x="13.5" y="3.5" width="7" height="7" rx="1"/><rect x="3.5" y="13.5" width="7" height="7" rx="1"/><rect x="13.5" y="13.5" width="7" height="7" rx="1"/></symbol>
+ <symbol id="list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.5M3.5 12h.5M3.5 18h.5"/></symbol>
+ <symbol id="star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></symbol>
+ <symbol id="walk" viewBox="0 0 24 24"><circle cx="13" cy="4.5" r="2"/><path d="m9 21 2.5-6.5L14 17v4M7 12l3-4 4 1 2 3 3 1M11.5 14.5 10 8"/></symbol>
+ <symbol id="car" viewBox="0 0 24 24"><path d="M4 16V12l2-5h12l2 5v4zM4 16v3h3v-3M17 16v3h3v-3M4 12h16"/><circle cx="8" cy="14" r="1"/><circle cx="16" cy="14" r="1"/></symbol>
+ <symbol id="box" viewBox="0 0 24 24"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/></symbol>
+ <symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.5"/></symbol>
+ <symbol id="alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20zM12 10v4.5M12 17.2v.3"/></symbol>
+ <symbol id="eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+ <symbol id="back" viewBox="0 0 24 24"><path d="M9 7 4 12l5 5M4 12h11a5 5 0 0 1 0 10"/></symbol>
+ <symbol id="del" viewBox="0 0 24 24"><path d="M9 5h11v14H9l-6-7z"/><path d="m12 9 5 6M17 9l-5 6"/></symbol>
+ <symbol id="menu" viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></symbol>
+ <symbol id="chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+ <symbol id="folder" viewBox="0 0 24 24"><path d="M3 6.5h6l2 2h10V19H3z"/></symbol>
+ <symbol id="film" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></symbol>
+ <symbol id="export" viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M5 14v6h14v-6"/></symbol>
+ <symbol id="headset" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14h3v6H4zM17 14h3v6h-3z"/></symbol>
+ <symbol id="question" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17v.3"/></symbol>
+ <symbol id="rocket" viewBox="0 0 24 24"><path d="M5 19c0-3 1-5 3-6l3 3c-1 2-3 3-6 3zM9 14 14 9c2-2 5-4 7-4-0 2-2 5-4 7l-5 5zM14 9l1 1"/></symbol>
+ <symbol id="wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 14.5h2"/></symbol>
+ <symbol id="scale" viewBox="0 0 24 24"><path d="M12 3v18M6 21h12M4 7h16M7 7l-3 6a3 3 0 0 0 6 0zM17 7l-3 6a3 3 0 0 0 6 0z"/></symbol>
+ <symbol id="eu" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/></symbol>
+ <symbol id="diag" viewBox="0 0 24 24"><path d="M3 12h4l2-5 4 10 2-5h6"/></symbol>
+ <symbol id="plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6.5 8h11v3a5.5 5.5 0 0 1-11 0zM12 16.5V21"/></symbol>
+ <symbol id="power" viewBox="0 0 24 24"><path d="M12 3v8M7 6a8 8 0 1 0 10 0"/></symbol>
+ <symbol id="fp" viewBox="0 0 24 24"><path d="M12 4a8 8 0 0 1 8 8M6.3 6.3A8 8 0 0 0 4 12v2M12 8a4 4 0 0 1 4 4v3M8 12a4 4 0 0 1 2-3.5M12 12v6M8 16v2"/></symbol>
+</svg>
+
+<a class="skip" href="#screenMain">Przejdź do treści</a>
+<div class="demoBar" role="note">
+  <svg class="i"><use href="#info"/></svg>
+  <strong>WERSJA DEMONSTRACYJNA</strong>
+  <span>Projekt graficzny. Kamery, zdarzenia i liczby oznaczone „DEMO” są przykładowe i nie pochodzą z realnego systemu.</span>
+</div>
+
+<!-- =========================================================
+     STRONA WWW
+     ========================================================= -->
+<div class="site" data-shell="www" hidden>
+<header class="webHeader">
+  <div class="wrap">
+    <a class="brand" href="#start"><svg class="logo"><use href="#logo"/></svg><span><b>HOME <span>SECURITY</span></b><small>Monitoring domu z komputera i telefonu</small></span></a>
+    <nav class="webNav" id="webNav" aria-label="Strona">
+      <a href="#start">Start</a>
+      <a href="#jak-dziala">Jak działa</a>
+      <a href="#mozliwosci">Możliwości</a>
+      <a href="#wymagania">Wymagania</a>
+      <a href="#pobierz">Pobierz</a>
+      <a href="#faq">FAQ</a>
+      <a href="#kontakt">Kontakt</a>
+    </nav>
+    <div class="webActions">
+      <a class="btn sm" href="#rejestracja">Załóż konto</a>
+      <a class="btn sm primary" href="#logowanie"><svg class="i"><use href="#user"/></svg>Zaloguj się</a>
+      <button class="iconBtn menuToggle" type="button" data-toggle-nav aria-label="Menu" aria-expanded="false"><svg class="i"><use href="#menu"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="screenMain">
+<!-- 1. STRONA GŁÓWNA -->
+<section data-screen="start" aria-label="Strona główna">
+  <div class="hero">
+    <div class="bg" role="img" aria-label="Ilustracja: dom nocą (grafika z projektu)"></div>
+    <div class="wrap">
+      <span class="tag"><svg class="i"><use href="#shield"/></svg>Wydanie rozwojowe · monitoring domu</span>
+      <h1 class="title">Pełna kontrola<br>i podgląd <em>Twojego domu</em></h1>
+      <p class="lead">Kamera przy komputerze Windows, podgląd na telefonie i nagrania w jednym miejscu. Sprawdzaj stan połączenia, wracaj do archiwum i korzystaj z czytelnego panelu.</p>
+      <div class="heroActions">
+        <a class="btn primary" href="#pobierz">Pobierz HOME SECURITY <svg class="i"><use href="#arrow"/></svg></a>
+        <a class="btn" href="#jak-dziala"><svg class="i"><use href="#play"/></svg>Zobacz, jak to działa</a>
+      </div>
+      <div class="ticks">
+        <span><svg class="i"><use href="#check"/></svg>Program Windows x64</span>
+        <span><svg class="i"><use href="#check"/></svg>Panel na telefonie (PWA)</span>
+        <span><svg class="i"><use href="#check"/></svg>Konto i dodatkowy PIN</span>
+      </div>
+    </div>
+  </div>
+  <div class="wrap featureStrip">
+    <div class="grid4">
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#cam"/></svg></span><div><h2 class="h3">Podgląd na żywo</h2><p>Obraz udostępniany przez komputer z kamerą.</p></div></div>
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#film"/></svg></span><div><h2 class="h3">Lokalne archiwum</h2><p>Nagrania w wybranym folderze komputera.</p></div></div>
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#bell"/></svg></span><div><h2 class="h3">Zdarzenia</h2><p>Wykrycia ruchu i dźwięku z kamery.</p></div></div>
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#lock"/></svg></span><div><h2 class="h3">Konto i PIN</h2><p>Logowanie i odblokowanie to osobne kroki.</p></div></div>
+    </div>
+  </div>
+  <div class="wrap section">
+    <div class="grid2" style="align-items:end;margin-bottom:22px">
+      <div><span class="eyebrow">Co dostajesz</span><h2 class="big">Właściwe narzędzie<br>we właściwym miejscu</h2></div>
+      <p class="muted">Podgląd, nagrania i ustawienia mają osobne sekcje. Grafiki poniżej są ilustracjami projektu, nie zrzutami z Twojej kamery.</p>
+    </div>
+    <div class="grid4">
+      <a class="card solution" href="#mozliwosci" style="text-decoration:none;color:inherit"><div class="ph" style="background-image:url(assets/demo-kam01.webp)"></div><div class="body"><h2 class="h3"><svg class="i"><use href="#cam"/></svg>Podgląd</h2><p>Pełny ekran, cyfrowe przybliżenie i odsłuch.</p></div></a>
+      <a class="card solution" href="#mozliwosci" style="text-decoration:none;color:inherit"><div class="ph" style="background-image:url(assets/demo-archiwum.webp)"></div><div class="body"><h2 class="h3"><svg class="i"><use href="#film"/></svg>Nagrania</h2><p>Archiwum DVR, wybór dnia i odtwarzanie.</p></div></a>
+      <a class="card solution" href="#mozliwosci" style="text-decoration:none;color:inherit"><div class="ph" style="background-image:url(assets/demo-kam04.webp)"></div><div class="body"><h2 class="h3"><svg class="i"><use href="#bell"/></svg>Zdarzenia</h2><p>Ruch i dźwięk w jednym miejscu.</p></div></a>
+      <a class="card solution" href="#mozliwosci" style="text-decoration:none;color:inherit"><div class="ph" style="background-image:url(assets/demo-kam06.webp)"></div><div class="body"><h2 class="h3"><svg class="i"><use href="#diag"/></svg>Diagnostyka</h2><p>Kamera, zapis, folder i połączenie osobno.</p></div></a>
+    </div>
+  </div>
+  <div class="wrap section" style="padding-top:0">
+    <div class="card glow split" style="padding:28px">
+      <div class="phone" aria-hidden="true"><div class="notch"></div><div class="screen">
+        <div class="ph" style="background-image:url(assets/demo-kam01.webp)"></div>
+        <div class="rows"><div><span class="sdot"></span>Dom – wejście <span class="demo" style="margin-left:auto">DEMO</span></div><div><svg class="i"><use href="#cam"/></svg>Kamery</div><div><svg class="i"><use href="#film"/></svg>Nagrania</div><div><svg class="i"><use href="#bell"/></svg>Zdarzenia</div></div>
+      </div></div>
+      <div>
+        <span class="eyebrow">Panel HOME SECURITY</span>
+        <h2 class="big">Twój dom w zasięgu ręki</h2>
+        <p class="muted">Panel internetowy otworzysz na Androidzie i iPhonie i dodasz do ekranu głównego. Aplikacje w Google Play i App Store nie są jeszcze opublikowane.</p>
+        <ul class="checklist" style="margin:16px 0 20px">
+          <li><svg class="i"><use href="#check"/></svg>Podgląd obrazu z komputera nadającego</li>
+          <li><svg class="i"><use href="#check"/></svg>Archiwum nagrań i zdarzenia</li>
+          <li><svg class="i"><use href="#check"/></svg>Dostęp przez konto i dodatkowy PIN</li>
+        </ul>
+        <a class="btn primary" href="#pobierz">Jak zacząć <svg class="i"><use href="#arrow"/></svg></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. JAK DZIAŁA -->
+<section data-screen="jak-dziala" aria-label="Jak działa" hidden>
+  <div class="wrap section">
+    <span class="eyebrow">Zobacz, jak to działa</span>
+    <h1 class="title">Jak działa <em>HOME SECURITY?</em></h1>
+    <p class="lead">HOME SECURITY łączy program na komputerze Windows z panelem w przeglądarce telefonu. Komputer obsługuje kamerę i nagrania, a telefon otwiera dostępny podgląd.</p>
+    <div class="card glow flow" style="padding:26px;margin:10px 0 18px">
+      <div class="card node"><span class="icoBox"><svg class="i"><use href="#win"/></svg></span><h2 class="h3">Komputer</h2><p class="muted">Źródło obrazu i zapis</p></div>
+      <svg class="i arrow" style="width:40px;height:40px"><use href="#arrow"/></svg>
+      <div class="card node"><span class="icoBox"><svg class="i"><use href="#lock"/></svg></span><h2 class="h3">Panel</h2><p class="muted">Konto, PIN i podgląd</p></div>
+      <svg class="i arrow" style="width:40px;height:40px"><use href="#arrow"/></svg>
+      <div class="card node"><span class="icoBox"><svg class="i"><use href="#mobile"/></svg></span><h2 class="h3">Telefon</h2><p class="muted">Odbiornik obrazu</p></div>
+    </div>
+    <div class="grid3">
+      <div class="card step"><span class="n">1</span><div><h2 class="h3">Komputer udostępnia obraz</h2><p>Uruchamiasz program Windows i wybierasz kamerę. To komputer jest nadajnikiem, a nie telefon.</p></div></div>
+      <div class="card step"><span class="n">2</span><div><h2 class="h3">Ty otwierasz własny panel</h2><p>Logujesz się na konto, odblokowujesz dostęp PIN-em i sprawdzasz dostępność podglądu.</p></div></div>
+      <div class="card step"><span class="n">3</span><div><h2 class="h3">Nagrania mają osobne potwierdzenie</h2><p>Archiwum i diagnostyka pomagają odróżnić działającą kamerę od rzeczywiście zapisanego pliku.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. MOŻLIWOŚCI -->
+<section data-screen="mozliwosci" aria-label="Możliwości" hidden>
+  <div class="wrap section">
+    <span class="eyebrow">Mniej szukania. Więcej kontroli.</span>
+    <h1 class="title">Najważniejsze <em>możliwości</em></h1>
+    <p class="lead">Podgląd, nagrania i ustawienia mają osobne sekcje. Nie musisz przekopywać się przez jeden przeładowany ekran.</p>
+    <div class="grid3">
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#cam"/></svg></span><h2 class="h3">Podgląd na żywo</h2><p class="muted">Podgląd kamery, odsłuch i kontrola kadru. Pełny ekran, cyfrowe przybliżenie i dopasowanie obrazu.</p></div>
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#film"/></svg></span><h2 class="h3">Archiwum nagrań</h2><p class="muted">Archiwum DVR, wybór dnia i odtwarzanie. Miejsce zapisu wybierasz na komputerze nadającym.</p></div>
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#bell"/></svg></span><h2 class="h3">Zdarzenia</h2><p class="muted">Wykrycia ruchu i dźwięku z kamery, z możliwością filtrowania.</p></div>
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#diag"/></svg></span><h2 class="h3">Diagnostyka</h2><p class="muted">Stan kamery, nagrywania, folderu, WebRTC i chmury jest rozdzielony. Napis „na żywo” nie oznacza zapisanego pliku.</p></div>
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#lock"/></svg></span><h2 class="h3">Konto i PIN</h2><p class="muted">Logowanie do konta i odblokowanie panelu to oddzielne kroki. Publiczna strona nie wyświetla obrazu z kamery.</p></div>
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#folder"/></svg></span><h2 class="h3">Kopia Google Drive</h2><p class="muted">Opcjonalna, wymaga poprawnej konfiguracji i autoryzacji. Zapis lokalny działa bez niej.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. PIERWSZE URUCHOMIENIE -->
+<section data-screen="pierwsze-uruchomienie" aria-label="Pierwsze uruchomienie" hidden>
+  <div class="wrap section">
+    <span class="eyebrow">Poradnik</span>
+    <h1 class="title">Pierwsze <em>uruchomienie</em></h1>
+    <p class="lead">Dobry start to nie samo kliknięcie „Start”. Sprawdź cały przebieg: obraz z kamery, powstanie pliku w wybranym folderze i możliwość jego odtworzenia.</p>
+    <div class="card steps" style="padding:24px">
+      <div class="step"><span class="n">1</span><div><h2 class="h3">Ustal, który komputer będzie nadajnikiem</h2><p>Wybierz komputer Windows, do którego podłączona jest kamera. To on obsługuje urządzenie i zapis. Telefon jest panelem podglądu.</p></div></div>
+      <div class="step"><span class="n">2</span><div><h2 class="h3">Konto i PIN to dwa kroki</h2><p>Zaloguj się na swoje konto, potwierdź adres e-mail, a następnie odblokuj panel swoim PIN-em. Nie podawaj PIN-u ani hasła w zgłoszeniu do pomocy.</p></div></div>
+      <div class="step"><span class="n">3</span><div><h2 class="h3">Sprawdź kamerę i mikrofon</h2><p>Wybierz kamerę w sekcji urządzeń i sprawdź rzeczywisty obraz. Rozdzielczość i liczbę klatek odczytaj w diagnostyce.</p></div></div>
+      <div class="step"><span class="n">4</span><div><h2 class="h3">Wskaż folder i wykonaj krótki test</h2><p>Przejdź do „Nagrań”, wskaż własny folder na komputerze i zatwierdź dostęp. Nagraj krótki fragment i odtwórz go przed codziennym użyciem.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 13. WYMAGANIA -->
+<section data-screen="wymagania" aria-label="Wymagania" hidden>
+  <div class="wrap section">
+    <span class="eyebrow">Zanim zaczniesz</span>
+    <h1 class="title">Wymagania <em>techniczne</em></h1>
+    <p class="lead">Parametry obrazu zależą od sprzętu, ustawień i połączenia. Faktyczne wartości sprawdzisz w diagnostyce.</p>
+    <table class="reqTable">
+      <tr><th>Komputer nadający</th><td>Windows x64; kamera dostępna w systemie. Program korzysta z WebView2.</td></tr>
+      <tr><th>Telefon</th><td>Panel internetowy/PWA dla Androida i iPhone’a. Nie jest to jeszcze aplikacja ze sklepu.</td></tr>
+      <tr><th>Połączenie na żywo</th><td>WebRTC. Dostępność zależy od sieci, uprawnień urządzenia i możliwości zestawienia połączenia.</td></tr>
+      <tr><th>Jakość obrazu</th><td>Zależna od kamery i ustawień. Rozdzielczość oraz liczbę klatek odczytasz w panelu diagnostycznym.</td></tr>
+      <tr><th>Nagrania lokalne</th><td>Wybrany folder na komputerze i dostępne miejsce na dysku. Uprawnienie do folderu może wymagać ponownego zatwierdzenia.</td></tr>
+      <tr><th>Kopia Google Drive</th><td>Opcjonalna integracja wymagająca poprawnej konfiguracji i autoryzacji.</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 14. POBIERZ -->
+<section data-screen="pobierz" aria-label="Pobierz" hidden>
+  <div class="wrap section">
+    <span class="eyebrow">Pobierz</span>
+    <h1 class="title">Komputer czuwa.<br><em>Ty masz podgląd.</em></h1>
+    <p class="lead">Pobierz HOME SECURITY na komputer Windows i otwieraj swój panel na telefonie.</p>
+    <div class="grid3">
+      <div class="card platform"><span class="icoBox"><svg class="i"><use href="#win"/></svg></span><h2 class="h3" style="margin:0">Windows</h2><p class="muted" style="margin:0">Domowe centrum monitoringu. Podłącz kamerę i wybierz folder na nagrania.</p><ol><li>Pobierz i uruchom instalator.</li><li>Wybierz katalog programu.</li><li>Skonfiguruj konto, kamerę i folder nagrań.</li></ol><a class="btn primary" href="https://dominiksolorz.github.io/kamera/pobierz.html"><svg class="i"><use href="#down"/></svg>Strona pobierania</a></div>
+      <div class="card platform"><span class="icoBox"><svg class="i"><use href="#mobile"/></svg></span><h2 class="h3" style="margin:0">Android</h2><p class="muted" style="margin:0">Panel internetowy dodasz do ekranu głównego.</p><ol><li>Otwórz panel w Chrome.</li><li>Wybierz „Dodaj do ekranu głównego”.</li><li>Uruchom ikonę i zaloguj się.</li></ol><div class="store"><svg class="i"><use href="#info"/></svg>Google Play: aplikacja sklepowa nie jest jeszcze opublikowana.</div></div>
+      <div class="card platform"><span class="icoBox"><svg class="i"><use href="#mobile"/></svg></span><h2 class="h3" style="margin:0">iPhone i iPad</h2><p class="muted" style="margin:0">Panel dodasz do ekranu początkowego.</p><ol><li>Otwórz panel w Safari.</li><li>Wybierz „Udostępnij” → „Do ekranu początkowego”.</li><li>Uruchom ikonę i zaloguj się.</li></ol><div class="store"><svg class="i"><use href="#info"/></svg>App Store: aplikacja sklepowa nie jest jeszcze opublikowana.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 15. KONTAKT I POMOC -->
+<section data-screen="kontakt" aria-label="Kontakt i pomoc" hidden>
+  <div class="wrap section">
+    <span class="eyebrow">Kontakt i pomoc</span>
+    <h1 class="title">Potrzebujesz <em>pomocy?</em></h1>
+    <p class="lead">Opisz swoje pytanie lub problem. Nie podawaj hasła, PIN-u, kodów weryfikacyjnych ani tokenów.</p>
+    <div class="grid3 contactCards" style="margin-bottom:18px">
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#mail"/></svg></span><h2 class="h3">Napisz e-mail</h2><a class="big" href="mailto:<!--OPERATOR:email-->"><!--OPERATOR:email--></a><p>Odpowiadamy po zapoznaniu się ze zgłoszeniem.</p></div>
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#phone"/></svg></span><h2 class="h3">Telefon</h2><a class="big" href="tel:<!--OPERATOR:phone-->"><!--OPERATOR:phoneDisplay--></a><p>Dane operatora z dokumentów HOME SECURITY.</p></div>
+      <div class="card"><span class="icoBox"><svg class="i"><use href="#question"/></svg></span><h2 class="h3">Najczęstsze pytania</h2><a class="btn sm" href="#faq">Przejdź do FAQ</a><p>Odpowiedzi o urządzeniach, zapisie i koncie.</p></div>
+    </div>
+    <form class="card" id="contactForm" style="max-width:760px">
+      <div class="cardHead"><h2><svg class="i"><use href="#mail"/></svg>Formularz kontaktowy <span class="demo red">DEMO</span></h2></div>
+      <div class="grid2"><label class="field noicon"><input required placeholder="Imię" aria-label="Imię"></label><label class="field noicon"><input type="email" required placeholder="Twój e-mail" aria-label="Twój e-mail"></label></div>
+      <label class="field noicon"><select aria-label="Temat"><option>Pomoc techniczna</option><option>Konto i dostęp</option><option>Kamera i dźwięk</option><option>Nagrania i Google Drive</option><option>Produkt i współpraca</option><option>Prywatność i dokumenty</option></select></label>
+      <label class="field noicon"><textarea required placeholder="Wiadomość" aria-label="Wiadomość"></textarea></label>
+      <div class="mockNote" style="margin-bottom:14px"><svg class="i"><use href="#info"/></svg><span><b>W wersji demonstracyjnej formularz niczego nie wysyła.</b> Działający formularz jest na stronie kontaktowej HOME SECURITY.</span></div>
+      <button class="btn primary" type="submit">Wyślij wiadomość <svg class="i"><use href="#arrow"/></svg></button>
+    </form>
+  </div>
+</section>
+
+<!-- 16. FAQ -->
+<section data-screen="faq" aria-label="FAQ" hidden>
+  <div class="wrap section">
+    <span class="eyebrow">FAQ</span>
+    <h1 class="title">Najczęściej zadawane <em>pytania</em></h1>
+    <label class="field faqSearch"><svg class="i"><use href="#search"/></svg><input id="faqSearch" type="search" placeholder="Szukaj w pytaniach, np. „nagrania”, „telefon”, „PIN”" aria-label="Szukaj w pytaniach"></label>
+    <div class="faqCats" role="group" aria-label="Kategorie">
+      <button type="button" data-faq="all" aria-pressed="true"><svg class="i"><use href="#layers"/></svg>Wszystkie</button>
+      <button type="button" data-faq="start" aria-pressed="false"><svg class="i"><use href="#rocket"/></svg>Pierwsze kroki</button>
+      <button type="button" data-faq="app" aria-pressed="false"><svg class="i"><use href="#mobile"/></svg>Aplikacja</button>
+      <button type="button" data-faq="rec" aria-pressed="false"><svg class="i"><use href="#cam"/></svg>Kamery i nagrania</button>
+      <button type="button" data-faq="offer" aria-pressed="false"><svg class="i"><use href="#wallet"/></svg>Oferta</button>
+    </div>
+    <div class="faq" id="faqList">
+      <details data-cat="start" open><summary><span class="pm">+</span>Czy to jest program, czy strona internetowa?</summary><div class="ans">To dwa interfejsy jednego projektu: instalowany program Windows oraz panel internetowy. Komputer z kamerą pełni rolę nadajnika. Telefon nie zastępuje komputera nagrywającego.</div></details>
+      <details data-cat="app"><summary><span class="pm">+</span>Czy działa na Androidzie i iPhonie?</summary><div class="ans">Na telefonach dostępny jest panel w przeglądarce/PWA. Nie ma jeszcze opublikowanych aplikacji w Google Play ani App Store. Zachowanie obrazu, dźwięku i pracy w tle trzeba sprawdzić na swoim urządzeniu.</div></details>
+      <details data-cat="rec"><summary><span class="pm">+</span>Czy mogę zamknąć program i nadal nagrywać?</summary><div class="ans">W obecnym wydaniu nie traktuj zamknięcia panelu nadajnika jako bezpiecznej pracy rejestratora w tle. Niezależny silnik agenta jest w integracji. Do tego czasu pozostaw nadajnik uruchomiony i sprawdzaj potwierdzenia zapisu.</div></details>
+      <details data-cat="rec"><summary><span class="pm">+</span>Czy Google Drive jest wymagany?</summary><div class="ans">Nie. Zapis lokalny i kopia do Drive to oddzielne ścieżki. Chmura wymaga poprawnej autoryzacji i konfiguracji.</div></details>
+      <details data-cat="rec"><summary><span class="pm">+</span>Gdzie są przechowywane nagrania?</summary><div class="ans">Lokalizację wybierasz na komputerze nadającym. Dopóki folder i zapis pliku nie są potwierdzone, nie zakładaj, że materiał znajduje się w tym folderze.</div></details>
+      <details data-cat="offer"><summary><span class="pm">+</span>Ile kosztuje HOME SECURITY?</summary><div class="ans">Nie mamy jeszcze opublikowanego cennika ani możliwości zakupu na tej stronie. Samo założenie konta nie tworzy zamówienia.</div></details>
+      <details data-cat="offer"><summary><span class="pm">+</span>Czy założenie konta oznacza zakup?</summary><div class="ans">Nie. Rejestracja otwiera konfigurację konta i panelu; sama w sobie nie jest zamówieniem ani płatnością.</div></details>
+      <p class="muted" id="faqEmpty" hidden>Brak pytań pasujących do wyszukiwania.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 17. DOKUMENTY -->
+<section data-screen="dokumenty" aria-label="Dokumenty" hidden>
+  <div class="wrap section">
+    <span class="eyebrow">Dokumenty</span>
+    <h1 class="title">Dokumenty i <em>zasady</em></h1>
+    <p class="lead">Treść dokumentów pochodzi z zatwierdzonych źródeł HOME SECURITY (design/documents) i jest tu pokazana bez zmian.</p>
+    <div class="grid3">
+      <a class="card docCard" href="#polityka-prywatnosci"><span class="icoBox"><svg class="i"><use href="#shield"/></svg></span><div><h2 class="h3">Polityka prywatności</h2><p>Jakie dane trafiają do strony, konta i usług.</p></div></a>
+      <a class="card docCard" href="#rodo"><span class="icoBox"><svg class="i"><use href="#eu"/></svg></span><div><h2 class="h3">Informacja RODO</h2><p>Role administratorów, cele i prawa osób.</p></div></a>
+      <a class="card docCard" href="#regulamin"><span class="icoBox"><svg class="i"><use href="#scale"/></svg></span><div><h2 class="h3">Regulamin</h2><p>Warunki dostępu i obowiązki użytkownika.</p></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- 18. STAN PROJEKTU -->
+<section data-screen="stan-projektu" aria-label="Stan projektu" hidden>
+  <div class="wrap section">
+    <span class="eyebrow">Rozwijamy otwarcie</span>
+    <h1 class="title">Stan <em>projektu</em></h1>
+    <p class="lead">HOME SECURITY jest rozwijanym systemem. Przed użyciem jako jedynego zabezpieczenia przetestuj własny zestaw: kamerę, zapis, odtwarzanie i połączenie z telefonu.</p>
+    <div class="grid3 statusCols">
+      <div class="card"><span class="badge ok">Dostępne w panelu</span><h2 class="h3">Codzienna kontrola</h2><p>Podgląd, konto i PIN, wybór urządzeń, archiwum, ustawienia i rozdzielona diagnostyka.</p></div>
+      <div class="card"><span class="badge mid">W integracji</span><h2 class="h3">Niezależny rejestrator</h2><p>Agent Windows i nowa ścieżka chmurowa są rozwijane. Nagrywania nie należy traktować jako niezależnego od otwartego panelu nadajnika.</p></div>
+      <div class="card"><span class="badge low">Kierunek rozwoju</span><h2 class="h3">Szerszy ekosystem</h2><p>Rozbudowana obsługa wielu kamer oraz aplikacje sklepowe Android/iOS nie są jeszcze gotowymi elementami oferty.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 19–21. DOKUMENTY PRAWNE -->
+<section data-screen="polityka-prywatnosci" aria-label="Polityka prywatności" hidden>
+  <div class="wrap section legal">
+    <div class="legalHero"><span class="icoBox"><svg class="i"><use href="#shield"/></svg></span><div><span class="eyebrow">Dokument</span><h1 class="title" style="margin:0">Polityka prywatności</h1></div></div>
+    <p class="sourceNote">Źródło: design/documents/polityka-prywatnosci.html (treść bez zmian).</p>
+    <article class="card legalBody"><!--DOC:polityka-prywatnosci--></article>
+  </div>
+</section>
+<section data-screen="rodo" aria-label="RODO" hidden>
+  <div class="wrap section legal">
+    <div class="legalHero"><span class="icoBox"><svg class="i"><use href="#eu"/></svg></span><div><span class="eyebrow">Dokument</span><h1 class="title" style="margin:0">Informacja RODO</h1></div></div>
+    <p class="sourceNote">Źródło: design/documents/rodo.html (treść bez zmian).</p>
+    <article class="card legalBody"><!--DOC:rodo--></article>
+  </div>
+</section>
+<section data-screen="regulamin" aria-label="Regulamin" hidden>
+  <div class="wrap section legal">
+    <div class="legalHero"><span class="icoBox"><svg class="i"><use href="#scale"/></svg></span><div><span class="eyebrow">Dokument</span><h1 class="title" style="margin:0">Regulamin</h1></div></div>
+    <p class="sourceNote">Źródło: design/documents/regulamin.html (treść bez zmian).</p>
+    <article class="card legalBody"><!--DOC:regulamin--></article>
+  </div>
+</section>
+</main>
+<footer class="webFooter">
+  <div class="wrap">
+    <a class="brand" href="#start"><svg class="logo"><use href="#logo"/></svg><span><b>HOME <span>SECURITY</span></b></span></a>
+    <nav aria-label="Stopka"><a href="#pierwsze-uruchomienie">Pierwsze uruchomienie</a><a href="#stan-projektu">Stan projektu</a><a href="#dokumenty">Dokumenty</a><a href="#polityka-prywatnosci">Polityka prywatności</a><a href="#rodo">RODO</a><a href="#regulamin">Regulamin</a></nav>
+    <span>Projekt graficzny · wersja demonstracyjna</span>
+  </div>
+</footer>
+</div>
+
+<!-- =========================================================
+     LOGOWANIE / REJESTRACJA / PIN
+     ========================================================= -->
+<div data-shell="auth" hidden>
+<!-- 2. LOGOWANIE -->
+<section class="authPage" data-screen="logowanie" aria-label="Logowanie" hidden>
+  <div class="bg" aria-hidden="true"></div>
+  <form class="authCard" id="loginForm">
+    <a class="brand" href="#start"><svg class="logo"><use href="#logo"/></svg><span><b>HOME <span>SECURITY</span></b></span></a>
+    <div class="authIcon"><svg class="i"><use href="#lock"/></svg></div>
+    <h1>Logowanie</h1>
+    <p class="sub">Zaloguj się do swojego konta w HOME SECURITY.</p>
+    <label class="field"><svg class="i"><use href="#user"/></svg><input type="email" required placeholder="Adres e-mail" autocomplete="email" aria-label="Adres e-mail"></label>
+    <div class="field"><svg class="i"><use href="#lock"/></svg><input type="password" required placeholder="Hasło" autocomplete="current-password" aria-label="Hasło"><button class="iconBtn eye" type="button" data-eye aria-label="Pokaż hasło"><svg class="i"><use href="#eye"/></svg></button></div>
+    <div class="authRow"><span class="muted" style="font-size:12.5px">Najpierw konto, potem PIN.</span><a href="#" data-demo-msg="Reset hasła działa w prawdziwym panelu.">Nie pamiętasz hasła?</a></div>
+    <button class="btn primary block" type="submit">Zaloguj się <svg class="i"><use href="#arrow"/></svg></button>
+    <div class="divider">lub</div>
+    <button class="btn block" type="button" data-demo-msg="Logowanie przez Google działa w prawdziwym panelu."><svg class="i" viewBox="0 0 24 24" style="stroke:none"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.3-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.3c1.9-1.8 2.9-4.4 2.9-7.3z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.7-2.5l-3.3-2.5c-.9.6-2 1-3.4 1a5.9 5.9 0 0 1-5.5-4H3.1V16A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.5 14a6 6 0 0 1 0-4V7.4H3.1a10 10 0 0 0 0 9.1z"/><path fill="#EA4335" d="M12 6c1.5 0 2.8.5 3.9 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.5 10A5.9 5.9 0 0 1 12 6z"/></svg>Zaloguj się przez Google</button>
+    <p class="authFoot">Nie masz konta? <a href="#rejestracja">Zarejestruj się</a></p>
+    <div class="mockNote" style="margin-top:14px"><svg class="i"><use href="#info"/></svg><span><b>Wersja demonstracyjna.</b> Ten ekran nie loguje do prawdziwego konta.</span></div>
+  </form>
+</section>
+
+<!-- 3. REJESTRACJA -->
+<section class="authPage" data-screen="rejestracja" aria-label="Rejestracja" hidden>
+  <div class="bg" aria-hidden="true"></div>
+  <form class="authCard" id="registerForm">
+    <a class="brand" href="#start"><svg class="logo"><use href="#logo"/></svg><span><b>HOME <span>SECURITY</span></b></span></a>
+    <div class="authIcon"><svg class="i"><use href="#userplus"/></svg></div>
+    <h1>Rejestracja</h1>
+    <p class="sub">Utwórz nowe konto HOME SECURITY.</p>
+    <label class="field"><svg class="i"><use href="#user"/></svg><input required placeholder="Imię i nazwisko" autocomplete="name" aria-label="Imię i nazwisko"></label>
+    <label class="field"><svg class="i"><use href="#mail"/></svg><input type="email" required placeholder="Adres e-mail" autocomplete="email" aria-label="Adres e-mail"></label>
+    <div class="field"><svg class="i"><use href="#lock"/></svg><input id="regPass" type="password" required minlength="10" placeholder="Utwórz hasło" autocomplete="new-password" aria-label="Hasło"><button class="iconBtn eye" type="button" data-eye aria-label="Pokaż hasło"><svg class="i"><use href="#eye"/></svg></button></div>
+    <div class="field"><svg class="i"><use href="#lock"/></svg><input id="regPass2" type="password" required placeholder="Powtórz hasło" autocomplete="new-password" aria-label="Powtórz hasło"><button class="iconBtn eye" type="button" data-eye aria-label="Pokaż hasło"><svg class="i"><use href="#eye"/></svg></button></div>
+    <ul class="pwRules" id="pwRules">
+      <li data-rule="len"><svg class="i"><use href="#check"/></svg>Co najmniej 10 znaków</li>
+      <li data-rule="same"><svg class="i"><use href="#check"/></svg>Hasła są takie same</li>
+    </ul>
+    <label class="check"><input type="checkbox" required><span>Akceptuję <a href="#regulamin">Regulamin</a> i zapoznałem(-am) się z <a href="#polityka-prywatnosci">Polityką prywatności</a> oraz <a href="#rodo">informacją RODO</a>.</span></label>
+    <button class="btn primary block" type="submit">Utwórz konto <svg class="i"><use href="#userplus"/></svg></button>
+    <p class="authFoot">Masz już konto? <a href="#logowanie">Zaloguj się</a></p>
+    <div class="mockNote" style="margin-top:14px"><svg class="i"><use href="#info"/></svg><span><b>Wersja demonstracyjna.</b> Rejestracja nie tworzy prawdziwego konta. Prawdziwy formularz wymaga też adresu i kodu pocztowego.</span></div>
+  </form>
+</section>
+
+<!-- 4. PIN -->
+<section class="authPage" data-screen="pin" aria-label="Weryfikacja PIN" hidden>
+  <div class="bg" aria-hidden="true"></div>
+  <div class="authCard">
+    <a class="brand" href="#start"><svg class="logo"><use href="#logo"/></svg><span><b>HOME <span>SECURITY</span></b></span></a>
+    <div class="authIcon"><svg class="i"><use href="#shield"/></svg></div>
+    <h1>Weryfikacja PIN</h1>
+    <p class="sub">Wprowadź 4- lub 6-cyfrowy kod PIN, aby potwierdzić dostęp.</p>
+    <div class="pinBoxes" id="pinBoxes" role="status" aria-live="polite" aria-label="Wpisane cyfry"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="keypad" id="keypad">
+      <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+      <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+      <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+      <button type="button" class="del" data-k="del" aria-label="Usuń cyfrę"><svg class="i"><use href="#del"/></svg></button><button type="button" data-k="0">0</button><button type="button" class="ok" data-k="ok" aria-label="Zatwierdź"><svg class="i"><use href="#tick"/></svg></button>
+    </div>
+    <p class="pinMsg" id="pinMsg" role="status"></p>
+    <div class="lockNote"><svg class="i"><use href="#lock"/></svg>W wersji demo PIN nie jest sprawdzany ani zapisywany.</div>
+  </div>
+</section>
+</div>
+
+<!-- =========================================================
+     APLIKACJA
+     ========================================================= -->
+<div class="app" data-shell="app" hidden>
+<aside class="side" id="side" aria-label="Menu aplikacji">
+  <a class="brand" href="#pulpit"><svg class="logo"><use href="#logo"/></svg><span><b>HOME <span>SECURITY</span></b><small>Panel · wersja demo</small></span></a>
+  <nav class="sideNav" aria-label="Widoki">
+    <a href="#pulpit"><svg class="i"><use href="#home"/></svg>Pulpit główny</a>
+    <a href="#kamery"><svg class="i"><use href="#cam"/></svg>Kamery</a>
+    <a href="#archiwum"><svg class="i"><use href="#film"/></svg>Archiwum nagrań</a>
+    <a href="#zdarzenia"><svg class="i"><use href="#bell"/></svg>Zdarzenia i alerty <span class="count">3</span></a>
+    <div class="sep"></div>
+    <a href="#ustawienia"><svg class="i"><use href="#gear"/></svg>Ustawienia <svg class="i chev"><use href="#chev"/></svg></a>
+    <a href="#start"><svg class="i"><use href="#back"/></svg>Strona WWW</a>
+  </nav>
+  <section class="card statusCard" aria-labelledby="stTitle">
+    <h2 class="h3" id="stTitle">Status systemu <span class="demo">DEMO</span></h2>
+    <div class="ring" role="img" aria-label="Przykładowy stan 92 procent (DEMO)">
+      <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="50"/><circle class="val" cx="60" cy="60" r="50" stroke-dasharray="289.03 314.16"/></svg>
+      <div class="lbl"><b>92%</b><small><span class="sdot"></span>Operacyjny</small></div>
+    </div>
+    <ul class="metrics">
+      <li><span class="sdot"></span><span>Kamery</span><em>Online</em><b>6 / 6</b></li>
+      <li><span class="sdot"></span><span>Sieć</span><em>Stabilna</em><b>98%</b></li>
+      <li><span class="sdot amber"></span><span>Pamięć</span><em style="color:var(--amber)">Użycie</em><b>72%</b></li>
+    </ul>
+  </section>
+  <div class="userCard"><span class="av"><svg class="i"><use href="#user"/></svg></span><div><b>Administrator</b><small>Konto DEMO</small></div></div>
+</aside>
+<div class="scrim" id="appScrim" hidden></div>
+
+<div class="main">
+  <header class="appTop">
+    <button class="iconBtn menuToggle" type="button" data-toggle-side aria-label="Menu" aria-expanded="false"><svg class="i"><use href="#menu"/></svg></button>
+    <div class="t"><h1 id="appTitle">Pulpit główny</h1><p id="appSub">Pełna kontrola i podgląd Twojego domu</p></div>
+    <label class="search"><svg class="i"><use href="#search"/></svg><input id="appSearch" type="search" placeholder="Szukaj (kamery, zdarzenia, ustawienia…)" aria-label="Szukaj"><kbd>Ctrl K</kbd></label>
+    <div class="topIcons">
+      <button class="iconBtn" type="button" data-go="zdarzenia" aria-label="Zdarzenia"><svg class="i"><use href="#bell"/></svg><span class="dot"></span></button>
+      <button class="iconBtn opt" type="button" data-demo-msg="Wiadomości nie są częścią HOME SECURITY." aria-label="Wiadomości"><svg class="i"><use href="#mail"/></svg></button>
+      <button class="iconBtn opt" type="button" data-go="ustawienia" aria-label="Ustawienia"><svg class="i"><use href="#gear"/></svg></button>
+      <div class="clock"><b id="clockT">--:--:--</b><small id="clockD">—</small></div>
+    </div>
+  </header>
+
+  <!-- 5. PULPIT -->
+  <section class="content" data-screen="pulpit" aria-label="Pulpit" hidden>
+    <div class="dash">
+      <section class="card">
+        <div class="cardHead"><h2><svg class="i"><use href="#cam"/></svg>Podgląd na żywo z kamer <span class="pill">6 aktywnych</span><span class="demo">DEMO</span></h2>
+          <div class="cardTools"><a class="btn sm" href="#kamery">Zobacz wszystkie kamery <svg class="i"><use href="#arrow"/></svg></a><div class="seg" role="group" aria-label="Układ"><button type="button" data-layout="3" aria-pressed="true" aria-label="Siatka 3×2"><svg class="i"><use href="#grid"/></svg></button><button type="button" data-layout="2" aria-pressed="false" aria-label="Siatka 2×3"><svg class="i"><use href="#list"/></svg></button></div></div></div>
+        <div class="camGrid" id="dashCams"></div>
+      </section>
+      <div style="display:grid;gap:18px;align-content:start">
+        <section class="card">
+          <div class="cardHead"><h2><svg class="i" style="color:var(--red)"><use href="#bell"/></svg>Bieżące alerty <span class="demo">DEMO</span></h2><a class="btn sm" href="#zdarzenia">Wszystkie</a></div>
+          <ul class="alertList" id="dashAlerts"></ul>
+        </section>
+        <section class="card">
+          <div class="cardHead"><h2><svg class="i"><use href="#bolt"/></svg>Szybkie akcje <span class="demo">DEMO</span></h2></div>
+          <div class="quick" role="group" aria-label="Szybkie akcje">
+            <button type="button" data-quick="arm" aria-pressed="true"><svg class="i"><use href="#home"/></svg>Uzbrój<small>Tryb przykładowy</small></button>
+            <button type="button" data-quick="disarm" aria-pressed="false"><svg class="i"><use href="#shield"/></svg>Rozbrój<small>Tryb przykładowy</small></button>
+            <button type="button" data-go="kamery"><svg class="i"><use href="#cam"/></svg>Podgląd<small>Wszystkie kamery</small></button>
+          </div>
+        </section>
+      </div>
+    </div>
+    <div class="bottomRow">
+      <section class="card mapCard">
+        <div class="cardHead"><h2><svg class="i"><use href="#map"/></svg>Mapa obiektu – podgląd <span class="demo">DEMO</span></h2></div>
+        <div class="mapWrap">
+          <div class="zones" role="group" aria-label="Strefy">
+            <button type="button" aria-pressed="true"><svg class="i"><use href="#layers"/></svg>Wszystkie strefy</button>
+            <button type="button" aria-pressed="false"><svg class="i"><use href="#home"/></svg>Wejście główne</button>
+            <button type="button" aria-pressed="false"><svg class="i"><use href="#car"/></svg>Podjazd / Garaż</button>
+            <button type="button" aria-pressed="false"><svg class="i"><use href="#box"/></svg>Taras / Salon</button>
+            <button type="button" aria-pressed="false"><svg class="i"><use href="#star"/></svg>Ogród</button>
+          </div>
+          <div class="mapImg" role="img" aria-label="Ilustracja planu obiektu (DEMO)"><div class="inner" id="mapInner"></div><div class="ctrl"><button type="button" data-zoom="in" aria-label="Przybliż">+</button><button type="button" data-zoom="out" aria-label="Oddal">−</button></div></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="cardHead"><h2><svg class="i"><use href="#chart"/></svg>Statystyki (24 h) <span class="demo">DEMO</span></h2></div>
+        <div class="stats">
+          <div class="stat"><span class="icoBox"><svg class="i"><use href="#cam"/></svg></span><div><small>Zdarzenia</small><b>128</b><em>▲ 12%</em></div></div>
+          <div class="stat"><span class="icoBox red"><svg class="i"><use href="#bell"/></svg></span><div><small>Alerty</small><b>24</b><em class="down">▼ 20%</em></div></div>
+          <div class="stat"><span class="icoBox green"><svg class="i"><use href="#walk"/></svg></span><div><small>Ruch</small><b>96</b><em>▲ 8%</em></div></div>
+          <div class="stat"><span class="icoBox violet"><svg class="i"><use href="#car"/></svg></span><div><small>Pojazdy</small><b>32</b><em>▲ 14%</em></div></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="cardHead"><h2><svg class="i"><use href="#shield"/></svg>Stan systemu <span class="demo">DEMO</span></h2></div>
+        <ul class="health">
+          <li><svg class="i"><use href="#check"/></svg><span>Ochrona domu</span><em>Aktywna</em></li>
+          <li><svg class="i"><use href="#check"/></svg><span>Kamery (6)</span><em>Online</em></li>
+          <li><svg class="i"><use href="#check"/></svg><span>Połączenie</span><em>Stabilne</em></li>
+          <li><svg class="i"><use href="#check"/></svg><span>Pamięć nagrań</span><em style="color:var(--amber)">72%</em></li>
+        </ul>
+        <div class="okBox"><svg class="i"><use href="#check"/></svg><div><b>System działa prawidłowo</b><small>Komunikat przykładowy (DEMO)</small></div></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- 6. KAMERY -->
+  <section class="content" data-screen="kamery" aria-label="Kamery" hidden>
+    <section class="card">
+      <div class="cardHead"><h2><svg class="i"><use href="#cam"/></svg>Monitoring kamer na żywo <span class="demo">DEMO</span></h2><div class="seg" role="group" aria-label="Układ"><button type="button" data-layout-all="2" aria-pressed="true" aria-label="Układ 2 kolumny"><svg class="i"><use href="#grid"/></svg></button><button type="button" data-layout-all="3" aria-pressed="false" aria-label="Układ 3 kolumny"><svg class="i"><use href="#list"/></svg></button></div></div>
+      <div class="camGrid cols2" id="allCams"></div>
+      <div class="camBar" style="margin-top:14px" role="group" aria-label="Widok">
+        <button type="button" data-layout-all="2" aria-pressed="true"><svg class="i"><use href="#grid"/></svg>Wszystkie</button>
+        <button type="button" data-fav aria-pressed="false"><svg class="i"><use href="#star"/></svg>Ulubione</button>
+        <button type="button" data-layout-all="2" aria-pressed="false"><svg class="i"><use href="#grid"/></svg>Układ 2×2</button>
+        <button type="button" data-layout-all="3" aria-pressed="false"><svg class="i"><use href="#grid"/></svg>Układ 3×2</button>
+        <button type="button" data-fullfirst><svg class="i"><use href="#expand"/></svg>Pełny ekran</button>
+      </div>
+    </section>
+  </section>
+
+  <!-- 7. ARCHIWUM -->
+  <section class="content" data-screen="archiwum" aria-label="Archiwum" hidden>
+    <section class="card">
+      <div class="cardHead"><h2><svg class="i"><use href="#film"/></svg>Archiwum nagrań i odtwarzanie <span class="demo">DEMO</span></h2></div>
+      <div class="tabs" role="group" aria-label="Tryb" style="margin-bottom:14px">
+        <button type="button" aria-pressed="true"><svg class="i"><use href="#play"/></svg>Odtwarzanie</button>
+        <button type="button" aria-pressed="false"><svg class="i"><use href="#list"/></svg>Lista nagrań</button>
+        <button type="button" aria-pressed="false"><svg class="i"><use href="#cal"/></svg>Kalendarz</button>
+        <button type="button" aria-pressed="false" data-demo-msg="Eksport działa tylko w prawdziwym panelu."><svg class="i"><use href="#export"/></svg>Eksport</button>
+      </div>
+      <div class="player">
+        <header><span class="sdot"></span>KAM 01 – Wejście główne <span class="demo">DEMO</span><span class="ptime" id="playTime">24.05.2025, 23:43:07</span></header>
+        <div class="ph"><span class="note demo red">PODGLĄD Z PROJEKTU — BRAK NAGRANIA</span></div>
+        <div class="controls"><button class="iconBtn" type="button" data-demo-msg="W wersji demo nie ma pliku do odtworzenia." aria-label="Odtwórz"><svg class="i"><use href="#play"/></svg></button><span class="ptime">00:13 / 01:02</span><div class="bar"><i></i></div><button class="iconBtn" type="button" aria-label="Pełny ekran" data-demo-msg="W wersji demo nie ma pliku do odtworzenia."><svg class="i"><use href="#expand"/></svg></button></div>
+      </div>
+      <div class="timeline" id="timeline" role="slider" tabindex="0" aria-label="Oś czasu (DEMO)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="48">
+        <i class="mark" style="left:30%;background:var(--amber)"></i><i class="mark" style="left:62%;background:var(--red)"></i><i class="mark" style="left:82%;background:var(--cyan)"></i>
+        <span class="cursor"><b id="tlLabel">23:43:07</b></span>
+      </div>
+      <div class="tlLabels"><span>23:35</span><span>23:40</span><span>23:45</span><span>23:50</span><span>23:55</span></div>
+      <div class="filters" style="margin:16px 0"><label class="field"><svg class="i"><use href="#cal"/></svg><select aria-label="Dzień"><option>24 maja 2025 (DEMO)</option></select></label><label class="field"><svg class="i"><use href="#cal"/></svg><select aria-label="Zakres czasu"><option>23:30 – 00:00</option></select></label></div>
+      <div class="cardHead" style="margin-bottom:10px"><h2 class="h3">Miniatury zdarzeń z wybranego okresu <span class="demo">DEMO</span></h2></div>
+      <div class="thumbs" id="thumbs"></div>
+    </section>
+  </section>
+
+  <!-- 8. ZDARZENIA I ALERTY -->
+  <section class="content" data-screen="zdarzenia" aria-label="Zdarzenia i alerty" hidden>
+    <section class="card">
+      <div class="cardHead"><h2><svg class="i"><use href="#bell"/></svg>Alerty i zdarzenia <span class="demo">DEMO</span></h2></div>
+      <div class="tabs" role="group" aria-label="Filtr" id="evTabs" style="margin-bottom:14px">
+        <button type="button" data-ev="all" aria-pressed="true"><svg class="i"><use href="#layers"/></svg>Wszystkie</button>
+        <button type="button" data-ev="motion" aria-pressed="false"><svg class="i"><use href="#walk"/></svg>Ruch</button>
+        <button type="button" data-ev="person" aria-pressed="false"><svg class="i"><use href="#user"/></svg>Osoby</button>
+        <button type="button" data-ev="vehicle" aria-pressed="false"><svg class="i"><use href="#car"/></svg>Pojazdy</button>
+        <button type="button" data-ev="system" aria-pressed="false"><svg class="i"><use href="#gear"/></svg>System</button>
+      </div>
+      <div class="mockNote" style="margin-bottom:14px"><svg class="i"><use href="#info"/></svg><span><b>Lista przykładowa.</b> Obecne wydanie HOME SECURITY wykrywa ruch i dźwięk; rozpoznawanie osób i pojazdów nie istnieje.</span></div>
+      <ul class="eventList" id="evList"></ul>
+      <div class="grid3" style="margin-top:14px"><button class="btn" type="button" data-markread><svg class="i"><use href="#tick"/></svg>Oznacz jako przeczytane</button><button class="btn" type="button" data-go="ustawienia"><svg class="i"><use href="#gear"/></svg>Ustawienia alertów</button><button class="btn primary" type="button" data-demo-msg="Raporty nie istnieją w obecnym wydaniu."><svg class="i"><use href="#chart"/></svg>Raport zdarzeń</button></div>
+    </section>
+  </section>
+
+  <!-- 9. USTAWIENIA -->
+  <section class="content" data-screen="ustawienia" aria-label="Ustawienia" hidden>
+    <section class="card setLayout">
+      <div class="setNav" role="group" aria-label="Kategorie">
+        <button type="button" aria-pressed="true"><svg class="i"><use href="#gear"/></svg>Ogólne</button>
+        <button type="button" aria-pressed="false"><svg class="i"><use href="#cam"/></svg>Kamery</button>
+        <button type="button" aria-pressed="false"><svg class="i"><use href="#bell"/></svg>Powiadomienia</button>
+        <button type="button" aria-pressed="false"><svg class="i"><use href="#film"/></svg>Nagrywanie</button>
+        <button type="button" aria-pressed="false"><svg class="i"><use href="#lock"/></svg>Bezpieczeństwo</button>
+      </div>
+      <form id="settingsForm">
+        <div class="cardHead" style="margin:0"><h2>Ogólne <span class="demo">DEMO</span></h2></div>
+        <p class="muted" style="margin:0 0 6px">Podstawowe ustawienia systemu. Zmiany zapisują się tylko w tej przeglądarce.</p>
+        <div class="setRow"><label for="sysName">Nazwa systemu<small>Widoczna w nagłówku</small></label><input class="input" id="sysName" value="Mój HOME SECURITY" style="padding:0 14px"></div>
+        <div class="setRow"><label for="tz">Strefa czasowa</label><select class="input" id="tz" style="padding:0 14px"><option>(UTC+01:00) Warszawa</option></select></div>
+        <div class="setRow"><label for="lang">Język</label><select class="input" id="lang" style="padding:0 14px"><option>Polski</option></select></div>
+        <div class="setRow sw"><label for="s1">Autostart nagrywania<small>Przykładowe ustawienie</small></label><input class="switch" id="s1" type="checkbox" checked></div>
+        <div class="setRow sw"><label for="s2">Powiadomienia e-mail<small>Przykładowe ustawienie</small></label><input class="switch" id="s2" type="checkbox" checked></div>
+        <div class="setRow sw"><label for="s3">Powiadomienia push<small>Przykładowe ustawienie</small></label><input class="switch" id="s3" type="checkbox"></div>
+        <div class="setFoot"><button class="btn" type="reset">Anuluj</button><button class="btn primary" type="submit">Zapisz zmiany</button></div>
+      </form>
+    </section>
+  </section>
+</div>
+</div>
+
+<button class="btn sm screensBtn" type="button" id="screensBtn" aria-expanded="false" aria-controls="screensPanel"><svg class="i"><use href="#grid"/></svg>Ekrany (21)</button>
+<nav class="screensPanel" id="screensPanel" hidden aria-label="Wszystkie ekrany">
+  <h2 class="h3">Wszystkie ekrany projektu</h2>
+  <p>Strona WWW</p>
+  <a href="#start"><span>1</span>Strona główna</a>
+  <a href="#jak-dziala"><span>10</span>Jak działa</a>
+  <a href="#mozliwosci"><span>11</span>Możliwości</a>
+  <a href="#pierwsze-uruchomienie"><span>12</span>Pierwsze uruchomienie</a>
+  <a href="#wymagania"><span>13</span>Wymagania</a>
+  <a href="#pobierz"><span>14</span>Pobierz aplikację</a>
+  <a href="#kontakt"><span>15</span>Kontakt i pomoc</a>
+  <a href="#faq"><span>16</span>FAQ</a>
+  <a href="#dokumenty"><span>17</span>Dokumenty</a>
+  <a href="#stan-projektu"><span>18</span>Stan projektu</a>
+  <a href="#polityka-prywatnosci"><span>19</span>Polityka prywatności</a>
+  <a href="#rodo"><span>20</span>RODO</a>
+  <a href="#regulamin"><span>21</span>Regulamin</a>
+  <p>Dostęp</p>
+  <a href="#logowanie"><span>2</span>Logowanie</a>
+  <a href="#rejestracja"><span>3</span>Rejestracja</a>
+  <a href="#pin"><span>4</span>PIN</a>
+  <p>Aplikacja</p>
+  <a href="#pulpit"><span>5</span>Pulpit główny</a>
+  <a href="#kamery"><span>6</span>Kamery</a>
+  <a href="#archiwum"><span>7</span>Archiwum nagrań</a>
+  <a href="#zdarzenia"><span>8</span>Zdarzenia i alerty</a>
+  <a href="#ustawienia"><span>9</span>Ustawienia</a>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="app.js" defer></script>
+</body>
+</html>

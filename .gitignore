@@ -10,6 +10,8 @@ agent-contracts/bin/
 agent-contracts/obj/
 agent-tests/bin/
 agent-tests/obj/
+drive-sync/bin/
+drive-sync/obj/
 
 # Local server credentials must never enter the static Pages distribution.
 .env

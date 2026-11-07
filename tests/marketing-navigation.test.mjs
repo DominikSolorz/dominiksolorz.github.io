@@ -97,8 +97,8 @@ test('homepage puts only the essential five links in desktop header and deeper i
  assert.equal((footer.match(/<nav aria-label=/g)||[]).length,3);
  assert.ok(footer.includes('Informacja RODO'));
  assert.ok(footer.includes('Wydanie rozwojowe.'));
- for(const id of ['jak-dziala','mozliwosci','zobacz-panel','przygotowanie','specyfikacja','stan-projektu'])
-  assert.ok(home.includes('id="'+id+'"'));
+ for(const page of ['jak-dziala','mozliwosci','prezentacja','przygotowanie','wymagania','stan-projektu'])
+  assert.ok(home.includes('href="'+page+'.html"'));
 });
 
 test('mobile navigation is legible, keyboard-accessible and supports reduced motion',async()=>{
