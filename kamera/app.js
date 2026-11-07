@@ -9,8 +9,8 @@ import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, 
 import { b64, sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=23";
 import { requireAccess } from "./lock.js?v=22";
-import { createRemoteUnlockHost } from "./remote-unlock-host.mjs?v=1";
-import { mountRemoteUnlockPhone } from "./remote-unlock-phone.mjs?v=1";
+import { createRemoteUnlockHost } from "./remote-unlock-host.mjs?v=2";
+import { mountRemoteUnlockPhone } from "./remote-unlock-phone.mjs?v=2";
 import { channelFor, lock } from "./access.js?v=21";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=17";
@@ -81,7 +81,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "271"; // musi się zgadzać z version.json
+const VERSION = "272"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2291,7 +2291,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "187";
+  const SERVICE_WORKER_BUILD = "188";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
