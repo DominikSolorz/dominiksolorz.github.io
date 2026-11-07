@@ -53,7 +53,9 @@ test('background updates verify integrity and never stop recording',async()=>{
  assert.ok(src.includes('updateButton.Click += async (_, _) => await DownloadAndPrepareOfferedUpdateAsync()'));
  assert.ok(update.includes('if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;'));
  assert.ok(update.indexOf('SHA256.HashDataAsync(packageStream)')<update.indexOf('File.Move(pendingTemporaryPath, PendingUpdatePath, true)'));
- assert.ok(!update.includes('desktop.update.prepare'));
+ assert.ok(update.includes('await RestartIntoPreparedUpdateAsync();'),'verified download must immediately attempt a safe native restart');
+ assert.ok(src.includes('type = "desktop.update.prepare"'),'recording must acknowledge safe shutdown');
+ assert.ok(src.includes('updatePrepared.Task.WaitAsync(TimeSpan.FromMinutes(2))'),'native host must wait for recording save acknowledgement');
  assert.ok(!update.includes('Application.Restart'));
  const visibility=src.split('if (type.GetString() == "desktop.update.visibility")')[1]?.split('if (type.GetString() == "desktop.update.query")')[0];
  assert.ok(visibility,'visibility handler must remain');
