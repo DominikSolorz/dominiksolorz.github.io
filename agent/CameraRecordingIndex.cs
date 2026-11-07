@@ -99,11 +99,18 @@ public sealed class CameraRecordingIndex
         return new CameraRecordingSegment(id, cameraId, start, end, bytes, verifiedPath, true);
     }
 
-    private static bool VerifiedOnDisk(string path, long bytes)
+    private bool VerifiedOnDisk(string path, long bytes)
     {
-        try { return bytes > 0 && File.Exists(path) && new FileInfo(path).Length == bytes; }
+        try
+        {
+            // A file or parent directory may have been swapped for a symlink
+            // after registration. Never report a path outside the configured root.
+            if (bytes <= 0 || ValidateFile(path) != path) return false;
+            return File.Exists(path) && new FileInfo(path).Length == bytes;
+        }
         catch (IOException) { return false; }
         catch (UnauthorizedAccessException) { return false; }
+        catch (ArgumentException) { return false; }
     }
 
     // UTC bounds are half-open [from, to): no cross-camera leakage and no
@@ -147,6 +154,8 @@ public sealed class CameraRecordingIndex
         DateTimeOffset from, DateTimeOffset to, int limit = 1000)
     {
         var intervals = Query(cameraId, from, to, limit);
+        // Never silently label unexamined pages as gaps in long-running archives.
+        if (intervals.Count == limit) throw new InvalidOperationException("RECORDING_COVERAGE_REQUIRES_PAGINATION");
         var cursor = from.ToUniversalTime();
         var end = to.ToUniversalTime();
         var gaps = new List<RecordingIndexGap>();
