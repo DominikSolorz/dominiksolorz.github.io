@@ -104,7 +104,6 @@
 <link rel="stylesheet" href="premium-dark-pro.css?v=1">
 <link rel="stylesheet" href="remote-unlock-ui.css?v=1">
 <link rel="stylesheet" href="tech-ops.css?v=2">
-<link rel="stylesheet" href="loading-campaign.css?v=1">
 <link rel="stylesheet" href="operator-layout.css?v=3">
 </template>
 <style>html,body{margin:0;min-height:100%;background:#090b11;color:#f4f3ef;font:15px/1.5 system-ui,sans-serif}[hidden]{display:none!important}.publicLanding body>:not(#publicHome):not(script):not(template):not(#bootError){display:none!important}.publicLanding #publicHome{position:relative;z-index:200;min-height:100vh;overflow:hidden}.publicLanding #bootError{position:fixed;z-index:999;inset:auto 16px 16px;padding:18px;background:#24141a;color:#fff}</style>
@@ -312,8 +311,12 @@
     const step = document.getElementById("bootStep");
     const steps = [...document.querySelectorAll(".bootSteps li")];
     const retry = document.getElementById("bootRetry");
-    // Ładowanie zaczyna się dopiero po kliknięciu „Zaloguj się”, nigdy pod
-    // stroną główną. Dzięki temu komputer i telefon mają ten sam przebieg.
+    // Reklamowy ekran 30 s należy wyłącznie do wejścia na mobilną stronę
+    // główną (index.html). Po logowaniu na telefonie nie pokazuj ponownie
+    // ekranu ładowania. Nie omijaj przy tym bramki konta ani PIN-u.
+    const phonePlatform = document.documentElement.dataset.phonePlatform;
+    const skipVisualBoot = (phonePlatform === "android" || phonePlatform === "ios")
+      && window.__HOME_SECURITY_DESKTOP__ !== true && !window.chrome?.webview;
     boot.hidden = true;
     let complete = false, bootActive = false, fallback = null;
     // Zabezpieczenie dla telefonów, które zatrzymały stary moduł PWA w pamięci.
@@ -348,9 +351,9 @@
       if (bootActive || complete) return;
       bootActive = true;
       started = performance.now();
-      boot.hidden = false;
+      boot.hidden = skipVisualBoot;
       retry.hidden = true;
-      requestAnimationFrame(paint);
+      if (!skipVisualBoot) requestAnimationFrame(paint);
       // Niezależny od WebRTC i modułu aplikacji bezpiecznik — nie da się
       // utknąć na „01 s”. Kończy on wyłącznie animację, nie sprawdzanie PIN-u.
       fallback = setTimeout(() => {
@@ -363,6 +366,14 @@
     window.__finishSecureBoot = async () => {
       if (complete) return;
       startBoot();
+      // Na telefonie PIN pojawia się zaraz po gotowości konta, bez drugiej
+      // reklamy i bez sztucznego czekania 700 + 220 ms.
+      if (skipVisualBoot) {
+        complete = true;
+        clearTimeout(fallback);
+        boot.hidden = true;
+        return;
+      }
       // Krótkie przejście zamiast obowiązkowych 6,5 sekundy oczekiwania.
       const remaining = Math.max(0, 700 - (performance.now() - started));
       if (remaining) await new Promise(resolve => setTimeout(resolve, remaining));
