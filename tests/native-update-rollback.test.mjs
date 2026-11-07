@@ -55,7 +55,11 @@ test('background updates verify integrity and never stop recording',async()=>{
  assert.ok(update.indexOf('SHA256.HashDataAsync(packageStream)')<update.indexOf('File.Move(pendingTemporaryPath, PendingUpdatePath, true)'));
  assert.ok(!update.includes('desktop.update.prepare'));
  assert.ok(!update.includes('Application.Restart'));
- assert.ok(src.includes('if (panelUnlocked) await DownloadAndPrepareOfferedUpdateAsync();'));
+ const visibility=src.split('if (type.GetString() == "desktop.update.visibility")')[1]?.split('if (type.GetString() == "desktop.update.query")')[0];
+ assert.ok(visibility,'visibility handler must remain');
+ assert.ok(!visibility.includes('DownloadAndPrepareOfferedUpdateAsync()'),'unlock never authorizes an unattended download');
+ const check=src.split('private async Task CheckForUpdateAsync()')[1]?.split('// Download only after explicit owner click')[0];
+ assert.ok(check&&!check.includes('DownloadAndPrepareOfferedUpdateAsync()'),'background check never authorizes download');
  assert.ok(update.includes('if (File.Exists(PendingUpdatePath)) return;'));
  assert.ok(!update.includes('MessageBox.Show'),'one click must not require a second confirmation');
 });
