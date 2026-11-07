@@ -675,3 +675,20 @@
 /* HOME SECURITY: unified dark design across Windows, Android, iOS and the public site.
    A phone's system light preference must not switch ONLY the landing page to white.
    Respect reduced motion and contrast settings elsewhere; never affect camera/video. */
+
+/* Wersja 18: dopracowanie wyglądu — czytelniejszy nagłówek na telefonie,
+   zwartsza stopka na komputerze, spójne szerokości i delikatne stany hover kart. */
+@media(max-width:700px){
+ #publicHome .mktHero h1,.marketingPage .mktHero h1{letter-spacing:-.042em;line-height:1.06}
+ .marketingPage .mktPageTitle{letter-spacing:-.04em}
+}
+@media(min-width:701px){
+ #publicHome .mktFooter nav,.marketingPage .mktFooter nav{gap:2px}
+ #publicHome .mktFooter nav a,.marketingPage .mktFooter nav a{min-height:32px}
+ #publicHome .mktFooter nav b,.marketingPage .mktFooter nav b{margin-bottom:10px}
+}
+#publicHome .mktFooter nav a,.marketingPage .mktFooter nav a{transition:color .16s}
+.marketingPage .downloadHelp{max-width:none}
+#publicHome :is(.mktFeature,.mktScenarioCard,.mktHomeDestinations article),.marketingPage :is(.mktFeature,.mktScenarioCard){transition:border-color .2s,box-shadow .2s}
+#publicHome :is(.mktFeature,.mktScenarioCard):hover,.marketingPage :is(.mktFeature,.mktScenarioCard):hover{border-color:#5b6aa0;box-shadow:0 18px 48px rgba(10,12,30,.45)}
+#publicHome .mktTextLink,.marketingPage .mktTextLink{text-underline-offset:4px}
