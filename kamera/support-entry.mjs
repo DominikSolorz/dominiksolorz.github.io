@@ -1,4 +1,4 @@
-// Only the public homepage includes this entry. The conversation UI loads on click.
+// Only the public questions page includes this entry. The conversation UI loads on click.
 const home=document.querySelector('#publicHome');
 if(home && !home.querySelector('.hsSupportLauncher')){
   const button=document.createElement('button');

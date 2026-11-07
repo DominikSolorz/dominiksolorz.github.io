@@ -11,8 +11,30 @@ function open() {
     r.onerror = () => reject(r.error);
   });
 }
-async function get(key) { const db = await open(); return new Promise((resolve, reject) => { const r = db.transaction(STORE).objectStore(STORE).get(key); r.onsuccess = () => resolve(r.result || null); r.onerror = () => reject(r.error); }); }
-async function put(key, value) { const db = await open(); return new Promise((resolve, reject) => { const t = db.transaction(STORE, "readwrite"); t.objectStore(STORE).put(value, key); t.oncomplete = () => resolve(); t.onerror = () => reject(t.error); t.onabort = () => reject(t.error || new Error("Nie zapisano wyboru folderu.")); }); }
+async function get(key) {
+  const db = await open();
+  try { return await new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE);
+    const request = transaction.objectStore(STORE).get(key);
+    let value = null;
+    request.onsuccess = () => { value = request.result || null; };
+    transaction.oncomplete = () => resolve(value);
+    transaction.onerror = transaction.onabort = () => reject(transaction.error || new Error("Nie odczytano folderu nagrań."));
+  }); } finally { db.close(); }
+}
+async function putMany(entries) {
+  const db = await open();
+  try { await new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE, "readwrite");
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = transaction.onabort = () => reject(transaction.error || new Error("Nie zapamiętano folderu nagrań. Poprzedni wybór pozostaje bez zmian."));
+    try { for (const [key, value] of entries) transaction.objectStore(STORE).put(value, key); }
+    catch (error) { transaction.abort(); reject(error); }
+  }); } finally { db.close(); }
+}
+async function put(key, value) { await putMany([[key, value]]); }
+// Loaded at startup so the Restore button can request permission directly from its click.
+let selectedHandle;
 
 async function usable(handle, ask = false) {
   if (!handle) return false;
@@ -57,14 +79,14 @@ export async function choose({ newFolder = null } = {}) {
     if (!existed) managed = { parent, name: newFolder, handle };
   }
   await verifyWritable(handle);
-  await put("folder", handle);
-  await put("browseRoot", handle);
-  await put("managedFolder", managed);
+  await putMany([["folder", handle], ["browseRoot", handle], ["managedFolder", managed]]);
+  selectedHandle = handle;
   handles.clear(); // Never reuse handles belonging to the previous archive location.
   return handle.name;
 }
 export async function disconnect() {
-  await put("folder", null); await put("managedFolder", null); await put("browseRoot", null); handles.clear();
+  await putMany([["folder", null], ["managedFolder", null], ["browseRoot", null]]);
+  selectedHandle = null; handles.clear();
 }
 async function remoteDirectory(path) {
   if (!Array.isArray(path) || path.length>12 || path.some(name=>!validFolderName(name))) throw new Error("Nieprawidłowa ścieżka folderu.");
@@ -95,7 +117,8 @@ export async function browseFolders(path=[], offset=0) {
 export async function selectRemoteFolder(path) {
   const {handle}=await remoteDirectory(path);
   await verifyWritable(handle);
-  await put("folder",handle); await put("managedFolder",null); handles.clear();
+  await putMany([["folder",handle],["managedFolder",null]]);
+  selectedHandle = handle; handles.clear();
   return {name:handle.name};
 }
 export async function createRemoteFolder(path,name) {
@@ -127,7 +150,16 @@ export async function deleteEmptyCreatedFolder() {
   await managed.parent.removeEntry(managed.name, { recursive: false });
   await disconnect();
 }
-export async function status(ask = false) { const h = await get("folder"); return { selected: !!h, name: h && h.name ? h.name : "", ready: await usable(h, ask) }; }
+export async function status(ask = false) {
+  const h = ask && selectedHandle !== undefined ? selectedHandle : await get("folder");
+  selectedHandle = h;
+  // Do not spend the click activation on an IndexedDB read or queryPermission first.
+  const ready = ask && h
+    ? await h.requestPermission({ mode: "readwrite" }) === "granted"
+    : await usable(h);
+  if (ask && ready) await verifyWritable(h);
+  return { selected: !!h, name: h?.name || "", ready };
+}
 // Nazwa pliku → uchwyt (także w podfolderach dni/godzin), uzupełniane przy każdym przeglądaniu folderu.
 const handles = new Map();
 const recordingParents = new Map();
