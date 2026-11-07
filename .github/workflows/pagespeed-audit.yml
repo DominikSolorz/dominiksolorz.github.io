@@ -1,4 +1,4 @@
-name: HOME SECURITY Lighthouse performance audit
+name: WWW | Wydajność | Audyt Lighthouse
 
 on:
   workflow_dispatch:
@@ -21,7 +21,10 @@ on:
       - 'scripts/optimize-marketing-images.mjs'
       - 'kamera/sw.js'
       - 'kamera/assets/**'
-      - 'design/marketing/home.html'
+      - 'design/marketing/**'
+      - 'kamera/*.html'
+      - 'kamera/blog/*.html'
+      - 'scripts/audit-page*.mjs'
       - 'scripts/summarize-lighthouse.mjs'
       - '.github/workflows/pagespeed-audit.yml'
 
@@ -54,7 +57,9 @@ jobs:
           test -n "$CHROME" || { echo "Chrome missing on runner"; exit 1; }
           echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
           "$CHROME" --version
-      - name: Wait for Pages to publish this web build and its compressed images
+      # Audit the same GitHub Pages origin that Lighthouse measures.
+      # Vercel is an independent deployment and must not gate this origin.
+      - name: Wait for GitHub Pages to publish this build and its optimized images
         shell: bash
         run: |
           set -euo pipefail
@@ -63,9 +68,7 @@ jobs:
             url="https://dominiksolorz.github.io/kamera/o-systemie.html?audit=${GITHUB_SHA}&attempt=${i}"
             if html="$(curl --fail --silent --show-error --max-time 15 --header "Cache-Control: no-cache" "$url")" \
               && [[ "$html" == *"home-security-build\" content=\"${BUILD}\""* ]] \
-              && curl --fail --silent --show-error --max-time 15 --head "https://dominiksolorz.github.io/kamera/assets/home-security-hero-640.webp?audit=${GITHUB_SHA}" > /dev/null \
-              && public_build="$(curl --fail --silent --show-error --max-time 15 "https://home-security-dominik-solorz.vercel.app/kamera/version.json?audit=${GITHUB_SHA}")" \
-              && [[ "$public_build" == *"\"version\":\"${BUILD}\""* ]]; then
+              && curl --fail --silent --show-error --max-time 15 --head "https://dominiksolorz.github.io/kamera/assets/home-security-hero-640.webp?audit=${GITHUB_SHA}" > /dev/null; then
               echo "Pages is serving HOME SECURITY build ${BUILD} with the optimized media."
               break
             fi
@@ -102,5 +105,55 @@ jobs:
         with:
           name: home-security-lighthouse-reports
           path: lighthouse-results/*.json
+          if-no-files-found: warn
+          retention-days: 21
+
+  inventory:
+    runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.pages.outputs.targets }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/audit-page-inventory.mjs
+            /kamera/*.html
+            /kamera/blog/*.html
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - id: pages
+        run: echo "targets=$(node scripts/audit-page-inventory.mjs)" >> "$GITHUB_OUTPUT"
+  every-page:
+    needs: [inventory, lighthouse-production]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.inventory.outputs.targets) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: /scripts/audit-page.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock lighthouse@13
+      - name: Audit this exact URL on desktop and mobile
+        env:
+          AUDIT_TARGET: ${{ toJSON(matrix) }}
+        run: node scripts/audit-page.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-page-${{ matrix.id }}
+          path: lighthouse-results/
           if-no-files-found: warn
           retention-days: 21

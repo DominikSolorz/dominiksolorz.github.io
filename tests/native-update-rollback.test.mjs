@@ -47,13 +47,25 @@ test('Windows cannot apply an arbitrary file or continue with a corrupt pending 
  assert.ok(src.includes('File.Move(temporaryPath, packagePath, true)'),'incomplete downloads may not become active packages');
 });
 
-test('updates remain opt-in and verify release integrity before stopping any recording',async()=>{
+test('background updates verify integrity and never stop recording',async()=>{
  const src=await read('desktop-client/Program.cs');
- const update=src.slice(src.indexOf('private async Task DownloadAndPrepareOfferedUpdateAsync()'),src.indexOf('private void RestartIntoPreparedUpdate'));
+ const update=src.slice(src.indexOf('private async Task DownloadAndPrepareOfferedUpdateAsync()'),src.indexOf('private sealed record DesktopUpdateManifest'));
  assert.ok(src.includes('updateButton.Click += async (_, _) => await DownloadAndPrepareOfferedUpdateAsync()'));
- assert.ok(update.includes('if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;'));
- assert.ok(update.indexOf('SHA256.HashDataAsync(packageStream)')<update.indexOf('desktop.update.prepare'));
- assert.ok(update.indexOf('if (!prepared)')<update.indexOf('File.WriteAllText(PendingUpdatePath'));
+ assert.ok(update.includes('if (!panelUnlocked || downloadingUpdate) return;'));
+ assert.ok(update.includes('if (offeredUpdate is null) return;'));
+ assert.ok(update.indexOf('SHA256.HashDataAsync(packageStream)')<update.indexOf('File.Move(pendingTemporaryPath, PendingUpdatePath, true)'));
+ assert.ok(update.includes('await RestartIntoPreparedUpdateAsync();'),'verified download must immediately attempt a safe native restart');
+ assert.ok(src.includes('type = "desktop.update.prepare"'),'recording must acknowledge safe shutdown');
+ assert.ok(src.includes('updatePrepared.Task.WaitAsync(TimeSpan.FromMinutes(2))'),'native host must wait for recording save acknowledgement');
+ assert.ok(!update.includes('Application.Restart'));
+ const visibility=src.split('if (type.GetString() == "desktop.update.visibility")')[1]?.split('if (type.GetString() == "desktop.update.query")')[0];
+ assert.ok(visibility,'visibility handler must remain');
+ assert.ok(!visibility.includes('DownloadAndPrepareOfferedUpdateAsync()'),'unlock never authorizes an unattended download');
+ const check=src.split('private async Task CheckForUpdateAsync()')[1]?.split('// Download only after explicit owner click')[0];
+ assert.ok(check&&!check.includes('DownloadAndPrepareOfferedUpdateAsync()'),'background check never authorizes download');
+ assert.ok(update.includes('if (File.Exists(PendingUpdatePath))'),'a staged package must be recognized');
+ assert.ok(update.includes('await RestartIntoPreparedUpdateAsync();'),'repeated click should install without another download');
+ assert.ok(update.includes('if (offeredUpdate is null) return;'),'no new or verified release means no install');
  assert.ok(!update.includes('MessageBox.Show'),'one click must not require a second confirmation');
 });
 

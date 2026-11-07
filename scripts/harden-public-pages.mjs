@@ -36,7 +36,7 @@ export async function hardenPublicPages(root){
  const inlineStyles=[...html.matchAll(/<style\b[^>]*>[\s\S]*?<\/style>/g)].map(m=>m[0]).join('');
  html=html.replace(/<style\b[^>]*>[\s\S]*?<\/style>/g,'').replace('</head>',inlineStyles+'</head>');
   // This tiny synchronous compatibility check must run before other page modules, without a network hop.
-  const bridge=/<script src="public-entry\.js\?v=2"><\/script>/;
+  const bridge=/<script src="public-entry\.js\?v=\d+"><\/script>/;
   if(bridge.test(html)){
    const js=await readFile(resolve(camera,'public-entry.js'),'utf8');
    if(/<\/script/i.test(js))throw Error('Unsafe script terminator');
