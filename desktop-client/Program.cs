@@ -430,7 +430,14 @@ internal static class Program
                         }
                         if (type.GetString() == "desktop.update.check") { if (panelUnlocked) await CheckForUpdateAsync(); return; }
                         if (type.GetString() == "desktop.update.cancel") { CancelPreparedUpdate(); return; }
-                        if (type.GetString() == "desktop.update.request") { await DownloadAndPrepareOfferedUpdateAsync(); return; }
+                        if (type.GetString() == "desktop.update.request") {
+                            if (!panelUnlocked) return;
+                            // The web sidebar also uses this action for retry after a failed manifest check.
+                            // With no offered version, retry discovery instead of silently doing nothing.
+                            if (offeredUpdate is null) await CheckForUpdateAsync();
+                            else await DownloadAndPrepareOfferedUpdateAsync();
+                            return;
+                        }
                         if (type.GetString() == "desktop.update.prepared") {
                             if (root.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String && id.GetString() == updatePreparationId)
                                 updatePrepared?.TrySetResult(root.TryGetProperty("ok", out var ok) && ok.ValueKind == JsonValueKind.True);
