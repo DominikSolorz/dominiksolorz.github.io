@@ -13,7 +13,8 @@ const message = (text, bad = false) => { const el = $("authMessage"); el.textCon
 const section = name => document.querySelectorAll("[data-auth-step]").forEach(el => { el.hidden = el.dataset.authStep !== name; });
 // Zostawiamy adres bez parametrów. Jest zgodny z dozwolonym adresem strony
 // w Supabase, a po potwierdzeniu zdarzenie SIGNED_IN otworzy konfigurację.
-const callbackUrl = () => `${location.origin}${location.pathname}`;
+// Keep the existing allow-listed callback URL. The public entry forwards account returns.
+const callbackUrl = () => new URL("./", location.href).href;
 const postCode = value => /^\d{2}-\d{3}$/.test(value);
 let pendingConfirmationEmail = "";
 const ENTRY_TICKET = "hs-device-entry-v1";
@@ -78,6 +79,9 @@ function randomSalt() { const bytes = crypto.getRandomValues(new Uint8Array(24))
 
 export async function currentAccountUser() {
   const { data: { user }, error } = await accountClient.auth.getUser();
+  // A visitor opening the login form normally has no session yet.
+  // Only this explicit client state is anonymous; all other errors still fail closed.
+  if (error?.name === 'AuthSessionMissingError') return null;
   if (error) throw error;
   // Server-confirmed user, not user-editable metadata or the browser's token text.
   const googleIdentity = user?.identities?.some(identity => identity.provider === "google");
@@ -153,12 +157,18 @@ async function saveDevice(device, platform) {
 }
 function enterPanel() { $("authDialog").hidden = true; window.__openSecurePanel?.(); }
 
-async function continueWithSession(deviceChosen = false) {
+async function continueWithSession(signedInUser = null) {
   if (continuing) return;
   continuing = true;
   try {
-  const user = await currentAccountUser();
-  if (!user) { section("login"); return; }
+  // signInWithPassword zwraca użytkownika potwierdzonego przez usługę Auth.
+  // Korzystamy z niego od razu, aby drugi odczyt sesji nie cofał logowania.
+  const user = signedInUser || await currentAccountUser();
+  if (!user) {
+    section("login");
+    message("Nie udało się przywrócić sesji konta. Sprawdź, czy przeglądarka pozwala tej stronie zapisywać dane, i zaloguj się ponownie.", true);
+    return;
+  }
   const profile = await profileFor(user);
   const missingProfile = !profile || !profile.first_name || !profile.last_name || !profile.address_line || !profile.postal_code;
   const missingConsent = !profile?.privacy_accepted_at || !profile?.terms_accepted_at;
@@ -168,13 +178,13 @@ async function continueWithSession(deviceChosen = false) {
     form.address_line.value = profile?.address_line || meta.address_line || ""; form.postal_code.value = profile?.postal_code || meta.postal_code || ""; form.phone.value = profile?.phone || meta.phone || "";
     section("profile");
     message(missingProfile
-      ? "Konto zostało potwierdzone. Uzupełnij dane profilu i zaakceptuj dokumenty, aby przejść do wyboru urządzenia i PIN-u."
+      ? "Konto zostało potwierdzone. Uzupełnij dane profilu i zaakceptuj dokumenty, aby przejść do PIN-u. Układ dopasuje się automatycznie."
       : "Logowanie powiodło się. Dane profilu są już zapisane; brakuje jedynie akceptacji Regulaminu i Polityki prywatności. Przeczytaj dokumenty, zaznacz zgodę i kliknij Dalej. Twój dotychczasowy PIN pozostaje bez zmian.");
     return;
   }
-  const security = await securityForCurrentUser();
-  // Wybór dotyczy bieżącego urządzenia, nie ostatniego urządzenia konta.
-  if (!deviceChosen) { section("device"); message(""); return; }
+  const security = await securityFor(user);
+  // Device layout is presentation, not an authentication factor. The account,
+  // profile/consent and PIN checks remain mandatory; no device-choice round trip.
   if (!security?.pin_hash) { section("pin"); message(""); return; }
   enterPanel();
   } finally { continuing = false; }
@@ -185,7 +195,16 @@ window.__ensureAccountReady = async () => {
   if (!user) throw new Error("Sesja konta wygasła. Zaloguj się ponownie.");
   return user;
 };
-window.__showAccount = async () => { $("authDialog").hidden = false; message(""); if (recoveryUntil > Date.now()) { section('reset-password'); return; } if (recoveryReturn) { section('forgot-password'); message('Otwórz nowy link resetujący z wiadomości e-mail.',true); return; } await continueWithSession(); };
+window.__showAccount = async () => {
+  $("authDialog").hidden = false; message("");
+  if (recoveryUntil > Date.now()) { section("reset-password"); return; }
+  if (recoveryReturn) { section("forgot-password"); message("Otwórz nowy link resetujący z wiadomości e-mail.", true); return; }
+  const callback = new URLSearchParams(location.hash.slice(1));
+  const callbackFailure = callback.get("error_description") || callback.get("error");
+  if (callbackFailure) { section("login"); message("Nie udało się zakończyć logowania: " + callbackFailure, true); return; }
+  try { await continueWithSession(); }
+  catch (error) { section("login"); message(explainAuthError(error), true); }
+};
 // Osobny adres ?auth=register otwiera formularz niezależnie od skryptów strony głównej.
 // Pozwala to wkleić link bezpośrednio w przeglądarce lub aplikacji Windows.
 window.__showRegistration = async () => { $("authDialog").hidden = false; message(""); section("register"); };
@@ -197,12 +216,20 @@ $("authClose")?.addEventListener("click", () => { $("authDialog").hidden = true;
 $("authToRegister")?.addEventListener("click", () => { message(""); section("register"); });
 document.querySelectorAll(".authToLogin").forEach(button => button.addEventListener("click", () => { message(""); section("login"); }));
 $("loginForm")?.addEventListener("submit", async event => {
-  event.preventDefault(); const form = event.currentTarget; message("Sprawdzam dane logowania…");
+  event.preventDefault();
+  const form = event.currentTarget;
+  const submit = form.querySelector('[type="submit"]');
+  if (submit?.disabled) return;
+  if (submit) submit.disabled = true;
+  message("Sprawdzam dane logowania…");
   try {
-    const { error } = await accountClient.auth.signInWithPassword({ email: clean(form.email.value), password: form.password.value });
-    if (error) return message(explainAuthError(error), true);
-    await continueWithSession();
+    const { data, error } = await accountClient.auth.signInWithPassword({ email: clean(form.email.value), password: form.password.value });
+    if (error) throw error;
+    if (!data?.user || !data?.session?.access_token) throw new Error("Usługa kont nie zwróciła aktywnej sesji. Zaloguj się ponownie.");
+    await continueWithSession(data.user);
+    form.password.value = "";
   } catch (error) { message(explainAuthError(error), true); }
+  finally { if (submit) submit.disabled = false; }
 });
 $("registerForm")?.addEventListener("submit", async event => {
   event.preventDefault(); const form = event.currentTarget;
@@ -240,7 +267,7 @@ $("verificationCodeForm")?.addEventListener("submit", async event => {
     await continueWithSession();
   } catch (error) { message(explainAuthError(error), true); }
 });
-$("profileForm")?.addEventListener("submit", async event => { event.preventDefault(); if (!event.currentTarget.terms.checked) return message("Zaakceptuj Regulamin i Politykę prywatności.", true); try { await saveProfile(event.currentTarget); section("device"); } catch (error) { message(error.message, true); } });
+$("profileForm")?.addEventListener("submit", async event => { event.preventDefault(); if (!event.currentTarget.terms.checked) return message("Zaakceptuj Regulamin i Politykę prywatności.", true); try { await saveProfile(event.currentTarget); await continueWithSession(); } catch (error) { message(error.message, true); } });
 document.querySelectorAll("[data-device]").forEach(button => button.addEventListener("click", () => {
   document.querySelectorAll("[data-device]").forEach(item => { const active = item === button; item.classList.toggle("selected", active); item.setAttribute("aria-pressed", String(active)); });
   $("deviceValue").value = button.dataset.device;
@@ -285,12 +312,20 @@ accountClient.auth.onAuthStateChange((event, session) => {
   const returnedFromEmail = event === "SIGNED_IN" && returnedWithEmailToken && !!session;
   let pendingEntry = false;
   try { pendingEntry = !!sessionStorage.getItem(ENTRY_TICKET); } catch (_) {}
-  if (returnedFromEmail || (event === "INITIAL_SESSION" && (pendingEntry || new URLSearchParams(location.search).get("auth") === "confirmed"))) {
+  const confirmedRoute = new URLSearchParams(location.search).get("auth") === "confirmed";
+  if (event === "INITIAL_SESSION" && !session && pendingEntry) {
+    // Przeterminowana przepustka urządzenia nie może w kółko uruchamiać logowania.
+    try { sessionStorage.removeItem(ENTRY_TICKET); } catch (_) {}
+  }
+  if (returnedFromEmail || (event === "INITIAL_SESSION" && (pendingEntry || confirmedRoute))) {
     returnedWithEmailToken = false;
     $("authDialog").hidden = false;
     setTimeout(async () => {
-      try { const user = await currentAccountUser(); await continueWithSession(user ? takeDeviceEntry(user) : false); }
-      catch (error) { message(error.message, true); }
+      try {
+        const user = await currentAccountUser();
+        if (user && pendingEntry) takeDeviceEntry(user);
+        await continueWithSession(user);
+      } catch (error) { section("login"); message(explainAuthError(error), true); }
     }, 0);
   }
 });

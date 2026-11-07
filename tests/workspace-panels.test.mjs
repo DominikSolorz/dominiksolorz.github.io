@@ -55,5 +55,8 @@ test('mirror shares stream without capture or track stops and cleans timer',()=>
  const source={srcObject:stream,readyState:2,addEventListener(){},removeEventListener(){}};
  const target={srcObject:null,paused:true,play:async()=>{target.paused=false;}};const placeholder={hidden:false};
  const dispose=mirrorLivePreview(source,target,placeholder);
- assert.equal(target.srcObject,stream);assert.equal(placeholder.hidden,true);dispose();assert.equal(stopped,0);assert.equal(source.srcObject,stream);
+ assert.equal(target.srcObject,stream);assert.equal(placeholder.hidden,true);
+ assert.equal(target.muted,true,'mirrored preview must not play a second copy of the audio');
+ assert.equal(target.defaultMuted,true);
+ dispose();assert.equal(stopped,0);assert.equal(source.srcObject,stream);
 });

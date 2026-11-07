@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 
-const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
+const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
 test('the setup checklist actually responds to four user choices without tracking',async()=>{
  const script=await read('kamera/marketing-start.mjs');
@@ -22,27 +22,28 @@ test('the setup checklist actually responds to four user choices without trackin
  assert.equal(progress.attrs['aria-valuenow'],'0');
  inputs[0].checked=true;handlers[0]();
  assert.equal(count.textContent,'1 / 4');
- assert.equal(bar.style.width,'25%');
+ assert.equal(bar.style.transform,'scaleX(0.25)');
  inputs.forEach(item=>{item.checked=true;});
  handlers[1]();
  assert.equal(count.textContent,'4 / 4');
- assert.equal(bar.style.width,'100%');
+ assert.equal(bar.style.transform,'scaleX(1)');
  assert.match(summary.textContent,/nie automatyczny test kamery/);
  assert.ok(!/localStorage|sessionStorage|fetch\(|XMLHttpRequest|navigator\.mediaDevices/.test(script),'checklist does not collect data or access camera');
 });
 
-test('public home makes no fake sales promises and always marks concept material',async()=>{
+test('public topic pages preserve honest sales and concept disclosures',async()=>{
  const home=await read('design/marketing/home.html');
+ const details=(await Promise.all(['przygotowanie','stan-projektu','pytania','prezentacja'].map(n=>read('kamera/'+n+'.html')))).join('\n');
  for(const part of ['id="przygotowanie"','Ile kosztuje HOME SECURITY?','nie jest zakupem','publicznego cennika','Wydanie rozwojowe','nie są rzeczywiste zrzuty ekranu']){
-  assert.ok(home.includes(part),'missing explicit disclosure: '+part);
+  assert.ok((home+details).includes(part),'missing explicit disclosure: '+part);
  }
- assert.equal((home.match(/data-mkt-setup/g)||[]).length,4);
- assert.ok(home.includes('marketing-start.css?v=1'));
- assert.ok(home.includes('marketing-start.mjs?v=1'));
+ assert.equal((details.match(/data-mkt-setup/g)||[]).length,4);
+ assert.ok(details.includes('marketing-start.css?v=3'));
+ assert.ok(details.includes('marketing-start.mjs?v=2'));
  assert.ok(!home.includes('Kup teraz'));
  assert.ok(!home.includes('Zapłać teraz'));
- const [page,app]=await Promise.all(['kamera/o-systemie.html','kamera/index.html'].map(read));
- const slot=/<section id="publicHome"[\s\S]*?<\/section>(?=\s*<section id="authDialog")/;
+ const [page,app]=await Promise.all(['kamera/o-systemie.html','kamera/panel.html'].map(read));
+ const slot=/<(?:section|div)(?: role="group")? id="publicHome"[\s\S]*?<\/(?:section|div)>(?=\s*<section id="authDialog")/;
  assert.ok(page.includes(home.trimEnd()));
  assert.equal(app.match(slot)?.[0],home.trimEnd());
 });
@@ -53,12 +54,15 @@ test('marketing guided checklist is responsive and safely cached with the new re
  assert.ok(css.includes('@media(max-width:670px)'));
  assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
  assert.ok(css.includes('mktSetupItem:focus-within'));
- assert.ok(sw.includes('./marketing-start.css?v=1'));
- assert.ok(sw.includes('./marketing-start.mjs?v=1'));
- assert.ok(sw.includes('kamera-domowa-shell-v130'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "130"'));
- assert.equal(JSON.parse(version).version,'220');
- assert.ok(app.includes('const VERSION = "220"'));
+ assert.ok(sw.includes('./marketing-start.css?v=3'));
+ assert.ok(sw.includes('./marketing-start.mjs?v=2'));
+ const release=JSON.parse(version).version;
+ const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
+ assert.ok(/^\d+$/.test(release)&&/^\d+$/.test(shell),'manifest and service worker revisions must be numeric');
+assert.ok(sw.includes('kamera-domowa-shell-v'+shell));
+ assert.ok(app.includes('SERVICE_WORKER_BUILD = "'+shell+'"'));
+
+ assert.ok(app.includes('const VERSION = "'+release+'"'));
 });
 
 test('legal documents never send visitors from Back to a login page',async()=>{
@@ -74,8 +78,9 @@ test('the deployed-site audit checks real pages without submitting forms',async(
  const [script,manifest]=await Promise.all(['scripts/verify-live-marketing.mjs','kamera/version.json'].map(read));
  assert.ok(script.includes("galeria.html"));
  assert.ok(script.includes("polityka-prywatnosci.html"));
- assert.ok(script.includes("HOME-SECURITY-Desktop-Setup-1.4.8.exe"));
+ assert.ok(script.includes("downloads/HOME-SECURITY-Desktop-Setup-"),'audit must check a real downloadable Windows installer');
+ assert.ok(script.includes("expectedDesktop.version+'.exe'"),'installer URL must be derived from current release manifest');
  assert.ok(!script.includes("method:'POST'"));
  assert.ok(!script.includes('submit()'));
- assert.ok(script.includes("const expectedBuild='"+JSON.parse(manifest).version+"'"));
+ assert.ok(script.includes("../kamera/version.json"));
 });

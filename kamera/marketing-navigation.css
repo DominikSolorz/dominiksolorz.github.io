@@ -1,0 +1,58 @@
+/* Structured mobile navigation, additive to existing HOME SECURITY marketing styles.
+   No private app styling and no dependency on JS for native toggle behavior. */
+.mktMenuText{font:700 11px/1.2 "Segoe UI",system-ui,sans-serif;letter-spacing:.02em}
+.mktMobileMenu>summary{position:relative}
+.mktMenuBars{transition:transform .22s cubic-bezier(.22,1,.36,1)}
+.mktMenuBars i{transform-origin:50% 50%;transition:transform .24s cubic-bezier(.22,1,.36,1),opacity .15s ease}
+.mktMobileMenu[open] .mktMenuBars i:first-child{transform:translateY(7px) rotate(45deg)}
+.mktMobileMenu[open] .mktMenuBars i:nth-child(2){opacity:0;transform:scaleX(.25)}
+.mktMobileMenu[open] .mktMenuBars i:last-child{transform:translateY(-7px) rotate(-45deg)}
+.mktMenuTextClosed{display:none}
+.mktMobileMenu[open] .mktMenuTextOpen{display:none}
+.mktMobileMenu[open] .mktMenuTextClosed{display:inline}
+.mktMobileMenu>nav .mktMenuGroup{display:grid;gap:2px;min-width:0;padding:9px 5px}
+.mktMobileMenu>nav .mktMenuGroup+.mktMenuGroup{border-top:1px solid #554753}
+.mktMobileMenu>nav .mktMenuGroupLabel{color:#f2ce92;font-weight:800;font-size:11px;letter-spacing:.075em;text-transform:uppercase;padding:8px 12px 6px;margin:0}
+.mktMobileMenu>nav .mktMenuGroup a{width:100%;min-width:0}
+.mktMobileMenu>nav .mktMenuGroup a[aria-current="location"]{color:#ffe0ab;background:#332934}
+.mktMobileMenu>nav .mktMenuAccount a{justify-content:center;text-align:center;font-weight:750}
+.mktMobileMenu>nav .mktMenuAccount a.mktLogin{background:#f4ce8b;color:#1b1720;border:1px solid #f4ce8b;min-height:48px;margin:5px 4px}
+.mktMobileMenu>nav .mktMenuAccount a.mktMenuRegister{border:1px solid #9b7182;background:#422b39;color:#fff;min-height:46px;margin:4px}
+.mktMobileMenu>nav a:focus-visible,.mktMobileMenu>summary:focus-visible{outline:3px solid #f4ce8b;outline-offset:2px}
+.mktFooter .mktFooterNote{font-size:12px;line-height:1.65;color:#c7c0c9}
+.mktFooter .mktFooterNote strong{color:#ffe0b5}
+.mktFooter .mktCopyright{grid-column:1/-1;border-top:1px solid #443b47;padding-top:19px;margin-top:5px}
+@media(min-width:761px){
+ .mktFooter{grid-template-columns:minmax(205px,1.4fr) repeat(3,minmax(0,1fr));column-gap:clamp(18px,3vw,42px)}
+}
+@media(max-width:760px){
+ .mktMobileMenu>summary{gap:5px;flex-direction:column}
+ .mktMobileMenu>summary .mktMenuBars{width:21px;gap:4px}
+ .mktMobileMenu>summary .mktMenuBars i{height:2px}
+ .mktMobileMenu[open] .mktMenuBars i:first-child{transform:translateY(6px) rotate(45deg)}
+ .mktMobileMenu[open] .mktMenuBars i:last-child{transform:translateY(-6px) rotate(-45deg)}
+ #publicHome .mktMobileMenu>nav,.marketingPage .mktMobileMenu>nav{
+  right:12px;left:auto;width:min(390px,calc(100vw - 24px));padding:8px;
+  max-height:min(76dvh,calc(100dvh - 83px));overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior:contain;
+  background:#12131c;border:1px solid #806775;border-radius:0 0 17px 17px;
+  box-shadow:0 23px 65px #000b;
+ }
+ #publicHome .mktMobileMenu>nav a,.marketingPage .mktMobileMenu>nav a{min-height:46px;font-size:14px;padding:11px 13px}
+ .mktMobileMenu>nav .mktMenuGroup{width:100%;flex:none;align-items:stretch;padding:8px 4px}
+ .mktMobileMenu>nav .mktMenuGroupLabel{width:100%;white-space:normal;font-size:11px}
+ .mktFooter{grid-template-columns:repeat(2,minmax(0,1fr));gap:23px 16px}
+ .mktFooter>div:first-child{grid-column:1/-1}
+ .mktFooter nav{min-width:0}
+ .mktFooter nav:last-of-type{grid-column:1/-1}
+ .mktFooter nav a{overflow-wrap:anywhere}
+}
+@media(max-width:450px){
+ .mktFooter{grid-template-columns:minmax(0,1fr)}
+ .mktFooter nav,.mktFooter nav:last-of-type{grid-column:1/-1}
+ .mktFooter nav{gap:5px}
+ .mktFooter nav a{min-height:43px}
+}
+@media(prefers-reduced-motion:reduce){
+ .mktMenuBars,.mktMenuBars i{animation:none!important;transition:none!important}
+}
