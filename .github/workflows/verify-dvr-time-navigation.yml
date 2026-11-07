@@ -1,4 +1,4 @@
-name: Verify HOME SECURITY real DVR time navigation
+name: WSPÓLNE | Nagrania DVR | Test osi czasu
 
 on:
   pull_request:
