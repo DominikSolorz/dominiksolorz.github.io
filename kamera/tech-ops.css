@@ -230,3 +230,150 @@ html:not(.policeCommand):not(.usMilitary) :is(#app,#lock,#boot,#authDialog,#quic
 }
 html:not(.policeCommand):not(.usMilitary) .lockScreen .pinLogo{background:rgba(34,211,238,.05)!important;border:1px solid var(--to-line2)!important;border-radius:6px!important;box-shadow:0 0 30px -6px rgba(34,211,238,.35)!important}
 html:not(.policeCommand):not(.usMilitary) .lockScreen .pinMsg{font-family:var(--to-mono);color:var(--to-amber)!important}
+
+/* =====================================================================
+   Wersja 2: porządek układu (Windows i telefon).
+   ===================================================================== */
+
+/* Pasek boczny Windows leży poza #app — ten sam styl co reszta panelu. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar{
+  background:linear-gradient(180deg,#080b0f,#06080b)!important;border-right:1px solid var(--to-line)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button{
+  margin-inline:8px;width:calc(100% - 16px);border-radius:4px!important;
+  color:var(--to-muted)!important;background:transparent!important;box-shadow:none!important;
+  transition:background-color .15s,color .15s;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button:hover:not(:disabled){background:var(--to-hover)!important;color:var(--to-text)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button.active{
+  background:linear-gradient(90deg,rgba(34,211,238,.16),rgba(34,211,238,.03))!important;
+  color:var(--to-cyan2)!important;box-shadow:inset 3px 0 0 var(--to-cyan)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button.active :is(svg,i,b){color:var(--to-cyan)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body :is(.desktopBrand,.desktopDevice){background:transparent!important;border-color:var(--to-line)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand :is(b,strong,span,small){color:var(--to-cyan)!important;font-family:var(--to-mono);letter-spacing:.14em}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebarFoot{border-color:var(--to-line)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebarFoot a{color:var(--to-cyan2)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebarFoot :is(button,.btn){border-radius:4px!important;border-color:var(--to-line2)!important;background:var(--to-surface)!important;color:var(--to-text)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebarFoot :is(button,.btn):hover{border-color:var(--to-cyan)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSearch{background:var(--to-surface)!important;border:1px solid var(--to-line2)!important;border-radius:4px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSearch input{background:transparent!important;border:0!important;color:var(--to-text)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopTopStatus{font-family:var(--to-mono);font-size:12px;letter-spacing:.04em;color:var(--to-muted)!important}
+
+/* Sterowanie: tryby pracy jako czytelna lista 2×N, bez łamania słów w połowie. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .modeList{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .modeList .modeBtn{
+  width:auto!important;height:auto!important;min-height:52px!important;aspect-ratio:auto!important;
+  flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;gap:10px!important;
+  padding:10px 12px!important;text-align:left!important;
+  background:var(--to-raised)!important;border:1px solid var(--to-line2)!important;border-radius:4px!important;color:var(--to-text)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .modeList .modeBtn svg{flex:0 0 20px;width:20px!important;height:20px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .modeList .modeBtn span{
+  width:auto!important;font-size:12.5px!important;line-height:1.25!important;
+  word-break:normal!important;overflow-wrap:normal!important;hyphens:manual!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .modeList .modeBtn:last-child:nth-child(odd){grid-column:1/-1}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .modeList .modeBtn:hover:not(:disabled){border-color:rgba(34,211,238,.5)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .modeList .modeBtn:is(.active,.on,[aria-pressed="true"]){
+  border-color:var(--to-cyan)!important;background:rgba(34,211,238,.1)!important;color:var(--to-cyan2)!important;box-shadow:inset 3px 0 0 var(--to-cyan)!important;
+}
+
+/* Ostatnie zdarzenia na pulpicie: jeden zwarty nagłówek zamiast dwóch. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .desktopEventsDrawer>summary{align-items:center!important;padding:14px 16px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .desktopEventsDrawer #viewEventsCard{
+  margin:0!important;border:0!important;border-top:1px solid var(--to-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .desktopEventsDrawer #viewEventsCard>summary{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px;
+  min-height:0!important;padding:10px 16px!important;margin:0!important;
+  font-size:13px!important;font-weight:600;color:var(--to-muted)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .desktopEventsDrawer #viewEventsCard>summary span{font-size:inherit!important;line-height:1.3!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .desktopEventsDrawer #viewEvents{margin:0!important;padding:4px 16px 16px!important;width:auto!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .desktopEventsDrawer #viewEvents li{
+  border:1px dashed var(--to-line2)!important;border-radius:4px!important;background:transparent!important;box-shadow:none!important;
+  font-family:var(--to-mono);font-size:12px;color:var(--to-dim)!important;padding:12px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #desktopEventCount{
+  font-family:var(--to-mono);font-size:11px!important;letter-spacing:.04em;border-radius:3px!important;
+  border:1px solid var(--to-line2)!important;background:var(--to-bg)!important;color:var(--to-muted)!important;white-space:nowrap;
+}
+
+/* Ustawienia: wszystkie wiersze mają tę samą siatkę — etykieta | kontrolka | wartość. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #setCard :is(.desktopPreviewTweaks>label,.lightBox,.setRow:not(#ownerLight):not(.switchRow)>label){
+  display:grid!important;grid-template-columns:minmax(150px,34%) minmax(0,1fr) 64px!important;
+  align-items:center!important;column-gap:16px!important;row-gap:6px;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #setCard :is(.desktopPreviewSelect select,.setRow>label>select,.lightBox>.lightCtl){grid-column:2/-1!important;width:100%!important;min-width:0!important;max-width:none!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #setCard .desktopPreviewTweaks>label>input[type="range"]{width:100%!important;min-width:0!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #setCard .desktopPreviewTweaks>label>output{width:64px!important;justify-self:stretch;text-align:center;font-family:var(--to-mono);border-radius:4px!important;border-color:var(--to-line2)!important;background:var(--to-bg)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #setCard .setRow:is(#ownerLight,:has(>label>select)){display:block!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #setCard .lightHead{justify-content:space-between!important;gap:8px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #setCard .lightCtl{grid-template-columns:36px minmax(0,1fr) 36px!important;gap:10px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #setCard .lightCtl button{width:36px!important;height:36px!important;padding:0!important;border-radius:4px!important;background:var(--to-raised)!important;border:1px solid var(--to-line2)!important;color:var(--to-text)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #setCard .switchRow{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:16px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #setCard :is(.desktopPreviewTweaks>label,.setRow){padding-block:12px!important;border-bottom:1px solid var(--to-line)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #setCard .reloadPc{width:100%!important;margin:16px 0!important;justify-content:center}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app #setCard .pipPreferences{margin-top:16px!important;border:1px solid var(--to-line)!important;border-radius:6px!important;background:var(--to-bg)!important;padding:14px 16px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .desktopSettingsTabs button{
+  display:flex!important;align-items:center;gap:10px;min-height:42px;width:100%;justify-content:flex-start;text-align:left;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .desktopSettingsTabs{background:var(--to-surface)!important;border:1px solid var(--to-line)!important;border-radius:6px!important;padding:8px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .settingsHelp{background:var(--to-surface)!important;border:1px solid var(--to-line)!important;border-radius:6px!important}
+
+/* Suwaki w kolorze motywu zamiast czerwieni. */
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app input[type="range"]{accent-color:var(--to-cyan)!important;background:transparent!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app input[type="range"]::-webkit-slider-runnable-track{background:var(--to-line2)!important;height:4px;border-radius:2px}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app input[type="range"]::-webkit-slider-thumb{background:#fff!important;border:2px solid var(--to-cyan)!important;box-shadow:0 0 0 3px rgba(34,211,238,.2)!important}
+
+/* Pola wyboru z kolorowym obramowaniem (np. Kamera + mikrofon) — neutralne. */
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app label:has(>input[type="checkbox"]):not(.switchRow):not(.workspaceCheck){border-color:var(--to-line2)!important}
+
+/* Zdarzenia i Diagnostyka: pasek filtrów w jednej linii, równe wysokości. */
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app .workspaceToolbar{
+  display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:8px!important;
+}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app .workspaceToolbar>*{min-height:40px!important;margin:0!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app .workspaceToolbar>label:first-child{display:inline-flex!important;align-items:center;gap:8px;font-family:var(--to-mono);font-size:12px;color:var(--to-muted)}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app .workspaceToolbar input[type="date"]{min-height:40px!important;padding:0 10px!important;color-scheme:dark}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app .workspaceCheck{
+  display:inline-flex!important;align-items:center!important;gap:8px!important;padding:0 12px!important;
+  border:1px solid var(--to-line2)!important;border-radius:4px!important;background:var(--to-raised)!important;color:var(--to-text)!important;
+}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app .workspaceToolbar .btn{padding:0 14px!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app .eventWorkspaceList:empty,
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app .eventWorkspaceList>p:only-child{border-radius:4px!important;border-color:var(--to-line2)!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app .eventWorkspaceDetail{border-radius:6px!important;border-color:var(--to-line)!important;background:var(--to-bg)!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) #app :is(.diagFilter,.desktopDiagnosticsScreen label):has(>select){display:flex!important;align-items:center;gap:10px;white-space:nowrap}
+
+/* Telefon: pasek filtrów zdarzeń rozkłada się na dwie równe kolumny. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .workspaceToolbar{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .workspaceToolbar>label:first-child{grid-column:1/-1;display:grid!important;grid-template-columns:auto minmax(0,1fr)}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .workspaceToolbar input[type="date"]{width:100%!important;min-width:0!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .workspaceToolbar>.btn{grid-column:1/-1;width:100%}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .workspaceCheck{justify-content:center}
+
+/* Telefon: ikony kategorii ustawień w kolorze motywu, równe kafle. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .mobileSettingCategories button{
+  display:grid!important;grid-template-columns:40px minmax(0,1fr) 16px!important;align-items:center!important;gap:12px!important;
+  min-height:64px;padding:12px 14px!important;text-align:left;border-radius:6px!important;
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .mobileSettingCategories button>b{
+  width:40px!important;height:40px!important;display:grid!important;place-items:center;border-radius:4px!important;
+  background:rgba(34,211,238,.08)!important;border:1px solid rgba(34,211,238,.3)!important;color:var(--to-cyan)!important;box-shadow:none!important;
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .mobileSettingCategories button>i{color:var(--to-cyan)!important;font-style:normal}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .mobileSettingCategories button strong{color:var(--to-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .mobileSettingsHome .eyebrow{font-family:var(--to-mono);color:var(--to-cyan)!important;letter-spacing:.16em}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .mobileOverviewActions button{
+  display:grid!important;grid-template-columns:40px minmax(0,1fr) 16px!important;align-items:center!important;gap:12px!important;min-height:64px;
+}
+
+/* Telefon: długie teksty nigdy nie wychodzą poza kartę. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app :is(.card,.panel,.mobileOverviewCard) :is(p,small,strong,span,h2,h3,li){overflow-wrap:anywhere;min-width:0}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app :is(.card,.panel) :is(button,.btn){max-width:100%;white-space:normal}
+/* Podsumowanie na dole pulpitu: tekst zawija się zamiast ucinać „…”. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) #app .desktopSummary :is(strong,small,span){white-space:normal!important;text-overflow:clip!important;overflow:visible!important}

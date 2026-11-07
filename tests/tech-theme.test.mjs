@@ -32,9 +32,9 @@ test('Tech Ops panel theme loads after Premium Dark Pro without touching recorde
   const [panel, sw, css] = await Promise.all([read('kamera/panel.html'), read('kamera/sw.js'), read('kamera/tech-ops.css')]);
   const rules = css.replace(/\/\*[\s\S]*?\*\//g, '');
   const template = panel.match(/<template id="panelStyles">([\s\S]*?)<\/template>/)[1];
-  assert.ok(template.indexOf('tech-ops.css?v=1') > template.indexOf('premium-dark-pro.css'));
-  assert.ok(template.indexOf('tech-ops.css?v=1') > template.indexOf('remote-unlock-ui.css'));
-  assert.ok(sw.includes('./tech-ops.css?v=1'));
+  assert.ok(template.indexOf('tech-ops.css?v=2') > template.indexOf('premium-dark-pro.css'));
+  assert.ok(template.indexOf('tech-ops.css?v=2') > template.indexOf('remote-unlock-ui.css'));
+  assert.ok(sw.includes('./tech-ops.css?v=2'));
   assert.match(css, /:not\(\.policeCommand\):not\(\.usMilitary\)/);
   assert.match(css, /#ctrlStart/);
   assert.match(css, /#ctrlStop/);
@@ -43,4 +43,18 @@ test('Tech Ops panel theme loads after Premium Dark Pro without touching recorde
   assert.doesNotMatch(rules, /display:\s*none|visibility:\s*hidden/i);
   assert.doesNotMatch(rules, /addEventListener|setInterval/);
   assert.doesNotMatch(rules, /\n\s*\*\s*\{/);
+});
+
+test('mobile camera frame never overrides the mobileHidden view switch', async () => {
+  const css = await read('kamera/mobile-camera-frame.css');
+  // mobile.js marks #stage .mobileHidden outside the Podgląd view; a forced display:block must exclude it.
+  const forced = [...css.matchAll(/([^{}]*#stage[^{}]*)\{[^}]*display:block!important/g)].map(m => m[1]);
+  assert.ok(forced.length > 0);
+  for (const selector of forced) assert.match(selector, /:not\(\.mobileHidden\)/, selector.trim());
+});
+
+test('Tech Ops styles the Windows sidebar, which lives outside #app', async () => {
+  const css = await read('kamera/tech-ops.css');
+  assert.match(css, /body \.desktopNav button\.active\{/);
+  assert.match(css, /\.modeList\{\s*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
