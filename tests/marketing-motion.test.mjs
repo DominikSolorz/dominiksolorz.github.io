@@ -14,7 +14,7 @@ test('public motion module has valid JavaScript syntax and no recorder dependenc
  assert.equal(syntax.status,0,syntax.stderr||syntax.error?.message);
  const js=await read('kamera/marketing-motion.mjs');
  assert.ok(js.includes("document.querySelector('#publicHome.mktSite')"));
- assert.ok(js.includes("site.getClientRects().length > 0"));
+ assert.ok(js.includes("!site.hidden"));
  assert.ok(js.includes("aria-current', 'location'"));
  assert.ok(!/getUserMedia|MediaRecorder|createClient\(|signInWithPassword|localStorage/.test(js));
 });
@@ -64,14 +64,14 @@ test('scroll progress, active nav and back-to-top work in reduced-motion mode',a
 });
 
 test('all marketing pages load the motion styles and script, including the panel public entry',async()=>{
- const paths=['kamera/index.html','kamera/o-systemie.html','kamera/galeria.html','kamera/pomoc.html',
+ const paths=['kamera/panel.html','kamera/o-systemie.html','kamera/galeria.html','kamera/pomoc.html',
    'kamera/blog/index.html','kamera/blog/pierwsze-uruchomienie.html',
    'kamera/blog/zapis-lokalny-i-drive.html','kamera/blog/diagnostyka-monitoringu.html'];
  for(const path of paths){
    const html=await read(path),prefix=path.includes('/blog/')?'../':'';
-   assert.ok(html.includes('href="'+prefix+'marketing-motion.css?v=1"'),path);
-   assert.ok(html.includes('src="'+prefix+'marketing-motion.mjs?v=1"'),path);
-   assert.equal((html.match(/marketing-motion\.mjs\?v=1/g)||[]).length,1,path);
+   assert.ok(html.includes('href="'+prefix+'marketing-motion.css?v=2"'),path);
+   assert.ok(html.includes('src="'+prefix+'marketing-motion.mjs?v=3"'),path);
+   assert.equal((html.match(/marketing-motion\.mjs\?v=3/g)||[]).length,1,path);
  }
 });
 
@@ -90,19 +90,22 @@ test('scroll effects are progressive, focus-safe and opt out of reduced motion',
 
 test('PWA, runtime and public pages have matching motion asset and build versions',async()=>{
  const [sw,app,version,index]=await Promise.all([
-  'kamera/sw.js','kamera/app.js','kamera/version.json','kamera/index.html'].map(read));
- for(const asset of ['marketing-motion.css?v=1','marketing-motion.mjs?v=1'])assert.ok(sw.includes('./'+asset));
- assert.ok(sw.includes('kamera-domowa-shell-v130'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "130"'));
- assert.ok(app.includes('const VERSION = "220"'));
- assert.equal(JSON.parse(version).version,'220');
- assert.ok(index.includes('home-security-build" content="220"'));
- assert.ok(index.includes('app.js?v=220'));
+  'kamera/sw.js','kamera/app.js','kamera/version.json','kamera/panel.html'].map(read));
+ for(const asset of ['marketing-motion.css?v=2','marketing-motion.mjs?v=3'])assert.ok(sw.includes('./'+asset));
+ const release=JSON.parse(version).version;
+ const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
+ assert.ok(/^\d+$/.test(release)&&/^\d+$/.test(shell),'manifest and service worker revisions must be numeric');
+assert.ok(sw.includes('kamera-domowa-shell-v'+shell));
+ assert.ok(app.includes('SERVICE_WORKER_BUILD = "'+shell+'"'));
+ assert.ok(app.includes('const VERSION = "'+release+'"'));
+
+ assert.ok(index.includes('home-security-build" content="'+release+'"'));
+ assert.ok(index.includes('app.js?v='+release));
 });
 
 
 test('support assistant does not overlap the scroll control and auth animations respect accessibility',async()=>{
- const [css,html]=await Promise.all(['kamera/marketing-motion.css','kamera/index.html'].map(read));
+ const [css,html]=await Promise.all(['kamera/marketing-motion.css','kamera/panel.html'].map(read));
  assert.ok(css.includes('#publicHome.mktSite .mktBackToTop{left:'));
  assert.ok(css.includes('#authDialog:not([hidden]) .authCard'));
  assert.ok(css.includes('#authDialog:not([hidden]) [data-auth-step].authForm:not([hidden])'));
@@ -110,4 +113,40 @@ test('support assistant does not overlap the scroll control and auth animations 
  assert.ok(css.includes('#authDialog :is(.authPrimary,.authSecondary,.authGoogleButton,.authTextBtn,.authClose){transition:none!important'));
  assert.ok(html.includes('class="authDialog"'));
  assert.ok(html.includes('id="authClose"'));
+});
+
+test('reveal startup never measures every card synchronously or hides the first viewport',async()=>{
+ const js=await read('kamera/marketing-motion.mjs');
+ let callback,observed=0,unobserved=0;
+ const names=new Set();
+ const target={classList:{add:name=>names.add(name),remove:(...values)=>values.forEach(value=>names.delete(value)),contains:name=>names.has(name)},
+   style:{setProperty(){},removeProperty(){}},
+   getBoundingClientRect(){throw Error('Synchronous card layout during startup');}};
+ class Observer{constructor(fn){callback=fn;}observe(){observed++;}unobserve(){unobserved++;}disconnect(){}}
+ const site={querySelector:()=>null,querySelectorAll:()=>[target],append(){},addEventListener(){},getClientRects:()=>[{}]};
+ const control={setAttribute(){},append(){},addEventListener(){}};
+ const document={body:site,documentElement:{scrollHeight:2000},querySelector:()=>site,
+   createElement:()=>control,createTextNode:value=>({textContent:value}),getElementById:()=>null};
+ const window={scrollY:0,innerHeight:800,IntersectionObserver:Observer,requestAnimationFrame:fn=>fn(),
+   matchMedia:()=>({matches:false,addEventListener(){}}),addEventListener(){}};
+ vm.runInNewContext(js,{document,window,IntersectionObserver:Observer});
+ assert.equal(observed,1);
+ assert.equal(names.has('mktWillReveal'),false,'content must remain visible before visibility is known');
+ callback([{target,isIntersecting:false}]);
+ assert.equal(names.has('mktWillReveal'),true,'only confirmed offscreen content can be hidden');
+ callback([{target,isIntersecting:true}]);
+ assert.equal(names.has('mktIsVisible'),true);
+ assert.equal(unobserved,1,'visible content is never re-hidden');
+});
+
+test('top-of-page startup never forces document, header or visibility layout',async()=>{
+ const js=await read('kamera/marketing-motion.mjs');
+ const noLayout=()=>{throw Error('Forced layout at initial scroll position');};
+ const control={setAttribute(){},append(){},addEventListener(){}};
+ const header={querySelector:()=>null,getBoundingClientRect:noLayout,style:{setProperty(){}},classList:{toggle(){}}};
+ const site={hidden:false,querySelector:selector=>selector==='.mktHeader'?header:null,querySelectorAll:()=>[],append(){},addEventListener(){},getClientRects:noLayout};
+ const doc={};Object.defineProperty(doc,'scrollHeight',{get:noLayout});
+ const document={body:{},documentElement:doc,querySelector:()=>site,createElement:()=>control,createTextNode:()=>({})};
+ const window={scrollY:0,innerHeight:800,matchMedia:()=>({matches:true,addEventListener(){}}),requestAnimationFrame:fn=>fn(),addEventListener(){}};
+ assert.doesNotThrow(()=>vm.runInNewContext(js,{document,window}));
 });

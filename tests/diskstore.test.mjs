@@ -7,7 +7,7 @@ const source = (await readFile(new URL('../kamera/diskstore.js',import.meta.url)
 function setup() {
   let picked=null;
   const ctx=vm.createContext({Map,Set,Error,crypto:webcrypto,window:{showDirectoryPicker:async()=>{if(picked instanceof Error) throw picked; return picked;}}});
-  vm.runInContext(source+'\n globalThis.values=new Map(); globalThis.api={choose,save,list,removeRecording,validFolderName,disconnect,deleteEmptyCreatedFolder,browseFolders,selectRemoteFolder,createRemoteFolder,deleteRemoteEmptyFolder}; get=async k=>values.get(k); put=async(k,v)=>{values.set(k,v);};',ctx);
+  vm.runInContext(source+'\n globalThis.values=new Map(); globalThis.api={status,choose,save,list,removeRecording,validFolderName,disconnect,deleteEmptyCreatedFolder,browseFolders,selectRemoteFolder,createRemoteFolder,deleteRemoteEmptyFolder}; get=async k=>values.get(k); put=async(k,v)=>{values.set(k,v);}; putMany=async entries=>{if(globalThis.failCommit)throw Error("commit failed");for(const [k,v] of entries)values.set(k,v);};',ctx);
   function folder(name,{sizeMismatch=false,granted=true}={}) {
     const files=new Map(), children=new Map();
     return {name,kind:'directory',files,children,queryPermission:async()=>granted?'granted':'denied',requestPermission:async()=>granted?'granted':'denied',
@@ -47,3 +47,20 @@ test('remote selection changes archive without widening browse root',async()=>{c
 test('remote traversal and invalid names rejected',async()=>{const s=setup(),f=s.folder('approved');s.pick(f);await s.ctx.api.choose();for(const path of [['..'],['C:\\'],Array(13).fill('child')])await assert.rejects(s.ctx.api.browseFolders(path));await assert.rejects(s.ctx.api.createRemoteFolder([],'../escape'));});
 test('disconnect revokes remote folder browsing',async()=>{const s=setup(),f=s.folder('approved');s.pick(f);await s.ctx.api.choose();await s.ctx.api.disconnect();await assert.rejects(s.ctx.api.browseFolders([]));});
 test('remote pagination is bounded',async()=>{const s=setup(),f=s.folder('approved');s.pick(f);await s.ctx.api.choose();for(let i=0;i<101;i++)await s.ctx.api.createRemoteFolder([],'child'+i);const first=await s.ctx.api.browseFolders([]);assert.equal(first.entries.length,100);assert.equal(first.nextOffset,100);assert.equal((await s.ctx.api.browseFolders([],100)).entries.length,1);});
+
+test('failed selection commit preserves both prior recording folder and remote browse root',async()=>{
+ const s=setup(),a=s.folder('old'),b=s.folder('new');s.pick(a);await s.ctx.api.choose();
+ s.ctx.failCommit=true;s.pick(b);await assert.rejects(s.ctx.api.choose(),/commit failed/);
+ assert.equal(s.selected(),a);assert.equal(s.ctx.values.get('browseRoot'),a);
+ assert.equal((await s.ctx.api.status()).name,'old');
+});
+test('restoring preloaded folder requests permission before asynchronous storage access and verifies write',async()=>{
+ const s=setup(),f=s.folder('saved');s.ctx.values.set('folder',f);await s.ctx.api.status();
+ let requested=false;f.requestPermission=()=>{requested=true;return Promise.resolve('granted');};
+ vm.runInContext('get=async()=>{throw Error("storage read consumed activation");}',s.ctx);
+ const result=s.ctx.api.status(true);assert.equal(requested,true);assert.equal((await result).ready,true);assert.equal(f.files.size,0);
+});
+test('restored permission without working disk never reports ready',async()=>{
+ const s=setup(),f=s.folder('unwritable',{sizeMismatch:true});s.ctx.values.set('folder',f);await s.ctx.api.status();
+ await assert.rejects(s.ctx.api.status(true),/potwierdzić zapisu/);
+});

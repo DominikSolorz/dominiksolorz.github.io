@@ -21,7 +21,7 @@ if (site) {
   backToTop.append(arrow, document.createTextNode('Na górę'));
   site.append(backToTop);
 
-  const isPublicVisible = () => site === document.body || site.getClientRects().length > 0;
+  const isPublicVisible = () => site === document.body || !site.hidden;
   const doc = document.documentElement;
   let frameScheduled = false;
   const refresh = () => {
@@ -31,16 +31,26 @@ if (site) {
       return;
     }
     const y = Math.max(0, window.scrollY || 0);
+    // At the top, all scroll state is known without measuring layout. Reading
+    // scrollHeight/header rectangles here forced the first complete page layout.
+    if (y === 0) {
+      header?.style.setProperty('--mkt-scroll-progress', '0');
+      header?.classList.toggle('mktIsScrolled', false);
+      backToTop.hidden = true;
+      for (const item of navSections) item.link.removeAttribute('aria-current');
+      return;
+    }
     const scrollable = Math.max(1, doc.scrollHeight - window.innerHeight);
     const ratio = Math.min(1, y / scrollable);
-    header?.style.setProperty('--mkt-scroll-progress', String(ratio));
-    header?.classList.toggle('mktIsScrolled', y > 12);
-    backToTop.hidden = y < 600;
+    // Read layout before changing styles; alternating reads and writes forces reflow.
     const threshold = (header?.getBoundingClientRect().height || 80) + 55;
     let active = null;
     for (const item of navSections) {
       if (item.section.getBoundingClientRect().top <= threshold) active = item.link;
     }
+    header?.style.setProperty('--mkt-scroll-progress', String(ratio));
+    header?.classList.toggle('mktIsScrolled', y > 12);
+    backToTop.hidden = y < 600;
     for (const item of navSections) {
       if (item.link === active) item.link.setAttribute('aria-current', 'location');
       else item.link.removeAttribute('aria-current');
@@ -83,22 +93,24 @@ if (site) {
       }
       return;
     }
-    revealObserver = new IntersectionObserver(entries => {
-      for (const entry of entries) if (entry.isIntersecting) reveal(entry.target);
-    }, { threshold: 0.07, rootMargin: '0px 0px -5% 0px' });
     let pendingIndex = 0;
-    for (const element of revealTargets) {
-      // Never hide something already in the reading viewport.
-      const bounds = element.getBoundingClientRect();
-      if (bounds.top < window.innerHeight * .93) {
-        element.classList.remove('mktWillReveal', 'mktIsVisible');
-        continue;
+    // Let the browser report visibility asynchronously. Measuring every card at
+    // startup forced a complete layout and could delay the first mobile paint.
+    revealObserver = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          reveal(entry.target);
+        } else if (!entry.target.classList.contains('mktIsVisible')) {
+          entry.target.style.setProperty('--mkt-delay', String((pendingIndex++ % 3) * 65) + 'ms');
+          entry.target.classList.add('mktWillReveal');
+        }
       }
-      element.style.setProperty('--mkt-delay', String((pendingIndex % 3) * 65) + 'ms');
-      element.classList.remove('mktIsVisible');
-      element.classList.add('mktWillReveal');
+    }, { threshold: 0, rootMargin: '0px 0px 100px 0px' });
+    for (const element of revealTargets) {
+      // Content stays visible until the observer confirms it is off screen.
+      element.classList.remove('mktWillReveal', 'mktIsVisible');
+      element.style.removeProperty('--mkt-delay');
       revealObserver.observe(element);
-      pendingIndex++;
     }
   };
   configureReveals();

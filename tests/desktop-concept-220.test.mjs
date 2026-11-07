@@ -6,19 +6,21 @@ const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
 test('real HOME SECURITY 220 owner interface loads the UI-concept design last and offline',async()=>{
  const [html,sw,css,version,app]=await Promise.all([
-  'kamera/index.html','kamera/sw.js','kamera/interface-concept.css',
+  'kamera/panel.html','kamera/sw.js','kamera/interface-concept.css',
   'kamera/version.json','kamera/app.js'].map(read));
- assert.equal(JSON.parse(version).version,'220');
- assert.ok(app.includes('const VERSION = "220"'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "130"'));
- assert.ok(sw.includes('kamera-domowa-shell-v130'));
- assert.ok(html.includes('home-security-build" content="220"'));
- assert.ok(html.includes('app.js?v=220'));
- assert.ok(html.includes('desktop.js?v=35'));
- assert.ok(sw.includes('./desktop.js?v=35'));
- assert.ok(html.includes('href="interface-concept.css?v=1"'));
- assert.ok(sw.includes('./interface-concept.css?v=1'));
- assert.ok(html.indexOf('interface-concept.css?v=1')>html.indexOf('interface-theme.css?v=3'));
+ const release=JSON.parse(version).version;
+ const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
+ assert.ok(/^\d+$/.test(release)&&/^\d+$/.test(shell),'manifest and service worker revisions must be numeric');
+ assert.ok(app.includes('const VERSION = "'+release+'"'));
+ assert.ok(app.includes('SERVICE_WORKER_BUILD = "'+shell+'"'));
+ assert.ok(sw.includes('kamera-domowa-shell-v'+shell));
+ assert.ok(html.includes('home-security-build" content="'+release+'"'));
+ assert.ok(html.includes('app.js?v='+release));
+ const desktopScript=html.match(/desktop\.js\?v=\d+/)?.[0];assert.ok(desktopScript);
+ assert.ok(sw.includes('./'+desktopScript));
+ assert.ok(html.includes('href="interface-concept.css?v=3"'));
+ assert.ok(sw.includes('./interface-concept.css?v=3'));
+ assert.ok(html.indexOf('interface-concept.css?v=3')>html.indexOf('interface-theme.css?v=3'));
  assert.ok(css.length>10000,'design is implemented in production CSS, not merely a concept document');
 });
 
@@ -57,7 +59,7 @@ test('special-purpose police and military themes remain independent and user mot
 
 test('desktop navigation derives current location from real router and never claims recording success',async()=>{
  const [desktop,panels,html]=await Promise.all([
-  'kamera/desktop.js','kamera/workspace-panels.mjs','kamera/index.html'].map(read));
+  'kamera/desktop.js','kamera/workspace-panels.mjs','kamera/panel.html'].map(read));
  assert.ok(desktop.includes('setAttribute("aria-current", "page")'));
  assert.ok(desktop.includes('removeAttribute("aria-current")'));
  assert.ok(desktop.includes('desktopSummaryCamera">Sprawdzam…'));
@@ -74,10 +76,13 @@ test('Windows WebView2 preview uses the updated bundle but does not change relea
  const [program,project,installer]=await Promise.all([
   'desktop-client/Program.cs','desktop-client/HomeSecurityDesktop.csproj',
   'desktop-client/installer/HomeSecurityDesktop.iss'].map(read));
- assert.ok(program.includes('private const string WebPanelBuild = "220"'));
- assert.ok(program.includes('private const string DesktopVersion = "1.4.8"'));
- assert.ok(project.includes('<Version>1.4.8</Version>'));
- assert.ok(installer.includes('AppVersion "1.4.8"'));
+ const installedWeb=Number(program.match(/WebPanelBuild = "(\d+)"/)?.[1]);
+ const currentWeb=Number(JSON.parse(await read('kamera/version.json')).version);
+ const nativeVersion=program.match(/DesktopVersion = "([\d.]+)"/)?.[1];
+ assert.ok(installedWeb>=220&&installedWeb<=currentWeb,'native bundle must never point to a future web build');
+ assert.ok(/^\d+\.\d+\.\d+$/.test(nativeVersion),'native release must be semantic');
+ assert.ok(project.includes('<Version>'+nativeVersion+'</Version>'));
+ assert.ok(installer.includes('AppVersion "'+nativeVersion+'"'));
  assert.ok(program.includes('installedShell = DesktopVersion + ":" + WebPanelBuild'));
  const clear=program.match(/Storage.clearDataForOrigin[\s\S]*?\);/);
  assert.ok(clear,'bundle migration should retain explicit cache migration');
