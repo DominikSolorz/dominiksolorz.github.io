@@ -1,5 +1,6 @@
 /* Do not cap height independently from width: that flattened the landscape frame. */
-.mobileOwnerMode #stage:not(:fullscreen):not(.fakeFull){
+/* .mobileHidden: mobile.js shows the camera only in the Podgląd view. */
+.mobileOwnerMode #stage:not(:fullscreen):not(.fakeFull):not(.mobileHidden){
   display:block!important;position:relative;width:100%!important;min-width:0;
   height:auto!important;min-height:0!important;max-height:none!important;
   aspect-ratio:var(--mobile-camera-ratio,4 / 3)!important;align-self:start;
