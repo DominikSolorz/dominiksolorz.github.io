@@ -1,4 +1,4 @@
-name: Verify unified UI and paired phone unlock cryptography
+name: WSPÓLNE | Interfejs i PIN | Test integracji
 on:
   push:
     branches:

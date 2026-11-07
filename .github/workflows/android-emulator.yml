@@ -1,4 +1,4 @@
-name: Android emulator phone interface and media tests
+name: MOBILE | Android | Test telefonu w emulatorze
 on:
   push:
     branches: [main]

@@ -1,4 +1,4 @@
-name: Verify HOME SECURITY Premium Dark Pro integration
+name: WSPÓLNE | Panel | Test wyglądu Premium Dark Pro
 
 on:
   pull_request:
