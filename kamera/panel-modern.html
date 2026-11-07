@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="description" content="HOME SECURITY — Professional Home Monitoring System">
+  <title>HOME SECURITY — Monitoring Domu</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect fill='%236366f1' width='48' height='48' rx='8'/%3E%3Cpath fill='white' d='M24 12c-6.6 0-12 5.4-12 12s5.4 12 12 12 12-5.4 12-12-5.4-12-12-12zm0 20c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z'/%3E%3C/svg%3E">
+  
+  <!-- Modern Styles -->
+  <link rel="stylesheet" href="styles-modern.css?v=1">
+  
+  <!-- Font Optimization -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ============================================================
+       HEADER & STATUS BAR
+       ============================================================ -->
+  <header class="header">
+    <div class="header-content">
+      <a href="./" class="header-brand">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="48" height="48" rx="8" fill="url(#grad1)"/>
+          <path d="M24 12c-6.6 0-12 5.4-12 12s5.4 12 12 12 12-5.4 12-12-5.4-12-12-12zm0 20c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z" fill="white"/>
+          <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#6366f1"/>
+              <stop offset="100%" style="stop-color:#ec4899"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>HOME SECURITY</span>
+      </a>
+      
+      <div style="display: flex; align-items: center; gap: var(--space-lg);">
+        <div class="status-indicator">
+          <span class="status-dot recording" id="statusDot"></span>
+          <span id="statusText">● Nagrywanie</span>
+        </div>
+        
+        <div class="status-indicator">
+          <span style="font-size: var(--font-size-xs); color: var(--text-muted);">v269</span>
+        </div>
+        
+        <button class="btn btn-ghost" id="settingsBtn" title="Ustawienia">
+          ⚙️
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       MAIN CONTAINER
+       ============================================================ -->
+  <div class="container" style="padding-top: var(--space-xl); padding-bottom: var(--space-xl);">
+    
+    <!-- VIDEO STAGE -->
+    <section class="stage" id="stage">
+      <video id="video" playsinline></video>
+      <div class="stage-overlay" id="placeholder">
+        <div style="text-align: center;">
+          <div style="font-size: 3rem; margin-bottom: var(--space-md);">📹</div>
+          <p>Przygotowuję kamerę...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- GRID: CONTROLS + SIDEBAR -->
+    <div class="grid grid-3" style="margin-top: var(--space-xl);">
+      
+      <!-- LEFT: CONTROL PANEL -->
+      <div style="grid-column: span 2;">
+        
+        <!-- MAIN CONTROL BAR -->
+        <div class="control-bar">
+          <div class="control-group">
+            <div class="control-label">Nagrywanie</div>
+            <div class="recording-timer" id="recordingTimer">00:00:00</div>
+          </div>
+          
+          <div class="control-group" style="flex: 1; gap: var(--space-lg); justify-content: center;">
+            <button class="btn btn-primary" id="startBtn" title="Rozpocznij nagrywanie">
+              ▶ START
+            </button>
+            <button class="btn btn-secondary" id="stopBtn" title="Zatrzymaj nagrywanie">
+              ⏹ STOP
+            </button>
+            <button class="btn btn-secondary" id="restartBtn" title="Zrestartuj kamerę">
+              🔄 RESTART
+            </button>
+          </div>
+          
+          <div class="control-group">
+            <button class="btn btn-ghost" id="fullscreenBtn" title="Pełny ekran">
+              ⛶
+            </button>
+          </div>
+        </div>
+
+        <!-- MODE & QUALITY SETTINGS -->
+        <div class="panel" style="margin-top: var(--space-lg);">
+          <div class="panel-header">
+            <h3>
+              <span class="panel-icon">⚙️</span>
+              Tryb & Jakość
+            </h3>
+          </div>
+          <div class="panel-content">
+            <div class="settings-group">
+              <div class="settings-row">
+                <div class="settings-label">
+                  <span class="settings-label-title">Tryb Kamery</span>
+                  <span class="settings-label-hint">Wybierz sposób pracy</span>
+                </div>
+                <div style="display: flex; gap: var(--space-sm);">
+                  <button class="btn btn-secondary" data-mode="record" style="font-size: var(--font-size-xs); padding: var(--space-sm) var(--space-md);">● Na żywo + Zapis</button>
+                  <button class="btn btn-secondary" data-mode="preview" style="font-size: var(--font-size-xs); padding: var(--space-sm) var(--space-md);">👁 Sam Podgląd</button>
+                  <button class="btn btn-secondary" data-mode="off" style="font-size: var(--font-size-xs); padding: var(--space-sm) var(--space-md);">⏸ Wyłączona</button>
+                </div>
+              </div>
+              
+              <div class="settings-row">
+                <div class="settings-label">
+                  <span class="settings-label-title">Jakość Nagrania</span>
+                  <span class="settings-label-hint">Wyższa jakość = więcej miejsca</span>
+                </div>
+                <select id="quality" style="min-width: 200px;">
+                  <option value="p360">🔹 Niska — 360p (ok. 30 MB / 10 min)</option>
+                  <option value="eco">🔹 Oszczędna — pełna rozdzielczość (ok. 45 MB / 10 min)</option>
+                  <option value="high">🔹 Wysoka — wyraźny obraz (ok. 110 MB / 10 min)</option>
+                  <option value="max" selected>🔹 Full HD 60 — najwyższa jakość (ok. 600 MB / 10 min)</option>
+                </select>
+              </div>
+              
+              <div class="settings-row">
+                <div class="settings-label">
+                  <span class="settings-label-title">Dźwięk & Wideo</span>
+                  <span class="settings-label-hint">Źródło transmisji</span>
+                </div>
+                <select id="media">
+                  <option value="av" selected>📹 Obraz + Dźwięk</option>
+                  <option value="v">📹 Tylko Obraz</option>
+                  <option value="a">🎙 Tylko Dźwięk</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CAMERA SETTINGS -->
+        <div class="panel" style="margin-top: var(--space-lg);">
+          <div class="panel-header">
+            <h3>
+              <span class="panel-icon">📷</span>
+              Kamera & Audio
+            </h3>
+          </div>
+          <div class="panel-content">
+            <div class="settings-group">
+              <div class="settings-row">
+                <div class="settings-label">
+                  <span class="settings-label-title">Jasność Kamery</span>
+                  <span class="settings-label-hint">Dostosuj oświetlenie</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: var(--space-md);">
+                  <button class="btn btn-secondary" style="padding: var(--space-sm); width: 2.5rem;">−</button>
+                  <input type="range" id="lightPick" min="-3" max="3" value="0" style="width: 150px;">
+                  <button class="btn btn-secondary" style="padding: var(--space-sm); width: 2.5rem;">+</button>
+                  <span id="lightVal" style="color: var(--text-muted); font-size: var(--font-size-sm); min-width: 80px;">Neutralnie</span>
+                </div>
+              </div>
+              
+              <div class="settings-row">
+                <div class="settings-label">
+                  <span class="settings-label-title">Mikrofon</span>
+                  <span class="settings-label-hint">Włącz/wyłącz dźwięk</span>
+                </div>
+                <label>
+                  <input type="checkbox" id="withAudio" checked>
+                  <span>Włączony</span>
+                </label>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-label">
+                  <span class="settings-label-title">Profil Audio</span>
+                  <span class="settings-label-hint">Filtrowanie szumów</span>
+                </div>
+                <select id="audioProfilePick">
+                  <option value="clean" selected>🎙 Czysty — z filtrem szumów</option>
+                  <option value="raw">🎙 Surowy — bez filtrowania</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: SIDEBAR -->
+      <div style="display: flex; flex-direction: column; gap: var(--space-lg);">
+        
+        <!-- DIAGNOSTYKA -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>
+              <span class="panel-icon">🔧</span>
+              Status
+            </h3>
+          </div>
+          <div class="panel-content">
+            <div id="diagList" style="display: flex; flex-direction: column; gap: var(--space-md);">
+              <div class="alert alert-info">
+                <span class="alert-icon">ℹ</span>
+                <div>
+                  <strong>Inicjalizacja...</strong>
+                  <p style="margin: 0; font-size: var(--font-size-xs);">Ładowanie systemu diagnostyki</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wydarzenia (MOTION/SOUND) -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>
+              <span class="panel-icon">🎯</span>
+              Ostatnie Zdarzenia
+            </h3>
+          </div>
+          <div class="panel-content">
+            <ul id="pcEvents" style="list-style: none; display: flex; flex-direction: column; gap: var(--space-sm);">
+              <li class="text-muted" style="text-align: center; padding: var(--space-md) 0;">Brak zdarzeń</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ARCHIWUM -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>
+              <span class="panel-icon">📁</span>
+              Archiwum
+            </h3>
+          </div>
+          <div class="panel-content">
+            <div class="settings-group">
+              <div class="settings-row">
+                <div class="settings-label">
+                  <span class="settings-label-title">Folder Zapisu</span>
+                  <span class="settings-label-hint" id="archiveInfo">Nie ustawiony</span>
+                </div>
+              </div>
+              
+              <button class="btn btn-primary" id="chooseArchiveDir" style="width: 100%;">
+                📁 Wybierz Folder...
+              </button>
+              
+              <div id="archiveFolderSelectionStatus" class="alert alert-info" style="font-size: var(--font-size-xs);">
+                <span class="alert-icon">ℹ</span>
+                <span>Wybierz folder na tym komputerze, aby przechowywać nagrania lokalnie.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============================================================
+       FOOTER & MODALS
+       ============================================================ -->
+  <footer style="background: var(--bg-secondary); border-top: 1px solid var(--border-primary); padding: var(--space-lg); text-align: center; color: var(--text-muted); font-size: var(--font-size-sm); margin-top: var(--space-2xl);">
+    <p style="margin: 0;">HOME SECURITY — Profesjonalny System Monitoringu Domu | Wersja 269</p>
+  </footer>
+
+  <!-- Loading Toast -->
+  <div id="toast" style="position: fixed; bottom: 2rem; right: 2rem; background: var(--surface-card); border: 1px solid var(--border-primary); border-radius: var(--radius-lg); padding: var(--space-lg); box-shadow: var(--shadow-xl); color: var(--text-primary); max-width: 400px; z-index: 9999; display: none; animation: slideIn var(--transition-base);" hidden></div>
+
+  <style>
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(1rem);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+
+  <!-- ============================================================
+       SCRIPTS
+       ============================================================ -->
+  <script>
+    // Toast notification helper
+    function toastMsg(text) {
+      const toast = document.getElementById('toast');
+      toast.textContent = text;
+      toast.hidden = false;
+      setTimeout(() => {
+        toast.hidden = true;
+      }, 4000);
+    }
+
+    // Status indicator
+    function updateStatus(recording) {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      
+      if (recording) {
+        dot.className = 'status-dot recording';
+        text.textContent = '● Nagrywanie';
+      } else {
+        dot.className = 'status-dot offline';
+        text.textContent = '○ Offline';
+      }
+    }
+
+    // Recording timer
+    let startTime = null;
+    function updateTimer() {
+      if (startTime) {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+        const seconds = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('recordingTimer').textContent = `${hours}:${minutes}:${seconds}`;
+      }
+    }
+
+    setInterval(updateTimer, 1000);
+
+    // Button handlers
+    document.getElementById('startBtn').addEventListener('click', () => {
+      startTime = Date.now();
+      updateStatus(true);
+      toastMsg('✓ Nagrywanie rozpoczęte');
+    });
+
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      startTime = null;
+      document.getElementById('recordingTimer').textContent = '00:00:00';
+      updateStatus(false);
+      toastMsg('✓ Nagrywanie zatrzymane');
+    });
+
+    document.getElementById('restartBtn').addEventListener('click', () => {
+      toastMsg('🔄 Restartuję kamerę...');
+    });
+
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      const stage = document.getElementById('stage');
+      if (stage.requestFullscreen) {
+        stage.requestFullscreen();
+      } else if (stage.webkitRequestFullscreen) {
+        stage.webkitRequestFullscreen();
+      }
+    });
+
+    // Mode buttons
+    document.querySelectorAll('[data-mode]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mode;
+        const modes = {
+          record: '● Na żywo + Zapis',
+          preview: '👁 Sam Podgląd',
+          off: '⏸ Wyłączona'
+        };
+        toastMsg(`Tryb: ${modes[mode]}`);
+      });
+    });
+
+    // Light control
+    document.getElementById('lightPick').addEventListener('input', (e) => {
+      const value = parseInt(e.target.value);
+      const labels = {
+        '-3': '−3 (najciemniej)',
+        '-2': '−2',
+        '-1': '−1',
+        '0': '0 (neutralnie)',
+        '1': '+1',
+        '2': '+2',
+        '3': '+3 (najjaśniej)'
+      };
+      document.getElementById('lightVal').textContent = labels[value] || 'Neutralnie';
+    });
+
+    // Initialize
+    updateStatus(false);
+    toastMsg('✓ HOME SECURITY gotowy - kliknij START');
+  </script>
+
+  <!-- Reference to original app.js -->
+  <script type="module" src="app.js?v=1"></script>
+</body>
+</html>
