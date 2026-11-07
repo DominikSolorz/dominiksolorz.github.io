@@ -10,7 +10,8 @@ const publicSource=await readFile(new URL('../kamera/o-systemie.html',import.met
 const workerSource=await readFile(new URL('../kamera/sw.js',import.meta.url),'utf8');
 const currentUpdateModule=publicSource.match(/marketing-auto-update\.mjs\?v=\d+/)?.[0];
 const currentSW=workerSource.match(/kamera-domowa-shell-v(\d+)/)?.[1];
-assert.ok(currentUpdateModule&&currentSW,'Cannot derive current web updater and service worker revisions');
+const currentMarketingCSS=publicSource.match(/marketing\.css\?v=\d+/)?.[0];
+assert.ok(currentUpdateModule&&currentSW&&currentMarketingCSS,'Cannot derive current updater, PWA and stylesheet revisions');
 
 
 const timeoutMs=18000;
@@ -23,29 +24,37 @@ const get=async(path,{method='GET'}={})=>{
   return method==='HEAD'?response:response.text();
 };
 const checks=[
-  ['o-systemie.html',['id="publicHome"','id="przygotowanie"','data-mkt-setup','marketing-start.mjs?v=2','id="galeria"','Wydanie rozwojowe','href="galeria.html"']],
+  ['o-systemie.html',['id="publicHome"','Wydanie rozwojowe','href="jak-dziala.html"']],
+  ['przygotowanie.html',['id="przygotowanie"','data-mkt-setup','marketing-start.mjs?v=2']],
+  ['prezentacja.html',['id="galeria"','marketing-gallery.mjs?v=2']],
+  ['jak-dziala.html',['id="w-praktyce"']],
+  ['mozliwosci.html',['id="mozliwosci"']],
+  ['wymagania.html',['id="specyfikacja"']],
+  ['stan-projektu.html',['id="stan-projektu"']],
+  ['pytania.html',['id="faq"']],
   ['galeria.html',['class="mktConceptCard"','nie zrzuty działającej aplikacji','marketing-gallery.mjs?v=2']],
+  ['kontakt.html',['id="mktContactForm"','name="consent"','functions/v1/home-contact','id="mktContactResult"']],
   ['pomoc.html',['id="mktContactForm"','name="consent"','functions/v1/home-contact','id="mktContactResult"']],
   ['blog/index.html',['pierwsze-uruchomienie.html','diagnostyka-monitoringu.html']],
   ['blog/pierwsze-uruchomienie.html',['HOME SECURITY','Zaloguj']],
   ['polityka-prywatnosci.html',['o-systemie.html','Polityka prywatności']],
   ['regulamin.html',['o-systemie.html','Regulamin']],
   ['rodo.html',['o-systemie.html','Informacja RODO']],
-  ['panel.html',['name="home-security-build" content="'+expectedBuild+'"','id="authDialog"','id="publicHome"','interface-concept.css?v=2']],
-  ['index.html',['http-equiv="Content-Security-Policy"','require-trusted-types-for','data-source="marketing.css?v=13"','name="robots" content="index,follow"','rel="canonical" href="https://home-security-dominik-solorz.vercel.app/kamera/"','data-public-entry']],
+  ['panel.html',['name="home-security-build" content="'+expectedBuild+'"','id="authDialog"','id="publicHome"','interface-concept.css?v=3']],
+  ['index.html',['http-equiv="Content-Security-Policy"','require-trusted-types-for','data-source="'+currentMarketingCSS+'"','marketing-navigation.mjs?v=1','name="robots" content="index,follow"','rel="canonical" href="https://dominiksolorz.github.io/kamera/"','data-public-entry','id="hsMobileSplash"','mobile-app-splash.js?v=3']],
   ['sitemap.xml',['/kamera/galeria.html','/kamera/</loc>']],
   ['../index.html',['./kamera/','location.replace']]
 ];
 const assets=[
  'marketing-start.css?v=3','marketing-start.mjs?v=2',
  'marketing-auto-update.css?v=2',currentUpdateModule,
- 'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=2','public-entry.js?v=2',
+ 'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=2','public-entry.js?v=6',
  'marketing-gallery.css?v=3','marketing-gallery.mjs?v=2',
- 'interface-concept.css?v=2',
- 'marketing-motion.css?v=2','marketing.css?v=13',
+ 'interface-concept.css?v=3',
+ 'marketing-motion.css?v=2',currentMarketingCSS,'marketing-navigation.css?v=1','marketing-navigation.mjs?v=1',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
  'assets/home-security-hero-640.webp','assets/home-security-hero.webp','assets/home-security-how-it-works-640.webp','assets/ds-logo-96.webp','assets/ds-logo-192.webp','../docs/ui-193/01-pulpit-480.webp','../docs/ui-193/01-pulpit-640.webp','../docs/ui-193/01-pulpit-720.webp','../docs/ui-193/01-pulpit-960.webp',
- 'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-'+expectedDesktop.version+'.exe'
+ 'assets/home-security-hero.png','assets/home-security-loading.webp','assets/home-security-ad-02.webp','assets/home-security-ad-03.webp','mobile-app-splash.js?v=3','mobile-app-splash.css?v=3','downloads/HOME-SECURITY-Desktop-Setup-'+expectedDesktop.version+'.exe'
 ];
 
 let tries=0;
@@ -54,7 +63,7 @@ while(true){
     const html=await get('o-systemie.html');
     const app=await get('panel.html');
     const expected='home-security-build" content="'+expectedBuild+'"';
-    assert.ok(html.includes('id="przygotowanie"')&&html.includes(expected)&&html.includes(currentUpdateModule),'The public homepage is still serving the previous release');
+    assert.ok(html.includes('href="przygotowanie.html"')&&html.includes(expected)&&html.includes(currentUpdateModule),'The public homepage is still serving the previous release');
     assert.ok(app.includes(expected)&&app.includes('app.js?v='+expectedBuild),'The protected panel is still serving the previous release');
     break;
   }catch(error){
@@ -66,7 +75,7 @@ while(true){
 for(const [path,tokens] of checks){
   const html=await get(path);
   for(const token of tokens)assert.ok(html.includes(token),'Missing '+JSON.stringify(token)+' in '+path);
-  if(/^(?:o-systemie|galeria|pomoc)\.html$/.test(path)||path.startsWith('blog/')){
+  if(path.endsWith('.html')&&!['panel.html','../index.html','polityka-prywatnosci.html','regulamin.html','rodo.html'].includes(path)){
     assert.ok(html.includes('home-security-build" content="'+expectedBuild+'"'),'Outdated marketing build on '+path);
     assert.ok(html.includes(currentUpdateModule),'New public update notice is missing from '+path);
   }
@@ -75,6 +84,13 @@ for(const [path,tokens] of checks){
   if(path==='index.html')assert.ok(!html.includes('id="authDialog"')&&!html.includes('app.js?v='));
   console.log('OK document '+path);
 }
+// Reject the original cause of invisible releases: redirect to an outdated public mirror.
+const entryScript=await get('public-entry.js?v=6');
+assert.ok(!entryScript.includes('home-security-dominik-solorz.vercel.app'),'The public entry must not redirect to stale Vercel');
+assert.ok(entryScript.includes('panel.html')&&entryScript.includes('location.replace'), 'Private panel routing must remain in the deployed minified bridge');
+const publicHTML=await get('index.html');
+assert.ok(publicHTML.includes('rel="canonical" href="https://dominiksolorz.github.io/kamera/"'));
+console.log('OK routing: up-to-date GitHub Pages homepage, secure owner panel preserved.');
 for(const path of assets){
   const response=await get(path,{method:'HEAD'});
   const bytes=Number(response.headers.get('content-length')||'0');

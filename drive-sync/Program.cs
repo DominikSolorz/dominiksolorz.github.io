@@ -57,6 +57,12 @@ Console.CancelKeyPress+=(_,e)=>{e.Cancel=true;stop.Cancel();};
 while(!stop.IsCancellationRequested) {
  string? error=null;int discovered=0;
  try {
+  var policyFile=Path.Combine(directory,"recording-storage.json");
+  if(File.Exists(policyFile)) {
+   var policy=JsonSerializer.Deserialize<RecordingStoragePolicy>(File.ReadAllText(policyFile))??throw new IOException("STORAGE_POLICY_INVALID");
+   // New recording storage owns uploads once explicitly configured. Do not scan old user archives behind its controls.
+   if(policy.Revision>0) { ready=false;await Task.Delay(TimeSpan.FromSeconds(10),stop.Token);continue; }
+  }
   if(DateTimeOffset.UtcNow>=nextPreflight) {
    await api.ValidateFolder(config.IntegrationId,config.DriveFolderId,stop.Token);
    ready=true;nextPreflight=DateTimeOffset.UtcNow.AddMinutes(5);

@@ -1,4 +1,4 @@
-name: Build and test HOME SECURITY mobile previews
+name: MOBILE | Android i iOS | Budowanie i testy
 on:
   push:
     branches: [main]
