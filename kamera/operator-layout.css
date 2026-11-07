@@ -418,3 +418,39 @@ html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button{min-he
 html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button[data-k="ok"]{background:var(--pl-blue)!important;border-color:var(--pl-blue)!important;color:#fff!important;box-shadow:0 12px 28px -14px rgba(47,107,255,.9)!important}
 html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button[data-k="ok"]:hover:not(:disabled){background:var(--pl-blue2)!important}
 html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button[data-k="del"]{background:rgba(3,8,18,.7)!important;color:var(--pl-muted)!important}
+
+/* ================= Telefon: wąskie ekrany (320–400 px), duża czcionka systemowa ================= */
+/* Nagłówek: tytuł zawsze ma miejsce; przycisk odblokowania komputera przechodzi do drugiego wiersza. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{flex-wrap:wrap!important;row-gap:8px!important;column-gap:8px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader>div{flex:1 1 0!important;min-width:0!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader h1{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader>:is(#deviceLayoutBtn,.mobileRelease){flex:0 0 auto!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader>.hsRemoteEntry{
+  order:10;flex:1 0 100%!important;width:100%!important;max-width:100%!important;margin:0!important;
+  min-height:40px!important;padding:8px 12px!important;font:600 13.5px/1.25 var(--pl-sans)!important;white-space:normal!important;
+  color:#fff!important;background:linear-gradient(180deg,rgba(47,107,255,.24),rgba(47,107,255,.1))!important;border-color:rgba(91,140,255,.55)!important;
+}
+/* Odtwarzacz: przyciski zawijają tekst i układają się w siatce zamiast nachodzić na siebie. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrPrecisionControls{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(92px,1fr))!important;gap:6px!important;width:100%}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrPrecisionControls .dvrPrecisionClock{grid-column:1/-1;display:flex!important;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrPrecisionControls .dvrPrecisionClock input{flex:1 1 120px;min-width:0;max-width:100%}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.dvrGroup,.dvrPrecisionControls) .dvrBtn{
+  height:auto!important;min-height:40px!important;padding:6px 6px!important;white-space:normal!important;line-height:1.2!important;
+  font-size:12.5px!important;min-width:0!important;overflow-wrap:normal;word-break:normal;text-align:center
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrCtrls .dvrGroup{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrCtrls .dvrGroup:has(>.dvrBtn:nth-child(5)){grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:4px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrCtrls .dvrGroup:has(>.dvrBtn:nth-child(5)) .dvrBtn{padding:4px 2px!important;font-size:12px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrCtrls .dvrGroup>input{grid-column:1/-1;min-width:0;width:100%;max-width:100%;box-sizing:border-box}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrLegend{display:flex!important;flex-wrap:wrap;gap:6px 12px}
+/* Zdarzenia: pole daty nie wychodzi poza kartę. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .workspaceToolbar>label:first-child{min-width:0;max-width:100%;overflow:hidden}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .workspaceToolbar input[type="date"]{max-width:100%!important;box-sizing:border-box!important;-webkit-appearance:none;appearance:none;min-height:40px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(input,select,textarea){max-width:100%;box-sizing:border-box}
+/* Bardzo niskie ekrany 16:9 (np. 360×640): mniej pionowych odstępów. */
+@media (max-height:700px) and (max-width:480px){
+  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{padding-block:6px!important;min-height:52px!important}
+  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader h1{font-size:19px!important}
+  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader>:is(#deviceLayoutBtn,.mobileRelease summary){min-width:42px!important;min-height:42px!important}
+}
