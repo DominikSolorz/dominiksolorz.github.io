@@ -14,7 +14,7 @@ test('one click downloads the signed release, then initiates safe restart',async
  assert.match(download,/if \(offeredUpdate is null\) return/);
  assert.match(download,/SHA256\.HashDataAsync\(packageStream\)/);
  assert.ok(download.indexOf('SHA256.HashDataAsync(packageStream)')<download.indexOf('File.Move(pendingTemporaryPath, PendingUpdatePath, true)'));
- assert.ok(download.indexOf('File.Move(pendingTemporaryPath, PendingUpdatePath, true)')<download.indexOf('await RestartIntoPreparedUpdateAsync();'));
+ assert.ok(download.indexOf('File.Move(pendingTemporaryPath, PendingUpdatePath, true)')<download.lastIndexOf('await RestartIntoPreparedUpdateAsync();'),'first install can use staged cache, newly downloaded update must verify before restart');
  assert.match(download,/if \(File\.Exists\(PendingUpdatePath\)\)/,'already downloaded packages should retry install');
  assert.match(download,/updateButton.Enabled = panelUnlocked/,'a blocked restart can be retried without redownloading');
  assert.doesNotMatch(download,/Application\.Restart|MessageBox\.Show/,'no second dialog or unverified Application.Restart');
