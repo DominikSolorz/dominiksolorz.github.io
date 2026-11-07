@@ -11,6 +11,8 @@ test('Windows app advertises one-click Zaktualizuj for the exact offered version
   assert.ok(source.includes('if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;'));
   assert.ok(source.includes('SHA256.HashDataAsync'));
   assert.ok(source.includes('PublishUpdateState("staged"'));
+  assert.ok(source.includes('await RestartIntoPreparedUpdateAsync();'));
+  assert.ok(source.includes('type = "desktop.update.prepare"'));
   assert.ok(!source.includes('Application.Restart'));
 });
 
