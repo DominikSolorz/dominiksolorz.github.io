@@ -32,6 +32,10 @@ jobs:
           node-version: '22'
       - name: Verify real recorder controls, PIN gate, layout and offline style cache
         run: node --test tests/premium-dark-pro.test.mjs tests/panel-entry.test.mjs tests/owner-theme.test.mjs tests/workspace-ui.test.mjs tests/desktop-bundle.test.mjs
+      - name: Download the exact current release files needed by repository tests
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/desktop-release.mjs fetch
       - name: Run all frontend regression tests
         run: node --test tests/*.test.mjs
       - name: Validate new stylesheet syntax
