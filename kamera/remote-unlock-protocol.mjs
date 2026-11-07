@@ -44,6 +44,20 @@ export function equalsConstantTime(a,b){
  let diff=0;for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);
  return diff===0;
 }
+// The owner-authenticated database row is not proof that the Windows lock opened.
+// Only the host that decrypted the valid PIN proof may create this MAC AFTER
+// the local PIN screen accepted the owner key; the phone checks it before success.
+export async function createUnlockReceipt(pinKey,{requestId,userId,hostId,phoneId}){
+ if(![requestId,userId,hostId,phoneId].every(v=>typeof v==='string'&&/^[0-9a-f-]{36}$/i.test(v)))throw new Error('Invalid unlock receipt identity');
+ let secret;
+ try{secret=raw(pinKey);}catch{throw new Error('Invalid unlock receipt key');}
+ if(secret.length!==32)throw new Error('Invalid unlock receipt key');
+ const signingKey=await crypto.subtle.importKey('raw',secret,{name:'HMAC',hash:'SHA-256'},false,['sign']);
+ const context=JSON.stringify(['home-security-unlock-receipt-v1','approved',requestId,userId,hostId,phoneId]);
+ const signature=await crypto.subtle.sign('HMAC',signingKey,encoder.encode(context));
+ return Array.from(new Uint8Array(signature),v=>v.toString(16).padStart(2,'0')).join('');
+}
+
 export function isFreshRequest(row,now=Date.now()){
  const start=Date.parse(row?.created_at),end=Date.parse(row?.expires_at);
  return Number.isFinite(start)&&Number.isFinite(end)&&start>=now-120000&&start<=now+5000&&end>now&&end<=start+120000;
