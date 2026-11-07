@@ -420,15 +420,16 @@ internal static class Program
                     if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("type", out var type) && type.ValueKind == JsonValueKind.String) {
                         if (type.GetString() == "desktop.update.visibility") {
                             panelUnlocked = root.TryGetProperty("visible", out var visible) && visible.ValueKind == JsonValueKind.True;
-                            updateBar.Visible = panelUnlocked && offeredUpdate is not null;
-                            if (panelUnlocked && offeredUpdate is not null && !File.Exists(PendingUpdatePath))
-                                await DownloadAndPrepareOfferedUpdateAsync();
+                            updateBar.Visible = panelUnlocked;
+                            // Unlocking does NOT authorize an update download.
                             webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); return;
                         }
                         if (type.GetString() == "desktop.update.query") {
                             // A query does not prove the HTML sidebar is visible. Keep the native offer.
                             webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); return;
                         }
+                        if (type.GetString() == "desktop.update.check") { if (panelUnlocked) await CheckForUpdateAsync(); return; }
+                        if (type.GetString() == "desktop.update.cancel") { CancelPreparedUpdate(); return; }
                         if (type.GetString() == "desktop.update.request") { await DownloadAndPrepareOfferedUpdateAsync(); return; }
                         if (type.GetString() == "desktop.update.prepared") {
                             if (root.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String && id.GetString() == updatePreparationId)
@@ -500,30 +501,82 @@ internal static class Program
 
         private async Task CheckForUpdateAsync()
         {
-            if (checkingUpdate || downloadingUpdate || File.Exists(PendingUpdatePath)) return;
+            if (checkingUpdate || downloadingUpdate) return;
+            if (File.Exists(PendingUpdatePath))
+            {
+                PublishUpdateState("staged", "Pobrana aktualizacja czeka na następne uruchomienie. Możesz ją anulować przed zamknięciem programu.");
+                return;
+            }
             checkingUpdate = true;
+            PublishUpdateState("checking", "Sprawdzam oficjalny kanał aktualizacji Windows…");
             try
             {
                 var manifest = await Http.GetFromJsonAsync<DesktopUpdateManifest>($"{UpdateManifestUrl}?t={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
-                WriteDiagnostic("update-manifest", new { installed = DesktopVersion, available = manifest?.Version });
-                if (manifest is null || !Version.TryParse(manifest.Version, out var available) || available <= Version.Parse(DesktopVersion)) return;
-                if (!Uri.TryCreate(manifest.PackageUrl, UriKind.Absolute, out var packageUri) || packageUri.Scheme != "https" || packageUri.Host != PublicHost || packageUri.Port != 443 || packageUri.UserInfo.Length != 0 || !packageUri.AbsolutePath.StartsWith("/kamera/updates/", StringComparison.Ordinal) || manifest.Sha256?.Length != 64 || !manifest.Sha256.All(Uri.IsHexDigit)) return;
+                if (manifest is null || !Version.TryParse(manifest.Version, out var available))
+                    throw new InvalidDataException("Kanał aktualizacji nie podał poprawnej wersji.");
+                var installed = Version.Parse(DesktopVersion);
+                if (available > installed &&
+                    (!Uri.TryCreate(manifest.PackageUrl, UriKind.Absolute, out var packageUri) ||
+                     packageUri.Scheme != "https" || packageUri.Host != PublicHost ||
+                     packageUri.Port != 443 || packageUri.UserInfo.Length != 0 ||
+                     !packageUri.AbsolutePath.StartsWith("/kamera/updates/", StringComparison.Ordinal) ||
+                     manifest.Sha256?.Length != 64 || !manifest.Sha256.All(Uri.IsHexDigit)))
+                    throw new InvalidDataException("Nowe wydanie ma nieprawidłowe źródło lub sumę kontrolną.");
+                lastSuccessfulUpdateCheckUtc = DateTimeOffset.UtcNow;
+                WriteDiagnostic("update-manifest", new { installed = DesktopVersion, available = manifest.Version });
+                if (available <= installed)
+                {
+                    offeredUpdate = null;
+                    PublishUpdateState("current", $"Wersja {DesktopVersion} jest aktualna. Automatyczne sprawdzanie co 6 godzin podczas pracy programu.");
+                    return;
+                }
                 offeredUpdate = manifest;
                 ShowUpdateOffer(manifest.Version);
-                if (panelUnlocked) await DownloadAndPrepareOfferedUpdateAsync();
                 WriteDiagnostic("update-offered", new { manifest.Version });
             }
-            catch (Exception ex) { WriteDiagnostic("update-check-failed", new { error = ex.Message }); }
-            finally { checkingUpdate = false; }
+            catch (Exception ex)
+            {
+                WriteDiagnostic("update-check-failed", new { error = ex.Message });
+                if (offeredUpdate is not null)
+                    PublishUpdateState("available", $"Nie udało się ponownie sprawdzić kanału. Ostatnio wykryto {offeredUpdate.Version}. Możesz ponowić sprawdzenie.");
+                else
+                    PublishUpdateState("error", "Nie udało się sprawdzić aktualizacji. Sprawdź internet i ponów próbę.");
+            }
+            finally
+            {
+                checkingUpdate = false;
+                checkUpdateButton.Enabled = !downloadingUpdate && !File.Exists(PendingUpdatePath);
+                if (updateCheckTimer.Enabled) { updateCheckTimer.Stop(); updateCheckTimer.Start(); }
+            }
         }
 
-        // Download in the background after unlock; install at the next normal
+        // Download only after explicit owner click; install at the next normal
         // launch. Never stop the active recorder to prepare an update.
         private void ShowUpdateOffer(string version)
         {
             updateButton.Text = $"↻ Zaktualizuj do wersji {version}";
-            updateButton.Location = new Point(Math.Max(12, updateBar.ClientSize.Width - updateButton.Width - 16), 8);
-            PublishUpdateState("available", "Aktualizacja pobierze się w tle po odblokowaniu panelu. Kamera będzie nadal pracować.");
+            updateButton.Enabled = true;
+            PublishUpdateState("available", "Nowa wersja jest dostępna. Kliknij „Zaktualizuj”, aby pobrać ją po swojej decyzji. Nagrywanie będzie kontynuowane.");
+        }
+
+        private void CancelPreparedUpdate()
+        {
+            if (!panelUnlocked || downloadingUpdate) return;
+            try
+            {
+                if (!File.Exists(PendingUpdatePath)) return;
+                // The pending instruction belongs to the updater; never remove
+                // arbitrary user files or recordings through a supplied path.
+                File.Delete(PendingUpdatePath);
+                offeredUpdate = null;
+                updateButton.Enabled = true;
+                PublishUpdateState("current", "Anulowano instalację przy następnym uruchomieniu. Twoje nagrania nie zostały zmienione.");
+                WriteDiagnostic("update-cancelled", new { installed = DesktopVersion });
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                PublishUpdateState("error", "Nie udało się anulować przygotowanej aktualizacji. " + ex.Message);
+            }
         }
 
         private async Task DownloadAndPrepareOfferedUpdateAsync()
@@ -590,7 +643,7 @@ internal static class Program
                 updateButton.Text = $"↻ Spróbuj ponownie: {manifest.Version}";
                 PublishUpdateState("error", "Aktualizacja nie została zainstalowana. " + ex.Message);
             }
-            finally { downloadingUpdate = false; updateProgress.Visible = false; updatePrepared = null; updatePreparationId = null; }
+            finally { downloadingUpdate = false; updateProgress.Visible = false; updatePrepared = null; updatePreparationId = null; checkUpdateButton.Enabled = !File.Exists(PendingUpdatePath); }
         }
 
     }
