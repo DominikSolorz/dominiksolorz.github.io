@@ -18,5 +18,6 @@ export async function applyAudioProfile(track,profile,supported = {}) {
 }
 export function audioStatus(result) {
   const label=value=>value===true?'włączone':value===false?'wyłączone':'brak potwierdzenia';
-  return `Mikrofon komputera: odszumianie ${label(result.actual.noiseSuppression)}, usuwanie echa ${label(result.actual.echoCancellation)}, automatyczne wzmocnienie ${label(result.actual.autoGainControl)}.`;
+  const software = result.software === true ? (result.profile === 'environment' ? ' Dodatkowy filtr wyłączony (pełne dźwięki otoczenia).' : ' Filtr buczenia, syczenia i szumu w przerwach aktywny dla podglądu i nagrań.') : result.software === false ? ' Dodatkowy filtr programowy niedostępny na tym komputerze.' : '';
+  return `Mikrofon komputera: odszumianie ${label(result.actual.noiseSuppression)}, usuwanie echa ${label(result.actual.echoCancellation)}, automatyczne wzmocnienie ${label(result.actual.autoGainControl)}.${software}`;
 }

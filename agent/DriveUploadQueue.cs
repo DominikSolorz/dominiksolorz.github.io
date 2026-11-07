@@ -31,12 +31,13 @@ public sealed class DriveUploadQueue(AgentDatabase database)
         c.Parameters.AddWithValue("$size",input.Length); c.Parameters.AddWithValue("$md5",md5); c.Parameters.AddWithValue("$now",DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
         c.ExecuteNonQuery(); return id;
     }
-    public DriveUpload? Claim(DateTimeOffset now)
+    public DriveUpload? Claim(DateTimeOffset now, Guid? integration = null)
     {
         using var db=database.Open(); using var tx=db.BeginTransaction(); using var c=db.CreateCommand(); c.Transaction=tx;
         c.Parameters.AddWithValue("$now",now.ToUnixTimeMilliseconds());
         c.CommandText="UPDATE drive_uploads SET status=CASE WHEN attempts>=10 THEN 'failed' ELSE 'retry_wait' END,code='LEASE_EXPIRED',lease=NULL,lease_until_ms=NULL,next_ms=$now WHERE status='running' AND lease_until_ms<=$now"; c.ExecuteNonQuery();
-        c.CommandText="SELECT id,integration_id,path,folder_id,name,size,md5,remote_id,attempts FROM drive_uploads WHERE status IN ('queued','retry_wait') AND next_ms<=$now ORDER BY updated_ms,id LIMIT 1";
+        c.CommandText="SELECT id,integration_id,path,folder_id,name,size,md5,remote_id,attempts FROM drive_uploads WHERE status IN ('queued','retry_wait') AND next_ms<=$now AND ($integration IS NULL OR integration_id=$integration) ORDER BY updated_ms,id LIMIT 1";
+        c.Parameters.AddWithValue("$integration",(object?)integration?.ToString()??DBNull.Value);
         DriveUpload? job=null;
         using(var r=c.ExecuteReader()) if(r.Read()) job=new(Guid.Parse(r.GetString(0)),Guid.Parse(r.GetString(1)),r.GetString(2),r.GetString(3),r.GetString(4),r.GetInt64(5),r.GetString(6),r.IsDBNull(7)?null:r.GetString(7),Guid.NewGuid().ToString("N"),r.GetInt32(8)+1);
         if(job is not null) {
@@ -90,9 +91,9 @@ public sealed class DriveUploadQueue(AgentDatabase database)
 
 public sealed class DriveUploadWorker(DriveUploadQueue queue,GoogleDriveApi api)
 {
-    public async Task<bool> RunOne(CancellationToken ct=default)
+    public async Task<bool> RunOne(CancellationToken ct=default, Guid? integration=null)
     {
-        var job=queue.Claim(DateTimeOffset.UtcNow); if(job is null) return false;
+        var job=queue.Claim(DateTimeOffset.UtcNow,integration); if(job is null) return false;
         try {
             using var file=DriveUploadQueue.OpenInput(job.Path);
             if(file.Length!=job.Size || Convert.ToHexString(await MD5.HashDataAsync(file,ct))!=job.Md5)

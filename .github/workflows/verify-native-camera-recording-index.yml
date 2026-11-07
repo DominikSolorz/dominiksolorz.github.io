@@ -1,0 +1,46 @@
+name: DESKTOP | Agent kamery | Test indeksu nagrań
+
+on:
+  push:
+    branches:
+      - feat/native-camera-recording-index-2026-11-07
+  pull_request:
+    paths:
+      - 'agent/**'
+      - 'agent-tests/**'
+      - 'agent-contracts/**'
+      - 'agent-client/**'
+      - '.github/workflows/verify-native-camera-recording-index.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-index:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Compile native Windows agent and SQLite schema
+        shell: pwsh
+        run: dotnet build agent/HomeSecurityAgent.csproj -c Release
+      - name: Run native agent tests including 50-camera indexing and restarts
+        shell: pwsh
+        run: dotnet run --project agent-tests/HomeSecurity.Agent.Tests.csproj -c Release
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Protect existing camera catalog and DVR behavior
+        run: node --test tests/camera-workspace.test.mjs tests/dvr-time-navigation.test.mjs

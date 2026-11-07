@@ -6,25 +6,43 @@
 <meta name="robots" content="noindex,follow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#070b16">
-<meta name="home-security-build" content="242">
+<meta name="color-scheme" content="dark">
+<meta name="home-security-build" content="272">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kamera domowa">
-<script src="core/client-layout.js?v=2"></script>
+<script src="core/client-layout.js?v=3"></script>
 <script>
   const routeParams = new URLSearchParams(location.search);
+  // Starsze instalacje PWA otwieraja panel bezposrednio. Przekieruj wylacznie
+  // ich domyslny start, nie skroty DVR/kamery, konta ani wersje Windows.
+  const legacyPhoneHome = routeParams.get('panel') === 'owner'
+    && routeParams.get('ui') === 'phone'
+    && [...routeParams.keys()].length === 2
+    && (window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true)
+    && window.__HOME_SECURITY_DESKTOP__ !== true && !window.chrome?.webview;
+  if (legacyPhoneHome) location.replace(new URL('./index.html?app=mobile-home',location.href).href);
   const desktopParam = routeParams.get("desktop");
   // Użytkownik może świadomie wybrać układ, niezależnie od tego, z jakiego
   // urządzenia korzysta. Wybór jest tylko ustawieniem wyglądu i nie zmienia
   // tego, który komputer jest nadajnikiem kamery.
   let savedUiMode = "";
-  try { savedUiMode = localStorage.getItem("hs-ui-mode") || ""; } catch (_) { /* tryb prywatny */ }
-  const requestedUiMode = routeParams.get("ui");
+  let layoutPreference = "auto";
+  try {
+    layoutPreference = localStorage.getItem("hs-layout-mode-v2") || "auto";
+    savedUiMode = localStorage.getItem("hs-layout-choice-v2") || "";
+  } catch (_) { /* tryb prywatny */ }
+  if (routeParams.get("layout") === "auto") layoutPreference = "auto";
+  if (routeParams.get("layout") === "manual" && ["phone", "computer"].includes(routeParams.get("ui"))) {
+    layoutPreference = "manual";
+    savedUiMode = routeParams.get("ui");
+  }
+  const requestedUiMode = routeParams.get("layout") === "manual" ? routeParams.get("ui") : "";
   const nativeWindowsApp = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview;
   // Nadajnik ma zawsze pozostać lekką, osobną aplikacją Chrome.
   const isTransmitter = location.hash === "#nadaj";
-  const requestedView = routeParams.get("view");
+  const requestedView = routeParams.get("layout") === "manual" ? routeParams.get("view") : "";
   const mobileRequested = routeParams.get("app") === "android" || requestedView === "mobile" || desktopParam === "0";
   const phonePlatform = HomeSecurityLayout.detectPlatform(navigator);
   document.documentElement.dataset.phonePlatform = phonePlatform;
@@ -38,9 +56,15 @@
   // dodatkowego parametru. "view=desktop" pozostaje świadomym wyjątkiem
   // do testów; stary "desktop=1" nie rozwija już panelu na telefonie.
   const clientLayout = HomeSecurityLayout.resolve({ native: nativeWindowsApp,
-    transmitter: isTransmitter, ui: requestedUiMode, view: requestedView,
+    transmitter: isTransmitter, preference: layoutPreference, ui: requestedUiMode, view: requestedView,
     legacyMobile: mobileRequested, saved: savedUiMode, mobile: mobileBrowser, compact: compactScreen });
   document.documentElement.dataset.clientMode = clientLayout;
+  document.documentElement.dataset.layoutPreference = nativeWindowsApp ? "native" : layoutPreference;
+  try {
+    localStorage.setItem("hs-layout-mode-v2", layoutPreference);
+    localStorage.setItem("hs-layout-choice-v2", savedUiMode);
+    localStorage.setItem("hs-last-client-layout", clientLayout);
+  } catch (_) { /* Storage unavailable: current device detection still works. */ }
   document.documentElement.dataset.clientRuntime = nativeWindowsApp ? "windows" : "web";
   document.documentElement.classList.add("publicLanding");
   if (clientLayout === "mobile") {
@@ -54,21 +78,33 @@
 </script>
 <title>HOME SECURITY — monitoring domu</title>
 <meta name="description" content="HOME SECURITY: monitoring domowy z programem Windows, podglądem na telefonie, lokalnym archiwum i diagnostyką połączenia. Poznaj funkcje i wymagania.">
-<link rel="manifest" href="manifest.webmanifest?v=3">
+<link rel="manifest" href="manifest.webmanifest?v=4">
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
-<link rel="stylesheet" href="marketing.css?v=13">
+<link rel="stylesheet" href="marketing.css?v=18">
 <link rel="stylesheet" href="marketing-motion.css?v=2">
 <script type="module" src="marketing-motion.mjs?v=3"></script>
 <link rel="stylesheet" href="marketing-navigation.css?v=1">
+<link rel="stylesheet" href="tech-theme.css?v=3">
+<link rel="stylesheet" href="marketing-campaign.css?v=1">
 <script type="module" src="marketing-navigation.mjs?v=1"></script>
 <script type="module" src="marketing-downloads.mjs?v=2"></script>
 <template id="panelStyles">
 <link rel="stylesheet" href="style.css?v=185">
 <link rel="stylesheet" href="workspace-ui.css?v=13">
 <link rel="stylesheet" href="interface-theme.css?v=3">
-<link rel="stylesheet" href="interface-concept.css?v=2">
+<link rel="stylesheet" href="interface-concept.css?v=3">
 <link rel="stylesheet" href="auth-experience.css?v=2">
 <link rel="stylesheet" href="camera-workspace.css?v=2">
+<link rel="stylesheet" href="mobile-camera-frame.css?v=6">
+<link rel="stylesheet" href="desktop-product.css?v=1">
+<link rel="stylesheet" href="gallery-viewer.css?v=1">
+<link rel="stylesheet" href="reference-ui.css?v=1">
+<link rel="stylesheet" href="audio-listen.css?v=1">
+<link rel="stylesheet" href="mobile-viewer.css?v=5">
+<link rel="stylesheet" href="premium-dark-pro.css?v=1">
+<link rel="stylesheet" href="remote-unlock-ui.css?v=1">
+<link rel="stylesheet" href="tech-ops.css?v=2">
+<link rel="stylesheet" href="operator-layout.css?v=3">
 </template>
 <style>html,body{margin:0;min-height:100%;background:#090b11;color:#f4f3ef;font:15px/1.5 system-ui,sans-serif}[hidden]{display:none!important}.publicLanding body>:not(#publicHome):not(script):not(template):not(#bootError){display:none!important}.publicLanding #publicHome{position:relative;z-index:200;min-height:100vh;overflow:hidden}.publicLanding #bootError{position:fixed;z-index:999;inset:auto 16px 16px;padding:18px;background:#24141a;color:#fff}</style>
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png"></head>
@@ -77,130 +113,80 @@
      wejściu do zabezpieczonej części i wpisaniu PIN-u. -->
 <div role="group" id="publicHome" class="publicHome mktSite" aria-label="Strona główna HOME SECURITY">
   <a class="mktSkip" href="#mkt-content">Przejdź do treści</a>
-  <header class="mktHeader"><a class="mktBrand" href="./" aria-label="DS HOME SECURITY — strona główna"><img src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w" sizes="44px" width="44" height="48" alt="Logo DS"><span>HOME <b>SECURITY</b><small>TWÓJ DOM. TWOJA KONTROLA.</small></span></a><nav aria-label="Nawigacja strony"><a href="#mozliwosci">Możliwości</a><a href="#jak-dziala">Jak działa</a><a href="pobierz.html">Pobierz</a><a href="blog/index.html">Poradniki</a><a href="pomoc.html">Pomoc</a></nav><a class="mktLogin" href="panel.html?auth=login">Zaloguj się <span aria-hidden="true">↗</span></a><details class="mktMobileMenu"><summary aria-label="Otwórz menu nawigacji" aria-controls="mktMobileNavigation"><span class="mktMenuBars" aria-hidden="true"><i></i><i></i><i></i></span><span class="mktMenuText mktMenuTextOpen" aria-hidden="true">Menu</span><span class="mktMenuText mktMenuTextClosed" aria-hidden="true">Zamknij</span></summary><nav id="mktMobileNavigation" aria-label="Nawigacja mobilna"><div class="mktMenuGroup " role="group" aria-label="Poznaj HOME SECURITY"><p class="mktMenuGroupLabel">Poznaj HOME SECURITY</p><a href="#jak-dziala">Jak działa</a><a href="#mozliwosci">Możliwości</a><a href="#zobacz-panel">Prezentacja panelu</a><a href="galeria.html">Projekty interfejsu</a><a href="#specyfikacja">Wymagania</a><a href="#stan-projektu">Stan projektu</a></div><div class="mktMenuGroup " role="group" aria-label="Zacznij korzystać"><p class="mktMenuGroupLabel">Zacznij korzystać</p><a href="pobierz.html">Pobierz aplikację</a><a href="#przygotowanie">Przygotowanie</a><a href="blog/pierwsze-uruchomienie.html">Pierwsze uruchomienie</a><a href="blog/index.html">Wszystkie poradniki</a></div><div class="mktMenuGroup mktMenuAccount" role="group" aria-label="Konto"><p class="mktMenuGroupLabel">Konto</p><a class="mktLogin" href="panel.html?auth=login">Zaloguj się</a><a class="mktMenuRegister" href="panel.html?auth=register">Załóż konto</a></div><div class="mktMenuGroup " role="group" aria-label="Pomoc i dokumenty"><p class="mktMenuGroupLabel">Pomoc i dokumenty</p><a href="pomoc.html">Kontakt i pomoc</a><a href="polityka-prywatnosci.html">Polityka prywatności</a></div></nav></details></header>
+  <header class="mktHeader"><a class="mktBrand" href="./" aria-label="DS HOME SECURITY — strona główna"><img src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w" sizes="44px" width="44" height="48" alt="Logo DS"><span>HOME <b>SECURITY</b><small>TWÓJ DOM. TWOJA KONTROLA.</small></span></a><nav aria-label="Nawigacja strony"><a href="mozliwosci.html">Możliwości</a><a href="jak-dziala.html">Jak działa</a><a href="pobierz.html">Pobierz</a><a href="blog/index.html">Poradniki</a><a href="pomoc.html">Pomoc</a></nav><a class="mktLogin" href="panel.html?auth=login">Zaloguj się <span aria-hidden="true">↗</span></a><details class="mktMobileMenu"><summary aria-label="Otwórz menu nawigacji" aria-controls="mktMobileNavigation"><span class="mktMenuBars" aria-hidden="true"><i></i><i></i><i></i></span><span class="mktMenuText mktMenuTextOpen" aria-hidden="true">Menu</span><span class="mktMenuText mktMenuTextClosed" aria-hidden="true">Zamknij</span></summary><nav id="mktMobileNavigation" aria-label="Nawigacja mobilna"><div class="mktMenuGroup " role="group" aria-label="Poznaj HOME SECURITY"><p class="mktMenuGroupLabel">Poznaj HOME SECURITY</p><a href="jak-dziala.html">Jak działa</a><a href="mozliwosci.html">Możliwości</a><a href="prezentacja.html">Prezentacja panelu</a><a href="wymagania.html">Wymagania</a><a href="stan-projektu.html">Stan projektu</a></div><div class="mktMenuGroup " role="group" aria-label="Zacznij korzystać"><p class="mktMenuGroupLabel">Zacznij korzystać</p><a href="pobierz.html">Pobierz aplikację</a><a href="przygotowanie.html">Przygotowanie</a><a href="blog/pierwsze-uruchomienie.html">Pierwsze uruchomienie</a><a href="blog/index.html">Wszystkie poradniki</a></div><div class="mktMenuGroup mktMenuAccount" role="group" aria-label="Konto"><p class="mktMenuGroupLabel">Konto</p><a class="mktLogin" href="panel.html?auth=login">Zaloguj się</a><a class="mktMenuRegister" href="panel.html?auth=register">Załóż konto</a></div><div class="mktMenuGroup " role="group" aria-label="Pomoc i dokumenty"><p class="mktMenuGroupLabel">Pomoc i dokumenty</p><a href="pomoc.html">Pomoc</a><a href="kontakt.html">Kontakt</a><a href="dokumenty.html">Dokumenty i instrukcja</a><a href="instrukcja.html">Instrukcja obsługi</a><a href="zasady-korzystania.html">Zasady korzystania</a><a href="polityka-prywatnosci.html">Polityka prywatności</a></div></nav></details></header>
   <main id="mkt-content" class="mktMain">
-    <div class="mktHero mktContainer"><div class="mktHeroCopy"><p class="mktEyebrow"><span></span> HOME SECURITY · MONITORING DLA TWOJEGO DOMU</p><h1>Monitoring domu.<br><em>Podgląd<br>pod ręką.</em></h1><p class="mktLead">Monitoring domu z HOME SECURITY łączy komputer Windows z panelem na telefonie. Sprawdź podgląd kamery, wróć do nagrań i odczytaj stan połączenia.</p><div class="mktActions"><a class="mktButton" href="pobierz.html">Pobierz HOME SECURITY <span aria-hidden="true">↓</span></a><a class="mktButton mktButtonQuiet" href="panel.html?auth=register">Załóż konto <span aria-hidden="true">↗</span></a></div><div role="group" class="mktHeroFacts" aria-label="Najważniejsze informacje"><span>Komputer Windows x64</span><span>Telefon przez przeglądarkę</span><span>Folder nagrań na komputerze</span></div><p class="mktFine"><strong>Wydanie rozwojowe:</strong> to nie jest gotowy system alarmowy. <a href="#stan-projektu">Sprawdź możliwości i ograniczenia</a>. <a href="pomoc.html?temat=produkt">Masz pytanie o ofertę?</a></p></div><figure class="mktHeroVisual"><img src="assets/home-security-hero.png" srcset="assets/home-security-hero-640.webp 640w, assets/home-security-hero.webp 1024w" sizes="(max-width: 700px) calc(100vw - 36px), (max-width: 1200px) 43vw, 550px" width="1024" height="1024" fetchpriority="high" decoding="async" alt="Ilustracja spokojnego wnętrza domu przedstawiająca ideę monitoringu HOME SECURITY"><figcaption><span class="mktImageLabel">ILUSTRACJA KONCEPCJI</span><strong>Jeden panel.<br>Jasny obraz sytuacji.</strong><span>Windows w domu. Podgląd w telefonie.</span></figcaption></figure></div>
-    <div class="mktCapabilityStrip"><div class="mktContainer"><span><b>01</b> Podgląd na żywo</span><span><b>02</b> Lokalne archiwum</span><span><b>03</b> Konto i dodatkowy PIN</span><span><b>04</b> Panel na telefonie</span></div></div>
-    <section id="zobacz-panel" class="mktStage mktContainer" aria-label="Przykładowy układ panelu HOME SECURITY">
-      <div class="mktStageHeading"><div><p class="mktEyebrow">JEDEN SYSTEM. PRZEJRZYSTY OBRAZ SYTUACJI.</p><h2>Nie musisz zgadywać,<br>co dzieje się z kamerą.</h2></div><p>Najważniejsze obszary systemu są oddzielone. To przykład układu panelu — nie transmisja z kamery i nie rzeczywiste dane pomiarowe.</p></div>
-      <div role="group" class="mktDemo" aria-label="Wizualizacja poglądowa interfejsu aplikacji">
-        <div class="mktDemoTop"><span class="mktDemoMark">◉ <strong>HOME SECURITY</strong> <small>PRZYKŁADOWY UKŁAD</small></span><span class="mktDemoUser" aria-hidden="true">● ● ●</span></div>
-        <div class="mktDemoBody">
-          <div class="mktDemoNav" aria-hidden="true"><span class="selected">⌂</span><span>◫</span><span>◷</span><span>⚙</span></div>
-          <div class="mktDemoScreen"><span class="mktDemoEyebrow">PODGLĄD</span><h3>Wszystko w zasięgu wzroku.</h3><div class="mktDemoImage"><span class="mktDemoLens">◉</span><span class="mktDemoIllustration">WIDOK KAMERY</span><small>Obszar podglądu — ilustracja</small></div></div>
-          <div class="mktDemoSide"><p>PANEL KONTROLI</p><div><span>01</span><strong>Obraz na żywo</strong><small>Oddzielny podgląd</small></div><div><span>02</span><strong>Archiwum DVR</strong><small>Historia i odtwarzanie</small></div><div><span>03</span><strong>Diagnostyka</strong><small>Stan połączenia i zapisu</small></div></div>
-        </div>
-        <div class="mktDemoBottom">WIZUALIZACJA INTERFEJSU · BEZ DANYCH UŻYTKOWNIKA</div>
+    <div class="mktHero mktContainer"><div class="mktHeroCopy"><p class="mktEyebrow"><span></span> HOME SECURITY · MONITORING DLA TWOJEGO DOMU</p><h1>Twój dom.<br><em>Pod kontrolą,<br>gdziekolwiek jesteś.</em></h1><p class="mktLead">Podgląd na żywo z kamery przy komputerze, archiwum nagrań i wygodny dostęp z telefonu. HOME SECURITY pomaga Ci sprawdzić, co dzieje się w domu, bez przełączania się między wieloma narzędziami.</p><div class="mktActions"><a class="mktButton" href="pobierz.html">Pobierz HOME SECURITY <span aria-hidden="true">↓</span></a><a class="mktButton mktButtonQuiet" href="panel.html?auth=login">Otwórz panel <span aria-hidden="true">↗</span></a></div><p class="mktStartLinks">Pierwszy raz? <a href="panel.html?auth=register">Załóż konto</a> lub <a href="blog/pierwsze-uruchomienie.html">zobacz instrukcję uruchomienia</a>.</p><div role="group" class="mktHeroFacts" aria-label="Najważniejsze informacje"><span>Komputer Windows x64</span><span>Telefon przez przeglądarkę</span><span>Folder nagrań na komputerze</span></div><p class="mktFine"><strong>Wydanie rozwojowe:</strong> to nie jest gotowy system alarmowy. <a href="stan-projektu.html">Sprawdź możliwości i ograniczenia</a>. <a href="kontakt.html?temat=produkt">Masz pytanie o ofertę?</a></p></div><figure class="mktHeroVisual"><img src="assets/home-security-hero.png" srcset="assets/home-security-hero-640.webp 640w, assets/home-security-hero.webp 1024w" sizes="(max-width: 700px) calc(100vw - 36px), (max-width: 1200px) 43vw, 550px" width="1024" height="1024" fetchpriority="high" decoding="async" alt="Ilustracja spokojnego wnętrza domu przedstawiająca ideę monitoringu HOME SECURITY"><figcaption><span class="mktImageLabel">ILUSTRACJA KONCEPCJI</span><strong>Jeden panel.<br>Jasny obraz sytuacji.</strong><span>Windows w domu. Podgląd w telefonie.</span></figcaption></figure></div>
+    <div class="mktCapabilityStrip mktMkStrip"><div class="mktContainer"><article><span class="mktMkIco"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="m15.5 10 6-3.5v11l-6-3.5"/></svg></span><div><b>Podgląd na żywo</b><small>Obraz z kamery przy komputerze Windows.</small></div></article><article><span class="mktMkIco"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/></svg></span><div><b>Kontrola z telefonu</b><small>Panel w przeglądarce Androida i iPhone’a.</small></div></article><article><span class="mktMkIco"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></svg></span><div><b>Lokalne archiwum</b><small>Nagrania w wybranym folderze komputera.</small></div></article><article><span class="mktMkIco"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></span><div><b>Prywatność i dostęp</b><small>Konto i dodatkowy PIN to osobne kroki.</small></div></article></div></div>
+
+
+
+
+
+
+    
+    <!-- Kampania produktowa: bez demonstracyjnych alarmów i fikcyjnych ocen -->
+    <section class="hsCampaign mktContainer" aria-labelledby="hsCampaignTitle">
+      <div class="hsCampaignCopy">
+        <p class="hsCampaignEyebrow">HOME SECURITY / TWÓJ DOM POD KONTROLĄ</p>
+        <h2 id="hsCampaignTitle">Sprawdź, co dzieje się <em>w Twoim domu.</em></h2>
+        <p>Obraz z kamery przy komputerze, wygodny podgląd na telefonie i nagrania w wybranym folderze. Wszystko w jednym panelu, bez obietnic funkcji, których jeszcze nie ma.</p>
+        <div class="hsCampaignActions"><a href="jak-dziala.html">Zobacz, jak to działa →</a><a href="pobierz.html">Pobierz na Windows ↓</a></div>
+      </div>
+      <div class="hsCampaignVisual" role="img" aria-label="Ilustracyjne zdjęcie współczesnego domu, obraz promocyjny, nie widok z prawdziwej kamery">
+        <div class="hsCampaignStatus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z"/><path d="m8 12 3 3 5-6"/></svg><div><span>Monitoring pod kontrolą</span><small>Projekt wizualny HOME SECURITY</small></div></div>
+      </div>
+    </section>
+    <section class="hsCampaignShelf mktContainer" aria-labelledby="hsCampaignShelfTitle">
+      <div class="hsCampaignShelfHead"><h2 id="hsCampaignShelfTitle">Zobacz możliwości <span style="color:#58def9">w praktyce.</span></h2><p>Trzy najważniejsze części HOME SECURITY. Zdjęcia są ilustracyjne, nie przedstawiają aktywnej transmisji.</p></div>
+      <div class="hsCampaignTiles">
+        <a class="hsCampaignTile" href="mozliwosci.html"><img src="assets/site-kam01.webp" width="480" height="300" loading="lazy" decoding="async" alt="Ilustracja przykładowego obrazu z kamery przy domu"><span class="hsCampaignTileBody"><small>01 / PODGLĄD</small><strong>Kamera na żywo</strong><span>Obraz z komputera nadającego możesz otworzyć w panelu na swoim telefonie.</span><b>Sprawdź podgląd →</b></span></a>
+        <a class="hsCampaignTile" href="mozliwosci.html"><img src="assets/site-archiwum.webp" width="480" height="300" loading="lazy" decoding="async" alt="Ilustracja archiwum nagrań z monitoringu"><span class="hsCampaignTileBody"><small>02 / NAGRANIA</small><strong>Wracaj do zapisanych chwil</strong><span>Wybierz dzień i sprawdź materiały zapisane w folderze komputera.</span><b>Poznaj archiwum →</b></span></a>
+        <a class="hsCampaignTile" href="pobierz.html"><img src="assets/site-kam02.webp" width="480" height="300" loading="lazy" decoding="async" alt="Ilustracja podglądu monitoringu na urządzeniu mobilnym"><span class="hsCampaignTileBody"><small>03 / ZDALNY DOSTĘP</small><strong>Twój panel w telefonie</strong><span>Połącz się przez przeglądarkę. Dostęp do panelu jest oddzielony od publicznej strony.</span><b>Jak uruchomić →</b></span></a>
       </div>
     </section>
 
-
-    <section id="galeria" class="mktConceptGallery mktContainer" aria-labelledby="mktGalleryTitle">
-      <div class="mktSectionHead mktConceptHead"><div><p class="mktEyebrow">PROJEKT INTERFEJSU · PLANSZE KONCEPCYJNE</p><h2 id="mktGalleryTitle">Zajrzyj do środka.<br>Zobacz kierunek rozwoju.</h2></div><p>Cztery projekty ekranów Windows i telefonu. To wizualizacje UI z etapu 193, a nie zrzuty działającej aplikacji 217. Wybrane elementy mogą nie być dostępne w obecnej wersji.</p></div>
-      <div class="mktConceptGrid">
-        <figure class="mktConceptCard"><a class="mktConceptOpen" href="../docs/ui-193/01-pulpit.png" data-mkt-image-view aria-label="Otwórz duży projekt pulpitu HOME SECURITY"><img src="../docs/ui-193/01-pulpit.png" srcset="../docs/ui-193/01-pulpit-480.webp 480w, ../docs/ui-193/01-pulpit-640.webp 640w, ../docs/ui-193/01-pulpit-720.webp 720w, ../docs/ui-193/01-pulpit-960.webp 960w" sizes="(max-width: 650px) calc(100vw - 36px), (max-width: 1100px) 48vw, 550px" loading="lazy" decoding="async" fetchpriority="low" width="1536" height="1024" alt="Koncepcja pulpitu HOME SECURITY z podglądem i listą zdarzeń"><span class="mktConceptZoom" aria-hidden="true">Powiększ <span>↗</span></span></a><figcaption><span>01 · KOMPUTER</span><strong>Pulpit i podgląd</strong><small>Propozycja organizacji obrazu i zdarzeń.</small></figcaption></figure>
-        <figure class="mktConceptCard"><a class="mktConceptOpen" href="../docs/ui-193/03-nagrania.png" data-mkt-image-view aria-label="Otwórz duży projekt archiwum HOME SECURITY"><img src="../docs/ui-193/03-nagrania.png" srcset="../docs/ui-193/03-nagrania-480.webp 480w, ../docs/ui-193/03-nagrania-640.webp 640w, ../docs/ui-193/03-nagrania-720.webp 720w, ../docs/ui-193/03-nagrania-960.webp 960w" sizes="(max-width: 650px) calc(100vw - 36px), (max-width: 1100px) 48vw, 550px" loading="lazy" decoding="async" fetchpriority="low" width="1536" height="1024" alt="Koncepcja archiwum HOME SECURITY z osią czasu i odtwarzaczem"><span class="mktConceptZoom" aria-hidden="true">Powiększ <span>↗</span></span></a><figcaption><span>02 · ARCHIWUM</span><strong>Nagrania w jednym miejscu</strong><small>Propozycja widoku odtwarzacza i zapisu.</small></figcaption></figure>
-        <figure class="mktConceptCard"><a class="mktConceptOpen" href="../docs/ui-193/05-diagnostyka.png" data-mkt-image-view aria-label="Otwórz duży projekt diagnostyki HOME SECURITY"><img src="../docs/ui-193/05-diagnostyka.png" srcset="../docs/ui-193/05-diagnostyka-480.webp 480w, ../docs/ui-193/05-diagnostyka-640.webp 640w, ../docs/ui-193/05-diagnostyka-720.webp 720w, ../docs/ui-193/05-diagnostyka-960.webp 960w" sizes="(max-width: 650px) calc(100vw - 36px), (max-width: 1100px) 48vw, 550px" loading="lazy" decoding="async" fetchpriority="low" width="1536" height="1024" alt="Koncepcja diagnostyki kamery, zapisu i połączenia"><span class="mktConceptZoom" aria-hidden="true">Powiększ <span>↗</span></span></a><figcaption><span>03 · KONTROLA</span><strong>Diagnostyka bez zgadywania</strong><small>Propozycja rozdzielenia komunikatów.</small></figcaption></figure>
-        <figure class="mktConceptCard"><a class="mktConceptOpen" href="../docs/ui-193/07-telefon.png" data-mkt-image-view aria-label="Otwórz duży projekt ekranów mobilnych HOME SECURITY"><img src="../docs/ui-193/07-telefon.png" srcset="../docs/ui-193/07-telefon-480.webp 480w, ../docs/ui-193/07-telefon-640.webp 640w, ../docs/ui-193/07-telefon-720.webp 720w, ../docs/ui-193/07-telefon-960.webp 960w" sizes="(max-width: 650px) calc(100vw - 36px), (max-width: 1100px) 48vw, 550px" loading="lazy" decoding="async" fetchpriority="low" width="1536" height="1024" alt="Koncepcja panelu telefonu z podglądem i nawigacją"><span class="mktConceptZoom" aria-hidden="true">Powiększ <span>↗</span></span></a><figcaption><span>04 · TELEFON</span><strong>Panel zaprojektowany na dotyk</strong><small>Koncepcja mobilnej nawigacji i widoków.</small></figcaption></figure>
+    <section class="mktPublicFeatures mktContainer" aria-labelledby="mktPublicFeaturesTitle">
+      <div class="mktPublicSectionHead">
+        <div><p class="mktEyebrow"><span></span> JEDEN PANEL · CODZIENNY SPOKÓJ</p><h2 id="mktPublicFeaturesTitle">Wszystko, co ważne.<br><em>W jednym miejscu.</em></h2></div>
+        <p>Nie musisz przekopywać się przez ustawienia. Najważniejsze elementy monitoringu mają być czytelne od pierwszego spojrzenia.</p>
       </div>
-      <div class="mktConceptNote"><div><strong>Ważne: to nie są rzeczywiste zrzuty ekranu.</strong><p>Plansze pokazują kierunek projektowy, nie dowodzą obsługi wielu kamer, detekcji osób, czujników ani niezależnego nagrywania. Zakres działających funkcji i ograniczeń opisujemy poniżej.</p></div><div class="mktConceptActions"><a class="mktTextLink" href="galeria.html">Zobacz wszystkie 8 plansz projektu →</a><a class="mktTextLink" href="#stan-projektu">Sprawdź aktualny stan funkcji →</a></div></div>
-      <dialog class="mktGalleryDialog" aria-labelledby="mktGalleryDialogTitle"><div class="mktGalleryDialogHead"><div><span>HOME SECURITY · PROJEKT UI</span><h3 id="mktGalleryDialogTitle">Podgląd planszy</h3></div><button type="button" class="mktGalleryClose" data-mkt-image-close aria-label="Zamknij powiększenie">Zamknij ×</button></div><div class="mktGalleryDialogImage"></div><p>Koncepcja projektu UI — nie jest to zrzut działającej aplikacji ani obraz z kamery.</p></dialog>
-    </section>
-
-    <section id="w-praktyce" class="mktVisualStory" aria-labelledby="mktVisualTitle">
-      <div class="mktContainer mktVisualLayout">
-        <figure class="mktVisualFigure">
-          <div class="mktVisualImage"><img src="assets/home-security-how-it-works.png" srcset="assets/home-security-how-it-works-640.webp 640w, assets/home-security-how-it-works.webp 1024w" sizes="(max-width: 700px) calc(100vw - 36px), 540px" loading="lazy" decoding="async" width="1024" height="1024" alt="Poglądowa ilustracja działania domowego monitoringu HOME SECURITY, a nie zrzut rzeczywistej transmisji kamery"></div>
-          <figcaption>Ilustracja koncepcji produktu. Obraz i funkcje zależą od Twoich urządzeń oraz konfiguracji.</figcaption>
-        </figure>
-        <div class="mktVisualCopy">
-          <p class="mktEyebrow">ZOBACZ, JAK TO DZIAŁA</p>
-          <h2 id="mktVisualTitle">Od kamery w domu do podglądu na telefonie.</h2>
-          <p class="mktVisualLead">HOME SECURITY łączy program na komputerze Windows z panelem w przeglądarce telefonu. Dzięki temu wiesz, gdzie powstaje obraz, gdzie zapisują się nagrania i jakie warunki musi spełniać połączenie.</p>
-          <ol class="mktVisualSequence">
-            <li><span>01</span><div><h3>Komputer udostępnia obraz</h3><p>Uruchamiasz program Windows i wybierasz kamerę. To komputer jest nadajnikiem, a nie telefon.</p></div></li>
-            <li><span>02</span><div><h3>Ty otwierasz własny panel</h3><p>Logujesz się na konto, odblokowujesz dostęp PIN-em i sprawdzasz dostępność podglądu.</p></div></li>
-            <li><span>03</span><div><h3>Nagrania mają osobne potwierdzenie</h3><p>Archiwum i diagnostyka pomagają odróżnić działającą kamerę od rzeczywiście zapisanego pliku.</p></div></li>
-          </ol>
-          <div class="mktVisualActions"><a class="mktButton" href="blog/pierwsze-uruchomienie.html">Instrukcja krok po kroku <span aria-hidden="true">↗</span></a><a class="mktTextLink" href="#specyfikacja">Sprawdź wymagania →</a></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="mozliwosci" class="mktSection mktContainer"><div class="mktSectionHead"><div><p class="mktEyebrow">MNIEJ SZUKANIA. WIĘCEJ KONTROLI.</p><h2>Właściwe narzędzie.<br>We właściwym miejscu.</h2></div><p>Podgląd, nagrania i ustawienia mają osobne sekcje. Nie musisz przekopywać się przez jeden przeładowany ekran.</p></div><div class="mktFeatureGrid"><article class="mktFeature mktFeatureMain"><span class="mktFeatureNumber">01 / DOM</span><h3>Sprawdź to,<br>co dzieje się teraz.</h3><p>Podgląd kamery, odsłuch i kontrola kadru. Pełny ekran, cyfrowe przybliżenie i ustawienia dopasowania obrazu są pod ręką.</p><a class="mktTextLink" href="blog/diagnostyka-monitoringu.html">Jak rozumieć stan kamery <span aria-hidden="true">↗</span></a><div role="group" class="mktFeatureDiagram" aria-label="Podział ról urządzeń"><span>Komputer z kamerą</span><i aria-hidden="true">→</i><span>Twój panel</span></div></article><article class="mktFeature"><span class="mktFeatureNumber">02 / NAGRANIA</span><h3>Wracaj do zapisanych fragmentów.</h3><p>Archiwum DVR, wybór dnia i odtwarzanie. Miejsce zapisu wybierasz na komputerze nadającym — z jego zgodą na dostęp do folderu.</p><a class="mktTextLink" href="blog/zapis-lokalny-i-drive.html">Poznaj zasady zapisu ↗</a></article><article class="mktFeature"><span class="mktFeatureNumber">03 / DIAGNOSTYKA</span><h3>Wiedz, co naprawdę działa.</h3><p>Stan kamery, nagrywania, folderu, WebRTC i chmury jest rozdzielony. Sam napis „na żywo” nie oznacza, że plik został już zapisany.</p><a class="mktTextLink" href="blog/diagnostyka-monitoringu.html">Sprawdź diagnostykę ↗</a></article><article class="mktFeature"><span class="mktFeatureNumber">04 / DOSTĘP</span><h3>Najpierw konto.<br>Potem Twój PIN.</h3><p>Logowanie do konta i odblokowanie panelu to oddzielne kroki. Publiczna strona nie wyświetla obrazu z Twojej kamery.</p><a class="mktTextLink" href="blog/pierwsze-uruchomienie.html">Zobacz pierwsze uruchomienie ↗</a></article></div></section>
-
-    <section id="zastosowania" class="mktScenarios mktContainer" aria-labelledby="mktScenariosTitle">
-      <div class="mktSectionHead"><div><p class="mktEyebrow">CO MOŻESZ ZROBIĆ</p><h2 id="mktScenariosTitle">Zobacz użyteczność.<br>Nie tylko listę funkcji.</h2></div><p>Trzy codzienne sytuacje, w których liczy się prosta obsługa. Poniższe miniatury są schematami, nie zrzutami ekranu ani rzeczywistymi pomiarami.</p></div>
-      <div class="mktScenarioGrid">
-        <article class="mktScenarioCard">
-          <div class="mktScenarioVisual mktScenarioLive" aria-hidden="true"><div class="mktScenarioHeader"><span>01 / PODGLĄD</span><span>◉</span></div><div class="mktScenarioArt mktScenarioArtCamera"><span class="mktScenarioCircle"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="8" y="11" width="27" height="25" rx="5" stroke="currentColor" stroke-width="2"/><circle cx="21.5" cy="23.5" r="7" stroke="currentColor" stroke-width="2"/><path d="M35 18l7-4v19l-7-4" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span></div><div class="mktScenarioVisualFoot">OBRAZ · SCHEMAT</div></div>
-          <span class="mktScenarioNumber">01 / PODGLĄD</span><h3>Chcesz sprawdzić, co widzi kamera?</h3><p>Otwierasz panel na telefonie i widzisz obraz udostępniany przez komputer. Dostęp zależy od działającego nadajnika i połączenia.</p><a class="mktTextLink" href="#jak-dziala">Jak uruchomić podgląd →</a>
+      <div class="mktPublicFeatureGrid">
+        <article class="mktPublicSpotlight">
+          <div class="mktPublicFeatureLabel"><span>01 / PODGLĄD</span><span>WINDOWS + TELEFON</span></div>
+          <div class="mktPublicPreview" role="img" aria-label="Schemat przykładowego interfejsu podglądu kamery. To nie jest rzeczywisty obraz ani aktywna transmisja.">
+            <div class="mktPublicPreviewTop"><span>HOME SECURITY</span><span>WIDOK POGLĄDOWY</span></div>
+            <div class="mktPublicPreviewStage"><div class="mktPublicPreviewMark" aria-hidden="true"><span></span></div><strong>Twoja kamera, jeden widok</strong><small>Podgląd pojawia się po połączeniu urządzeń.</small></div>
+            <div class="mktPublicPreviewBottom"><span>Stan połączenia</span><span>Nagrania</span><span>Ustawienia</span></div>
+          </div>
+          <h3>Podgląd bez zbędnych ekranów</h3><p>Sprawdzaj obraz i stan połączenia z panelu właściciela. Widok na telefonie nie przejmuje kamery komputera.</p>
+          <a class="mktTextLink" href="prezentacja.html">Zobacz prezentację panelu →</a>
         </article>
-        <article class="mktScenarioCard">
-          <div class="mktScenarioVisual mktScenarioArchive" aria-hidden="true"><div class="mktScenarioHeader"><span>02 / ARCHIWUM</span><span>▦</span></div><div class="mktScenarioArt"><div class="mktScenarioTimeline"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="mktScenarioPlay">▶</div></div><div class="mktScenarioVisualFoot">OŚ NAGRAŃ · SCHEMAT</div></div>
-          <span class="mktScenarioNumber">02 / HISTORIA</span><h3>Potrzebujesz wrócić do nagrania?</h3><p>Przeglądasz archiwum według dostępnych dni i odtwarzasz materiał. Zapisywany plik musi być potwierdzony przez komputer.</p><a class="mktTextLink" href="blog/zapis-lokalny-i-drive.html">Gdzie powstaje nagranie →</a>
-        </article>
-        <article class="mktScenarioCard">
-          <div class="mktScenarioVisual mktScenarioHealth" aria-hidden="true"><div class="mktScenarioHeader"><span>03 / DIAGNOSTYKA</span><span>◎</span></div><div class="mktScenarioArt mktScenarioStatus"><span><i></i>KAMERA</span><span><i></i>POŁĄCZENIE</span><span><i></i>FOLDER ZAPISU</span></div><div class="mktScenarioVisualFoot">KATEGORIE STANÓW · SCHEMAT</div></div>
-          <span class="mktScenarioNumber">03 / KONTROLA</span><h3>Chcesz wiedzieć, czy zapis działa?</h3><p>Odczytujesz osobno stan kamery, połączenia i folderu. Sam podgląd nie daje jeszcze pewności, że nagranie zostało zapisane.</p><a class="mktTextLink" href="blog/diagnostyka-monitoringu.html">Co oznaczają stany systemu →</a>
-        </article>
+        <article class="mktPublicFeatureCard"><span class="mktPublicFeatureNumber">02 / ARCHIWUM</span><div class="mktPublicFeatureIcon" aria-hidden="true">▤</div><h3>Nagrania we właściwym miejscu</h3><p>Wracaj do zapisanych materiałów w archiwum. Pliki lokalne znajdują się w wybranym folderze komputera.</p><a class="mktTextLink" href="mozliwosci.html">Poznaj funkcje →</a></article>
+        <article class="mktPublicFeatureCard"><span class="mktPublicFeatureNumber">03 / DOSTĘP</span><div class="mktPublicFeatureIcon" aria-hidden="true">◇</div><h3>Panel chroniony dostępem</h3><p>Oddzielna strefa właściciela, logowanie i dodatkowy PIN. Publiczna strona nie wyświetla prywatnego obrazu z kamery.</p><a class="mktTextLink" href="jak-dziala.html">Jak działa dostęp →</a></article>
       </div>
     </section>
 
-    <section id="jak-dziala" class="mktProcess"><div class="mktContainer mktProcessLayout"><div><p class="mktEyebrow">PROSTY PODZIAŁ RÓL</p><h2>Komputer zostaje w domu.<br>Ty wybierasz, skąd patrzysz.</h2><p>Windows obsługuje źródło kamery i miejsce zapisu. Telefon służy do podglądu, archiwum oraz dostępnych ustawień właściciela.</p><a class="mktTextLink" href="blog/pierwsze-uruchomienie.html">Przeczytaj instrukcję startu →</a></div><ol class="mktSteps"><li><span>01</span><div><h3>Przygotuj komputer</h3><p>Zainstaluj program Windows, podłącz kamerę i sprawdź jej dostępność w ustawieniach urządzeń.</p></div></li><li><span>02</span><div><h3>Zaloguj się i wybierz folder</h3><p>Wejdź na swoje konto, odblokuj panel PIN-em i zatwierdź lokalizację nagrań.</p></div></li><li><span>03</span><div><h3>Połącz telefon z własnym panelem</h3><p>Otwórz panel internetowy, zaloguj się i sprawdź obraz. Nadajnik musi pozostać uruchomiony.</p></div></li></ol></div></section>
-
-    <section id="przygotowanie" class="mktSetup mktContainer" aria-labelledby="mktSetupTitle">
-      <div class="mktSetupHeading">
-        <div><p class="mktEyebrow">PRAKTYCZNIE, BEZ ZGADYWANIA</p><h2 id="mktSetupTitle">Zanim uruchomisz monitoring.</h2><p>Sprawdź cztery rzeczy, od których zależy pierwsza konfiguracja. Ten przewodnik nie łączy się z kamerą i nie sprawdza automatycznie Twoich urządzeń.</p></div>
-        <div class="mktSetupCounter" aria-live="polite"><span id="mktSetupCount">0 / 4</span><small>punktów sprawdzonych</small><div class="mktSetupProgress" role="progressbar" aria-label="Postęp przygotowania" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0"><span></span></div></div>
-      </div>
-      <div class="mktSetupList">
-        <label class="mktSetupItem"><input type="checkbox" data-mkt-setup><span class="mktSetupCheck" aria-hidden="true"></span><span><strong>Komputer z Windows i kamerą</strong><small>Masz komputer x64, kamerę dostępną w systemie i możliwość uruchomienia nadajnika.</small></span></label>
-        <label class="mktSetupItem"><input type="checkbox" data-mkt-setup><span class="mktSetupCheck" aria-hidden="true"></span><span><strong>Konto i dostęp PIN</strong><small>Możesz odebrać e-mail potwierdzający i ustawić dodatkowy PIN do panelu.</small></span></label>
-        <label class="mktSetupItem"><input type="checkbox" data-mkt-setup><span class="mktSetupCheck" aria-hidden="true"></span><span><strong>Folder na prawdziwe nagrania</strong><small>Wybierzesz lokalny folder i zweryfikujesz, czy program faktycznie utworzył plik.</small></span></label>
-        <label class="mktSetupItem"><input type="checkbox" data-mkt-setup><span class="mktSetupCheck" aria-hidden="true"></span><span><strong>Telefon i stabilne połączenie</strong><small>Masz przeglądarkę telefonu i sprawdzisz połączenie z włączonym komputerem.</small></span></label>
-      </div>
-      <p id="mktSetupResult" class="mktSetupResult" role="status">Zaznacz przygotowane elementy. To lokalna lista kontrolna, bez zapisywania Twoich odpowiedzi.</p>
-      <div class="mktSetupActions"><a class="mktButton" href="blog/pierwsze-uruchomienie.html">Otwórz dokładną instrukcję <span aria-hidden="true">↗</span></a><a class="mktTextLink" href="pomoc.html?temat=produkt">Potrzebujesz pomocy? →</a></div>
-    </section>
-
-    <section id="specyfikacja" class="mktSection mktContainer"><div class="mktSectionHead"><div><p class="mktEyebrow">ZANIM ZACZNIESZ</p><h2>Bez niedomówień.<br>Oto wymagania i możliwości.</h2></div><p>Parametry obrazu zależą od sprzętu, ustawień i połączenia. Faktyczne wartości sprawdzisz w diagnostyce, a nie w marketingowej obietnicy.</p></div><div class="mktSpecLayout"><dl class="mktSpecs"><div><dt>Komputer nadający</dt><dd>Windows x64; kamera dostępna w systemie. Program korzysta z WebView2.</dd></div><div><dt>Telefon</dt><dd>Panel internetowy/PWA dla Androida i iPhone’a. Nie jest to jeszcze aplikacja ze sklepu.</dd></div><div><dt>Połączenie na żywo</dt><dd>WebRTC. Dostępność zależy od sieci, uprawnień urządzenia i możliwości zestawienia połączenia.</dd></div><div><dt>Jakość obrazu</dt><dd>Zależna od kamery i ustawień. Rozdzielczość oraz liczbę klatek odczytasz w panelu diagnostycznym.</dd></div><div><dt>Nagrania lokalne</dt><dd>Wybrany folder na komputerze i dostępne miejsce na dysku. Uprawnienie do folderu może wymagać ponownego zatwierdzenia.</dd></div><div><dt>Kopia Google Drive</dt><dd>Opcjonalna integracja wymagająca poprawnej konfiguracji i autoryzacji. Migracja nowego adaptera jest w toku.</dd></div></dl><aside class="mktDownload"><span class="mktFeatureNumber">HOME SECURITY DESKTOP</span><h3>Twoje centrum<br>monitoringu.</h3><p>Instalator programu Windows. Wybierasz katalog instalacji i uruchamiasz program z własnego skrótu.</p><a class="mktButton" href="downloads/HOME-SECURITY-Desktop-Setup-1.4.22.exe" download>Pobierz dla Windows <span aria-hidden="true">↓</span></a><p class="mktFine">Wydanie 1.4.22 · Windows x64<br>Sprawdź wymagania przed instalacją.</p><a href="blog/pierwsze-uruchomienie.html">Potrzebujesz instrukcji? →</a></aside></div></section>
-
-    <section id="prywatnosc" class="mktPrivacy" aria-labelledby="mktPrivacyTitle"><div class="mktContainer mktPrivacyGrid">
-      <div class="mktPrivacyCopy"><p class="mktEyebrow">PRZEJRZYSTOŚĆ TO PODSTAWA</p><h2 id="mktPrivacyTitle">Wiesz, gdzie jest kamera.<br>Wiesz, gdzie jest nagranie.</h2><p>Komputer Windows obsługuje kamerę i lokalizację zapisu. Telefon jest interfejsem do podglądu i dostępnych funkcji właściciela. To ważne rozróżnienie: działający obraz nie jest dowodem ukończonego zapisu.</p><div class="mktPrivacyLinks"><a class="mktTextLink" href="polityka-prywatnosci.html">Jak opisujemy przetwarzanie danych →</a><a class="mktTextLink" href="rodo.html">Informacja RODO →</a></div></div>
-      <div role="group" class="mktPrivacyPanel" aria-label="Schemat podziału funkcji HOME SECURITY">
-        <p>GDZIE CO SIĘ DZIEJE · SCHEMAT</p>
-        <div class="mktPrivacyNode"><span>01</span><div><strong>Komputer Windows</strong><small>Kamera i dostęp do wskazanego folderu nagrań</small></div></div>
-        <div class="mktPrivacyConnector" aria-hidden="true"><span></span><span></span></div>
-        <div class="mktPrivacyBranches"><div><b>02 / TELEFON</b><strong>Panel właściciela</strong><small>Podgląd i obsługa dostępnych funkcji</small></div><div><b>03 / DYSK</b><strong>Lokalne archiwum</strong><small>Pliki wymagają potwierdzonego zapisu</small></div></div>
-        <p class="mktPrivacyNote">To schemat architektury, nie gwarancja dostępności połączenia ani zachowania nagrań.</p>
-      </div>
-    </div></section>
-
-    <section id="stan-projektu" class="mktSection mktContainer mktProject"><div class="mktSectionHead"><div><p class="mktEyebrow">ROZWIJAMY OTWARCIE</p><h2>Wiesz, co dostajesz.<br>I co dopiero powstaje.</h2></div><p>HOME SECURITY jest rozwijanym systemem. Przed użyciem jako jedynego zabezpieczenia przetestuj własny zestaw: kamerę, zapis, odtwarzanie i połączenie z telefonu.</p></div><div class="mktRoadmap"><article><span class="mktBadge">DOSTĘPNE W PANELU</span><h3>Codzienna kontrola</h3><p>Podgląd, konto i PIN, wybór urządzeń, archiwum, ustawienia i rozdzielona diagnostyka. Każdą instalację trzeba skonfigurować i sprawdzić.</p></article><article><span class="mktBadge mktBadgeAmber">W INTEGRACJI</span><h3>Niezależny rejestrator</h3><p>Agent Windows i nowa ścieżka chmurowa są rozwijane. Obecnego nagrywania nie należy traktować jako niezależnego od otwartego panelu nadajnika.</p></article><article><span class="mktBadge mktBadgeMuted">KIERUNEK ROZWOJU</span><h3>Szerszy ekosystem</h3><p>Rozbudowana obsługa wielu kamer oraz aplikacje sklepowe Android/iOS nie są jeszcze gotowymi elementami oferty. Nie podajemy niepotwierdzonych dat.</p></article></div></section>
-    <section id="wybierz-start" class="mktDecision mktContainer">
-      <div class="mktDecisionLead"><p class="mktEyebrow">DWA SPOSOBY, BY ZACZĄĆ</p><h2>Zrób pierwszy krok.<br><em>Resztę zobaczysz jasno.</em></h2><p>Bez obiecywania funkcji, które jeszcze powstają. Sprawdź system albo porozmawiaj o zastosowaniu go u siebie.</p><div class="mktOfferNotice"><strong>Informacja o ofercie</strong><p>To wydanie rozwojowe. Nie udostępniamy obecnie publicznego cennika ani płatności na tej stronie. Rejestracja nie jest zakupem. Warunki ewentualnego udostępnienia komercyjnego wymagają indywidualnego ustalenia przed jakimkolwiek zobowiązaniem.</p></div></div>
-      <div class="mktDecisionOptions">
-        <article><span>01 / SPRAWDŹ</span><h3>Otwórz własny panel</h3><p>Załóż konto, potwierdź adres e-mail i skonfiguruj PIN. Do podglądu potrzebny jest uruchomiony nadajnik Windows.</p><a class="mktButton" href="panel.html?auth=register">Przejdź do rejestracji →</a></article>
-        <article><span>02 / POROZMAWIAJ</span><h3>Dobierz rozwiązanie do domu</h3><p>Masz pytania o sprzęt, wdrożenie lub przyszłą ofertę? Wyślij zapytanie. Warunki i dostępność uzgodnimy indywidualnie.</p><a class="mktButton mktButtonQuiet" href="pomoc.html?temat=produkt">Zapytaj o ofertę ↗</a></article>
+    <section class="mktMkSolutions mktContainer" aria-labelledby="mktMkSolutionsTitle"><div class="mktMkSolutionsIntro"><p class="mktEyebrow"><span></span> CO OBEJMUJE SYSTEM</p><h2 id="mktMkSolutionsTitle">Monitoring dopasowany<br><em>do Twojego domu</em></h2><p>Podgląd, nagrania, zdarzenia i panel na telefonie działają razem. Zdjęcia na kartach to ilustracje projektu, nie obraz z Twojej kamery.</p><a class="mktButton" href="mozliwosci.html">Poznaj wszystkie możliwości <span aria-hidden="true">→</span></a></div><div class="mktMkSolutionsGrid"><a class="mktMkSolution" href="mozliwosci.html"><span class="mktMkPhoto" style="background-image:url(assets/site-kam01.webp)" role="img" aria-label="Ilustracja: Podgląd kamery"></span><span class="mktMkSolBody"><b><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="m15.5 10 6-3.5v11l-6-3.5"/></svg>Podgląd kamery</b><small>Pełny ekran, cyfrowe przybliżenie i odsłuch na żywo.</small><i aria-hidden="true">→</i></span></a><a class="mktMkSolution" href="mozliwosci.html"><span class="mktMkPhoto" style="background-image:url(assets/site-archiwum.webp)" role="img" aria-label="Ilustracja: Archiwum nagrań"></span><span class="mktMkSolBody"><b><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></svg>Archiwum nagrań</b><small>Wybór dnia, odtwarzanie i zapis w lokalnym folderze.</small><i aria-hidden="true">→</i></span></a><a class="mktMkSolution" href="mozliwosci.html"><span class="mktMkPhoto" style="background-image:url(assets/site-kam04.webp)" role="img" aria-label="Ilustracja: Zdarzenia"></span><span class="mktMkSolBody"><b><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg>Zdarzenia</b><small>Wykrycia ruchu i dźwięku zebrane w jednym miejscu.</small><i aria-hidden="true">→</i></span></a><a class="mktMkSolution" href="pobierz.html"><span class="mktMkPhoto" style="background-image:url(assets/site-kam02.webp)" role="img" aria-label="Ilustracja: Panel na telefonie"></span><span class="mktMkSolBody"><b><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/></svg>Panel na telefonie</b><small>Zaloguj się z telefonu i sprawdź obraz z komputera.</small><i aria-hidden="true">→</i></span></a></div></section>
+    <section class="mktMkApp mktContainer" aria-labelledby="mktMkAppTitle"><div class="mktMkPhone" aria-hidden="true"><div class="mktMkNotch"></div><div class="mktMkScreen"><div class="mktMkScreenTop"><b>HOME <span>SECURITY</span></b><small>ilustracja</small></div><span class="mktMkScreenPhoto" style="background-image:url(assets/site-kam01.webp)"></span><span class="mktMkScreenRow"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="m15.5 10 6-3.5v11l-6-3.5"/></svg>Kamera</span><span class="mktMkScreenRow"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></svg>Nagrania</span><span class="mktMkScreenRow"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg>Zdarzenia</span><span class="mktMkScreenRow"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4 5.5v6c0 5 3.4 8.8 8 10 4.6-1.2 8-5 8-10v-6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>Ustawienia</span></div></div><div class="mktMkAppCopy"><p class="mktEyebrow"><span></span> PANEL HOME SECURITY</p><h2 id="mktMkAppTitle">Twój dom<br><em>w zasięgu ręki</em></h2><p>Panel otworzysz w przeglądarce telefonu i dodasz do ekranu głównego. Komputer z kamerą pozostaje w domu i udostępnia obraz.</p><ul class="mktMkChecks"><li><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Podgląd obrazu z komputera nadającego</li><li><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Archiwum nagrań i zdarzenia</li><li><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Logowanie do konta i dodatkowy PIN</li><li><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Działa na Androidzie i iPhonie (panel przeglądarkowy)</li></ul><div class="mktActions"><a class="mktButton" href="panel.html?auth=login">Otwórz panel <span aria-hidden="true">↗</span></a><a class="mktButton mktButtonQuiet" href="pobierz.html">Jak zainstalować na telefonie</a></div><p class="mktFine">Aplikacje w Google Play i App Store nie są jeszcze opublikowane.</p></div><div class="mktMkQuote"><p>Ilustracja na telefonie pokazuje układ panelu. Obraz pojawia się dopiero po połączeniu z Twoim komputerem.</p></div></section>
+    <section class="mktMkFacts mktContainer" aria-label="Najważniejsze fakty"><div><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.5 10.5 4.5v7H3zM12 4.3 21 3v8.5h-9zM3 12.5h7.5v7L3 18.5zM12 12.5h9V21l-9-1.3z"/></svg><b>Windows x64</b><small>Program na komputerze z kamerą</small></div><div><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/></svg><b>Android i iPhone</b><small>Panel w przeglądarce (PWA)</small></div><div><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><b>2 kroki dostępu</b><small>Konto, a potem PIN</small></div><div><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5h6l2 2h10V19H3z"/></svg><b>Zapis lokalny</b><small>Folder wybierasz sam</small></div><div class="mktMkFactsCta"><b>Sprawdź na swoim komputerze</b><a class="mktButton" href="pobierz.html">Pobierz HOME SECURITY <span aria-hidden="true">↓</span></a></div></section>
+    <section class="mktPublicJourney" aria-labelledby="mktPublicJourneyTitle">
+      <div class="mktContainer mktPublicJourneyLayout">
+        <div class="mktPublicJourneyIntro"><p class="mktEyebrow"><span></span> PIERWSZE URUCHOMIENIE</p><h2 id="mktPublicJourneyTitle">Od instalacji do podglądu.<br><em>Trzy proste kroki.</em></h2><p>Najpierw konfiguracja komputera z kamerą. Potem połączenie z panelem na telefonie. Bez udawania, że monitoring jest gotowy przed ustawieniem urządzeń.</p><a class="mktButton mktButtonQuiet" href="przygotowanie.html">Sprawdź wymagania <span aria-hidden="true">↗</span></a></div>
+        <ol class="mktPublicJourneySteps">
+          <li><span>01</span><div><h3>Zainstaluj HOME SECURITY</h3><p>Pobierz aktualną wersję Windows i przygotuj kamerę oraz mikrofon.</p></div></li>
+          <li><span>02</span><div><h3>Wybierz urządzenie i zapis</h3><p>Ustaw źródło obrazu oraz folder, do którego mają trafiać nagrania.</p></div></li>
+          <li><span>03</span><div><h3>Otwórz panel właściciela</h3><p>Zaloguj się, podaj PIN i sprawdź połączenie na telefonie.</p></div></li>
+        </ol>
       </div>
     </section>
-    <section id="poradniki" class="mktSection mktContainer"><div class="mktSectionHead"><div><p class="mktEyebrow">BLOG I CENTRUM WIEDZY</p><h2>Dobry monitoring zaczyna się<br>od dobrych ustawień.</h2></div><a class="mktTextLink" href="blog/index.html">Wszystkie poradniki ↗</a></div><div class="mktPosts"><a class="mktPost" href="blog/pierwsze-uruchomienie.html"><span class="mktPostArt mktArtSetup" aria-hidden="true">01 <i>START</i></span><span class="mktPostCategory">PIERWSZE KROKI</span><h3>Pierwsze uruchomienie: od instalacji do własnego panelu</h3><p>Konto, PIN, kamera i folder. Kolejność, która pomaga uniknąć niepotrzebnych problemów.</p><span class="mktTextLink">Czytaj poradnik ↗</span></a><a class="mktPost" href="blog/zapis-lokalny-i-drive.html"><span class="mktPostArt mktArtStorage" aria-hidden="true">02 <i>ARCHIWUM</i></span><span class="mktPostCategory">NAGRANIA I KOPIE</span><h3>Zapis lokalny a Google Drive. Dwa różne potwierdzenia</h3><p>Dlaczego aktywna kamera, zapisany plik i kopia w chmurze to nie to samo.</p><span class="mktTextLink">Czytaj poradnik ↗</span></a><a class="mktPost" href="blog/diagnostyka-monitoringu.html"><span class="mktPostArt mktArtDiagnostics" aria-hidden="true">03 <i>DIAGNOSTYKA</i></span><span class="mktPostCategory">POMOC TECHNICZNA</span><h3>Obraz jest, a nagrania brak? Sprawdź właściwy komponent</h3><p>Jak czytać stan kamery, harmonogramu, folderu, połączenia i chmury.</p><span class="mktTextLink">Czytaj poradnik ↗</span></a></div></section>
-    <section id="asystent" class="mktAiBand"><div class="mktContainer mktAiLayout"><div><p class="mktEyebrow">ASYSTENT HOME SECURITY · AI</p><h2>Masz pytanie?<br>Zapytaj, zanim skonfigurujesz.</h2><p>Asystent pomaga zrozumieć funkcje, wymagania i instrukcje. Nie ogląda Twojej kamery, nie obsługuje konta i może się pomylić. Nie podawaj mu haseł, kodów PIN ani prywatnych nagrań.</p><div class="mktAiActions"><button type="button" class="mktButton" data-hs-open-support>Otwórz pomoc AI ↗</button><a class="mktTextLink" href="pomoc.html">Wolę kontakt z człowiekiem →</a></div></div><div role="group" class="mktAiExample" aria-label="Przykładowe pytania do asystenta"><span>PRZYKŁADOWE PYTANIA</span><p>„Jak rozpocząć podgląd na telefonie?”</p><p>„Gdzie zapisują się moje nagrania?”</p><p>„Jak sprawdzić stan połączenia?”</p><small>Odpowiedzi nie zastępują diagnostyki urządzenia.</small></div></div></section>
-    <section id="faq" class="mktSection mktContainer mktFaqLayout"><div><p class="mktEyebrow">PYTANIA, KTÓRE WARTO ZADAĆ</p><h2>Prosto<br>i konkretnie.</h2><p>Nie znajdujesz swojej odpowiedzi?<br><a class="mktTextLink" href="pomoc.html">Napisz do nas ↗</a></p></div><div class="mktFaq"><details><summary>Czy to jest program, czy strona internetowa?</summary><p>To dwa interfejsy jednego projektu: instalowany program Windows oraz panel internetowy. Komputer z kamerą pełni rolę nadajnika. Telefon nie zastępuje komputera nagrywającego.</p></details><details><summary>Czy działa na Androidzie i iPhonie?</summary><p>Na telefonach dostępny jest panel w przeglądarce/PWA. Nie ma jeszcze opublikowanych aplikacji w Google Play ani App Store. Zachowanie obrazu, dźwięku i pracy w tle trzeba sprawdzić na swoim urządzeniu.</p></details><details><summary>Czy mogę zamknąć program i nadal nagrywać?</summary><p>W obecnym wydaniu nie traktuj zamknięcia panelu nadajnika jako bezpiecznej pracy rejestratora w tle. Niezależny silnik agenta jest w integracji. Do tego czasu pozostaw nadajnik uruchomiony i sprawdzaj potwierdzenia zapisu.</p></details><details><summary>Czy Google Drive jest wymagany?</summary><p>Nie. Zapis lokalny i kopia do Drive to oddzielne ścieżki. Chmura wymaga poprawnej autoryzacji i konfiguracji. Błąd tokenu oznacza problem z kopią chmurową, a nie automatycznie z PIN-em lub kamerą.</p></details><details><summary>Gdzie są przechowywane nagrania?</summary><p>Lokalizację wybierasz na komputerze nadającym. Dopóki folder i zapis pliku nie są potwierdzone, nie zakładaj, że materiał znajduje się w tym folderze. Więcej wyjaśnia poradnik o zapisie lokalnym.</p></details><details><summary>Ile kosztuje HOME SECURITY?</summary><p>Nie mamy jeszcze opublikowanego cennika ani możliwości zakupu na tej stronie. Samo założenie konta nie tworzy zamówienia. Jeśli interesują Cię warunki udostępnienia i przyszła oferta, <a href="pomoc.html?temat=produkt">napisz przez formularz</a>.</p></details><details><summary>Czy założenie konta oznacza zakup?</summary><p>Nie. Rejestracja otwiera konfigurację konta i panelu; sama w sobie nie jest zamówieniem ani płatnością. Publiczna strona nie ma jeszcze koszyka i cennika. W sprawie oferty, dostępności i warunków napisz przez <a href="pomoc.html?temat=produkt">formularz kontaktowy</a>.</p></details><details><summary>Czy publiczna strona pokazuje moją kamerę?</summary><p>Nie. Część informacyjna jest oddzielona od dostępu do panelu. Korzystanie z własnego panelu wymaga przejścia odpowiedniej ścieżki logowania i PIN-u. Nie udostępniaj haseł, kodów ani prywatnych linków podglądu.</p></details></div></section>
-    <section class="mktContactBand"><div class="mktContainer"><div><p class="mktEyebrow">POROZMAWIAJMY O TWOJEJ INSTALACJI</p><h2>Masz pytanie?<br>Zacznijmy od konkretów.</h2><p>Pomoc techniczna, konfiguracja albo pytania o rozwój produktu. Opisz urządzenie i to, co chcesz osiągnąć — bez wysyłania haseł i PIN-u.</p></div><div class="mktContactActions"><a class="mktButton mktButtonLight" href="panel.html?auth=register">Załóż konto <span aria-hidden="true">↗</span></a><a class="mktButton mktButtonQuiet" href="pomoc.html?temat=produkt">Zapytaj o produkt <span aria-hidden="true">→</span></a></div></div></section>
-  </main>
-  <footer class="mktFooter mktContainer"><div><a class="mktBrand" href="./"><img src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w" sizes="44px" width="38" height="42" alt="Logo DS"><span>HOME <b>SECURITY</b></span></a><p>Monitoring domu z komputera Windows i podglądem na telefonie.</p><p class="mktFooterNote"><strong>Wydanie rozwojowe.</strong> Przed uruchomieniem sprawdź wymagania i ograniczenia.</p></div><nav aria-label="Poznaj produkt"><b>Poznaj produkt</b><a href="#jak-dziala">Jak działa</a><a href="#mozliwosci">Możliwości</a><a href="galeria.html">Projekty interfejsu</a><a href="#specyfikacja">Wymagania</a><a href="#stan-projektu">Stan projektu</a></nav><nav aria-label="Rozpocznij korzystanie"><b>Rozpocznij</b><a href="pobierz.html">Pobierz na Windows</a><a href="#przygotowanie">Przygotowanie</a><a href="blog/pierwsze-uruchomienie.html">Pierwsze uruchomienie</a><a href="blog/index.html">Poradniki</a><a href="panel.html?auth=login">Zaloguj się</a></nav><nav aria-label="Pomoc i dokumenty"><b>Pomoc i dokumenty</b><a href="pomoc.html">Kontakt i pomoc</a><a href="polityka-prywatnosci.html">Polityka prywatności</a><a href="regulamin.html">Regulamin</a><a href="rodo.html">Informacja RODO</a></nav><p class="mktCopyright">© 2026 HOME SECURITY. Prezentowane makiety nie są obrazem z rzeczywistej kamery. Sprawdź zakres dostępnych funkcji.</p></footer>
-  <link rel="stylesheet" href="support.css?v=2">
-  <script type="module" src="support-entry.mjs?v=4"></script>
-  <link rel="stylesheet" href="marketing-gallery.css?v=3">
-  <script type="module" src="marketing-gallery.mjs?v=2"></script>
-  <link rel="stylesheet" href="marketing-start.css?v=3">
-  <script type="module" src="marketing-start.mjs?v=2"></script>
-</div>
+    <section class="mktPublicFinal mktContainer" aria-labelledby="mktPublicFinalTitle"><div><p class="mktEyebrow"><span></span> GOTOWY, ABY SPRAWDZIĆ?</p><h2 id="mktPublicFinalTitle">Zacznij od swojego komputera.</h2><p>Zapoznaj się z wymaganiami, zainstaluj program i sprawdź możliwości obecnego wydania.</p><small>HOME SECURITY jest projektem rozwojowym i nie zastępuje certyfikowanego systemu alarmowego.</small></div><div class="mktPublicFinalActions"><a class="mktButton" href="pobierz.html">Pobierz na Windows <span aria-hidden="true">↓</span></a><a class="mktTextLink" href="stan-projektu.html">Możliwości i ograniczenia →</a></div></section>
+
+    <section class="mktHomeDestinations mktContainer" aria-label="Poznaj HOME SECURITY"><article><h2>Jak zacząć?</h2><p>Sprawdź, jak połączyć komputer z kamerą i telefon.</p><a class="mktTextLink" href="jak-dziala.html">Jak działa →</a></article><article><h2>Co potrafi system?</h2><p>Poznaj możliwości oraz ograniczenia obecnego wydania.</p><a class="mktTextLink" href="mozliwosci.html">Zobacz możliwości →</a></article><article><h2>Potrzebujesz pomocy?</h2><p>Przejdź do instrukcji, odpowiedzi i kontaktu.</p><a class="mktTextLink" href="pomoc.html">Otwórz pomoc →</a></article></section></main>
+  <footer class="mktFooter mktContainer"><div><a class="mktBrand" href="./"><img src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w" sizes="44px" width="38" height="42" alt="Logo DS"><span>HOME <b>SECURITY</b></span></a><p>Monitoring domu z komputera Windows i podglądem na telefonie.</p><p class="mktFooterNote"><strong>Wydanie rozwojowe.</strong> Przed uruchomieniem sprawdź wymagania i ograniczenia.</p></div><nav aria-label="Poznaj produkt"><b>Poznaj produkt</b><a href="jak-dziala.html">Jak działa</a><a href="mozliwosci.html">Możliwości</a><a href="wymagania.html">Wymagania</a><a href="stan-projektu.html">Stan projektu</a></nav><nav aria-label="Rozpocznij korzystanie"><b>Rozpocznij</b><a href="pobierz.html">Pobierz na Windows</a><a href="przygotowanie.html">Przygotowanie</a><a href="blog/pierwsze-uruchomienie.html">Pierwsze uruchomienie</a><a href="blog/index.html">Poradniki</a><a href="panel.html?auth=login">Zaloguj się</a></nav><nav aria-label="Pomoc i dokumenty"><b>Pomoc i dokumenty</b><a href="pomoc.html">Pomoc</a><a href="kontakt.html">Kontakt</a><a href="dokumenty.html">Dokumenty i instrukcja</a><a href="instrukcja.html">Instrukcja obsługi</a><a href="zasady-korzystania.html">Zasady korzystania</a><a href="polityka-prywatnosci.html">Polityka prywatności</a><a href="regulamin.html">Regulamin</a><a href="rodo.html">Informacja RODO</a></nav><p class="mktCopyright">© 2026 HOME SECURITY. Materiały promocyjne i wizualizacje są ilustracyjne, nie przedstawiają aktywnej transmisji. Sprawdź zakres dostępnych funkcji.</p></footer>
+  </div>
 <section id="authDialog" class="authDialog" aria-label="Konto HOME SECURITY" hidden>
   <div class="authBackdrop"></div><div class="authCard" role="dialog" aria-modal="true" aria-labelledby="authTitle"><button id="authClose" class="authClose" type="button" aria-label="Zamknij">×</button>
-    <div class="authBrand"><img class="dsBrandLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="58px" width="96" height="96" alt="Logo DS"><p>HOME <b>SECURITY</b></p></div><p id="authMessage" class="authMessage" role="status"></p>
+    <div class="authBrand"><img class="dsBrandLogo" src="assets/ds-shield.svg" width="96" height="96" alt="Logo DS"><p>HOME <b>SECURITY</b></p></div><p id="authMessage" class="authMessage" role="status"></p>
     <form id="loginForm" data-auth-step="login" class="authForm" aria-label="Logowanie do HOME SECURITY"><p class="authEyebrow">BEZPIECZNE WEJŚCIE</p><h2 id="authTitle">Zaloguj się</h2><p>Najpierw konto, później dodatkowy PIN do panelu.</p><label>E-mail<input name="email" type="email" autocomplete="email" required></label><label>Hasło<input name="password" type="password" autocomplete="current-password" required></label><button class="authPrimary" type="submit">Zaloguj się →</button><button id="authToRegister" class="authTextBtn" type="button">Nie masz konta? Zarejestruj się</button></form>
 <form id="registerForm" data-auth-step="register" class="authForm" hidden><p class="authEyebrow">NOWE KONTO</p><h2>Załóż konto</h2><p>Wszystkie pola oznaczone gwiazdką są potrzebne do utworzenia konta.</p><div class="authGrid"><label>Imię *<input name="first_name" autocomplete="given-name" required></label><label>Nazwisko *<input name="last_name" autocomplete="family-name" required></label></div><label>Adres *<input name="address_line" autocomplete="address-line1" required></label><div class="authGrid"><label>Kod pocztowy *<input name="postal_code" placeholder="00-000" autocomplete="postal-code" required></label><label>Telefon <input name="phone" type="tel" autocomplete="tel"></label></div><label>E-mail *<input name="email" type="email" autocomplete="email" required></label><div class="authGrid"><label>Hasło *<input name="password" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></label><label>Powtórz hasło *<input name="password_repeat" type="password" autocomplete="new-password" required></label></div><label class="authCheck"><input name="terms" type="checkbox" required><span>Akceptuję <a href="regulamin.html" target="_blank" rel="noopener noreferrer">Regulamin</a> i zapoznałem(-am) się z <a href="polityka-prywatnosci.html" target="_blank" rel="noopener noreferrer">Polityką prywatności</a> oraz <a href="rodo.html" target="_blank" rel="noopener noreferrer">informacją RODO</a>.</span></label><button class="authPrimary" type="submit">Utwórz konto i wyślij e-mail →</button><button class="authToLogin authTextBtn" type="button">Masz konto? Zaloguj się</button></form>
 <section data-auth-step="confirm" class="authForm" hidden><p class="authEyebrow">POTWIERDŹ KONTO</p><h2>Sprawdź e-mail</h2><p>Wysłaliśmy wiadomość potwierdzającą. Otwórz bezpieczny link w wiadomości albo przepisz kod weryfikacyjny, jeśli jest podany.</p><form id="verificationCodeForm" class="verificationCodeForm"><label>Kod weryfikacyjny (opcjonalnie)<input id="verificationCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" maxlength="8" placeholder="Kod z e-maila"></label><button class="authSecondary" type="submit">Potwierdź kod</button></form><div class="authNotice">Link lub kod są jednorazowe. Nie przekazuj ich innej osobie. Jeśli nie widzisz wiadomości, sprawdź Spam.</div><button id="resendConfirmation" class="authPrimary" type="button">Wyślij wiadomość ponownie</button><button class="authToLogin authTextBtn" type="button">Wróć do logowania</button></section>
@@ -208,7 +194,7 @@
     <form id="forgotPasswordForm" data-auth-step="forgot-password" class="authForm" hidden><h2>Zresetuj hasło</h2><p>Wyślemy jednorazowy link na adres konta. Hasła nie zmienisz bez potwierdzenia linku.</p><label>E-mail<input name="email" type="email" autocomplete="email" required></label><button type="submit" class="authPrimary">Wyślij link resetujący</button><button type="button" class="authToLogin authTextBtn">Wróć do logowania</button></form>
     <form id="resetPasswordForm" data-auth-step="reset-password" class="authForm" hidden><h2>Ustaw nowe hasło</h2><p>Wpisz nowe hasło dwukrotnie. Nie zmieniamy Twojego PIN-u.</p><label>Nowe hasło<input name="password" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></label><label>Powtórz nowe hasło<input name="password_repeat" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></label><button type="submit" class="authPrimary">Zapisz nowe hasło</button></form>
     <form id="profileForm" data-auth-step="profile" class="authForm" hidden><p class="authEyebrow">DANE WŁAŚCICIELA</p><h2>Uzupełnij profil</h2><p>Dane są dostępne wyłącznie na Twoim koncie.</p><div class="authGrid"><label>Imię *<input name="first_name" required></label><label>Nazwisko *<input name="last_name" required></label></div><label>Adres *<input name="address_line" required></label><div class="authGrid"><label>Kod pocztowy *<input name="postal_code" placeholder="00-000" required></label><label>Telefon <input name="phone" type="tel"></label></div><button class="authPrimary" type="submit">Dalej →</button></form>
-    <label data-auth-step="profile" class="authCheck authGoogleTerms" hidden><input form="profileForm" name="terms" type="checkbox" required><span>Akceptuję <a href="regulamin.html" target="_blank" rel="noopener">Regulamin</a> i <a href="polityka-prywatnosci.html" target="_blank" rel="noopener">Politykę prywatności</a>.</span></label>
+    <label data-auth-step="profile" class="authCheck authGoogleTerms" hidden><input form="profileForm" name="terms" type="checkbox" required><span>Akceptuję <a href="regulamin.html" target="_blank" rel="noopener">Regulamin</a> i zapoznałem(-am) się z <a href="polityka-prywatnosci.html" target="_blank" rel="noopener">Polityką prywatności</a> oraz <a href="rodo.html" target="_blank" rel="noopener">informacją RODO</a>.</span></label>
     <div data-auth-step="login" class="authGoogleEntry"><span class="authDivider">lub</span><button id="googleLoginBtn" type="button" class="authGoogleButton"><span aria-hidden="true">G</span> Zaloguj przez Google</button><p>Potwierdź konto w Google. Dostęp do panelu nadal wymaga PIN-u.</p></div>
     <form id="deviceForm" data-auth-step="device" class="authForm" hidden>
       <p class="authEyebrow">KONTO → URZĄDZENIE → PIN → PANEL</p>
@@ -235,13 +221,21 @@
     let enter, opened = false;
     // Boot ma wiedzieć, czy strona główna nadal jest świadomie oglądana.
     // Dzięki temu awaryjne wznowienie nie zamknie strony informacyjnej.
-    window.__publicHomeActive = !isReceiver && !authRoute;
+    window.__publicHomeActive = !isReceiver && !authRoute && p.get("panel") !== "owner";
     window.__waitForPanel = new Promise(resolve => { enter = resolve; });
     const openPanel = () => {
       if (opened) return;
       opened = true;
       window.__publicHomeActive = false;
       home.hidden = true;
+      // Przechodzimy na adres panelu bez przeładowania strony.
+      // Ponowne wejście wraca do konta i ekranu PIN, nie do strony startowej.
+      if (!isReceiver) {
+        const target = new URL(location.href);
+        target.searchParams.delete("auth");
+        target.searchParams.set("panel", "owner");
+        history.replaceState(history.state, "", target.href);
+      }
       enter();
     };
     window.__openSecurePanel = openPanel;
@@ -256,7 +250,7 @@
     // stronę główną. Program Windows stosuje ten sam bezpieczny przebieg co
     // strona: strona główna → logowanie → start → PIN → pulpit.
     if (isReceiver) openPanel();
-    else if (authRoute) {
+    else if (authRoute || p.get("panel") === "owner") {
       home.hidden = true;
       window.__authReady.then(() => authRoute === "register" ? window.__showRegistration?.() : authRoute === "forgot" ? window.__showPasswordReset?.() : requestAccount());
     }
@@ -264,7 +258,7 @@
 </script>
 <header class="topbar">
   <button id="quickMenuBtn" class="quickMenuBtn" type="button" aria-label="Otwórz menu kamery" aria-controls="quickMenu" aria-expanded="false"><i></i><i></i><i></i></button>
-  <div class="brand"><img class="dsPanelLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="96px" width="96" height="96" alt="Logo DS"><span class="brandText">HOME <b>SECURITY</b></span></div>
+  <div class="brand"><img class="dsPanelLogo" src="assets/ds-shield.svg" width="96" height="96" alt="Logo DS"><span class="brandText">HOME <b>SECURITY</b></span></div>
   <span id="topStatus" class="chip">offline</span>
   <nav class="nav">
     <a class="navLink active" href="./">Na żywo</a>
@@ -295,7 +289,7 @@
 <section id="boot" class="bootScreen" aria-live="polite" aria-label="Uruchamianie HOME SECURITY">
   <div class="bootAtmosphere" aria-hidden="true"><i></i><i></i><b></b><b></b></div>
   <div class="bootCard">
-    <div class="bootMark"><img class="dsPanelLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="96px" width="96" height="96" alt="Logo DS"></div>
+    <div class="bootMark"><img class="dsPanelLogo" src="assets/ds-shield.svg" width="96" height="96" alt="Logo DS"></div>
     <p class="bootBrand">HOME <b>SECURITY</b></p>
     <p class="bootUnit">COMMAND CENTER · SECURE CHANNEL</p>
     <h2>Uruchamianie bezpiecznego panelu</h2>
@@ -317,8 +311,12 @@
     const step = document.getElementById("bootStep");
     const steps = [...document.querySelectorAll(".bootSteps li")];
     const retry = document.getElementById("bootRetry");
-    // Ładowanie zaczyna się dopiero po kliknięciu „Zaloguj się”, nigdy pod
-    // stroną główną. Dzięki temu komputer i telefon mają ten sam przebieg.
+    // Reklamowy ekran 30 s należy wyłącznie do wejścia na mobilną stronę
+    // główną (index.html). Po logowaniu na telefonie nie pokazuj ponownie
+    // ekranu ładowania. Nie omijaj przy tym bramki konta ani PIN-u.
+    const phonePlatform = document.documentElement.dataset.phonePlatform;
+    const skipVisualBoot = (phonePlatform === "android" || phonePlatform === "ios")
+      && window.__HOME_SECURITY_DESKTOP__ !== true && !window.chrome?.webview;
     boot.hidden = true;
     let complete = false, bootActive = false, fallback = null;
     // Zabezpieczenie dla telefonów, które zatrzymały stary moduł PWA w pamięci.
@@ -353,9 +351,9 @@
       if (bootActive || complete) return;
       bootActive = true;
       started = performance.now();
-      boot.hidden = false;
+      boot.hidden = skipVisualBoot;
       retry.hidden = true;
-      requestAnimationFrame(paint);
+      if (!skipVisualBoot) requestAnimationFrame(paint);
       // Niezależny od WebRTC i modułu aplikacji bezpiecznik — nie da się
       // utknąć na „01 s”. Kończy on wyłącznie animację, nie sprawdzanie PIN-u.
       fallback = setTimeout(() => {
@@ -368,6 +366,14 @@
     window.__finishSecureBoot = async () => {
       if (complete) return;
       startBoot();
+      // Na telefonie PIN pojawia się zaraz po gotowości konta, bez drugiej
+      // reklamy i bez sztucznego czekania 700 + 220 ms.
+      if (skipVisualBoot) {
+        complete = true;
+        clearTimeout(fallback);
+        boot.hidden = true;
+        return;
+      }
       // Krótkie przejście zamiast obowiązkowych 6,5 sekundy oczekiwania.
       const remaining = Math.max(0, 700 - (performance.now() - started));
       if (remaining) await new Promise(resolve => setTimeout(resolve, remaining));
@@ -388,7 +394,7 @@
 <!-- Wejście PIN-em -->
 <section id="lock" class="lockScreen" hidden>
   <div class="pinCard">
-    <div class="pinLogo"><img class="dsPanelLogo" src="assets/ds-logo.jpg" srcset="assets/ds-logo-96.webp 96w, assets/ds-logo-192.webp 192w" sizes="96px" width="96" height="96" alt="Logo DS"></div>
+    <div class="pinLogo"><img class="dsPanelLogo" src="assets/ds-shield.svg" width="96" height="96" alt="Logo DS"></div>
     <h2>Wpisz PIN</h2>
     <p class="muted small">Dostęp do kamery i nagrań tylko z PIN-em.</p>
     <div class="pinDots" aria-hidden="true"></div>
@@ -464,7 +470,7 @@
             <option value="av">Obraz + dźwięk</option>
             <option value="v">Tylko obraz</option>
             <option value="a">Tylko dźwięk</option>
-          </select></label><label>Oczyszczanie mikrofonu<select id="audioProfilePick"><option value="clean">Odszumianie — bez podbijania szumu</option><option value="voice">Wyraźniejsza mowa — automatyczne wzmocnienie</option><option value="environment">Otoczenie — bez filtrów</option></select><small id="audioProfileStatus" role="status">Działa na mikrofonie komputera nadającego. Silne filtrowanie może wyciszać ciche odgłosy otoczenia.</small></label></div>
+          </select></label><label>Oczyszczanie mikrofonu<select id="audioProfilePick"><option value="clean">Czysty dźwięk — filtr szumu i buczenia</option><option value="voice">Wyraźniejsza mowa — mocniejszy głos</option><option value="environment">Otoczenie — bez filtrów</option></select><small id="audioProfileStatus" role="status">Dotyczy odsłuchu na żywo i nowych nagrań. Cichy szum będzie tłumiony między dźwiękami, ale bardzo ciche zdarzenia też mogą być słabiej słyszalne.</small></label></div>
           <div class="setRow" id="ownerOnce"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><label>Czas zapisu jednorazowego<select id="onceMin">
             <option value="5">5 minut</option>
             <option value="15" selected>15 minut</option>
@@ -543,7 +549,7 @@
           <button class="btn primary" id="startBtn" hidden>▶ Uruchom kamerę</button>
           <button class="btn ghost" id="retryCameraBtn" hidden>↻ Spróbuj ponownie</button>
         </div>
-        <div class="row"><a class="btn ghost" href="downloads/HOME-SECURITY-Desktop-Setup-1.4.22.exe" download>⬇ Pobierz instalator HOME SECURITY Desktop (Windows)</a></div>
+        <div class="row"><a class="btn ghost" href="pobierz.html">⬇ Pobierz aktualny instalator HOME SECURITY Desktop (Windows)</a></div>
       </div>
 
       <div class="card">
@@ -568,6 +574,19 @@
         <div id="archiveInfo" class="status"></div>
         <section id="archiveStoragePanel" aria-label="Folder zapisu nagrań">
           <h2>Miejsce zapisu</h2>
+          <section id="recordingStorageChoice" hidden aria-label="Wybór miejsca zapisu">
+            <h3>Gdzie zapisywać nowe nagrania?</h3>
+            <label>Miejsce zapisu <select data-storage-mode><option value="local">Komputer</option><option value="cloud">Google Drive</option><option value="both">Komputer i Google Drive</option></select></label>
+            <button type="button" class="btn primary" data-storage-apply>Zastosuj miejsce zapisu</button>
+            <label>Folder Google Drive <input data-storage-folder type="url" placeholder="https://drive.google.com/drive/folders/…" autocomplete="off"></label>
+            <div class="row"><button type="button" class="btn" data-storage-connect>Podłącz / zmień folder Drive</button><button type="button" class="btn ghost" data-storage-disconnect>Odłącz Drive — zachowaj pliki</button></div>
+            <button type="button" class="btn ghost" data-storage-authorize hidden>Autoryzuj konto Google w programie Windows</button>
+            <p class="muted small">Przy pierwszym połączeniu potrzebna jest konfiguracja OAuth aplikacji oraz zgoda Google w przeglądarce systemowej. Na telefonie możesz zmienić folder już podłączonego konta. Wybrany folder musi mieć przyznany aplikacji dostęp.</p>
+            <a class="btn ghost" data-storage-open href="https://drive.google.com/drive/my-drive" hidden target="_blank" rel="noopener noreferrer">Otwórz wybrany folder Drive ↗</a>
+            <button type="button" class="btn ghost" data-storage-refresh>Sprawdź miejsce i stan zapisu</button>
+            <p data-storage-status class="status" role="status" aria-live="polite">Łączę z komputerem nadającym…</p>
+            <p class="muted small">Ustawienie dotyczy kolejnych zamykanych fragmentów. Nie przenosi ani nie usuwa wcześniejszych nagrań. Odłączenie Drive przełącza nowe nagrania na komputer; pliki czekające na wysłanie pozostają zachowane.</p>
+          </section>
           <section id="nativeDrivePanel" class="nativeDrivePanel" hidden aria-label="Automatyczne wysyłanie Google Drive">
             <h3>Google Drive</h3>
             <p data-drive-summary class="status" role="status" aria-live="polite">Sprawdzam kolejkę wysyłania…</p>
@@ -581,6 +600,7 @@
         <p id="oldLocalCleanupStatus" class="status" role="status">Usuwanie dotyczy wyłącznie nagrań sprzed dzisiejszej północy. Nie usuwa dzisiejszych materiałów, plików z folderu ani Google Drive.</p>
           </details>
         <p class="muted small">1. Wybierz miejsce na komputerze. 2. Zatwierdź folder i dostęp do zapisu. 3. Kolejne fragmenty zapiszą się tam automatycznie. Możesz wybrać Pulpit → nagrania lub inną lokalizację.</p>
+        <button class="btn" id="saveCurrentFragment" type="button" aria-describedby="archiveFolderSelectionStatus">Zapisz bieżący fragment do folderu</button>
         <div class="row"><button class="btn primary" id="chooseArchiveDir" type="button" aria-describedby="archiveFolderSelectionStatus">📁 Wybierz folder na komputerze…</button><button class="btn" id="restoreArchiveDir" type="button" hidden>Przywróć dostęp do poprzedniego folderu</button></div>
         <p id="archiveFolderSelectionStatus" class="status" role="status" aria-live="polite">Wybierz folder, do którego aplikacja ma automatycznie zapisywać nagrania.</p>
         <details class="archiveAdvanced"><summary>Zarządzanie folderem</summary>
@@ -662,11 +682,11 @@
 </script>
 <template id="panelRuntime">
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="auth.js?v=13"></script>
+<script type="module" src="auth.js?v=15"></script>
 <script type="module" src="auth-experience.mjs?v=2"></script>
-<script type="module" src="app.js?v=242"></script>
-<script type="module" src="desktop.js?v=40"></script>
-<script type="module" src="mobile.js?v=18"></script>
+<script type="module" src="app.js?v=272"></script>
+<script type="module" src="desktop.js?v=51"></script>
+<script type="module" src="mobile.js?v=30"></script>
 </template>
 <script type="module" src="panel-entry.mjs?v=2"></script>
 </body>
