@@ -37,6 +37,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Fetch and verify the published Windows installer for public link checks
+        run: node scripts/desktop-release.mjs fetch
       - name: Verify mobile camera, view navigation and stream lifecycle
         run: node --test tests/mobile-camera-frame.test.mjs tests/streaming.test.mjs
       - name: Verify public navigation and marketing did not regress
