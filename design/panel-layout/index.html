@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="pl" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="color-scheme" content="dark light">
+  <title>HOME SECURITY — projekt układu panelu (etap 1)</title>
+  <!--
+    Własna implementacja układu panelu HOME SECURITY, zaprojektowana na podstawie
+    zrzutu ekranu jako wzoru graficznego. To NIE jest kod oryginalnej strony.
+    Plik jest projektem (design/panel-layout/) i nie jest publikowany na stronie.
+    Atrybut data-hs-source wskazuje identyfikator z kamera/panel.html (lub moduł),
+    z którego dany obszar będzie zasilany w etapie 2. Teraz nic nie jest podłączone.
+  -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg class="iconSprite" aria-hidden="true" focusable="false">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="m15.5 10 6-3.5v11l-6-3.5"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5zM9 4v13.5M15 6.5V20"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16l4-5 3 3 5-7"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><circle cx="12" cy="12" r="3.5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20zM12 10v4.5M12 17.2v.3"/></symbol>
+  <symbol id="i-report" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="18.5" r="1.4"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></symbol>
+  <symbol id="i-collapse" viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1"/><rect x="13.5" y="3.5" width="7" height="7" rx="1"/><rect x="3.5" y="13.5" width="7" height="7" rx="1"/><rect x="13.5" y="13.5" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6.5 8h11v3a5.5 5.5 0 0 1-11 0zM12 16.5V21"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2.5 4 5.5v6c0 5 3.4 8.8 8 10 4.6-1.2 8-5 8-10v-6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+</svg>
+
+<a class="skip" href="#main">Przejdź do treści</a>
+
+<div class="shell" id="shell">
+  <!-- ===================== MENU BOCZNE ===================== -->
+  <aside class="sidebar" id="sidebar" aria-label="Menu główne" data-hs-source="desktop.js: .desktopSidebar / .desktopNav">
+    <div class="brand">
+      <span class="brandMark" aria-hidden="true"><svg><use href="#i-shield"/></svg></span>
+      <span class="brandText">HOME <b>SECURITY</b></span>
+      <button class="iconBtn collapseBtn" id="collapseBtn" type="button" aria-label="Zwiń menu" aria-pressed="false"><svg><use href="#i-collapse"/></svg></button>
+    </div>
+
+    <nav class="nav" id="nav" aria-label="Widoki panelu">
+      <button class="navItem" type="button" data-view="dashboard" aria-current="page"><svg><use href="#i-home"/></svg><span>Pulpit</span></button>
+      <button class="navItem" type="button" data-view="cameras"><svg><use href="#i-camera"/></svg><span>Kamery</span></button>
+      <button class="navItem" type="button" data-view="map"><svg><use href="#i-map"/></svg><span>Mapa</span><em class="tag">brak</em></button>
+      <button class="navItem" type="button" data-view="events"><svg><use href="#i-bell"/></svg><span>Zdarzenia</span></button>
+      <button class="navItem" type="button" data-view="analytics"><svg><use href="#i-chart"/></svg><span>Analityka</span><em class="tag">brak</em></button>
+      <button class="navItem" type="button" data-view="detection"><svg><use href="#i-scan"/></svg><span>Detekcja</span></button>
+      <button class="navItem" type="button" data-view="alerts"><svg><use href="#i-alert"/></svg><span>Alarmy</span></button>
+      <button class="navItem" type="button" data-view="reports"><svg><use href="#i-report"/></svg><span>Raporty</span><em class="tag">brak</em></button>
+      <button class="navItem hasSub" type="button" data-view="system" aria-expanded="false" aria-controls="sub-system"><svg><use href="#i-cpu"/></svg><span>System</span><svg class="chev"><use href="#i-chevron"/></svg></button>
+      <div class="subNav" id="sub-system" hidden>
+        <button type="button" data-view="system" data-section="diagnostics">Diagnostyka</button>
+        <button type="button" data-view="system" data-section="updates">Aktualizacje</button>
+      </div>
+      <button class="navItem hasSub" type="button" data-view="settings" aria-expanded="false" aria-controls="sub-settings"><svg><use href="#i-gear"/></svg><span>Ustawienia</span><svg class="chev"><use href="#i-chevron"/></svg></button>
+      <div class="subNav" id="sub-settings" hidden>
+        <button type="button" data-view="settings" data-section="image">Obraz i dźwięk</button>
+        <button type="button" data-view="settings" data-section="storage">Miejsce zapisu</button>
+      </div>
+    </nav>
+
+    <section class="card overview" aria-labelledby="overviewTitle" data-hs-source="#systemPanel, #systemStateBadge, #diagSum, operator-status.mjs">
+      <h2 id="overviewTitle">Przegląd systemu</h2>
+      <div class="ring" role="img" aria-label="Stan ogólny: niepodłączony">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <defs><linearGradient id="ringGrad" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="var(--cyan)"/><stop offset="1" stop-color="var(--violet)"/></linearGradient></defs>
+          <circle class="ringTrack" cx="60" cy="60" r="50"/>
+          <circle class="ringValue" id="ringValue" cx="60" cy="60" r="50" pathLength="100" stroke-dasharray="0 100"/>
+        </svg>
+        <div class="ringLabel"><strong id="ringPercent">—</strong><small id="ringState">Niepodłączony</small></div>
+      </div>
+      <ul class="metricList">
+        <li data-hs-source="core/camera-catalog.mjs"><i class="dot cyan"></i><span>Kamery</span><em class="state off">brak danych</em><b data-metric="cameras">—</b></li>
+        <li data-hs-source="core/peer-diagnostics.mjs"><i class="dot amber"></i><span>Sieć</span><em class="state off">brak danych</em><b data-metric="network">—</b></li>
+        <li data-hs-source="#archiveInfo, #archiveStoragePanel"><i class="dot violet"></i><span>Dysk</span><em class="state off">brak danych</em><b data-metric="storage">—</b></li>
+        <li data-hs-source="communication/agent-telemetry.mjs"><i class="dot cyan"></i><span>Agent</span><em class="state off">brak danych</em><b data-metric="agent">—</b></li>
+      </ul>
+    </section>
+
+    <button class="profile" id="profileBtn" type="button" aria-haspopup="true" aria-expanded="false" data-hs-source="auth.js, #lockBtn">
+      <span class="avatar" aria-hidden="true"><svg><use href="#i-user"/></svg></span>
+      <span class="profileText"><strong>Konto</strong><small>Niezalogowano (projekt)</small></span>
+      <svg class="chevDown"><use href="#i-down"/></svg>
+    </button>
+    <div class="popover profileMenu" id="profileMenu" hidden role="menu">
+      <p>Logowanie, PIN i wylogowanie obsługuje istniejący panel. W tym projekcie nie są podłączone.</p>
+      <button type="button" role="menuitem" disabled>Wyloguj (niepodłączone)</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <!-- ===================== TREŚĆ ===================== -->
+  <div class="workspace">
+    <header class="topbar" data-hs-source=".topbar, #topStatus, desktop.js: .desktopTopStatus">
+      <button class="iconBtn menuBtn" id="menuBtn" type="button" aria-label="Otwórz menu" aria-controls="sidebar" aria-expanded="false"><svg><use href="#i-menu"/></svg></button>
+      <div class="titleBlock">
+        <h1 id="pageTitle">Pulpit</h1>
+        <p id="pageSubtitle">Podgląd na żywo i stan systemu</p>
+      </div>
+      <label class="search" data-hs-source="desktop.js: #desktopSearchInput">
+        <svg><use href="#i-search"/></svg>
+        <input id="searchInput" type="search" placeholder="Szukaj w menu i panelu…" autocomplete="off" aria-label="Szukaj">
+        <kbd>/</kbd>
+      </label>
+      <div class="topActions">
+        <button class="iconBtn" id="notifyBtn" type="button" aria-label="Powiadomienia" aria-haspopup="true" aria-expanded="false" data-hs-source="#toast, #viewEvents"><svg><use href="#i-bell"/></svg></button>
+        <button class="iconBtn" id="messagesBtn" type="button" aria-label="Wiadomości" aria-haspopup="true" aria-expanded="false"><svg><use href="#i-mail"/></svg></button>
+        <button class="iconBtn" type="button" data-go="settings" aria-label="Ustawienia"><svg><use href="#i-gear"/></svg></button>
+        <button class="iconBtn" id="themeBtn" type="button" aria-label="Przełącz jasny motyw" aria-pressed="false"><svg class="ic-moon"><use href="#i-moon"/></svg><svg class="ic-sun"><use href="#i-sun"/></svg></button>
+        <div class="clock" aria-live="off" data-hs-source="#monitorTime, #monitorDate">
+          <strong id="clockTime">--:--:--</strong>
+          <small id="clockDate">—</small>
+        </div>
+      </div>
+      <div class="popover notifyMenu" id="notifyMenu" hidden role="dialog" aria-label="Powiadomienia">
+        <h3>Powiadomienia</h3>
+        <p class="empty">Brak powiadomień. Kanał powiadomień panelu nie jest podłączony w tym projekcie.</p>
+      </div>
+      <div class="popover messagesMenu" id="messagesMenu" hidden role="dialog" aria-label="Wiadomości">
+        <h3>Wiadomości</h3>
+        <p class="empty">HOME SECURITY nie ma skrzynki wiadomości. Element pozostawiony jako miejsce na przyszłą funkcję.</p>
+      </div>
+    </header>
+
+    <div class="banner" id="sampleBanner" hidden role="status">
+      <strong>DANE PRZYKŁADOWE.</strong> Wyświetlane wartości są ilustracją układu i nie pochodzą z żadnej kamery ani systemu.
+      <button type="button" class="linkBtn" data-action="toggle-sample">Wyłącz</button>
+    </div>
+
+    <main class="main" id="main" tabindex="-1">
+      <!-- ============ PULPIT ============ -->
+      <section class="view" data-view-panel="dashboard" aria-label="Pulpit">
+        <div class="dashGrid">
+          <section class="card feeds" aria-labelledby="feedsTitle" data-hs-source="#stage, #video, #liveBadge, #recBadge, core/camera-catalog.mjs, camera-workspace.mjs">
+            <header class="cardHead">
+              <h2 id="feedsTitle"><svg><use href="#i-camera"/></svg>Podgląd kamer</h2>
+              <div class="cardTools">
+                <div class="segmented" role="group" aria-label="Układ siatki kamer">
+                  <button type="button" data-cols="1" aria-pressed="false">1</button>
+                  <button type="button" data-cols="2" aria-pressed="false">4</button>
+                  <button type="button" data-cols="3" aria-pressed="true">6</button>
+                </div>
+                <button class="ghostBtn" type="button" data-go="cameras">Wszystkie</button>
+              </div>
+            </header>
+            <div class="cameraGrid" id="cameraGrid" data-cols="3"></div>
+          </section>
+
+          <section class="card alerts" aria-labelledby="alertsTitle" data-hs-source="#status, #recStatus, #diagList, operator-status.mjs">
+            <header class="cardHead">
+              <h2 id="alertsTitle">Alarmy systemu</h2>
+              <button class="ghostBtn" type="button" data-go="alerts">Wszystkie</button>
+            </header>
+            <ul class="feedList" id="alertsList" aria-live="polite"></ul>
+          </section>
+
+          <section class="card mapCard" aria-labelledby="mapTitle">
+            <header class="cardHead">
+              <h2 id="mapTitle"><svg><use href="#i-map"/></svg>Mapa obiektu</h2>
+              <span class="pill off">niedostępne w HOME SECURITY</span>
+            </header>
+            <div class="map" id="map">
+              <div class="mapCanvas" id="mapCanvas" aria-hidden="true"></div>
+              <div class="mapControls" role="group" aria-label="Sterowanie mapą">
+                <button class="iconBtn" type="button" data-map="in" aria-label="Przybliż"><svg><use href="#i-plus"/></svg></button>
+                <button class="iconBtn" type="button" data-map="out" aria-label="Oddal"><svg><use href="#i-minus"/></svg></button>
+                <button class="iconBtn" type="button" data-map="reset" aria-label="Wyśrodkuj"><svg><use href="#i-target"/></svg></button>
+              </div>
+              <div class="mapEmpty" id="mapEmpty">
+                <svg><use href="#i-map"/></svg>
+                <strong>Mapa nie jest podłączona</strong>
+                <span>Obecne wydanie nie zna położenia kamer. Siatka pokazuje wyłącznie miejsce na przyszły plan obiektu.</span>
+              </div>
+            </div>
+            <dl class="statStrip" data-hs-source="core/camera-catalog.mjs, #viewEvents, agent-telemetry.mjs">
+              <div><dt>Kamery łącznie</dt><dd data-stat="total">—</dd></div>
+              <div><dt>Aktywne kamery</dt><dd data-stat="active"><i class="dot cyan"></i>—</dd></div>
+              <div><dt>Zdarzenia (24 h)</dt><dd data-stat="events">—</dd></div>
+              <div><dt>Alarmy (24 h)</dt><dd data-stat="alerts"><i class="dot red"></i>—</dd></div>
+              <div><dt>Transfer</dt><dd data-stat="bandwidth" class="accent">—</dd></div>
+            </dl>
+          </section>
+
+          <section class="card events" aria-labelledby="eventsTitle" data-hs-source="#viewEvents, #pcEvents, workspace-panels.mjs: mountEventWorkspace">
+            <header class="cardHead">
+              <h2 id="eventsTitle">Ostatnie zdarzenia</h2>
+              <button class="ghostBtn" type="button" data-go="events">Wszystkie</button>
+            </header>
+            <ul class="feedList" id="eventsList" aria-live="polite"></ul>
+          </section>
+        </div>
+      </section>
+
+      <!-- ============ KAMERY ============ -->
+      <section class="view" data-view-panel="cameras" aria-label="Kamery" hidden>
+        <section class="card">
+          <header class="cardHead"><h2><svg><use href="#i-camera"/></svg>Wszystkie kamery</h2><span class="pill off">źródła niepodłączone</span></header>
+          <div class="cameraGrid large" id="cameraGridAll" data-cols="2"></div>
+          <p class="note">W panelu obraz pochodzi z <code>#stage</code> / <code>#video</code>, a lista kamer z <code>core/camera-catalog.mjs</code>. Start i stop zapisu (<code>#ctrlStart</code>, <code>#ctrlStop</code>) pozostają w obecnym panelu.</p>
+        </section>
+      </section>
+
+      <!-- ============ MAPA ============ -->
+      <section class="view" data-view-panel="map" aria-label="Mapa" hidden>
+        <section class="card emptyCard">
+          <svg><use href="#i-map"/></svg>
+          <h2>Mapa obiektu</h2>
+          <p>HOME SECURITY nie ma jeszcze planu obiektu ani położenia kamer. Ten widok nie pokazuje żadnych danych.</p>
+        </section>
+      </section>
+
+      <!-- ============ ZDARZENIA ============ -->
+      <section class="view" data-view-panel="events" aria-label="Zdarzenia" hidden>
+        <section class="card">
+          <header class="cardHead">
+            <h2><svg><use href="#i-bell"/></svg>Zdarzenia</h2>
+            <div class="filters" role="group" aria-label="Filtr zdarzeń">
+              <button type="button" class="chip" data-filter="all" aria-pressed="true">Wszystkie</button>
+              <button type="button" class="chip" data-filter="motion" aria-pressed="false">Ruch</button>
+              <button type="button" class="chip" data-filter="sound" aria-pressed="false">Dźwięk</button>
+            </div>
+          </header>
+          <ul class="feedList tall" id="eventsListAll" aria-live="polite"></ul>
+          <p class="note">Źródło w panelu: <code>#viewEvents</code>, <code>#pcEvents</code> i <code>workspace-panels.mjs</code>.</p>
+        </section>
+      </section>
+
+      <!-- ============ ANALITYKA ============ -->
+      <section class="view" data-view-panel="analytics" aria-label="Analityka" hidden>
+        <section class="card emptyCard">
+          <svg><use href="#i-chart"/></svg>
+          <h2>Analityka</h2>
+          <p>Brak tej funkcji w obecnym wydaniu. Nie są zbierane statystyki, z których dałoby się zbudować wykresy.</p>
+        </section>
+      </section>
+
+      <!-- ============ DETEKCJA ============ -->
+      <section class="view" data-view-panel="detection" aria-label="Detekcja" hidden>
+        <section class="card">
+          <header class="cardHead"><h2><svg><use href="#i-scan"/></svg>Detekcja ruchu i dźwięku</h2><span class="pill off">niepodłączone</span></header>
+          <div class="formGrid">
+            <label class="switchRow"><span>Detekcja ruchu</span><input type="checkbox" class="switch" disabled data-hs-source="#detectToggle"></label>
+            <label class="switchRow"><span>Detekcja dźwięku</span><input type="checkbox" class="switch" disabled data-hs-source="#detectSound"></label>
+            <label class="rangeRow"><span>Czułość</span><input type="range" min="1" max="10" value="5" disabled data-hs-source="#sensitivity"><output>—</output></label>
+          </div>
+          <p class="note">HOME SECURITY wykrywa ruch i dźwięk na komputerze z kamerą. Rozpoznawania osób, pojazdów czy obiektów nie ma i ten projekt go nie udaje.</p>
+        </section>
+      </section>
+
+      <!-- ============ ALARMY ============ -->
+      <section class="view" data-view-panel="alerts" aria-label="Alarmy" hidden>
+        <section class="card">
+          <header class="cardHead"><h2><svg><use href="#i-alert"/></svg>Alarmy systemu</h2></header>
+          <ul class="feedList tall" id="alertsListAll" aria-live="polite"></ul>
+          <p class="note">W panelu: <code>#status</code>, <code>#recStatus</code>, <code>#diagList</code> oraz <code>core/operator-status.mjs</code>.</p>
+        </section>
+      </section>
+
+      <!-- ============ RAPORTY ============ -->
+      <section class="view" data-view-panel="reports" aria-label="Raporty" hidden>
+        <section class="card emptyCard">
+          <svg><use href="#i-report"/></svg>
+          <h2>Raporty</h2>
+          <p>Brak tej funkcji w obecnym wydaniu. Archiwum nagrań pozostaje w widoku Nagrania istniejącego panelu.</p>
+        </section>
+      </section>
+
+      <!-- ============ SYSTEM ============ -->
+      <section class="view" data-view-panel="system" aria-label="System" hidden>
+        <div class="twoCol">
+          <section class="card" id="section-diagnostics" aria-labelledby="diagTitle" data-hs-source="#diagCard, #diagSum, #diagTime, #diagList">
+            <header class="cardHead"><h2 id="diagTitle"><svg><use href="#i-cpu"/></svg>Diagnostyka</h2><span class="pill off">niepodłączone</span></header>
+            <ul class="diagList">
+              <li><span>Kamera</span><em class="state off">nieznany</em></li>
+              <li><span>Nagrywanie</span><em class="state off">nieznany</em></li>
+              <li><span>Folder lokalny</span><em class="state off">nieznany</em></li>
+              <li><span>WebRTC</span><em class="state off">nieznany</em></li>
+              <li><span>Google Drive</span><em class="state off">nieznany</em></li>
+              <li><span>Agent Windows</span><em class="state off">nieznany</em></li>
+            </ul>
+          </section>
+          <section class="card" id="section-updates" aria-labelledby="updTitle" data-hs-source="core/web-updates.mjs, version.json, desktop-update.json">
+            <header class="cardHead"><h2 id="updTitle"><svg><use href="#i-shield"/></svg>Aktualizacje</h2><span class="pill off">niepodłączone</span></header>
+            <p>Mechanizm aktualizacji zostaje bez zmian: PWA przez <code>sw.js</code> i <code>core/web-updates.mjs</code>, komputer-kamera przez <code>version.json</code>, Windows przez <code>desktop-update.json</code>.</p>
+            <button class="primaryBtn" type="button" disabled>Sprawdź aktualizacje (niepodłączone)</button>
+          </section>
+        </div>
+      </section>
+
+      <!-- ============ USTAWIENIA ============ -->
+      <section class="view" data-view-panel="settings" aria-label="Ustawienia" hidden>
+        <div class="twoCol">
+          <section class="card" id="section-image" aria-labelledby="setImgTitle" data-hs-source="#setCard">
+            <header class="cardHead"><h2 id="setImgTitle"><svg><use href="#i-gear"/></svg>Wygląd tego projektu</h2></header>
+            <div class="formGrid">
+              <label class="switchRow"><span>Jasny motyw</span><input type="checkbox" class="switch" id="themeSwitch"></label>
+              <label class="switchRow"><span>Zwinięte menu boczne</span><input type="checkbox" class="switch" id="collapseSwitch"></label>
+              <label class="switchRow"><span>Pokaż dane przykładowe (wyraźnie oznaczone)</span><input type="checkbox" class="switch" id="sampleSwitch"></label>
+            </div>
+            <p class="note">Te przełączniki zmieniają tylko wygląd projektu w tej przeglądarce. Ustawienia kamery są w <code>#setCard</code> istniejącego panelu.</p>
+          </section>
+          <section class="card" id="section-storage" aria-labelledby="setStoreTitle" data-hs-source="#archiveStoragePanel, #recordingStorageChoice, #driveBackupStatus">
+            <header class="cardHead"><h2 id="setStoreTitle">Miejsce zapisu</h2><span class="pill off">niepodłączone</span></header>
+            <p>Wybór folderu, Google Drive i czyszczenie starych nagrań pozostają w istniejącym panelu. Ten projekt ich nie obsługuje.</p>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<template id="cameraTpl">
+  <article class="camTile">
+    <header class="camHead">
+      <i class="dot"></i><span class="camName"></span>
+      <time class="camTime">--:--:--</time>
+      <button class="iconBtn camMenuBtn" type="button" aria-haspopup="true" aria-expanded="false"><svg><use href="#i-more"/></svg></button>
+      <div class="popover camMenu" hidden role="menu">
+        <button type="button" role="menuitem" data-cam="full"><svg><use href="#i-expand"/></svg>Pełny ekran kafelka</button>
+        <button type="button" role="menuitem" disabled><svg><use href="#i-camera"/></svg>Start podglądu (niepodłączone)</button>
+        <button type="button" role="menuitem" disabled><svg><use href="#i-plug"/></svg>Wybierz źródło (niepodłączone)</button>
+      </div>
+    </header>
+    <div class="camView">
+      <div class="camEmpty"><svg><use href="#i-plug"/></svg><strong>Brak sygnału</strong><span>Źródło niepodłączone</span></div>
+      <span class="camCorner tl"></span><span class="camCorner tr"></span><span class="camCorner bl"></span><span class="camCorner br"></span>
+    </div>
+  </article>
+</template>
+
+<script src="app.js" defer></script>
+</body>
+</html>
