@@ -57,3 +57,7 @@ Nazwy plików wykonywalnych pozostają niezmienione. Ich fizyczne przeniesienie 
 `app.js` w katalogu głównym **nie jest** tym samym plikiem co `kamera/app.js`. Podawaj agentowi pełną ścieżkę, a nie tylko nazwę pliku. Nie przenoś ani nie zmieniaj nazw działających plików, instalatorów lub manifestów bez poprawienia wszystkich importów, ścieżek, konfiguracji i testów.
 
 Repozytoria **02 / LinkTalk** i **03 / LinkTalk-Releases** są odrębne. Tutaj wersja Windows nie jest wersją PWA ani wersją informacyjnej witryny Vercel. Zajrzyj do mapy wydań przed publikacją.
+
+## Pełne drzewo folderów
+
+[Otwórz kompletne drzewo 73 katalogów projektu](docs/DRZEWO-PROJEKTU.md). Dokument pokazuje wszystkie katalogi, ich przeznaczenie i informację, gdzie znajduje się README. [Katalog wszystkich plików głównego folderu kamera](kamera/KATALOG-PLIKOW.md) pozwala szybko odnaleźć konkretne skrypty, style i strony.
