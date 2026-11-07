@@ -57,7 +57,7 @@ test('offline check never claims that an update succeeded',async()=>{
 test('manifest recordings shortcut opens current mobile router, not legacy page',async()=>{
  const manifest=JSON.parse(await read('manifest.webmanifest'));
  assert.equal(manifest.id,'/kamera/owner-panel');
- assert.ok(manifest.start_url.includes('ui=phone'));
+ assert.equal(manifest.start_url,'./index.html?app=mobile-home');
  assert.ok(manifest.shortcuts.find(s=>s.short_name==='Nagrania').url.includes('mobileView=recordings'));
  const [mobile,app]=await Promise.all(['mobile.js','app.js'].map(read));
  assert.ok(mobile.includes("get('mobileView')"));assert.ok(mobile.includes('mobileBuild'));
@@ -140,7 +140,7 @@ test('marketing pages poll the published build but preserve unsent forms',async(
  assert.ok(generated.includes('home-security-build" content="'+version+'"'));
 });
 
-test('native Windows update remains strictly opt-in via the left-hand sidebar',async()=>{
+test('native Windows update retains retry control in the left-hand sidebar',async()=>{
  const [native,desktop]=await Promise.all([
    readFile(new URL('../desktop-client/Program.cs',import.meta.url),'utf8'),
    read('desktop.js')
