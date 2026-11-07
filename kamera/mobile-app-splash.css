@@ -1,4 +1,4 @@
-/* Reklama przy pierwszym uruchomieniu w mobilnym Chrome/Safari i PWA.
+/* Reklama przy kazdym odswiezeniu strony glownej w mobilnym Chrome/Safari i PWA.
    Arkusz nie modyfikuje logowania, PIN, nagrywania, innych tras ani desktopu. */
 #hsMobileSplash{display:none}
 html.hsMobileLaunch #publicHome{visibility:hidden}
