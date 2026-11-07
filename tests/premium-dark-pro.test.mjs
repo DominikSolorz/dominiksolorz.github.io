@@ -45,10 +45,12 @@ test('Premium Dark Pro is strictly scoped and keeps alternative themes intact', 
 });
 
 test('PWA and native shell reference the same deployable Premium Dark Pro CSS', async () => {
-  const [html, sw, css] = await Promise.all([camera('panel.html'), camera('sw.js'), camera('premium-dark-pro.css')]);
+  const [html, sw, css, app] = await Promise.all([camera('panel.html'), camera('sw.js'), camera('premium-dark-pro.css'), camera('app.js')]);
   const path = html.match(/premium-dark-pro\.css\?v=(\d+)/)?.[0];
   assert.equal(path, 'premium-dark-pro.css?v=1');
   assert.ok(sw.includes('./' + path));
-  assert.match(sw, /kamera-domowa-shell-v180/);
+  const shellVersion = app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
+  assert.ok(shellVersion, 'current service worker revision is defined by the application');
+  assert.ok(sw.includes('kamera-domowa-shell-v' + shellVersion));
   assert.match(css, /Premium Dark Pro/);
 });
