@@ -56,8 +56,9 @@ test('new site visual layer stays public-only, responsive and accessible',async(
 
 test('PWA refreshes marketing appearance without changing versioned recorder runtime',async()=>{
   const [sw,app,panel]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/panel.html'].map(read));
-  assert.match(sw,/kamera-domowa-shell-v181/);
-  assert.match(app,/SERVICE_WORKER_BUILD = "181"/);
+  const rev=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
+  assert.ok(rev,'the app must declare the current PWA cache revision');
+  assert.ok(sw.includes('kamera-domowa-shell-v'+rev),'service worker cache must match the app');
   const css=panel.match(/marketing\.css\?v=\d+/)?.[0];
   assert.ok(css);
   assert.ok(sw.includes('./'+css));

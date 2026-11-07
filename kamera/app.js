@@ -22,7 +22,7 @@ import * as diskstore from "./diskstore.js?v=12";
 import { closeRecordingFragment } from './close-recording-fragment.mjs?v=1';
 import { createPictureInPicture } from './picture-in-picture.mjs?v=1';
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=107";
+import { mountDvr } from "./dvr-ui.js?v=108";
 import { accountClient } from "./auth.js?v=15";
 import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=15";
 import { mountAccountUI } from "./account-ui.mjs?v=3";
@@ -2297,7 +2297,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "181";
+  const SERVICE_WORKER_BUILD = "182";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
