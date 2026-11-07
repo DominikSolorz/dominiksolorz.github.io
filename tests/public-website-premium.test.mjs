@@ -54,6 +54,34 @@ test('new site visual layer stays public-only, responsive and accessible',async(
   assert.equal((newCss.match(/\{/g)||[]).length,(newCss.match(/\}/g)||[]).length,'CSS curly braces match');
 });
 
+test('public marketing accents use the blue-purple-teal theme without recoloring the secure panel',async()=>{
+  const [css,panel]=await Promise.all([read('kamera/marketing.css'),read('kamera/panel.html')]);
+  const theme=css.split('/* HOME SECURITY WWW Premium Dark Pro')[1];
+  for(const token of ['--m-blue:#6366f1','--m-purple:#7c3aed','--m-teal:#2dd4bf',
+    'linear-gradient(95deg,#c4b5fd 4%,#a5b4fc 54%,#5eead4 100%)',
+    'linear-gradient(115deg,var(--m-blue) 0%,var(--m-purple) 58%,#0f766e 100%)'])
+    assert.ok(theme.includes(token),'missing public accent '+token);
+  assert.match(panel,/<template id="panelStyles">/);
+  assert.match(panel,/premium-dark-pro\.css\?v=1/);
+  assert.match(panel,/id="app" hidden/);
+});
+
+test('public pages follow the system light preference and preserve dark illustrative previews',async()=>{
+  const css=await read('kamera/marketing.css');
+  const light=css.slice(css.lastIndexOf('@media(prefers-color-scheme:light)'));
+  assert.ok(light.includes('--m-bg:#f5f7fc'));
+  assert.ok(light.includes('color-scheme:light'));
+  assert.ok(light.includes('backdrop-filter:blur(16px)'));
+  assert.ok(light.includes('.mktPublicJourney'));
+  assert.ok(light.includes('.mktMobileMenu>nav'));
+  assert.ok(light.includes('.mktPublicFeatureLabel'));
+  assert.ok(light.includes('.mktArticleAside a'));
+  assert.ok(!light.includes('#app'),'light theme must never target the authenticated camera workspace');
+  assert.ok(!light.includes('.mktDemo')&&!light.includes('.mktPublicPreviewStage'),
+    'illustrative product previews retain their dark, high-contrast UI');
+  assert.ok(css.slice(0,css.lastIndexOf('@media(prefers-color-scheme:light)')).includes('color-scheme:dark'));
+});
+
 test('PWA refreshes marketing appearance without changing versioned recorder runtime',async()=>{
   const [sw,app,panel]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/panel.html'].map(read));
   const rev=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];

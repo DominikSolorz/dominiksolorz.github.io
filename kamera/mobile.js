@@ -52,11 +52,12 @@ if (isMobileOwnerApp) {
   nav.className = "mobileBottomNav";
   nav.setAttribute("aria-label", "Nawigacja mobilna");
   nav.innerHTML = `
-    <button class="active" type="button" data-mobile-view="home"><b>⌂</b><span>Dom</span></button>
-    <button type="button" data-mobile-view="alerts"><b>♧</b><span>Zdarzenia</span></button>
+    <button class="active" type="button" data-mobile-view="home"><b>⌂</b><span>Panel</span></button>
+    <button type="button" data-mobile-view="camera"><b>◉</b><span>Podgląd</span></button>
+    <button type="button" data-mobile-view="alerts"><b>♧</b><span>Alarmy</span></button>
     <button type="button" data-mobile-view="recordings"><b>▷</b><span>Nagrania</span></button>
-    <button type="button" data-mobile-view="settings"><b>⚙</b><span>Ustawienia</span></button>`;
-  const mobileIcons={home:'home',alerts:'alerts',recordings:'archive',settings:'settings'};
+    <button type="button" data-mobile-view="settings" aria-label="Ustawienia"><b>⚙</b><span>Ustaw.</span></button>`;
+  const mobileIcons={home:'home',camera:'camera',alerts:'alerts',recordings:'archive',settings:'settings'};
   nav.querySelectorAll('[data-mobile-view]').forEach(button=>{button.querySelector('b').innerHTML=iconMarkup(mobileIcons[button.dataset.mobileView]);});
   document.body.append(nav);
 
@@ -116,8 +117,27 @@ if (isMobileOwnerApp) {
   document.querySelector(".mainCol")?.prepend(backSettings);
   backSettings.addEventListener("click", () => { document.body.dataset.mobileSettings = "root"; });
 
+  const overview = document.createElement("section");
+  overview.id = "mobileOverview";
+  overview.className = "mobileOverview mobileHidden";
+  overview.innerHTML = `
+    <section class="mobileOverviewCard" aria-labelledby="mobileOverviewTitle">
+      <p class="mobileOverviewEyebrow">PANEL MONITORINGU</p>
+      <h2 id="mobileOverviewTitle">Co chcesz teraz zrobić?</h2>
+      <p class="mobileOverviewStatus" id="mobileOverviewStatus" role="status">Podgląd kamery nie został uruchomiony.</p>
+      <p>Obraz nie włącza się sam po zalogowaniu. Otwórz go świadomie w zakładce Podgląd.</p>
+      <button class="mobileOverviewPrimary" type="button" data-open-mobile-view="camera">Otwórz podgląd</button>
+    </section>
+    <section class="mobileOverviewActions" aria-label="Skróty panelu">
+      <button type="button" data-open-mobile-view="alerts"><b>♧</b><span><strong>Alarmy i zdarzenia</strong><small>Sprawdź ostatnie zdarzenia</small></span><i>›</i></button>
+      <button type="button" data-open-mobile-view="recordings"><b>▷</b><span><strong>Archiwum nagrań</strong><small>Przeglądaj zapisane materiały</small></span><i>›</i></button>
+      <button type="button" data-open-mobile-view="settings"><b>⚙</b><span><strong>Ustawienia</strong><small>Skonfiguruj panel i zapis</small></span><i>›</i></button>
+    </section>`;
+  document.querySelector(".mainCol")?.prepend(overview);
+
   const views = {
-    home: ["mobileCameraInfo", "stage", "zoomBar", "audioHud", "watchPanel"],
+    home: ["mobileOverview"],
+    camera: ["mobileCameraInfo", "stage", "zoomBar", "audioHud", "watchPanel"],
     alerts: ["mobileEventsWorkspace"],
     recordings: ["dvrCard", "dvrListCard", "mobileRecordingStorage"],
     settings: ["modeCard", "ctrlBar", "systemPanel", "setCard", "diagCard", "mobileDiagnosticWorkspace"]
@@ -140,11 +160,14 @@ if (isMobileOwnerApp) {
   const managed = [...new Set([...Object.values(views).flat(),"viewEventsCard"])];
 
   function renderView(view) {
-    byId("mobilePageTitle").textContent = ({ home: "Dom", alerts: "Zdarzenia", recordings: "Nagrania", settings: "Ustawienia" })[view] || "Dom";
+    byId("mobilePageTitle").textContent = ({ home: "Panel", camera: "Podgląd", alerts: "Alarmy", recordings: "Nagrania", settings: "Ustawienia" })[view] || "Panel";
     const visible = new Set(views[view] || views.home);
     document.body.dataset.mobileView = view;
     document.body.dataset.mobileSettings = view === "settings" ? "root" : "";
     settingsHome.classList.toggle("mobileHidden", view !== "settings");
+    document.getElementById("mobileOverviewStatus").textContent = view === "camera"
+      ? "Podgląd kamery został otwarty."
+      : "Podgląd kamery nie został uruchomiony.";
     managed.forEach(id => {
       const el = byId(id);
       if (!el) return;
@@ -158,6 +181,7 @@ if (isMobileOwnerApp) {
     });
     try { sessionStorage.setItem("hs-mobile-view", view); } catch (_) { /* tryb prywatny */ }
     viewMemory.save(view);
+    document.dispatchEvent(new CustomEvent("hs-mobile-view-change", { detail: { view } }));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -170,6 +194,10 @@ if (isMobileOwnerApp) {
   nav.addEventListener("click", event => {
     const button = event.target.closest("button[data-mobile-view]");
     if (button) setView(button.dataset.mobileView);
+  });
+  overview.addEventListener("click", event => {
+    const button = event.target.closest("[data-open-mobile-view]");
+    if (button) setView(button.dataset.openMobileView);
   });
   settingsHome.addEventListener("click", event => {
     const button = event.target.closest("button[data-setting-section]");
@@ -194,6 +222,7 @@ if (isMobileOwnerApp) {
   let legacyView = "home";
   try { legacyView = sessionStorage.getItem("hs-mobile-view") || "home"; } catch (_) { /* tryb prywatny */ }
   const requestedMobileView=new URLSearchParams(location.search).get('mobileView');
-  const initialView=viewMemory.read(requestedMobileView,legacyView);
+  const rememberedView=viewMemory.read(requestedMobileView,legacyView);
+  const initialView=rememberedView === "camera" ? "home" : rememberedView;
   setTimeout(() => setView(views[initialView] ? initialView : "home"), 350);
 }
