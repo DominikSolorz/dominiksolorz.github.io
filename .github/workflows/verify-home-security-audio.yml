@@ -1,4 +1,4 @@
-name: Verify HOME SECURITY microphone and noise diagnostics
+name: WSPÓLNE | Audio | Test mikrofonu i redukcji szumu
 
 on:
   pull_request:
