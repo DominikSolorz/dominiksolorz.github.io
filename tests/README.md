@@ -26,3 +26,7 @@ node --test tests/*.test.mjs
 Do pojedynczego testu można użyć np. `node --test tests/mobile-camera-frame.test.mjs`. Przed uruchomieniem sprawdź wymagania środowiskowe konkretnego testu. Dodatkowe testy są w [../kamera/tests/](../kamera/tests/) i [../agent-tests/](../agent-tests/). Kompilacja .NET ma osobny proces.
 
 Agent powinien najpierw wskazać plik funkcji, potem testy tej funkcji, a na końcu pokazać wynik uruchomienia. Sam opis w dokumentacji nie oznacza, że test rzeczywiście przeszedł.
+
+## Wszystkie testy
+
+[Pełny indeks testów z odnośnikami do plików](INDEKS-TESTOW.md) pozwala przejść do konkretnego testu bez przeszukiwania całej listy.
