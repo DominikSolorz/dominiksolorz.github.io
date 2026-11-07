@@ -66,20 +66,17 @@ test('public marketing accents use the blue-purple-teal theme without recoloring
   assert.match(panel,/id="app" hidden/);
 });
 
-test('public pages follow the system light preference and preserve dark illustrative previews',async()=>{
+test('public site retains the same dark system identity as Windows and Android/iPhone',async()=>{
   const css=await read('kamera/marketing.css');
-  const light=css.slice(css.lastIndexOf('@media(prefers-color-scheme:light)'));
-  assert.ok(light.includes('--m-bg:#f5f7fc'));
-  assert.ok(light.includes('color-scheme:light'));
-  assert.ok(light.includes('backdrop-filter:blur(16px)'));
-  assert.ok(light.includes('.mktPublicJourney'));
-  assert.ok(light.includes('.mktMobileMenu>nav'));
-  assert.ok(light.includes('.mktPublicFeatureLabel'));
-  assert.ok(light.includes('.mktArticleAside a'));
-  assert.ok(!light.includes('#app'),'light theme must never target the authenticated camera workspace');
-  assert.ok(!light.includes('.mktDemo')&&!light.includes('.mktPublicPreviewStage'),
-    'illustrative product previews retain their dark, high-contrast UI');
-  assert.ok(css.slice(0,css.lastIndexOf('@media(prefers-color-scheme:light)')).includes('color-scheme:dark'));
+  assert.ok(css.includes('--m-bg:#0a0e1a'));
+  assert.ok(css.includes('--m-blue:#6366f1'));
+  assert.ok(css.includes('color-scheme:dark'));
+  assert.ok(!css.includes('@media(prefers-color-scheme:light)'),
+    'light phone preference must not turn only the landing page white');
+  assert.ok(css.includes('backdrop-filter:blur(16px)'),
+    'mobile navigation remains translucent, but dark');
+  assert.ok(!css.includes('#app .mktButton'),
+    'marketing styles must never overwrite the authenticated camera UI');
 });
 
 test('PWA refreshes marketing appearance without changing versioned recorder runtime',async()=>{
