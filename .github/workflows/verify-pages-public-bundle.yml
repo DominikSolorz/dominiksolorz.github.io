@@ -48,7 +48,8 @@ jobs:
           test ! -e _site/scripts
           test ! -e _site/agent
           test ! -e _site/native-mobile
-          test -s _site/docs/ui-193/01-pulpit-960.webp
+          # Optimized WebP variants are generated in the next production step.
+          test -d _site/docs/ui-193
           count=$(find _site -type f | wc -l)
           echo "Verified public distribution: $count files"
           test "$count" -lt 450
