@@ -15,7 +15,8 @@ test('native update verifies download and stages atomically without touching rec
  assert.ok(code.indexOf('SHA256.HashDataAsync')<code.indexOf('File.Move(pendingTemporaryPath, PendingUpdatePath, true)'));
  assert.ok(code.includes('HttpCompletionOption.ResponseHeadersRead'));
  assert.ok(code.includes('source.ReadAsync(buffer, downloadDeadline.Token)'));
- for(const forbidden of ['desktop.update.prepare','Application.Restart','RestartIntoPreparedUpdate'])assert.ok(!code.includes(forbidden));
+ assert.ok(code.includes('await RestartIntoPreparedUpdateAsync();'),'one click must continue to install and relaunch');
+ assert.ok(!code.includes('Application.Restart'),'host must use existing independently verified installer');
 });
 test('phone recordings route contains host storage status and remote chooser',()=>{assert.match(mobile,/recordings: \["dvrCard", "dvrListCard", "mobileRecordingStorage"\]/);assert.ok(mobile.includes('id="mobileRecordingState"'));assert.ok(mobile.includes('id="mobileChooseComputerFolder"'));assert.ok(!mobile.includes('showDirectoryPicker'));});
 
@@ -27,6 +28,7 @@ test('one click starts the native update without a second confirmation dialog',(
  assert.ok(flow.includes('if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;'));
  assert.ok(flow.includes('File.Move(pendingTemporaryPath, PendingUpdatePath, true)'));
  assert.ok(!flow.includes('Application.Restart'));
+ assert.ok(flow.includes('await RestartIntoPreparedUpdateAsync();'),'install automatically after verified download');
  assert.ok(native.includes('Interval = 10 * 60 * 1000'));
 });
 test('native update notification and start require the unlocked account panel',()=>{
