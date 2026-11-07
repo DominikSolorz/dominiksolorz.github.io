@@ -329,7 +329,12 @@ internal static class Program
                 ? lastSuccessfulUpdateCheckUtc.Value.ToLocalTime().ToString("dd.MM HH:mm")
                 : "jeszcze nie sprawdzono";
             updateInfo.Text = $"Zainstalowana {DesktopVersion} · ostatnie sprawdzenie: {checkedText} · {message}";
-            updateButton.Visible = offeredUpdate is not null;
+            updateButton.Visible = offeredUpdate is not null || File.Exists(PendingUpdatePath);
+            if (status == "staged")
+            {
+                updateButton.Text = "↻ Zainstaluj teraz";
+                updateButton.Enabled = panelUnlocked && !downloadingUpdate;
+            }
             cancelUpdateButton.Visible = File.Exists(PendingUpdatePath);
             checkUpdateButton.Enabled = !checkingUpdate && !downloadingUpdate && !File.Exists(PendingUpdatePath);
             // The owner sees the update center only after unlocking the panel.
@@ -524,7 +529,7 @@ internal static class Program
             if (checkingUpdate || downloadingUpdate) return;
             if (File.Exists(PendingUpdatePath))
             {
-                PublishUpdateState("staged", "Pobrana aktualizacja czeka na następne uruchomienie. Możesz ją anulować przed zamknięciem programu.");
+                PublishUpdateState("staged", "Aktualizacja jest pobrana. Kliknij „Zainstaluj teraz”, aby bezpiecznie zapisać nagranie, zainstalować nową wersję i uruchomić program ponownie.");
                 return;
             }
             checkingUpdate = true;
@@ -572,13 +577,13 @@ internal static class Program
             }
         }
 
-        // Download only after explicit owner click; install at the next normal
-        // launch. Never stop the active recorder to prepare an update.
+        // Download only after explicit owner click. Once verified, ask the recorder to
+        // flush its last segment before launching the existing rollback-safe updater.
         private void ShowUpdateOffer(string version)
         {
             updateButton.Text = $"↻ Zaktualizuj do wersji {version}";
             updateButton.Enabled = true;
-            PublishUpdateState("available", "NOWA WERSJA. Wybierz „Zaktualizuj”, aby pobrać ją za zgodą. Nagrywanie trwa dalej. Po pobraniu uruchom program ponownie.");
+            PublishUpdateState("available", "NOWA WERSJA. Wybierz „Zaktualizuj”, aby ją pobrać, bezpiecznie domknąć nagranie, zainstalować i automatycznie uruchomić program ponownie.");
             PromptForAvailableUpdate();
         }
 
@@ -599,8 +604,8 @@ internal static class Program
                 var answer = MessageBox.Show(this,
                     $"Dostępna jest aktualizacja HOME SECURITY Desktop {version}.\n\n" +
                     $"Zainstalowana wersja: {DesktopVersion}.\n\n" +
-                    "Pobrać ją teraz? Kamera i nagrywanie nie zostaną przerwane. " +
-                    "Instalacja nastąpi dopiero po zamknięciu i ponownym uruchomieniu programu.",
+                    "Pobrać i zainstalować teraz? Przed restartem ostatni fragment nagrania zostanie zapisany. " +
+                    "Program zamknie się, zaktualizuje i uruchomi ponownie. Jeśli nie można zapisać nagrania, instalacja nie ruszy.",
                     "HOME SECURITY · Dostępna aktualizacja",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Information,
                     MessageBoxDefaultButton.Button2);
@@ -629,10 +634,77 @@ internal static class Program
             }
         }
 
+        // The user consented by clicking "Zaktualizuj" or Yes on the offered-version prompt.
+        // Do not exit until the camera confirms that its current recording fragment was saved.
+        // If anything fails, leave the verified package staged for retry and keep Windows running.
+        private async Task<bool> RestartIntoPreparedUpdateAsync()
+        {
+            if (!panelUnlocked || !File.Exists(PendingUpdatePath) ||
+                webView.CoreWebView2 is null || !AgentWebViewBridge.Trusted(webView.CoreWebView2.Source))
+            {
+                PublishUpdateState("staged", "Pakiet jest pobrany, ale panel nie jest gotowy do bezpiecznego restartu. Odblokuj HOME SECURITY i wybierz „Zainstaluj teraz”.");
+                return false;
+            }
+            updatePreparationId = Guid.NewGuid().ToString("N");
+            updatePrepared = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            try
+            {
+                PublishUpdateState("preparing", "Zapisuję ostatni fragment nagrania przed instalacją. Nie wyłączaj komputera.");
+                webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new {
+                    type = "desktop.update.prepare", id = updatePreparationId
+                }));
+                var recorderReady = await updatePrepared.Task.WaitAsync(TimeSpan.FromMinutes(2));
+                if (!recorderReady)
+                    throw new IOException("Nagranie nie zostało bezpiecznie zapisane. Aktualizacja wstrzymana.");
+                if (!panelUnlocked || IsDisposed || !File.Exists(PendingUpdatePath))
+                    throw new InvalidOperationException("Sesja została zamknięta przed instalacją.");
+                PublishUpdateState("installing", "Nagranie zapisane. Zamykanie, instalowanie i automatyczne ponowne uruchamianie programu…");
+                WriteDiagnostic("update-restart-authorized", new { installed = DesktopVersion });
+                // Spawn the already implemented independent helper. It waits until our process
+                // has exited, verifies SHA-256 again, backs up installed files, and relaunches.
+                if (!StartPreparedUpdateIfAny())
+                    throw new IOException("Nie udało się uruchomić instalatora aktualizacji.");
+                Close();
+                return true;
+            }
+            catch (Exception error)
+            {
+                WriteDiagnostic("update-auto-restart-blocked", new { error = error.Message });
+                if (webView.CoreWebView2 is not null && updatePreparationId is not null)
+                {
+                    try
+                    {
+                        webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new {
+                            type = "desktop.update.abort", id = updatePreparationId
+                        }));
+                    }
+                    catch { /* Manual PIN and camera must remain available. */ }
+                }
+                if (!IsDisposed)
+                    PublishUpdateState("staged", "Aktualizacja pobrana, ale automatyczny restart nie powiódł się: " +
+                        error.Message + " Kliknij „Zainstaluj teraz”, aby ponowić po sprawdzeniu nagrań.");
+                return false;
+            }
+            finally
+            {
+                updatePrepared = null;
+                updatePreparationId = null;
+            }
+        }
+
         private async Task DownloadAndPrepareOfferedUpdateAsync()
         {
-            if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;
-            if (File.Exists(PendingUpdatePath)) return;
+            if (!panelUnlocked || downloadingUpdate) return;
+            // A previous download may already be verified; the same button retries
+            // the safe restart, never redownloads or silently abandons a package.
+            if (File.Exists(PendingUpdatePath))
+            {
+                downloadingUpdate = true;
+                try { await RestartIntoPreparedUpdateAsync(); }
+                finally { downloadingUpdate = false; }
+                return;
+            }
+            if (offeredUpdate is null) return;
             downloadingUpdate = true;
             var manifest = offeredUpdate;
             updateButton.Enabled = false;
@@ -681,7 +753,8 @@ internal static class Program
                 File.Move(pendingTemporaryPath, PendingUpdatePath, true);
                 WriteDiagnostic("update-ready", new { manifest.Version, packagePath });
                 updateButton.Text = $"Wersja {manifest.Version} gotowa";
-                PublishUpdateState("staged", "Aktualizacja gotowa! Po zakończeniu nagrywania zamknij i uruchom ponownie HOME SECURITY, aby ją zainstalować.");
+                PublishUpdateState("staged", "Pakiet sprawdzony. Zapisuję nagranie i przygotowuję automatyczny restart…");
+                await RestartIntoPreparedUpdateAsync();
             }
             catch (Exception ex)
             {
@@ -693,7 +766,17 @@ internal static class Program
                 updateButton.Text = $"↻ Spróbuj ponownie: {manifest.Version}";
                 PublishUpdateState("error", "Aktualizacja nie została zainstalowana. " + ex.Message);
             }
-            finally { downloadingUpdate = false; updateProgress.Visible = false; updatePrepared = null; updatePreparationId = null; checkUpdateButton.Enabled = !File.Exists(PendingUpdatePath); }
+            finally
+            {
+                downloadingUpdate = false;
+                updatePrepared = null;
+                updatePreparationId = null;
+                if (!IsDisposed)
+                {
+                    updateProgress.Visible = false;
+                    checkUpdateButton.Enabled = !File.Exists(PendingUpdatePath);
+                }
+            }
         }
 
     }
