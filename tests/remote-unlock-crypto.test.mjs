@@ -28,7 +28,8 @@ test('wrong account, host, phone or fake signer never unlocks',async()=>{
  for(const field of ['userId','hostId','phoneId']) {
    await assert.rejects(()=>decryptUnlockGrant(f.grant,{...f.options,[field]:randomUUID(),usedIds:new Set()}),/target mismatch/);
  }
- await assert.rejects(()=>decryptUnlockGrant(f.grant,{...f.options,pairedPhonePublicKey:await exportPhonePublicKey(f.stranger),usedIds:new Set()}),/Untrusted/);
+ const strangerPublicKey=await exportPhonePublicKey(f.stranger);
+ await assert.rejects(()=>decryptUnlockGrant(f.grant,{...f.options,pairedPhonePublicKey:strangerPublicKey,usedIds:new Set()}),/Untrusted/);
 });
 test('tampered grants and expired/future messages fail closed',async()=>{
  const f=await fixture();
