@@ -18,7 +18,7 @@ internal static class Program
     private const string PanelUrl = "https://dominiksolorz.github.io/kamera/?desktop=1&native=windows&host=computer&ui_build=" + WebPanelBuild;
     private const string PublicHost = "dominiksolorz.github.io";
     private const string UpdateManifestUrl = "https://dominiksolorz.github.io/kamera/desktop-update.json";
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(4) };
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(16) };
 
     [STAThread]
     private static void Main(string[] args)
@@ -289,12 +289,14 @@ internal static class Program
         private bool downloadingUpdate;
         private bool panelUnlocked;
         private DesktopUpdateManifest? offeredUpdate;
-        // Four background checks per 24 hours while the application is running,
-        // plus the existing startup check. A check never restarts the recorder.
-        private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 6 * 60 * 60 * 1000 };
+        // Check at startup, every 10 minutes and when the owner returns to the app.
+        // Detection never downloads, installs or interrupts camera recording.
+        private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 10 * 60 * 1000 };
         private readonly ProgressBar updateProgress = new() { Dock = DockStyle.Bottom, Height = 6, Visible = false };
 
         private DateTimeOffset? lastSuccessfulUpdateCheckUtc;
+        private DateTimeOffset? lastAttemptedUpdateCheckUtc;
+        private string? lastPromptedUpdateVersion;
         private object updateState = new { type = "desktop.update.state", status = "none" };
         private TaskCompletionSource<bool>? updatePrepared;
         private string? updatePreparationId;
@@ -319,7 +321,7 @@ internal static class Program
                 type = "desktop.update.state", status, version = offeredUpdate?.Version,
                 installedVersion = DesktopVersion,
                 lastCheckedUtc = lastSuccessfulUpdateCheckUtc.HasValue ? lastSuccessfulUpdateCheckUtc.Value.ToString("O") : null,
-                checkIntervalHours = 6,
+                checkIntervalMinutes = 10,
                 message, percent
             };
             try { if (AgentWebViewBridge.Trusted(webView.CoreWebView2.Source)) webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); } catch { }
@@ -358,6 +360,15 @@ internal static class Program
             checkUpdateButton.Click += async (_, _) => { if (panelUnlocked) await CheckForUpdateAsync(); };
             cancelUpdateButton.Click += (_, _) => CancelPreparedUpdate();
             updateCheckTimer.Tick += async (_, _) => await CheckForUpdateAsync();
+            Activated += async (_, _) =>
+            {
+                // Catch newly published versions promptly after the computer was idle.
+                if (webView.CoreWebView2 is null || checkingUpdate || downloadingUpdate) return;
+                if (lastAttemptedUpdateCheckUtc.HasValue &&
+                    DateTimeOffset.UtcNow - lastAttemptedUpdateCheckUtc.Value < TimeSpan.FromMinutes(2)) return;
+                await CheckForUpdateAsync();
+                PromptForAvailableUpdate();
+            };
             FormClosed += (_, _) => { updateCheckTimer.Dispose(); agentRuntime.Dispose(); };
             updateBar.Resize += (_, _) => LayoutUpdateCenter();
             updateButton.FlatAppearance.BorderColor = Color.FromArgb(255, 112, 128);
@@ -366,7 +377,7 @@ internal static class Program
             Controls.Add(updateBar);
             Shown += async (_, _) => await StartPanelAsync();
             KeyDown += (_, e) => { if (e.KeyCode == Keys.F11) ToggleFullScreen(); };
-            PublishUpdateState("none", "Aktualizacje są sprawdzane co 6 godzin. Pobieranie wymaga Twojego kliknięcia.");
+            PublishUpdateState("none", "Sprawdzam przy uruchomieniu, co 10 minut i po powrocie do okna. Pobieranie tylko za zgodą.");
             WriteDiagnostic("desktop-start", new { version = DesktopVersion, process = Environment.ProcessId });
         }
 
@@ -422,7 +433,9 @@ internal static class Program
                             panelUnlocked = root.TryGetProperty("visible", out var visible) && visible.ValueKind == JsonValueKind.True;
                             updateBar.Visible = panelUnlocked;
                             // Unlocking does NOT authorize an update download.
-                            webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState)); return;
+                            webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState));
+                            if (panelUnlocked) PromptForAvailableUpdate();
+                            return;
                         }
                         if (type.GetString() == "desktop.update.query") {
                             // A query does not prove the HTML sidebar is visible. Keep the native offer.
@@ -515,10 +528,12 @@ internal static class Program
                 return;
             }
             checkingUpdate = true;
+            lastAttemptedUpdateCheckUtc = DateTimeOffset.UtcNow;
             PublishUpdateState("checking", "Sprawdzam oficjalny kanał aktualizacji Windows…");
             try
             {
-                var manifest = await Http.GetFromJsonAsync<DesktopUpdateManifest>($"{UpdateManifestUrl}?t={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
+                using var manifestDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                var manifest = await Http.GetFromJsonAsync<DesktopUpdateManifest>($"{UpdateManifestUrl}?t={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}", manifestDeadline.Token);
                 if (manifest is null || !Version.TryParse(manifest.Version, out var available))
                     throw new InvalidDataException("Kanał aktualizacji nie podał poprawnej wersji.");
                 var installed = Version.Parse(DesktopVersion);
@@ -534,7 +549,7 @@ internal static class Program
                 if (available <= installed)
                 {
                     offeredUpdate = null;
-                    PublishUpdateState("current", $"Wersja {DesktopVersion} jest aktualna. Automatyczne sprawdzanie co 6 godzin podczas pracy programu.");
+                    PublishUpdateState("current", $"Wersja {DesktopVersion} jest aktualna. Kolejna kontrola automatycznie za 10 minut lub po powrocie do programu.");
                     return;
                 }
                 offeredUpdate = manifest;
@@ -563,7 +578,35 @@ internal static class Program
         {
             updateButton.Text = $"↻ Zaktualizuj do wersji {version}";
             updateButton.Enabled = true;
-            PublishUpdateState("available", "Nowa wersja jest dostępna. Kliknij „Zaktualizuj”, aby pobrać ją po swojej decyzji. Nagrywanie będzie kontynuowane.");
+            PublishUpdateState("available", "NOWA WERSJA. Wybierz „Zaktualizuj”, aby pobrać ją za zgodą. Nagrywanie trwa dalej. Po pobraniu uruchom program ponownie.");
+            PromptForAvailableUpdate();
+        }
+
+        // Announce every NEW version once per running desktop session.
+        // The owner can defer it; the normal toolbar remains available afterwards.
+        // Only a confirmed click may download. No modal before account + PIN unlock.
+        private void PromptForAvailableUpdate()
+        {
+            if (!panelUnlocked || offeredUpdate is null || downloadingUpdate ||
+                File.Exists(PendingUpdatePath) || !IsHandleCreated || IsDisposed) return;
+            var version = offeredUpdate.Version;
+            if (lastPromptedUpdateVersion == version) return;
+            lastPromptedUpdateVersion = version;
+            BeginInvoke(new Action(async () =>
+            {
+                if (IsDisposed || !panelUnlocked || downloadingUpdate ||
+                    offeredUpdate?.Version != version || File.Exists(PendingUpdatePath)) return;
+                var answer = MessageBox.Show(this,
+                    $"Dostępna jest aktualizacja HOME SECURITY Desktop {version}.\\n\\n" +
+                    $"Zainstalowana wersja: {DesktopVersion}.\\n\\n" +
+                    "Pobrać ją teraz? Kamera i nagrywanie nie zostaną przerwane. " +
+                    "Instalacja nastąpi dopiero po zamknięciu i ponownym uruchomieniu programu.",
+                    "HOME SECURITY · Dostępna aktualizacja",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Information,
+                    MessageBoxDefaultButton.Button2);
+                if (answer == DialogResult.Yes)
+                    await DownloadAndPrepareOfferedUpdateAsync();
+            }));
         }
 
         private void CancelPreparedUpdate()
@@ -602,7 +645,7 @@ internal static class Program
                 PublishUpdateState("downloading", "Pobieranie aktualizacji…");
                 updateProgress.Visible = true;
                 using (var response = await Http.GetAsync(manifest.PackageUrl, HttpCompletionOption.ResponseHeadersRead)) {
-                    using var downloadDeadline = new CancellationTokenSource(TimeSpan.FromMinutes(4));
+                    using var downloadDeadline = new CancellationTokenSource(TimeSpan.FromMinutes(15));
                     response.EnsureSuccessStatusCode();
                     var total = response.Content.Headers.ContentLength;
                     await using var source = await response.Content.ReadAsStreamAsync();
@@ -638,7 +681,7 @@ internal static class Program
                 File.Move(pendingTemporaryPath, PendingUpdatePath, true);
                 WriteDiagnostic("update-ready", new { manifest.Version, packagePath });
                 updateButton.Text = $"Wersja {manifest.Version} gotowa";
-                PublishUpdateState("staged", "Aktualizacja pobrana i sprawdzona. Zainstaluje się przy następnym uruchomieniu programu. Kamera i nagrywanie nadal pracują.");
+                PublishUpdateState("staged", "Aktualizacja gotowa! Po zakończeniu nagrywania zamknij i uruchom ponownie HOME SECURITY, aby ją zainstalować.");
             }
             catch (Exception ex)
             {
