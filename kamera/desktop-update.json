@@ -1,7 +1,7 @@
 {
-  "version": "1.4.52",
-  "packageUrl": "https://dominiksolorz.github.io/kamera/updates/HomeSecurityDesktop-1.4.52-win-x64.zip",
-  "sha256": "AD9900EA8FDC7DE7ABDDDD1BC55D0625BACC11D8BECCA79DB157FE5F9D4A79D6",
-  "installerSha256": "B94E46079B742C35517993CBE998F1314FBF672DFAB2869DC7822BF271E6DCA0",
-  "sourceFingerprint": "ee250392a6d4789f94f5f4233c65e5fe2d8bb033e5e1b6b3c2f281c76b80ba77"
+  "version": "1.4.53",
+  "packageUrl": "https://dominiksolorz.github.io/kamera/updates/HomeSecurityDesktop-1.4.53-win-x64.zip",
+  "sha256": "222A8A2E86BF65CA9F01C60CD22E94F17166854FC9CCD3E1E2F6A6BDADD01312",
+  "installerSha256": "D89E47338AC2F3B536EB8332043E99909B220965E34F22CA8798DC09B35A5C76",
+  "sourceFingerprint": "f1d8671826b95156b1bf0b94ea5a5d9c11573d15f97777d682cba8dfc0bca047"
 }
