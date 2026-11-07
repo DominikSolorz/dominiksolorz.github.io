@@ -18,7 +18,7 @@ export function fingerprintEntries(entries){
   return hash.digest('hex');
 }
 export async function sourceFingerprint(){
-  const paths=execFileSync('git',['ls-files','-z','--','kamera','desktop-client','agent','agent-client','agent-contracts','design/marketing'],{encoding:'utf8'}).split('\0').filter(Boolean)
+  const paths=execFileSync('git',['ls-files','-z','--','kamera','desktop-client','agent','agent-client','agent-contracts','design/marketing','design/documents','scripts/build-documents.mjs'],{encoding:'utf8'}).split('\0').filter(Boolean)
     .filter(p=>!/^kamera\/(updates|downloads)\//.test(p)&&p!=='kamera/desktop-update.json');
   return fingerprintEntries(await Promise.all(paths.map(async p=>[p,await readFile(p)])));
 }

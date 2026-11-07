@@ -1,4 +1,4 @@
-name: Build HOME SECURITY UI220 one-click test installer
+name: DESKTOP | Windows | Testowy instalator interfejsu
 
 on:
   push:

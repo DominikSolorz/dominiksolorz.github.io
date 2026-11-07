@@ -1,0 +1,146 @@
+/* Reference implementation of docs/ui-193. No sample camera or telemetry data. */
+html.desktopMode:not(.policeCommand):not(.usMilitary){--desktop-sidebar:212px;--desktop-right-width:340px;--ui-bg:#080b0d;--ui-surface:#101518;--ui-raised:#1b2025;--ui-line:#293136;--ui-text:#f0f1f3;--ui-muted:#a8afb8;--concept-red:#ee173c;--concept-gold:#d8b96f}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body{background:#080b0d;color:#f0f1f3;font:14px/1.5 "Segoe UI",system-ui,sans-serif}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSidebar{width:var(--desktop-sidebar);padding:0;background:linear-gradient(110deg,#0c1013,#080b0d);border-color:#252b30}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopBrand{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;height:196px;padding:25px 12px 22px;margin:0 0 15px;gap:6px;border:0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopBrand img{width:74px;height:94px;border:0;border-radius:0;background:none;object-fit:contain}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopBrand>span{text-align:center}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopBrand b{display:block;color:#d8b96f;letter-spacing:.16em;font-size:11px;font-weight:650}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopBrand small{display:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #desktopCollapse{position:absolute;right:6px;bottom:0;border:0;background:none;color:#a8afb8;width:28px;min-height:28px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav{padding:0;gap:7px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button{border-radius:0 7px 7px 0;min-height:55px;padding:12px 23px;gap:16px;font-weight:400}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button b{font-size:15px;font-weight:500}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button.active{background:linear-gradient(90deg,#40131d,#200f14);color:#ff3152;box-shadow:inset 4px 0 #f41c43}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav svg{width:24px;height:24px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSidebarFoot{margin: auto 16px 0;padding:18px 0 16px;border-top:1px solid #282f34;font-size:11px;color:#8f969e;line-height:1.7}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSidebarFoot button{font-size:11px;background:none;border-color:#2b3238;color:#a8afb8}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopDevice,html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopCapabilities{display:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .topbar{height:50px;background:#0c1013;border-color:#262d32;backdrop-filter:none;box-shadow:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) main{padding:76px 24px 28px;background:#080b0d}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopContext{display:flex;margin:0 0 22px;padding:0;align-items:center}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopContext h1{font-size:30px;font-weight:650;letter-spacing:-.025em;line-height:1.2}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopContext p{font-size:11px;margin-bottom:7px;color:#a8afb8}
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(.card,.panel,.desktopCameraTile,.desktopEventsDrawer,.desktopSettingsScreen,.desktopEventsScreen,.desktopDiagnosticsScreen,.desktopDeviceManager,.settingsHelp){border-color:#293136;background:linear-gradient(115deg,#11171b,#0e1316);border-radius:8px;box-shadow:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopOverview{grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopLiveScene{height:clamp(340px,calc(100dvh - 360px),680px);min-height:340px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopTileMeta{background:#12171b!important;border-color:#293136!important;padding:13px 16px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopTileMeta strong{font-size:15px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopCameraTile #stage{border:0;border-radius:0;background:#030507}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopEventsDrawer{max-height:650px;overflow:auto;padding:0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopEventsDrawer>summary{padding:17px 18px;border-bottom:1px solid #293136;font-size:16px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopEventsDrawer #viewEventsCard{position:static;margin:0;border:0;max-height:none;padding:14px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopHomeGuide{display:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:20px 0 0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSummary article{display:flex;align-items:flex-start;gap:13px;padding:21px;min-width:0;min-height:140px;background:linear-gradient(115deg,#12181c,#0f1316);border:1px solid #293136;border-radius:8px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSummaryIcon{width:24px;height:24px;color:#c5cbd1;flex-shrink:0;background:none;border:0;padding:0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSummaryIcon svg{width:24px;height:24px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSummary article>div{min-width:0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSummary b{font-size:15px;display:block;color:#f0f1f3;font-weight:600}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSummary strong{display:block;font-size:15px;margin:16px 0 8px;color:#d8dde2;overflow-wrap:anywhere}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSummary small{font-size:12px;color:#9ca6b1;overflow-wrap:anywhere}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen{grid-template-columns:minmax(0,1fr) 340px;gap:18px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen>header{display:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen .controlPreview{grid-row:1;grid-column:1}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen .controlDeviceDock{grid-row:1;grid-column:2;gap:16px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen #ctrlBar{grid-column:1/-1;grid-row:2;display:flex;margin:0;align-items:center;flex-wrap:wrap}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen #ctrlBar .ctrlBtns{flex:1 1 480px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock .desktopDeviceManager{padding:18px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock .desktopDeviceManager .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock .desktopDeviceManager .btn{padding:8px;font-size:11px;min-height:36px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock .desktopDeviceManager .muted{font-size:11px;line-height:1.5;margin-bottom:0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeList{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeBtn{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 5px;gap:9px;min-height:96px;text-align:center;background:linear-gradient(130deg,#1a2025,#12171b);border-color:#293136}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeBtn span{width:100%;flex:0 1 auto}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeBtn b{font-size:11px;line-height:1.4}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .controlDeviceDock #modeCard .modeBtn.active{border-color:#f41b42;background:linear-gradient(130deg,#3e1721,#231419);box-shadow:inset 0 0 0 1px #d51234}
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(#ctrlStart,.btn.primary){background:linear-gradient(110deg,#d91e38,#f0183e);border-color:#f72c4e;border-radius:6px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(#ctrlStop,#ctrlRestart){background:linear-gradient(115deg,#242a30,#171d22);border-color:#3b434b;border-radius:6px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsScreen{border:0;padding:0;background:transparent;box-shadow:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsHeader{display:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsTabs{padding:10px;background:#101518;border-radius:8px;border:1px solid #293136}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsTabs button{background:transparent;border-color:transparent;font-size:14px;min-height:46px;border-radius:5px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsTabs button.active{background:linear-gradient(90deg,#4b1c28,#331921);border-color:#5b2533}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsGrid.settingsOnly{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:16px;align-items:start;background:transparent}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsControls{border:1px solid #293136;border-radius:8px;overflow:hidden;background:#101518}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsControls #setCard{border:0;margin:0;border-radius:0;padding:18px;background:#101518}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .settingsHelp{position:sticky;top:70px;padding:20px;border:1px solid #293136;font-size:12px;line-height:1.7}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopPreviewTweaks label{border-bottom:1px solid #242c32;padding:13px 0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsControls input[type=range]{accent-color:#ed193d}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopDiagnosticsScreen{padding:0;background:transparent;border:0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .componentCards{grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .componentCard{padding:20px;min-width:0;min-height:225px;background:linear-gradient(115deg,#12181d,#0d1216);border:1px solid #293136;border-radius:7px;overflow-wrap:anywhere}
+.componentIcon{display:block;width:40px;height:40px;margin-bottom:18px;color:#c7cdd4}.componentIcon svg{width:40px;height:40px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .componentCard h3{font-size:17px;margin:0 0 13px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .componentCard strong{font-size:13px;font-weight:500}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .componentCard strong::before{content:'';display:inline-block;background:currentColor;border-radius:50%;width:10px;height:10px;margin-right:7px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .workspaceTableWrap{border:1px solid #293136;border-radius:7px;background:#101518}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .workspaceTable th{background:#151a1f;font-size:12px;padding:14px;text-transform:none;letter-spacing:0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .workspaceTable td{padding:14px;border-color:#293136;font-size:13px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .eventWorkspace{grid-template-columns:minmax(0,1.15fr) minmax(300px,1fr);gap:18px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .eventWorkspaceDetail{border:1px solid #293136;border-radius:8px;background:#101518;padding:18px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .eventWorkspaceRow{border-radius:0;background:#11171a;border-bottom:1px solid #293136;padding:13px;min-height:76px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .eventWorkspaceRow.selected{background:#351720;border-color:#a91a36}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModal{left:var(--desktop-sidebar);top:50px;background:#080b0d;backdrop-filter:none;z-index:100;border-radius:0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveWorkspace{grid-template-columns:minmax(0,1fr) 330px;gap:20px;padding:20px;align-items:start}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModalHead{padding:22px;border-color:#293136}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModalHead h2{font-size:30px;font-weight:650}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveStorageSidebar{background:#11171b;border:1px solid #293136;border-radius:8px;padding:18px;min-width:0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveStorageSidebar :is(.card,.panel){border:0;background:none;box-shadow:none;padding:0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archivePlaybackStage{border-radius:7px;border-color:#293136;min-height:260px;aspect-ratio:16/9;background:#020405}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModal :is(.dvrCard,.dvrListCard){border-radius:7px;border-color:#293136;background:#101518}
+html.desktopMode.desktopSidebarCollapsed{--desktop-sidebar:72px}
+html.desktopMode.desktopSidebarCollapsed .desktopBrand{height:110px;padding:10px 4px}
+html.desktopMode.desktopSidebarCollapsed .desktopBrand img{width:42px;height:56px}
+@media(max-width:1350px){html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsGrid.settingsOnly{grid-template-columns:minmax(0,1fr)}html.desktopMode:not(.policeCommand):not(.usMilitary) .componentCards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1099px){html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen{display:block}html.desktopMode:not(.policeCommand):not(.usMilitary) .controlWorkspace{display:grid;grid-template-columns:minmax(0,1fr) 280px}html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopOverview{grid-template-columns:minmax(0,1fr) 280px}html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveWorkspace{grid-template-columns:minmax(0,1fr) 280px}html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopControlsScreen #ctrlBar{margin-top:18px}}
+@media(max-width:1023px){html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopContext{display:flex}html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopOverview,html.desktopMode:not(.policeCommand):not(.usMilitary) .controlWorkspace,html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveWorkspace{grid-template-columns:minmax(0,1fr)}html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSummary{grid-template-columns:1fr}html.desktopMode:not(.policeCommand):not(.usMilitary) main{padding:22px 16px}html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModal{left:0}}
+/* Phone uses the same visual identity while keeping orientation and PiP sizing rules. */
+.mobileOwnerMode .mobileAppHeader{background:#0b0f12;border-color:#293136;border-radius:0;box-shadow:none}
+.mobileOwnerMode .mobileBrandLogo{background:none;border:0;border-radius:0;object-fit:contain;width:42px;height:52px}
+.mobileOwnerMode .mobileBottomNav{background:#0c1013;border-top:1px solid #293136;box-shadow:none}
+.mobileOwnerMode .mobileBottomNav button{border:0;border-radius:0;background:transparent;color:#a8afb8}
+.mobileOwnerMode .mobileBottomNav button.active{background:#281218;color:#f92249;box-shadow:inset 0 3px #ef1a41}
+.mobileOwnerMode .mobileBottomNav b svg{width:24px;height:24px;display:block;margin:auto}
+.mobileOwnerMode .mobileSettingsRow{background:#101518;border-color:#293136;border-radius:7px;min-height:66px}
+.mobileOwnerMode :is(.card,.panel,.eventWorkspaceDetail){background:#101518;border-color:#293136;border-radius:9px;box-shadow:none}
+.mobileOwnerMode .mobileCameraStatus{background:#101518;border-color:#293136;border-radius:7px}
+#authDialog .authCard{background:#101518;border-color:#343b43;border-radius:10px;box-shadow:0 24px 80px #0008}
+#authDialog .authBrand{display:grid;justify-items:center;gap:12px;border-color:#293136}
+#authDialog .authBrand img{background:none;border:0;border-radius:0;object-fit:contain;width:64px;height:80px}
+#authDialog .authForm input{background:#11171b;border-color:#3d464f;border-radius:6px;min-height:46px}
+#authDialog .authPrimary{border-radius:6px;background:linear-gradient(110deg,#d91b36,#f11940);box-shadow:none;min-height:46px}
+#authDialog .authTextBtn{min-height:44px;color:#f22b4f}
+#lock .pinLogo img{background:none;border:0;object-fit:contain;width:80px;height:100px}
+#lock .pinCard{background:#101518;border-color:#343c43;border-radius:10px}
+#lock .pinKey{background:linear-gradient(130deg,#242a30,#151b20);border-color:#414950;border-radius:7px}
+
+/* Legacy declarations used !important; override only the visible summary, retaining hidden routes. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSummary:not([hidden]){display:grid!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopBrand img.dsPanelLogo{background:transparent;border:0;border-radius:0;box-shadow:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopLiveScene{height:clamp(340px,calc(100dvh - 420px),620px)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopCameraLive{display:flex;flex-direction:column;overflow:hidden}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopCameraLive>.desktopTileMeta{position:relative!important;inset:auto!important;width:100%;display:flex;align-items:center;gap:12px;flex:0 0 auto;margin:0;min-height:48px;border-bottom:1px solid #293136}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopCameraLive>.stage{flex:1;aspect-ratio:auto!important;height:auto!important;min-height:0!important;width:100%;border-radius:0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsControls>#setCard input[type=range],html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopPreviewTweaks input[type=range]{accent-color:#ef1a41}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsFooter{border-radius:7px;background:#101518;border-color:#293136}
+.mobileOwnerMode .mobileAppHeader img.mobileBrandLogo{background:transparent;border:0;border-radius:0}
+
+/* The DVR's existing controls take their reference positions without cloning the live video. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModal .archiveModalHead{border:0;border-bottom:1px solid #293136;border-radius:0;background:#080b0d}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModalBody{display:flex;flex-direction:column;gap:16px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModal #dvrCard{display:contents!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModal .dvrTop{order:-2;padding:14px;background:#11171b;border:1px solid #293136;border-radius:6px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModal .dvrTop .panelHead{display:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archivePlaybackStage{order:-1;flex:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archivePlaybackStage .dvrBadge{position:absolute;inset:0;display:grid;place-items:center;text-align:center;max-width:none;max-height:none;width:100%;height:100%;padding:24px;border:0;border-radius:0;box-shadow:none;background:#030608;font:400 14px/1.6 "Segoe UI",system-ui,sans-serif;color:#aab4c0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModal #dvrListCard{background:#101518!important;border:1px solid #293136!important;border-radius:7px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveModal .dvrBar{background:#151c23;border-color:#313b45;border-radius:5px;min-height:62px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopCameraLive .stage .placeholder{background:#030608;border:0;box-shadow:none;color:#aab4c0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopCameraLive .stage::after{box-shadow:none;background:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .archiveStorageSidebar .status{background:#192027;border-color:#333f4a;border-radius:6px;font-size:12px}
+
+html.desktopMode.desktopSidebarCollapsed:not(.policeCommand):not(.usMilitary){--desktop-sidebar:72px}
+#lock .pinLogo{background:transparent;border:0;width:80px;height:104px;overflow:visible}
+#lock .keypad button{background:linear-gradient(130deg,#242a30,#151b20);border-color:#414950;border-radius:7px;min-height:52px}
+#lock .keypad button:hover{border-color:#ef2145;background:#2d2028}

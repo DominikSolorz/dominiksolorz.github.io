@@ -9,6 +9,8 @@ static class DriveTests
 {
     public static async Task Run(Action<bool,string> check,string root)
     {
+        check(HomeSecurityDesktop.ExternalLinks.IsDocumentation("https://dominiksolorz.github.io/kamera/dokumenty.html"),"documentation opens outside the active recording panel");
+        check(!HomeSecurityDesktop.ExternalLinks.IsDocumentation("https://dominiksolorz.github.io.evil.test/kamera/dokumenty.html")&&!HomeSecurityDesktop.ExternalLinks.IsDocumentation("https://dominiksolorz.github.io/kamera/panel.html?auth=login"),"documentation opener rejects foreign hosts and non-document paths");
         check(HomeSecurityDesktop.ExternalLinks.IsDriveFolder("https://drive.google.com/drive/folders/15c9XPFi55XkQnCjfW_cvDHqhEXo_M5V2"),"native owner click can open the real Drive folder outside blocked iframe");
         check(!HomeSecurityDesktop.ExternalLinks.IsDriveFolder("https://drive.google.com.evil.test/drive/folders/abcdefghijk"),"Drive external opener rejects lookalike hosts");
         check(!HomeSecurityDesktop.ExternalLinks.IsDriveFolder("file:///C:/Windows/System32/cmd.exe")&&!HomeSecurityDesktop.ExternalLinks.IsDriveFolder("https://attacker@drive.google.com/drive/folders/abcdefghijk"),"Drive external opener rejects local executables and URL credentials");

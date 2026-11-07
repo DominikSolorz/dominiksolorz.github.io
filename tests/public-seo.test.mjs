@@ -60,7 +60,9 @@ test('sitemap contains only unique indexable canonical pages, never panel, query
 test('installed PWA identity and callback allow-list destination survive document separation',async()=>{
  const manifest=JSON.parse(await read('kamera/manifest.webmanifest'));
  assert.equal(manifest.id,'/kamera/owner-panel');
- for(const href of [manifest.start_url,...manifest.shortcuts.map(item=>item.url)])assert.equal(new URL(href,'https://dominiksolorz.github.io/kamera/').pathname,'/kamera/panel.html');
+ assert.equal(new URL(manifest.start_url,'https://dominiksolorz.github.io/kamera/').pathname,'/kamera/index.html');
+ assert.ok(manifest.start_url.includes('app=mobile-home'));
+ for(const href of manifest.shortcuts.map(item=>item.url))assert.equal(new URL(href,'https://dominiksolorz.github.io/kamera/').pathname,'/kamera/panel.html');
  const auth=await read('kamera/auth.js');
  const callback=auth.match(/const callbackUrl = (\(\) => [^;]+);/)[1];
  const fn=vm.runInNewContext(callback,{URL,location:{href:'https://dominiksolorz.github.io/kamera/panel.html?auth=register'}});
