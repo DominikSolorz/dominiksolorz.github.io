@@ -14,6 +14,7 @@ test('product gallery uses existing proposal boards, not invented screenshots',a
     assert.ok(html.includes('href="panel.html?auth=register">Załóż konto'));
     assert.ok(html.includes('href="przygotowanie.html">Zobacz instrukcję uruchomienia'));
     assert.ok(html.includes('wymagają skonfigurowanego konta'));
+    assert.ok(html.includes('<div class="mktActions" role="group" aria-label="Uruchom lub skonfiguruj HOME SECURITY">'), 'presentation action controls need a valid accessible group role');
     assert.ok(html.includes('id="galeria"'));
     assert.ok(html.includes('Wizualizacje UI') || html.includes('wizualizacje UI') || html.includes('wizualizacje UI') || html.includes('wizualizacje UI z etapu 193') || html.includes('wizualizacje UI z etapu 193'.toUpperCase()) || html.includes('wizualizacje UI z etapu 193'),'concept disclaimer');
     assert.ok(html.includes('nie są rzeczywiste zrzuty ekranu') || html.includes('nie są zrzuty') || html.includes('nie są rzeczywiste zrzuty ekranu') || html.includes('To nie są rzeczywiste zrzuty ekranu'));
