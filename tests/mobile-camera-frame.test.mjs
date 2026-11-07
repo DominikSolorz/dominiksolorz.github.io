@@ -43,11 +43,11 @@ test('mobile layout switch remains a 48px touch target and refreshed CSS is prec
  assert.ok(serviceWorker.includes('./app.js?v='+version));
 });
 test('device layout button hides decorative square but keeps accessible layout selection',()=>{
- assert.match(frameCss,/mobileAppHeader #deviceLayoutBtn span\\{display:none\\}/);
- assert.match(frameCss,/mobileAppHeader #deviceLayoutBtn b\\{display:block/);
+ assert.match(frameCss,/mobileAppHeader #deviceLayoutBtn span\{display:none\}/);
+ assert.match(frameCss,/mobileAppHeader #deviceLayoutBtn b\{display:block/);
  assert.match(mobileJs,/id="deviceLayoutBtn"/);
- assert.match(mobileJs,/byId\\("deviceLayoutBtn"\\)\\?\\.addEventListener\\("click"/);
- assert.match(mobileJs,/querySelector\\('b'\\)\\.textContent=platformName/);
+ assert.match(mobileJs,/byId\("deviceLayoutBtn"\)\?\.addEventListener\("click"/);
+ assert.match(mobileJs,/querySelector\('b'\)\.textContent=platformName/);
 });
 test('mobile navigation opens camera only from an explicit camera view and starts at overview',()=>{
  assert.match(mobileJs,/data-mobile-view="home"><b>⌂<\/b><span>Panel<\/span>/);
