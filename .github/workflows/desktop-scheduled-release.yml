@@ -1,4 +1,4 @@
-name: Check and publish current Windows installer
+name: DESKTOP | Windows | Zbuduj i opublikuj aktualizację
 on:
   push:
     branches: [main]

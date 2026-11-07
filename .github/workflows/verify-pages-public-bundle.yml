@@ -1,4 +1,4 @@
-name: Verify HOME SECURITY Pages public artifact
+name: WWW | GitHub Pages | Test paczki publikacyjnej
 on:
   push:
     branches:

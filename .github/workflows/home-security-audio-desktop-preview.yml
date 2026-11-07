@@ -1,4 +1,4 @@
-name: Build HOME SECURITY audio fix Windows preview
+name: DESKTOP | Windows | Podgląd poprawki mikrofonu
 
 on:
   pull_request:
