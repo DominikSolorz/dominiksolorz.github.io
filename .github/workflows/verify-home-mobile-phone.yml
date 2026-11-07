@@ -1,0 +1,43 @@
+name: Verify HOME SECURITY phone and PWA release
+
+on:
+  push:
+    branches:
+      - copilot/142-modernizacja-strony-www
+  pull_request:
+    paths:
+      - 'kamera/mobile*.js'
+      - 'kamera/mobile*.css'
+      - 'kamera/mobile*.mjs'
+      - 'kamera/app.js'
+      - 'kamera/panel.html'
+      - 'kamera/sw.js'
+      - 'tests/mobile-camera-frame.test.mjs'
+      - 'tests/streaming.test.mjs'
+      - '.github/workflows/verify-home-mobile-phone.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-pwa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/downloads/**
+            !/kamera/updates/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify mobile camera, view navigation and stream lifecycle
+        run: node --test tests/mobile-camera-frame.test.mjs tests/streaming.test.mjs
+      - name: Verify public navigation and marketing did not regress
+        run: node --test tests/marketing.test.mjs tests/public-subpages.test.mjs
