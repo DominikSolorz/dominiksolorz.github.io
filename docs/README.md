@@ -23,3 +23,7 @@ Pliki typu `desktop-release-1.4.8.md`, `AUDIT-247.md` albo `incident-2026-10-16-
 ## Dla agentów
 
 Najpierw przeczytaj [../README.md](../README.md), [../AGENTS.md](../AGENTS.md), [REPO-MAP.md](REPO-MAP.md) oraz [RELEASE-MAP.md](RELEASE-MAP.md). Podawaj pełne ścieżki, rozdzielaj dokumentację bieżącą od historii i nie zakładaj, że zmiana opisu oznacza wdrożenie.
+
+## Wszystkie katalogi projektu
+
+[DRZEWO-PROJEKTU.md](DRZEWO-PROJEKTU.md) zawiera kompletne drzewo repozytorium z opisem zastosowania poszczególnych folderów.
