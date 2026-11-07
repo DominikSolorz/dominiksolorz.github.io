@@ -1,8 +1,11 @@
+import {iconMarkup} from "./ui-icons.mjs?v=1";
 // HOME SECURITY Mobile: osobny układ PWA dla właściciela.
 // Przełącza tylko widoki istniejącej strony — transmisja i nagrywanie działają dalej.
 // index.html wybiera tryb urządzenia przed narysowaniem strony. To obejmuje
 // aplikację instalowaną oraz zwykły Chrome na telefonie/tablecie.
 import { createRouter } from "./core/router.mjs";
+import { mountMobileCameraFrame } from './mobile-camera-frame.mjs?v=1';
+import { mountMobileCameraInfo } from './mobile-camera-status.mjs?v=1';
 import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { mountEventWorkspace, mountDiagnosticWorkspace } from "./workspace-panels.mjs?v=2";
 const isMobileOwnerApp = document.documentElement.classList.contains("mobileOwnerMode");
@@ -11,14 +14,34 @@ if (isMobileOwnerApp) {
   const byId = id => document.getElementById(id);
   const app = byId("app");
   document.body.classList.add("mobileOwnerMode");
+  const disposeCameraFrame=mountMobileCameraFrame(byId('stage'),byId('video'));
+  window.addEventListener('pagehide',event=>{if(!event.persisted)disposeCameraFrame();});
+  const cameraInfo=mountMobileCameraInfo({stage:byId('stage'),video:byId('video'),statusNode:byId('topStatus')});
+  // Keep original media/control nodes: changing orientation must never reopen the camera.
+  const zoomControls=byId('zoomBar');
+  if(zoomControls){zoomControls.classList.add('mobileZoomControls');byId('stage').after(zoomControls);}
+  const listeningControls=byId('audioHud');
+  if(listeningControls){listeningControls.classList.add('mobileListeningControls');(zoomControls||byId('stage')).after(listeningControls);}
+  byId('watchPanel')?.after(cameraInfo.element);
+  const infoToggle=document.createElement('button');
+  infoToggle.type='button';infoToggle.className='mobileCameraInfoToggle';infoToggle.textContent='Szczegóły';
+  infoToggle.setAttribute('aria-expanded','false');infoToggle.setAttribute('aria-label','Pokaż szczegóły kamery');
+  infoToggle.addEventListener('click',()=>{const expanded=cameraInfo.element.classList.toggle('expanded');infoToggle.setAttribute('aria-expanded',String(expanded));infoToggle.textContent=expanded?'Zwiń':'Szczegóły';});
+  cameraInfo.element.append(infoToggle);
+  window.addEventListener('pagehide',event=>{if(!event.persisted)cameraInfo.dispose();});
 
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
-    <img class="mobileBrandLogo" src="assets/ds-logo.jpg" alt="DS"><div><h1 id="mobilePageTitle">Dom</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
+    <img class="mobileBrandLogo" src="assets/ds-shield.svg" width="48" height="48" alt="DS"><div><h1 id="mobilePageTitle">Dom</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
     <button id="deviceLayoutBtn" type="button" aria-label="Zmień układ urządzenia"><span>▣</span><b>Telefon</b></button>
-    <div class="mobileRelease"><small id="mobileBuild"></small><button type="button" data-web-update>Sprawdź aktualizację</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span></div>`;
+    <details class="mobileRelease"><summary>Opcje aplikacji</summary><div class="mobileOptionsBody"><small id="mobileBuild"></small><button type="button" data-web-update>Aktualizacje automatyczne</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span><button type="button" data-open-project-gallery>Projekty interfejsu</button><a href="https://dominiksolorz.github.io/kamera/dokumenty.html" target="_blank" rel="noopener noreferrer">Instrukcja i dokumenty ↗</a><div class="mobileAccountOptions"></div></div></details>`;
   app?.insertBefore(mobileHeader, app.firstChild);
+  // Move the original profile/logout controls, retaining their handlers and identity.
+  const accountOptions=mobileHeader.querySelector('.mobileAccountOptions');
+  const moveAccountActions=()=>{const actions=mobileHeader.querySelector('.accountActions');if(actions&&actions.parentElement!==accountOptions)accountOptions.append(actions);};
+  const accountObserver=new MutationObserver(moveAccountActions);accountObserver.observe(mobileHeader,{childList:true});moveAccountActions();
+  window.addEventListener('pagehide',event=>{if(!event.persisted)accountObserver.disconnect();});
   const platformName=({android:'Android',ios:'iPhone / iPad'})[document.documentElement.dataset.phonePlatform]||'Telefon';
   byId('deviceLayoutBtn').querySelector('b').textContent=platformName;
   byId('mobileBuild').textContent=`Panel ${document.querySelector('meta[name="home-security-build"]')?.content||'—'} · ${platformName}`;
@@ -29,10 +52,13 @@ if (isMobileOwnerApp) {
   nav.className = "mobileBottomNav";
   nav.setAttribute("aria-label", "Nawigacja mobilna");
   nav.innerHTML = `
-    <button class="active" type="button" data-mobile-view="home"><b>⌂</b><span>Dom</span></button>
+    <button class="active" type="button" data-mobile-view="home"><b>⌂</b><span>Panel</span></button>
+    <button type="button" data-mobile-view="camera"><b>◉</b><span>Podgląd</span></button>
     <button type="button" data-mobile-view="alerts"><b>♧</b><span>Alarmy</span></button>
     <button type="button" data-mobile-view="recordings"><b>▷</b><span>Nagrania</span></button>
-    <button type="button" data-mobile-view="settings"><b>⚙</b><span>Ustawienia</span></button>`;
+    <button type="button" data-mobile-view="settings" aria-label="Ustawienia"><b>⚙</b><span>Ustaw.</span></button>`;
+  const mobileIcons={home:'home',camera:'camera',alerts:'alerts',recordings:'archive',settings:'settings'};
+  nav.querySelectorAll('[data-mobile-view]').forEach(button=>{button.querySelector('b').innerHTML=iconMarkup(mobileIcons[button.dataset.mobileView]);});
   document.body.append(nav);
 
   const deviceSheet = document.createElement("section");
@@ -44,6 +70,7 @@ if (isMobileOwnerApp) {
       <p>UKŁAD APLIKACJI</p><h2 id="deviceLayoutTitle">Na czym oglądasz?</h2>
       <span>Zmienia się tylko wielkość i układ ekranu. Nadajnik kamery pozostaje w programie Windows.</span>
       <div>
+        <button type="button" data-ui-mode="auto"><b>↔</b><strong>Automatycznie</strong><small>dopasuj do tego urządzenia i ekranu — zalecane</small></button>
         <button type="button" data-ui-mode="phone"><b>▯</b><strong>Telefon</strong><small>duży obraz, dolna nawigacja, obsługa dotykiem</small></button>
         <button type="button" data-ui-mode="computer"><b>▣</b><strong>Komputer</strong><small>panel boczny, pełny pulpit i więcej informacji</small></button>
       </div>
@@ -56,9 +83,15 @@ if (isMobileOwnerApp) {
     if (event.target === deviceSheet || event.target.closest(".deviceLayoutClose")) return setDeviceSheet(false);
     const button = event.target.closest("[data-ui-mode]");
     if (!button) return;
-    try { localStorage.setItem("hs-ui-mode", button.dataset.uiMode); } catch (_) { /* tryb prywatny */ }
+    const automatic = button.dataset.uiMode === "auto";
+    try {
+      localStorage.setItem("hs-layout-mode-v2", automatic ? "auto" : "manual");
+      localStorage.setItem("hs-layout-choice-v2", automatic ? "" : button.dataset.uiMode);
+    } catch (_) { /* tryb prywatny */ }
     const url = new URL(location.href);
-    url.searchParams.set("ui", button.dataset.uiMode);
+    ["ui", "view", "desktop"].forEach(key=>url.searchParams.delete(key));
+    url.searchParams.set("layout", automatic ? "auto" : "manual");
+    if (!automatic) url.searchParams.set("ui", button.dataset.uiMode);
     location.assign(url.toString());
   });
 
@@ -70,6 +103,7 @@ if (isMobileOwnerApp) {
   settingsHome.innerHTML = `
     <header><p class="eyebrow">USTAWIENIA</p><h2>Konfiguracja systemu</h2><p>Wybierz kategorię — podgląd i transmisja pozostają aktywne.</p></header>
     <div class="mobileSettingCategories">
+      <button type="button" data-setting-section="controls"><b>⏺</b><span><strong>Sterowanie i zapis</strong><small>start, stop zapisu, restart i tryb kamery</small></span><i>›</i></button>
       <button type="button" data-setting-section="image"><b>◉</b><span><strong>Obraz i jakość</strong><small>jasność, kolor, siatka, jakość</small></span><i>›</i></button>
       <button type="button" data-setting-section="sound"><b>◖</b><span><strong>Dźwięk</strong><small>mikrofon i źródło transmisji</small></span><i>›</i></button>
       <button type="button" data-setting-section="recording"><b>▣</b><span><strong>Nagrywanie</strong><small>tryb, jakość i długość zapisu</small></span><i>›</i></button>
@@ -83,11 +117,30 @@ if (isMobileOwnerApp) {
   document.querySelector(".mainCol")?.prepend(backSettings);
   backSettings.addEventListener("click", () => { document.body.dataset.mobileSettings = "root"; });
 
+  const overview = document.createElement("section");
+  overview.id = "mobileOverview";
+  overview.className = "mobileOverview mobileHidden";
+  overview.innerHTML = `
+    <section class="mobileOverviewCard" aria-labelledby="mobileOverviewTitle">
+      <p class="mobileOverviewEyebrow">PANEL MONITORINGU</p>
+      <h2 id="mobileOverviewTitle">Co chcesz teraz zrobić?</h2>
+      <p class="mobileOverviewStatus" id="mobileOverviewStatus" role="status">Podgląd kamery nie został uruchomiony.</p>
+      <p>Obraz nie włącza się sam po zalogowaniu. Otwórz go świadomie w zakładce Podgląd.</p>
+      <button class="mobileOverviewPrimary" type="button" data-open-mobile-view="camera">Otwórz podgląd</button>
+    </section>
+    <section class="mobileOverviewActions" aria-label="Skróty panelu">
+      <button type="button" data-open-mobile-view="alerts"><b>♧</b><span><strong>Alarmy i zdarzenia</strong><small>Sprawdź ostatnie zdarzenia</small></span><i>›</i></button>
+      <button type="button" data-open-mobile-view="recordings"><b>▷</b><span><strong>Archiwum nagrań</strong><small>Przeglądaj zapisane materiały</small></span><i>›</i></button>
+      <button type="button" data-open-mobile-view="settings"><b>⚙</b><span><strong>Ustawienia</strong><small>Skonfiguruj panel i zapis</small></span><i>›</i></button>
+    </section>`;
+  document.querySelector(".mainCol")?.prepend(overview);
+
   const views = {
-    home: ["stage", "watchPanel"],
+    home: ["mobileOverview"],
+    camera: ["mobileCameraInfo", "stage", "zoomBar", "audioHud", "watchPanel"],
     alerts: ["mobileEventsWorkspace"],
     recordings: ["dvrCard", "dvrListCard", "mobileRecordingStorage"],
-    settings: ["modeCard", "systemPanel", "setCard", "diagCard", "mobileDiagnosticWorkspace"]
+    settings: ["modeCard", "ctrlBar", "systemPanel", "setCard", "diagCard", "mobileDiagnosticWorkspace"]
   };
   const viewMemory=createViewMemory({key:'hs-mobile-view-v2',routes:Object.keys(views),fallback:'home'});
   const eventsWorkspace=document.createElement("section");eventsWorkspace.id="mobileEventsWorkspace";eventsWorkspace.className="card mobileHidden";mountEventWorkspace(eventsWorkspace);
@@ -97,21 +150,24 @@ if (isMobileOwnerApp) {
   recordingStorage.id = "mobileRecordingStorage";
   recordingStorage.className = "card mobileRecordingStorage mobileHidden";
   recordingStorage.open = true;
-    recordingStorage.innerHTML = `<summary>Zapis na komputerze</summary>
+    recordingStorage.innerHTML = `<summary>Miejsce zapisu nagrań</summary>
     <p id="mobileRecordingState" role="status">Oczekuję na stan komputera nagrywającego.</p>
-    <details class="localRecordingDetails"><summary>Szczegóły zapisu i diagnostyka</summary><p id="mobileRecordingDetails"></p><p class="muted small">Starsza kolejka w szczegółach pochodzi z panelu komputera. Aktualny status niezależnego wysyłania pokazuje osobna karta Google Drive powyżej.</p></details>
-    <p class="muted small">Nagrania są zapisywane na komputerze z kamerą. Z telefonu zarządzasz miejscem wcześniej zatwierdzonym na komputerze.</p>
+    <details class="localRecordingDetails"><summary>Szczegóły zapisu i diagnostyka</summary><p id="mobileRecordingDetails"></p><p class="muted small">Starsza kolejka w szczegółach pochodzi z panelu komputera. Aktualny stan miejsca zapisu i wysyłania pokazuje panel powyżej.</p></details>
+    <p class="muted small">Wybierz komputer, Google Drive albo oba miejsca. Telefon przekazuje ustawienie do komputera z kamerą.</p>
     <div id="mobileRecordingFolderControls"><button type="button" id="mobileChooseComputerFolder">📁 Wybierz folder komputera</button></div>
     <p class="muted small">Komputer musi być włączony. Widzisz miejsce wcześniej zatwierdzone w programie Windows; możesz otwierać podfoldery, tworzyć je i wybierać miejsce zapisu.</p>`;
   document.querySelector(".mainCol")?.append(recordingStorage);
   const managed = [...new Set([...Object.values(views).flat(),"viewEventsCard"])];
 
   function renderView(view) {
-    byId("mobilePageTitle").textContent = ({ home: "Dom", alerts: "Alarmy", recordings: "Nagrania", settings: "Ustawienia" })[view] || "Dom";
+    byId("mobilePageTitle").textContent = ({ home: "Panel", camera: "Podgląd", alerts: "Alarmy", recordings: "Nagrania", settings: "Ustawienia" })[view] || "Panel";
     const visible = new Set(views[view] || views.home);
     document.body.dataset.mobileView = view;
     document.body.dataset.mobileSettings = view === "settings" ? "root" : "";
     settingsHome.classList.toggle("mobileHidden", view !== "settings");
+    document.getElementById("mobileOverviewStatus").textContent = view === "camera"
+      ? "Podgląd kamery został otwarty."
+      : "Podgląd kamery nie został uruchomiony.";
     managed.forEach(id => {
       const el = byId(id);
       if (!el) return;
@@ -125,6 +181,7 @@ if (isMobileOwnerApp) {
     });
     try { sessionStorage.setItem("hs-mobile-view", view); } catch (_) { /* tryb prywatny */ }
     viewMemory.save(view);
+    document.dispatchEvent(new CustomEvent("hs-mobile-view-change", { detail: { view } }));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -138,11 +195,15 @@ if (isMobileOwnerApp) {
     const button = event.target.closest("button[data-mobile-view]");
     if (button) setView(button.dataset.mobileView);
   });
+  overview.addEventListener("click", event => {
+    const button = event.target.closest("[data-open-mobile-view]");
+    if (button) setView(button.dataset.openMobileView);
+  });
   settingsHome.addEventListener("click", event => {
     const button = event.target.closest("button[data-setting-section]");
     if (!button) return;
     document.body.dataset.mobileSettings = button.dataset.settingSection;
-    const title=button.dataset.settingSection==='sound'?'Ustawienia dźwięku':'Ustawienia obrazu';
+    const title=({controls:'Sterowanie i zapis na komputerze',image:'Ustawienia obrazu',sound:'Ustawienia dźwięku',recording:'Ustawienia nagrywania',system:'Ustawienia systemu i diagnostyki'})[button.dataset.settingSection] || 'Ustawienia';
     const card=byId('setCard');
     if(card){card.setAttribute('aria-label',title);const heading=card.querySelector('h2');if(heading)heading.textContent=title;}
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -161,6 +222,7 @@ if (isMobileOwnerApp) {
   let legacyView = "home";
   try { legacyView = sessionStorage.getItem("hs-mobile-view") || "home"; } catch (_) { /* tryb prywatny */ }
   const requestedMobileView=new URLSearchParams(location.search).get('mobileView');
-  const initialView=viewMemory.read(requestedMobileView,legacyView);
+  const rememberedView=viewMemory.read(requestedMobileView,legacyView);
+  const initialView=rememberedView === "camera" ? "home" : rememberedView;
   setTimeout(() => setView(views[initialView] ? initialView : "home"), 350);
 }
