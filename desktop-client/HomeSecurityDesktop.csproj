@@ -8,9 +8,9 @@
     <AssemblyName>HomeSecurityDesktop</AssemblyName>
     <RootNamespace>HomeSecurityDesktop</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.4.8</Version>
-    <AssemblyVersion>1.4.8.0</AssemblyVersion>
-    <FileVersion>1.4.8.0</FileVersion>
+    <Version>1.4.70</Version>
+    <AssemblyVersion>1.4.70.0</AssemblyVersion>
+    <FileVersion>1.4.70.0</FileVersion>
     <ApplicationIcon>installer/brand/home-security.ico</ApplicationIcon>
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
@@ -27,6 +27,7 @@
     <Content Include="AgentTestAssets/index.html" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="AgentTestAssets/untrusted.html" CopyToOutputDirectory="PreserveNewest" />
     <ProjectReference Include="../agent-client/HomeSecurity.Agent.Client.csproj" />
+    <ProjectReference Include="../agent/HomeSecurityAgent.csproj" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3065.39" />
   </ItemGroup>
 </Project>

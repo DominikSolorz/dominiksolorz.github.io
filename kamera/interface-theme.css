@@ -77,3 +77,76 @@ body {
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after { scroll-behavior:auto!important;transition:none!important; }
 }
+
+
+/* Unified HOME SECURITY owner-interface treatment.
+   Presentation only; preserves camera/video, state, permissions and alerts.
+   Explicit police and US Military themes keep their own palettes. */
+html:not(.policeCommand):not(.usMilitary){
+  --ui-bg:#090b11;--ui-surface:#141823;--ui-raised:#212432;
+  --ui-line:#3c3d4a;--ui-text:#f9f7fa;--ui-muted:#bdc0cf;
+  --ui-focus:#f4ce8b;--ui-accent:#f4ce8b;
+  --bg:var(--ui-bg);--card:var(--ui-surface);--line:var(--ui-line);
+  --text:var(--ui-text);--muted:var(--ui-muted);
+}
+html:not(.policeCommand):not(.usMilitary) body{
+  background:radial-gradient(ellipse 720px 470px at 82% 0%,rgba(168,72,104,.095),transparent 70%),#090b11;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(.topbar,.desktopSidebar),
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) :is(.mobileAppHeader,.mobileBottomNav){
+  background:#12151f;border-color:#41404c;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button{
+  border-radius:12px;transition:background .18s,border-color .18s,transform .18s;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button:hover{
+  background:#28232e;color:#fff;transform:translateX(2px);
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button.active,
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopSettingsTabs button.active,
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) .mobileBottomNav button.active{
+  background:linear-gradient(120deg,rgba(102,45,66,.5),rgba(43,30,41,.85));
+  border-color:rgba(244,206,139,.45);
+  color:#fff2dc;box-shadow:inset 3px 0 #f4ce8b;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button.active i{color:#f4ce8b}
+html:not(.policeCommand):not(.usMilitary) .btn.primary:not(#ctrlStart),
+html:not(.policeCommand):not(.usMilitary) .authPrimary{
+  background:linear-gradient(130deg,#ef4564,#b72243);
+  border-color:#fb7088;color:#fff;
+}
+html:not(.policeCommand):not(.usMilitary) .btn.primary:not(#ctrlStart):hover{
+  filter:brightness(1.08);
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #ctrlStart{
+  background:#176a53;border-color:#49bc91;color:#fff;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #ctrlStop{
+  background:#44252e;border-color:#c06478;color:#fff;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(.card,.panel,.desktopCameraTile,.desktopEventsDrawer,.desktopDeviceManager,.desktopControlsScreen,.desktopSettingsScreen),
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) :is(.card,.panel,#setCard){
+  background:linear-gradient(155deg,#1a1d29,#131720 80%);
+  border-color:#3d404c;border-radius:17px;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(.desktopCameraTile,.desktopDeviceManager,.desktopEventsDrawer){
+  box-shadow:0 15px 40px rgba(0,0,0,.15);
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopContext h1{
+  color:#fff;letter-spacing:-.05em;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(.desktopSearch,.desktopDevice,.desktopSettingsTabs),
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) .mobileSettingCategories button{
+  background:#191d28;border-color:#434452;color:#f7f5f9;border-radius:12px;
+}
+html:not(.policeCommand):not(.usMilitary) :is(input,select,textarea):focus-visible{
+  outline:3px solid #f4ce8b!important;outline-offset:2px;
+}
+@media(max-width:760px){
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) .mobileBottomNav button{min-height:48px}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) .mobileAppHeader{border-bottom:1px solid #40404d}
+}
+@media(prefers-reduced-motion:reduce){
+ html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button{transition:none}
+ html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button:hover{transform:none}
+}

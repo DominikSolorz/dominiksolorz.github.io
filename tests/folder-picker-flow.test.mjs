@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 const app=await readFile(new URL('../kamera/app.js',import.meta.url),'utf8');
-const html=await readFile(new URL('../kamera/index.html',import.meta.url),'utf8');
+const html=await readFile(new URL('../kamera/panel.html',import.meta.url),'utf8');
 const code=app.slice(app.indexOf('$("chooseArchiveDir").addEventListener'),app.indexOf('$("createArchiveDir").disabled'));
 function setup({host=true,choose=async()=> 'nagrania',regrant=async()=>true}={}) {
  const elements=new Map(),calls=[];

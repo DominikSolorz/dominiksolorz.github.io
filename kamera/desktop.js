@@ -1,3 +1,4 @@
+import {iconMarkup} from "./ui-icons.mjs?v=1";
 // HOME SECURITY Desktop: nakładka robocza dla dużego ekranu.
 // Używa tego samego silnika transmisji, zapisu i archiwum co index.html.
 // Nie uruchamia kamery ani nie zmienia jej konfiguracji samodzielnie.
@@ -5,7 +6,8 @@ import { createRouter } from "./core/router.mjs";
 import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { operatorStatus } from "./core/operator-status.mjs?v=1";
-import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=2";
+import { mountCameraWorkspace } from './camera-workspace.mjs?v=2';
+import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=4";
 const isTransmitter = location.hash === "#nadaj";
 // Tryb urządzenia jest rozstrzygany raz, przed załadowaniem CSS w index.html.
 // Dzięki temu Chrome w telefonie i wersja instalowana PWA nie rozchodzą się
@@ -14,11 +16,12 @@ const desktopRequested = !isTransmitter && document.documentElement.classList.co
 
 if (desktopRequested) {
   const $ = id => document.getElementById(id);
+  let cameraWorkspace = null;
   document.documentElement.classList.add("desktopMode");
   document.body.classList.add("desktopMode");
   // Panel operatora jest elementem po zalogowaniu. Desktop tworzy strukturę
   // wcześniej, ale do pomyślnego PIN-u lewy pasek pozostaje niewidoczny.
-  document.body.classList.add("accessPending");
+  if ($('app')?.hidden !== false) document.body.classList.add("accessPending");
 
   const header = document.querySelector(".topbar");
   const desktopTopStatus = document.createElement("div");
@@ -34,40 +37,64 @@ if (desktopRequested) {
   shell.className = "desktopSidebar";
   shell.setAttribute("aria-label", "Nawigacja HOME SECURITY Desktop");
   shell.innerHTML = `
-    <div class="desktopBrand"><img class="dsPanelLogo" src="assets/ds-logo.jpg" alt="Logo DS"><span><b>HOME SECURITY</b><small>DESKTOP</small></span><button id="desktopCollapse" type="button" aria-label="Rozwiń menu">›</button></div>
+    <div class="desktopBrand"><img class="dsPanelLogo" src="assets/ds-shield.svg" width="88" height="110" alt="Logo DS"><span><b>HOME SECURITY</b><small>MONITORING · OCHRONA · KONTROLA</small></span><button id="desktopCollapse" type="button" aria-label="Rozwiń menu">›</button></div>
     <div class="desktopDevice"><span id="desktopLiveDot" class="desktopDot"></span><span><b id="desktopLiveState">Sprawdzam połączenie</b><small id="desktopLiveDetail">—</small></span></div>
     <nav class="desktopNav" aria-label="Moduły monitoringu">
       <button class="active" type="button" data-desktop-view="live"><i>▦</i><span><b>Pulpit</b><small>podgląd na żywo</small></span><kbd>1</kbd></button>
       <button type="button" data-desktop-view="controls"><i>◉</i><span><b>Sterowanie</b><small>zapis i tryb pracy</small></span><kbd>2</kbd></button>
-      <button type="button" data-desktop-view="events"><i>♧</i><span><b>Alarmy</b><small>zdarzenia z kamery</small></span><kbd>6</kbd></button>
+      <button type="button" data-desktop-view="events"><i>♧</i><span><b>Zdarzenia</b><small>zdarzenia z kamery</small></span><kbd>6</kbd></button>
       <button type="button" data-desktop-view="archive"><i>⏪</i><span><b>Nagrania</b><small>archiwum DVR i folder zapisu</small></span><kbd>3</kbd></button>
       <button type="button" data-desktop-view="settings"><i>◌</i><span><b>Ustawienia</b><small>obraz, dźwięk i zapis</small></span><kbd>4</kbd></button>
       <button type="button" data-desktop-view="diagnostics"><i>⌁</i><span><b>Diagnostyka</b><small>stan systemu</small></span><kbd>5</kbd></button>
     </nav>
     <section class="desktopCapabilities" aria-label="Możliwości urządzenia">
       <h2>Urządzenie</h2>
-      <p><span class="capOk">●</span> Podgląd, zapis i DVR</p>
-      <p><span class="capOk">●</span> Zoom cyfrowy</p>
-      <p class="muted">Stan urządzeń znajdziesz w Diagnostyce.</p>
+      <p>Stan kamery, zapisu i sieci odczytasz w Diagnostyce.</p>
+      <p class="muted">Podgląd obrazu nie potwierdza zapisanego nagrania.</p>
     </section>
-    <div class="desktopSidebarFoot"><span>Alt + 1–6 przełącza moduły</span><a href="./?panel=owner" title="Otwórz interfejs mobilny">Widok Mobile</a></div>`;
+    <div class="desktopSidebarFoot"><a href="https://dominiksolorz.github.io/kamera/dokumenty.html" target="_blank" rel="noopener noreferrer">Instrukcja i dokumenty ↗</a><button type="button" data-open-project-gallery>Projekty interfejsu</button><span>DS Home Security<br>Panel ${document.querySelector('meta[name="home-security-build"]')?.content||'—'}</span><a href="panel.html?panel=owner&layout=manual&ui=phone" title="Ręcznie wybierz interfejs mobilny">Widok Mobile</a><a href="panel.html?panel=owner&layout=auto" title="Dopasuj układ do tego urządzenia">Automatyczny układ</a></div>`;
+  const navPaths = {
+    live: '<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>',
+    controls: '<rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/>',
+    events: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',
+    archive: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 8 6 4-6 4Z"/>',
+    settings: '<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/>',
+    diagnostics: '<path d="M2 12h5l3-8 4 16 3-8h5"/>'
+  };
+  shell.querySelectorAll('[data-desktop-view]').forEach(button => {
+    button.querySelector('i').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${navPaths[button.dataset.desktopView]}</svg>`;
+  });
   document.body.prepend(shell);
   const updateNotice = document.createElement("section");
   updateNotice.id = "desktopUpdateNotice"; updateNotice.className = "desktopUpdateNotice"; updateNotice.hidden = true;
-  updateNotice.innerHTML = '<button type="button" id="desktopUpdateAction">↻ Dostępna aktualizacja</button><progress id="desktopUpdateProgress" max="100" hidden></progress><small id="desktopUpdateStatus" role="status"></small>';
-  shell.append(updateNotice);
-  $("desktopUpdateAction").addEventListener("click", () => window.chrome?.webview?.postMessage({ type: "desktop.update.request" }));
+  updateNotice.innerHTML = '<button type="button" id="desktopUpdateAction" aria-label="Zaktualizuj program HOME SECURITY">↻ Zaktualizuj</button><progress id="desktopUpdateProgress" max="100" hidden></progress><small id="desktopUpdateStatus" role="status" aria-live="polite"></small>';
+  // Always show the available native update inside the LEFT navigation rail.
+  shell.insertBefore(updateNotice, shell.querySelector('.desktopNav'));
+  $("desktopUpdateAction").addEventListener("click", () => { if (updatePanelVisible) window.chrome?.webview?.postMessage({ type: "desktop.update.request" }); });
   window.chrome?.webview?.addEventListener("message", event => {
     const state = event.data;
     if (state?.type !== "desktop.update.state") return;
     updateNotice.hidden = state.status === "none";
     $("desktopUpdateAction").disabled = !["available", "error"].includes(state.status);
-    $("desktopUpdateAction").textContent = state.status === "available" ? `↻ Aktualizuj do ${state.version}` : "↻ Aktualizacja programu";
+    $("desktopUpdateAction").textContent = state.status === "available" ? `↻ Zaktualizuj do ${state.version}` : state.status === "error" ? "↻ Spróbuj ponownie" : state.status === "staged" ? `Wersja ${state.version} gotowa` : "↻ Aktualizacja programu";
     $("desktopUpdateStatus").textContent = state.message || "";
     const progress = $("desktopUpdateProgress"); progress.hidden = state.status !== "downloading";
     if (Number.isFinite(state.percent)) progress.value = Math.max(0, Math.min(100, state.percent));
     else progress.removeAttribute("value");
   });
+  // The updater is available only after account login and PIN unlock. Keep
+  // background version checks independent from this presentation boundary.
+  let updatePanelVisible = false;
+  const syncUpdateAccess = () => {
+    const app = $("app");
+    updatePanelVisible = Boolean(app && !app.hidden && !document.body.classList.contains("accessPending"));
+    window.chrome?.webview?.postMessage({ type: "desktop.update.visibility", visible: updatePanelVisible });
+  };
+  const updateAccessObserver = new MutationObserver(syncUpdateAccess);
+  updateAccessObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+  if ($("app")) updateAccessObserver.observe($("app"), { attributes: true, attributeFilter: ["hidden"] });
+  document.addEventListener("hs-panel-ready", syncUpdateAccess);
+  syncUpdateAccess();
   window.chrome?.webview?.postMessage({ type: "desktop.update.query" });
 
   const context = document.createElement("section");
@@ -78,9 +105,7 @@ if (desktopRequested) {
     <div class="desktopContextActions">
       <span id="desktopCameraCount" class="desktopCameraCount">Kamery: sprawdzam…</span>
       <div class="desktopLayouts" role="group" aria-label="Układ kamer">
-        <button type="button" class="active" aria-pressed="true">1×1</button>
-        <button type="button" disabled title="Dodaj kolejne kamery, aby użyć układu 2×2">2×2</button>
-        <button type="button" disabled title="Dodaj kolejne kamery, aby użyć układu 3×3">3×3</button>
+        <button type="button" id="desktopAddCamera" title="Dodaj osobne źródło obrazu">＋ Dodaj kamerę</button>
         <button type="button" id="desktopOpenLive" title="Otwórz aktualny obraz w pełnym ekranie">⛶ Pełny ekran</button>
       </div>
     </div>`;
@@ -109,8 +134,30 @@ if (desktopRequested) {
     <section class="desktopControlDock" aria-label="Sterowanie transmisją i nagrywaniem"><div class="desktopControlLocked" hidden><span>🔒</span><div><b>Sterowanie właściciela</b><small>Start, Stop i Restart są dostępne wyłącznie na komputerze-kamerze lub po zalogowaniu PIN-em właściciela.</small></div></div></section>
     <details class="desktopEventsDrawer" aria-label="Ostatnie zdarzenia"><summary><span>Ostatnie zdarzenia</span><small>ruch i dźwięk</small><b id="desktopEventCount">—</b></summary></details>`;
   if (context.parentElement) context.insertAdjacentElement("afterend", overview);
+  const homeGuide = document.createElement("section");
+  homeGuide.className = "desktopHomeGuide";
+  homeGuide.id = "desktopHomeGuide";
+  homeGuide.setAttribute("aria-label", "Najważniejsze funkcje pulpitu");
+  homeGuide.innerHTML = `<div><h2>Twój podgląd i nagrania</h2><p id="desktopHomeOperation" role="status">Oczekiwanie na aktualny stan urządzenia.</p></div><nav aria-label="Skróty pulpitu"><button type="button" data-home-view="controls">Sterowanie kamerą</button><button type="button" data-home-view="archive">Nagrania</button><button type="button" data-home-view="diagnostics">Sprawdź stan</button></nav>`;
+  overview.insertAdjacentElement("beforebegin", homeGuide);
   const liveTile = overview.querySelector(".desktopCameraLive");
   if (liveStage && liveTile) liveTile.append(liveStage);
+  $('desktopAddCamera').onclick=()=>{
+    if(cameraWorkspace)void cameraWorkspace.openSetup();
+    else $('desktopCameraCount').textContent='Konfiguracja kamer jest dostępna po zalogowaniu właściciela.';
+  };
+  const mountOwnerCameras=ownerId=>{
+    if(cameraWorkspace||!ownerId||$('app')?.hidden||document.body.classList.contains('accessPending'))return;
+    try{
+      cameraWorkspace=mountCameraWorkspace({root:overview.querySelector('.desktopLiveScene'),primaryTile:liveTile,primaryVideo:$('video'),ownerId,native:window.__HOME_SECURITY_DESKTOP__===true,
+        onState:(id,state)=>systemStore.component('camera:'+id,state)});
+    }catch(error){$('desktopCameraCount').textContent=error.message||'Nie udało się odczytać konfiguracji kamer.';}
+  };
+  document.addEventListener('hs-panel-ready',event=>mountOwnerCameras(event.detail?.ownerId));
+  mountOwnerCameras(window.__HOME_SECURITY_CAMERA_OWNER__);
+  // A route change only hides the workspace. Logout closes its owned previews.
+  new MutationObserver(()=>{if($('app')?.hidden)cameraWorkspace?.connections.stopAll();}).observe($('app'),{attributes:true,attributeFilter:['hidden']});
+  window.addEventListener('pagehide',()=>cameraWorkspace?.dispose(),{once:true});
   const eventsDrawer = overview.querySelector(".desktopEventsDrawer");
   if (eventCard && eventsDrawer) {
     eventsDrawer.append(eventCard);
@@ -121,8 +168,8 @@ if (desktopRequested) {
   }
   const eventsScreen = document.createElement("section");
   eventsScreen.className = "desktopEventsScreen"; eventsScreen.hidden = true;
-  eventsScreen.setAttribute("aria-label", "Alarmy i zdarzenia");
-  eventsScreen.innerHTML = '<h2>Alarmy i zdarzenia</h2><p>Rzeczywiste wykrycia ruchu i dźwięku z kamery. Zmiana widoku nie zatrzymuje transmisji ani zapisu.</p>';
+  eventsScreen.setAttribute("aria-label", "Zdarzenia");
+  eventsScreen.innerHTML = '<h2>Zdarzenia</h2><p>Rzeczywiste wykrycia ruchu i dźwięku z kamery. Zmiana widoku nie zatrzymuje transmisji ani zapisu.</p>';
   context.insertAdjacentElement("afterend", eventsScreen);
   mountEventWorkspace(eventsScreen);
   const diagnosticsScreen = document.createElement("section");
@@ -164,10 +211,9 @@ if (desktopRequested) {
   summary.className = "desktopSummary";
   summary.setAttribute("aria-label", "Stan systemu");
   summary.innerHTML = `
-    <article><span class="desktopSummaryIcon">◈</span><div><b>System</b><strong id="desktopSummaryStatus">Sprawdzam…</strong><small>stan połączenia</small></div></article>
-    <article><span class="desktopSummaryIcon">▣</span><div><b>Kamery</b><strong id="desktopSummaryCamera">1 aktywna</strong><small>kolejne urządzenia można dodać</small></div></article>
-    <article><span class="desktopSummaryIcon">◉</span><div><b>Nagrania</b><strong id="desktopSummaryRecording">Sprawdzam…</strong><small>status zapisu i DVR</small></div></article>
-    <article><span class="desktopSummaryIcon">⌁</span><div><b>Tryb ochrony</b><strong>Gotowy</strong><small>wykrywanie ruchu i dźwięku</small></div></article>`;
+    <article><span class="desktopSummaryIcon">${iconMarkup('camera')}</span><div><b>Status kamer</b><strong id="desktopSummaryCamera">Sprawdzam…</strong><small id="desktopSummaryStatus">Oczekiwanie na dane</small></div></article>
+    <article><span class="desktopSummaryIcon">${iconMarkup('recording')}</span><div><b>Nagrywanie</b><strong id="desktopSummaryRecording">Sprawdzam…</strong><small id="desktopSummaryLastFile">Nie potwierdzono zapisu pliku</small></div></article>
+    <article><span class="desktopSummaryIcon">${iconMarkup('storage')}</span><div><b>Miejsce zapisu</b><strong id="desktopSummaryStorage">Sprawdzam…</strong><small id="desktopSummaryStorageDetail">Folder i dostęp do zapisu</small></div></article>`;
   overview.insertAdjacentElement("afterend", summary);
 
   // Ustawienia są osobnym ekranem desktopowym, a nie kartą pozostawioną pod
@@ -226,8 +272,15 @@ if (desktopRequested) {
   const previewVideo = document.createElement("video");previewVideo.muted=true;previewVideo.playsInline=true;previewVideo.autoplay=true;
   previewVideo.setAttribute("aria-label","Podgląd aktywnej kamery");
   const previewEmpty=document.createElement("p");previewEmpty.textContent="Oczekiwanie na obraz kamery. Uruchom podgląd przyciskiem Start.";
-  controlPreview.append(previewVideo,previewEmpty);
+  const previewCaption=document.createElement("div");previewCaption.className="controlPreviewCaption";
+  const previewTitle=document.createElement("span");previewTitle.textContent="Podgląd kamery";
+  const previewFormat=document.createElement("output");previewFormat.setAttribute("aria-label","Rozdzielczość obrazu");
+  const updatePreviewFormat=()=>{previewFormat.textContent=previewVideo.videoWidth?`${previewVideo.videoWidth} × ${previewVideo.videoHeight}`:"Oczekiwanie na sygnał";};
+  previewVideo.addEventListener("loadedmetadata",updatePreviewFormat);previewVideo.addEventListener("resize",updatePreviewFormat);updatePreviewFormat();
+  previewCaption.append(previewTitle,previewFormat);
+  controlPreview.append(previewVideo,previewEmpty,previewCaption);
   const controlDeviceDock=document.createElement("aside");controlDeviceDock.className="controlDeviceDock";
+  if ($("modeCard")) controlDeviceDock.append($("modeCard"));
   controlWorkspace.append(controlPreview,controlDeviceDock);controlsScreen.querySelector("header").after(controlWorkspace);
   mirrorLivePreview($("video"),previewVideo,previewEmpty);
   controlDock.hidden = true;
@@ -272,7 +325,7 @@ if (desktopRequested) {
   emptySettings.className = "desktopSettingsEmpty";
   const setSettingsGroup = group => {
     activeSettingsGroup = settingsGroups[group] ? group : "picture";
-    settingsHelp.querySelector("p").textContent=({picture:"Korekta podglądu zmienia wygląd obrazu na tym ekranie. Nie udaje sprzętowej regulacji obiektywu.",sound:"Wybierz obraz z dźwiękiem lub sam obraz. Mikrofon wymaga zgody na komputerze nadającym.",quality:"Wyższa jakość zwiększa rozmiar nagrań i obciążenie łącza. Faktyczne parametry odczytasz w Diagnostyce.",recording:"Harmonogram i długość segmentu dotyczą nowych nagrań. Zatrzymanie zapisu pozostawia podgląd na żywo.",detection:"Zdarzenia ruchu i dźwięku pojawią się w zakładce Alarmy. Nie są klasyfikacją osób ani pojazdów.",devices:"Podłącz urządzenie, wykryj je i wybierz z listy. Zmiana źródła wymaga dostępu do komputera.",access:"PIN odblokowuje panel. Dostęp do folderu oraz autoryzacja Google Drive są osobnymi zgodami.",application:"Program Windows działa bez Chrome. Aktualizacja jest pokazywana dopiero po wykryciu nowszej wersji."})[activeSettingsGroup]||"";
+    settingsHelp.querySelector("p").textContent=({picture:"Korekta podglądu zmienia wygląd obrazu na tym ekranie. Nie udaje sprzętowej regulacji obiektywu.",sound:"Wybierz obraz z dźwiękiem lub sam obraz. Mikrofon wymaga zgody na komputerze nadającym.",quality:"Wyższa jakość zwiększa rozmiar nagrań i obciążenie łącza. Faktyczne parametry odczytasz w Diagnostyce.",recording:"Harmonogram i długość segmentu dotyczą nowych nagrań. Zatrzymanie zapisu pozostawia podgląd na żywo.",detection:"Zdarzenia ruchu i dźwięku pojawią się w zakładce Zdarzenia. Nie są klasyfikacją osób ani pojazdów.",devices:"Podłącz urządzenie, wykryj je i wybierz z listy. Zmiana źródła wymaga dostępu do komputera.",access:"PIN odblokowuje panel. Dostęp do folderu oraz autoryzacja Google Drive są osobnymi zgodami.",application:"Program Windows działa bez Chrome. Aktualizacja jest pokazywana dopiero po wykryciu nowszej wersji."})[activeSettingsGroup]||"";
     if (activeSettingsGroup === "devices") settingsControls.append(deviceManager);
     const visible = new Set(settingsGroups[activeSettingsGroup].filter(Boolean));
     Object.values(settingsGroups).flat().filter(Boolean).forEach(row => { row.hidden = !visible.has(row); });
@@ -346,24 +399,26 @@ if (desktopRequested) {
     // Każdy wpis w bocznym menu ma własny pełnoekranowy obszar. Dzięki temu
     // Diagnostyka i Archiwum nie zostawiają pustej połowy monitora.
     overview.hidden = view !== "live";
+    homeGuide.hidden = true;
     settingsScreen.hidden = view !== "settings";
     controlsScreen.hidden = view !== "controls";
     eventsScreen.hidden = view !== "events";
     diagnosticsScreen.hidden = view !== "diagnostics";
-    if(view==="controls"){controlDeviceDock.append(deviceManager);deviceManager.hidden=false;}
+    if(view==="controls"){controlDeviceDock.prepend(deviceManager);deviceManager.hidden=false;}
+    const audioHud=$("audioHud");if(audioHud)(view==="controls"?controlPreview:liveStage)?.append(audioHud);
     if (eventCard) { eventsDrawer.append(eventCard); eventCard.open = true; }
     if (layout) layout.hidden = true;
     context.querySelector(".desktopContextActions").hidden = view !== "live";
     // Pulpit ma być roboczy: kamera, zdarzenia i oś czasu — bez dodatkowych
     // kart diagnostycznych pod spodem. Ich dane są w module Diagnostyka.
-    summary.hidden = true;
+    summary.hidden = !["live", "controls"].includes(view);
     if (view === "live" && $("dvrCard")?.parentElement !== timelineDock) timelineDock.append($("dvrCard"));
     if (view === "live") $("dvrCard").hidden = false;
     if (view === "archive" && $("dvrCard")?.parentElement !== main) main?.prepend($("dvrCard"));
     const labels = {
-      live: ["Pulpit", "Monitoring domu"],
+      live: ["Pulpit", "Pulpit"],
       controls: ["Sterowanie", "Sterowanie kamerą"],
-      events: ["Alarmy", "Alarmy i zdarzenia"],
+      events: ["Zdarzenia", "Zdarzenia"],
       archive: ["Archiwum", "Nagrania DVR"],
       settings: ["Ustawienia", "Ustawienia kamery"],
       diagnostics: ["Diagnostyka", "Stan systemu"]
@@ -376,8 +431,9 @@ if (desktopRequested) {
     // Po opuszczeniu ustawień przywracamy komplet pól dla innych trybów
     // interfejsu; wybrana kategoria jest widoczna tylko w module Ustawienia.
     if (view === "settings") setSettingsGroup(activeSettingsGroup);
-    if(view==="events"){eventsScreen.scrollIntoView({block:"start"});return;}
-    const target = { live: "stage", controls: "ctrlBar", settings: "setCard", archive: "dvrCard" }[view];
+    if(view==="events"){window.scrollTo({top:0,behavior:"instant"});return;}
+    if (["controls", "settings", "live", "diagnostics"].includes(view)) { window.scrollTo({top:0,behavior:"instant"}); return; }
+    const target = { live: "desktopHomeGuide", controls: "ctrlBar", settings: "setCard", archive: "dvrCard" }[view];
     if (target) {
       main?.classList.remove("focus-live", "focus-controls", "focus-settings", "focus-archive");
       $(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -391,15 +447,16 @@ if (desktopRequested) {
     viewMemory.save(view);
     if(view!=="archive"&&document.body.classList.contains("archiveOpen"))document.dispatchEvent(new Event("hs-close-recordings"));
     if (view === "archive") {
-      shell.querySelectorAll("[data-desktop-view]").forEach(button => button.classList.toggle("active", button.dataset.desktopView === "archive"));
+      shell.querySelectorAll("[data-desktop-view]").forEach(button => { const active = button.dataset.desktopView === "archive"; button.classList.toggle("active", active); if (active) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current"); });
       document.dispatchEvent(new Event("hs-open-recordings"));
       return;
     }
-    shell.querySelectorAll("[data-desktop-view]").forEach(button => button.classList.toggle("active", button.dataset.desktopView === view));
+    shell.querySelectorAll("[data-desktop-view]").forEach(button => { const active = button.dataset.desktopView === view; button.classList.toggle("active", active); if (active) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current"); });
     openExistingView(view);
   };
   const router = createRouter({ routes: ["live", "controls", "events", "archive", "settings", "diagnostics"], render: renderRoute });
   const setActive = view => router.navigate(view);
+  homeGuide.querySelectorAll("[data-home-view]").forEach(button => button.addEventListener("click", () => setActive(button.dataset.homeView)));
   document.addEventListener('hs-panel-ready',()=>{if(router.current==='archive')document.dispatchEvent(new Event('hs-open-recordings'));});
   shell.querySelectorAll("[data-desktop-view]").forEach(button => button.addEventListener("click", () => setActive(button.dataset.desktopView)));
   document.addEventListener("hs-recordings-closed", () => setActive("live"));
@@ -414,12 +471,19 @@ if (desktopRequested) {
     if ($("desktopLiveDetail")) $("desktopLiveDetail").textContent = mode?.textContent?.trim() || live?.textContent?.trim() || "Sprawdzam stan…";
     const choices = $("cameraSelect")?.options;
     const count = choices ? Array.from(choices).filter(option => option.value).length : 0;
-    if ($("desktopCameraCount")) $("desktopCameraCount").textContent = `Wykryte źródła: ${count}`;
-    if ($("desktopSummaryCamera")) $("desktopSummaryCamera").textContent = `${count} aktywna${count === 1 ? "" : "e"}`;
+    if ($("desktopCameraCount")) $("desktopCameraCount").textContent = cameraWorkspace ? `Kamery: ${cameraWorkspace.catalog.list().length+1}` : `Wykryte źródła: ${count}`;
+    if ($("desktopSummaryCamera")) $("desktopSummaryCamera").textContent = cameraWorkspace ? `${cameraWorkspace.catalog.list().length+1} skonfigurowanych` : `${count} wykrytych źródeł`;
     if ($("desktopSummaryStatus")) $("desktopSummaryStatus").textContent = isLive ? "System online" : "Oczekiwanie na transmisję";
-    if ($("desktopSummaryRecording")) $("desktopSummaryRecording").textContent = mode?.textContent?.trim() || "Brak danych";
+    const recordingState=systemStore.read('recording',45000),storageState=systemStore.read('storage',90000);
+    const recordingLabels={recording:'Nagrywanie aktywne',waiting:'Oczekiwanie / harmonogram',idle:'Zapis zatrzymany',stopped:'Zapis zatrzymany',disabled:'Zapis wyłączony',error:'Błąd zapisu'};
+    if ($("desktopSummaryRecording")) $("desktopSummaryRecording").textContent = recordingState.freshness==='fresh'?(recordingLabels[recordingState.status]||'Stan niepotwierdzony'):'Brak aktualnych danych';
+    $("desktopSummaryLastFile").textContent=recordingState.lastFile?`Ostatni plik: ${recordingState.lastFile}`:'Nie potwierdzono zapisu pliku';
+    $("desktopSummaryStorage").textContent=storageState.name||storageState.folderName||'Brak danych o folderze';
+    $("desktopSummaryStorageDetail").textContent=storageState.message||({ready:'Dostęp do zapisu potwierdzony',permission_required:'Wymaga zatwierdzenia dostępu',error:'Błąd dostępu do folderu'}[storageState.status]||'Brak aktualnej telemetrii folderu');
     const operation=operatorStatus({isLive,recording:systemStore.read('recording',45000),storage:systemStore.read('storage',90000)});
     if ($("desktopTopStatusText")) $("desktopTopStatusText").textContent = operation.text;
+    const homeOperation = $("desktopHomeOperation");
+    if (homeOperation && homeOperation.textContent !== operation.text) homeOperation.textContent = operation.text;
     desktopTopStatus.classList.toggle("live", operation.severity==='active');
     desktopTopStatus.classList.toggle("warning", operation.severity==='warning');
     const settingsState = $("desktopSettingsLiveState");
@@ -428,7 +492,7 @@ if (desktopRequested) {
     if ($("desktopSettingsDevice")) $("desktopSettingsDevice").textContent = `Kamera: ${mediaSettings.deviceId ? "PC Camera" : "brak transmisji"}`;
     if ($("desktopSettingsResolution")) $("desktopSettingsResolution").textContent = mediaSettings.width && mediaSettings.height ? `${mediaSettings.width} × ${mediaSettings.height}` : "Rozdzielczość: —";
     if ($("desktopSettingsFps")) $("desktopSettingsFps").textContent = mediaSettings.frameRate ? `${Math.round(mediaSettings.frameRate)} FPS` : "FPS: —";
-    const events = document.querySelectorAll("#viewEvents li,#pcEvents li");
+    const events = systemStore.read("cameraEvents").items || [];
     if ($("desktopEventCount")) $("desktopEventCount").textContent = events.length ? `${events.length} zdarzeń` : "Brak zdarzeń";
   };
   // Obserwujemy wyłącznie prawdziwe źródła stanu. Obserwowanie całego body

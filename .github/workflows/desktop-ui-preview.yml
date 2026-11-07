@@ -1,0 +1,105 @@
+name: DESKTOP | Windows | Podgląd interfejsu programu
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'kamera/interface-concept.css'
+      - 'kamera/desktop.js'
+      - 'kamera/index.html'
+      - 'kamera/app.js'
+      - 'desktop-client/Program.cs'
+      - '.github/workflows/desktop-ui-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  desktop-preview:
+    name: Real Windows WebView2 preview (no production auto-update)
+    runs-on: windows-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          # This UI preview only needs source code and design resources.
+          # Do not download historical 80+ MB release ZIPs and installers.
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      # The full published release manifest/hash test still runs in pages.yml with the full repository.
+      - name: Verify interface contract before packaging
+        shell: pwsh
+        run: |
+          node --test tests/desktop-concept-220.test.mjs tests/workspace-ui.test.mjs tests/owner-theme.test.mjs tests/desktop-bundle.test.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'Interface regression tests failed.' }
+      - name: Build genuine Windows desktop and companion agent
+        shell: pwsh
+        run: |
+          $nativeVersion=([regex]::Match((Get-Content -Raw 'desktop-client/Program.cs'),'DesktopVersion = "([0-9.]+)"')).Groups[1].Value
+          if(-not $nativeVersion){throw 'Native desktop version is missing'}
+          & "$PWD/desktop-client/build-release.ps1" -Version $nativeVersion
+          if ($LASTEXITCODE -ne 0) { throw 'Windows release publish failed.' }
+      - name: Package preview, never overwrite public auto-updater
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $nativeVersion=([regex]::Match((Get-Content -Raw 'desktop-client/Program.cs'),'DesktopVersion = "([0-9.]+)"')).Groups[1].Value
+          $output = Join-Path $PWD ('desktop-client/publish-' + $nativeVersion)
+          $required = @(
+            'HomeSecurityDesktop.exe',
+            'Panel/index.html',
+            'Panel/panel.html',
+            'Panel/interface-concept.css',
+            'Panel/desktop.js',
+            ('Agent/' + $nativeVersion + '/HomeSecurityAgent.exe')
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path -LiteralPath (Join-Path $output $file))) { throw "Missing desktop file: $file" }
+          }
+          $html = Get-Content -Raw (Join-Path $output 'Panel/panel.html')
+          $css = Get-Content -Raw (Join-Path $output 'Panel/interface-concept.css')
+          $sourcePanel = Get-Content -Raw 'kamera/panel.html'
+          $stylesheet = [regex]::Match($sourcePanel, 'interface-concept\.css\?v=[0-9]+').Value
+          if (-not $stylesheet -or -not $html.Contains($stylesheet)) { throw 'Preview stylesheet does not match current source panel.' }
+          $webBuild=(Get-Content -Raw 'kamera/version.json' | ConvertFrom-Json).version
+          if (-not $html.Contains('home-security-build" content="' + $webBuild + '"')) { throw 'Preview does not match current web build.' }
+          if (-not $css.Contains('.desktopCameraTile')) { throw 'Real camera component is not styled.' }
+          @'
+          HOME SECURITY Desktop — niezależny pakiet testowy UI 220
+          Interfejs: projekt 193 zastosowany do prawdziwego panelu Windows / WebView2.
+          Wersja binarna: z aktualnego wydania źródeł; to tylko niezależny podgląd UI.
+          UWAGA: To nie jest oficjalny instalator ani automatyczna aktualizacja.
+          Nie zastępuj plików działającego instalatora i nie uruchamiaj obok aktywnego nagrywania.
+          Testuj na osobnym komputerze lub koncie Windows bez prywatnych nagrań.
+          Aby sprawdzić wygląd, rozpakuj całą paczkę i uruchom HomeSecurityDesktop.exe.
+          Potwierdź PIN, źródło kamery, uprawnienia folderu, nowy plik i jego odtworzenie.
+          Test pakietu nie dowodzi fizycznego zapisu z konkretnej kamery.
+          Program może korzystać z istniejącego profilu danych użytkownika.
+          Informacje o wydaniu oficjalnym: https://dominiksolorz.github.io/kamera/o-systemie.html
+          '@ | Set-Content -LiteralPath (Join-Path $output 'PRZECZYTAJ-PRZED-TESTEM.txt') -Encoding utf8
+          $zip = Join-Path $PWD 'HomeSecurityDesktop-UI220-preview-win-x64.zip'
+          Compress-Archive -Path (Join-Path $output '*') -DestinationPath $zip -CompressionLevel Optimal
+          if (-not (Test-Path -LiteralPath $zip)) { throw 'Preview zip was not created.' }
+          $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash
+          Write-Host "PREVIEW SHA-256: $hash"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "HOME SECURITY Desktop UI220 preview (NOT an automatic release)."
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "SHA-256: $hash"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Test on a separate Windows account/computer. Do not replace the active camera installation."
+      - uses: actions/upload-artifact@v4
+        with:
+          name: home-security-desktop-ui220-preview-win-x64
+          path: HomeSecurityDesktop-UI220-preview-win-x64.zip
+          if-no-files-found: error
+          retention-days: 14

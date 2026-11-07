@@ -1,0 +1,119 @@
+// Post-deploy checks against the public GitHub Pages domain. Does not log in, send mail or access cameras.
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+
+const origin='https://dominiksolorz.github.io';
+const root=origin+'/kamera/';
+const expectedBuild=JSON.parse(await readFile(new URL('../kamera/version.json',import.meta.url),'utf8')).version;
+const expectedDesktop=JSON.parse(await readFile(new URL('../kamera/desktop-update.json',import.meta.url),'utf8'));
+const publicSource=await readFile(new URL('../kamera/o-systemie.html',import.meta.url),'utf8');
+const workerSource=await readFile(new URL('../kamera/sw.js',import.meta.url),'utf8');
+const currentUpdateModule=publicSource.match(/marketing-auto-update\.mjs\?v=\d+/)?.[0];
+const currentSW=workerSource.match(/kamera-domowa-shell-v(\d+)/)?.[1];
+const currentMarketingCSS=publicSource.match(/marketing\.css\?v=\d+/)?.[0];
+assert.ok(currentUpdateModule&&currentSW&&currentMarketingCSS,'Cannot derive current updater, PWA and stylesheet revisions');
+
+
+const timeoutMs=18000;
+const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const get=async(path,{method='GET'}={})=>{
+  const url=new URL(path,root);
+  url.searchParams.set('release_check',process.env.GITHUB_SHA?.slice(0,12)||expectedBuild);
+  const response=await fetch(url,{method,redirect:'follow',signal:AbortSignal.timeout(timeoutMs),headers:{'cache-control':'no-cache'}});
+  assert.equal(response.status,200,method+' '+path+' returned HTTP '+response.status);
+  return method==='HEAD'?response:response.text();
+};
+const checks=[
+  ['o-systemie.html',['id="publicHome"','Wydanie rozwojowe','href="jak-dziala.html"']],
+  ['przygotowanie.html',['id="przygotowanie"','data-mkt-setup','marketing-start.mjs?v=2']],
+  ['prezentacja.html',['id="galeria"','marketing-gallery.mjs?v=2']],
+  ['jak-dziala.html',['id="w-praktyce"']],
+  ['mozliwosci.html',['id="mozliwosci"']],
+  ['wymagania.html',['id="specyfikacja"']],
+  ['stan-projektu.html',['id="stan-projektu"']],
+  ['pytania.html',['id="faq"']],
+  ['galeria.html',['class="mktConceptCard"','nie zrzuty działającej aplikacji','marketing-gallery.mjs?v=2']],
+  ['kontakt.html',['id="mktContactForm"','name="consent"','functions/v1/home-contact','id="mktContactResult"']],
+  ['pomoc.html',['id="mktContactForm"','name="consent"','functions/v1/home-contact','id="mktContactResult"']],
+  ['blog/index.html',['pierwsze-uruchomienie.html','diagnostyka-monitoringu.html']],
+  ['blog/pierwsze-uruchomienie.html',['HOME SECURITY','Zaloguj']],
+  ['polityka-prywatnosci.html',['o-systemie.html','Polityka prywatności']],
+  ['regulamin.html',['o-systemie.html','Regulamin']],
+  ['rodo.html',['o-systemie.html','Informacja RODO']],
+  ['panel.html',['name="home-security-build" content="'+expectedBuild+'"','id="authDialog"','id="publicHome"','interface-concept.css?v=3']],
+  ['index.html',['http-equiv="Content-Security-Policy"','require-trusted-types-for','data-source="'+currentMarketingCSS+'"','marketing-navigation.mjs?v=1','name="robots" content="index,follow"','rel="canonical" href="https://dominiksolorz.github.io/kamera/"','data-public-entry','id="hsMobileSplash"','mobile-app-splash.js?v=3']],
+  ['sitemap.xml',['/kamera/galeria.html','/kamera/</loc>']],
+  ['../index.html',['./kamera/','location.replace']]
+];
+const assets=[
+ 'marketing-start.css?v=3','marketing-start.mjs?v=2',
+ 'marketing-auto-update.css?v=2',currentUpdateModule,
+ 'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=2','public-entry.js?v=6',
+ 'marketing-gallery.css?v=3','marketing-gallery.mjs?v=2',
+ 'interface-concept.css?v=3',
+ 'marketing-motion.css?v=2',currentMarketingCSS,'marketing-navigation.css?v=1','marketing-navigation.mjs?v=1',
+ '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
+ 'assets/home-security-hero-640.webp','assets/home-security-hero.webp','assets/home-security-how-it-works-640.webp','assets/ds-logo-96.webp','assets/ds-logo-192.webp','../docs/ui-193/01-pulpit-480.webp','../docs/ui-193/01-pulpit-640.webp','../docs/ui-193/01-pulpit-720.webp','../docs/ui-193/01-pulpit-960.webp',
+ 'assets/home-security-hero.png','assets/home-security-loading.webp','assets/home-security-ad-02.webp','assets/home-security-ad-03.webp','mobile-app-splash.js?v=3','mobile-app-splash.css?v=3','downloads/HOME-SECURITY-Desktop-Setup-'+expectedDesktop.version+'.exe'
+];
+
+let tries=0;
+while(true){
+  try{
+    const html=await get('o-systemie.html');
+    const app=await get('panel.html');
+    const expected='home-security-build" content="'+expectedBuild+'"';
+    assert.ok(html.includes('href="przygotowanie.html"')&&html.includes(expected)&&html.includes(currentUpdateModule),'The public homepage is still serving the previous release');
+    assert.ok(app.includes(expected)&&app.includes('app.js?v='+expectedBuild),'The protected panel is still serving the previous release');
+    break;
+  }catch(error){
+    if(++tries>=18)throw error;
+    console.log('Waiting for GitHub Pages cache to publish the new release (attempt '+tries+')');
+    await pause(5000);
+  }
+}
+for(const [path,tokens] of checks){
+  const html=await get(path);
+  for(const token of tokens)assert.ok(html.includes(token),'Missing '+JSON.stringify(token)+' in '+path);
+  if(path.endsWith('.html')&&!['panel.html','../index.html','polityka-prywatnosci.html','regulamin.html','rodo.html'].includes(path)){
+    assert.ok(html.includes('home-security-build" content="'+expectedBuild+'"'),'Outdated marketing build on '+path);
+    assert.ok(html.includes(currentUpdateModule),'New public update notice is missing from '+path);
+  }
+  if(path==='galeria.html')assert.equal((html.match(/class="mktConceptCard"/g)||[]).length,8);
+  if(path==='panel.html')assert.ok(html.includes('app.js?v='+expectedBuild)&&html.includes('content="noindex,follow"'));
+  if(path==='index.html')assert.ok(!html.includes('id="authDialog"')&&!html.includes('app.js?v='));
+  console.log('OK document '+path);
+}
+// Reject the original cause of invisible releases: redirect to an outdated public mirror.
+const entryScript=await get('public-entry.js?v=6');
+assert.ok(!entryScript.includes('home-security-dominik-solorz.vercel.app'),'The public entry must not redirect to stale Vercel');
+assert.ok(entryScript.includes('panel.html')&&entryScript.includes('location.replace'), 'Private panel routing must remain in the deployed minified bridge');
+const publicHTML=await get('index.html');
+assert.ok(publicHTML.includes('rel="canonical" href="https://dominiksolorz.github.io/kamera/"'));
+console.log('OK routing: up-to-date GitHub Pages homepage, secure owner panel preserved.');
+for(const path of assets){
+  const response=await get(path,{method:'HEAD'});
+  const bytes=Number(response.headers.get('content-length')||'0');
+  console.log('OK asset '+path+(bytes?' ('+bytes+' bytes)':''));
+}
+// Keep release channels consistent after each publication. This prevents an old
+// installer or update manifest from being advertised alongside the new website.
+const publicVersion=JSON.parse(await get('version.json'));
+assert.equal(String(publicVersion.version),String(expectedBuild),'Published PWA build differs from the source release');
+console.log('OK web update channel build '+expectedBuild);
+const publicDesktop=JSON.parse(await get('desktop-update.json'));
+assert.match(publicDesktop.version,/^\d+\.\d+\.\d+$/);
+assert.equal(publicDesktop.version,expectedDesktop.version,'Published Windows release is not current');
+assert.equal(publicDesktop.packageUrl,expectedDesktop.packageUrl,'Published Windows update URL differs from the signed release');
+assert.equal(publicDesktop.sha256,expectedDesktop.sha256,'Published Windows ZIP checksum differs from the release');
+assert.equal(publicDesktop.installerSha256,expectedDesktop.installerSha256,'Published Windows installer checksum differs from the release');
+const packageURL=new URL(publicDesktop.packageUrl);
+assert.equal(packageURL.origin,origin,'Windows update package must stay on the trusted HTTPS origin');
+assert.equal(packageURL.pathname,'/kamera/updates/HomeSecurityDesktop-'+publicDesktop.version+'-win-x64.zip');
+await get('updates/HomeSecurityDesktop-'+publicDesktop.version+'-win-x64.zip',{method:'HEAD'});
+await get('downloads/HOME-SECURITY-Desktop-Setup-'+publicDesktop.version+'.exe',{method:'HEAD'});
+console.log('OK Windows update channel '+publicDesktop.version+' (manifest + ZIP + installer)');
+
+const headers=(await get('index.html',{method:'HEAD'})).headers;
+for(const name of ['cache-control','strict-transport-security','cross-origin-opener-policy','x-frame-options','content-security-policy'])console.log('Hosting header '+name+': '+(headers.get(name)||'(absent)'));
+console.log('Production marketing smoke: all public routes, releases and media files verified.');
