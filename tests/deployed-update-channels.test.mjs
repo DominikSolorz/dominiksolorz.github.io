@@ -7,10 +7,14 @@ const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 test('Windows app advertises one-click Zaktualizuj for the exact offered version',async()=>{
   const source=await read('desktop-client/Program.cs');
   assert.ok(source.includes('updateButton.Text = $"↻ Zaktualizuj do wersji {version}";'));
-  assert.ok(source.includes('Interval = 60 * 1000'));
-  assert.ok(source.includes('if (!panelUnlocked || downloadingUpdate || offeredUpdate is null) return;'));
+  assert.ok(source.includes('Interval = 10 * 60 * 1000'));
+  assert.ok(source.includes('if (!panelUnlocked || downloadingUpdate) return;'));
+  assert.ok(source.includes('if (offeredUpdate is null) return;'));
   assert.ok(source.includes('SHA256.HashDataAsync'));
-  assert.ok(source.includes('RestartIntoPreparedUpdate(manifest.Version)'));
+  assert.ok(source.includes('PublishUpdateState("staged"'));
+  assert.ok(source.includes('await RestartIntoPreparedUpdateAsync();'));
+  assert.ok(source.includes('type = "desktop.update.prepare"'));
+  assert.ok(!source.includes('Application.Restart'));
 });
 
 test('post-deployment verification compares both public update channels with immutable release sources',async()=>{
@@ -52,9 +56,25 @@ test('public site and PWA expose update controls while respecting recording safe
   assert.ok(app.includes('freshUpdateURL(location.href,VERSION,Date.now())'),'private PWA must also refresh the current release');
   assert.ok(sw.includes("fetch(event.request, {cache: 'no-store'})"),'explicit upgrades must bypass stale page cache');
   assert.ok(sw.includes('./core/web-updates.mjs?v=3'));
-  assert.ok(app.includes('autoApply:true'));
+  // Login, profile and PIN must not be interrupted by a background PWA reload.
+  // Updates remain available only through an explicit user action.
+  assert.ok(app.includes('autoApply:false'));
+  assert.ok(app.includes("webUpdates.available?webUpdates.apply():webUpdates.check()"));
   assert.ok(app.includes("button.textContent=webUpdates.available?'Zaktualizuj':'Sprawdź aktualizacje'"));
   assert.ok(marketing.includes("update.textContent = 'Zaktualizuj'"));
   assert.ok(webUpdates.includes('prepareReload'));
   assert.ok(webUpdates.includes('canAutoApply'));
+});
+
+
+test('production Windows version validation accepts real releases and rejects malformed metadata',async()=>{
+  const script=await read('scripts/verify-live-marketing.mjs');
+  const source=script.match(/assert\.match\(publicDesktop\.version,\/([^/\n]+)\/\);/);
+  assert.ok(source,'the production verifier must validate the Windows release version');
+  const pattern=new RegExp(source[1]);
+  assert.ok(pattern.test('1.4.20'));
+  assert.ok(pattern.test('12.34.567'));
+  for(const invalid of ['1x4x20','1.4','latest','1.4.20-beta','../../1.4.20']){
+    assert.equal(pattern.test(invalid),false,'should reject '+invalid);
+  }
 });

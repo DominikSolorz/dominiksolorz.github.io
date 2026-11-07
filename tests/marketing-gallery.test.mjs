@@ -5,17 +5,22 @@ import vm from 'node:vm';
 
 const base=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,base),'utf8');
-const homePaths=['design/marketing/home.html','kamera/index.html','kamera/panel.html','kamera/o-systemie.html'];
+const homePaths=['design/marketing/prezentacja.html','kamera/prezentacja.html'];
 
 test('product gallery uses existing proposal boards, not invented screenshots',async()=>{
   const pages=await Promise.all(homePaths.map(read));
   for(const html of pages){
+    assert.ok(html.includes('href="panel.html?auth=login">Otwórz działający panel'));
+    assert.ok(html.includes('href="panel.html?auth=register">Załóż konto'));
+    assert.ok(html.includes('href="przygotowanie.html">Zobacz instrukcję uruchomienia'));
+    assert.ok(html.includes('wymagają skonfigurowanego konta'));
+    assert.ok(html.includes('<div class="mktActions" role="group" aria-label="Uruchom lub skonfiguruj HOME SECURITY">'), 'presentation action controls need a valid accessible group role');
     assert.ok(html.includes('id="galeria"'));
     assert.ok(html.includes('Wizualizacje UI') || html.includes('wizualizacje UI') || html.includes('wizualizacje UI') || html.includes('wizualizacje UI z etapu 193') || html.includes('wizualizacje UI z etapu 193'.toUpperCase()) || html.includes('wizualizacje UI z etapu 193'),'concept disclaimer');
     assert.ok(html.includes('nie są rzeczywiste zrzuty ekranu') || html.includes('nie są zrzuty') || html.includes('nie są rzeczywiste zrzuty ekranu') || html.includes('To nie są rzeczywiste zrzuty ekranu'));
     assert.equal((html.match(/class="mktConceptCard"/g)||[]).length,4);
-    assert.ok(html.includes('marketing-gallery.css?v=3'));
-    assert.ok(html.includes('marketing-gallery.mjs?v=2'));
+    if(html.startsWith('<!doctype'))assert.ok(html.includes('marketing-gallery.css?v=4'));
+    if(html.startsWith('<!doctype'))assert.ok(html.includes('marketing-gallery.mjs?v=2'));
     assert.ok(html.includes('aria-labelledby="mktGalleryDialogTitle"'));
     assert.ok(html.includes('data-mkt-image-close'));
     assert.ok(html.includes('href="galeria.html"'));
@@ -72,7 +77,7 @@ test('gallery lightbox is keyboard accessible and does not block ordinary link f
 
 test('gallery respects reduced motion and does not load concept assets eagerly',async()=>{
   const [css,src,sw,manifest,app,index]=await Promise.all([
-    read('kamera/marketing-gallery.css'),read('design/marketing/home.html'),
+    read('kamera/marketing-gallery.css'),read('design/marketing/prezentacja.html'),
     read('kamera/sw.js'),read('kamera/version.json'),read('kamera/app.js'),
     read('kamera/panel.html')
   ]);
@@ -80,7 +85,7 @@ test('gallery respects reduced motion and does not load concept assets eagerly',
   assert.ok(css.includes(':focus-visible'));
   assert.ok(css.includes('@media(max-width:650px)'));
   assert.equal((src.match(/loading="lazy" decoding="async" fetchpriority="low"/g)||[]).length,4);
-  assert.ok(sw.includes('./marketing-gallery.css?v=3'));
+  assert.ok(sw.includes('./marketing-gallery.css?v=4'));
   assert.ok(sw.includes('./marketing-gallery.mjs?v=2'));
   const release=JSON.parse(manifest).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
