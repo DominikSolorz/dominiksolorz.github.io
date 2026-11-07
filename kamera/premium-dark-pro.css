@@ -156,3 +156,39 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app :is(button,a,inpu
     animation-iteration-count: 1 !important;
   }
 }
+
+/* HOME SECURITY unified PIN screen: same identity on Windows and mobile.
+   Presentation only. No changes to PIN verification, WebRTC or native controls. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) #lock,
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #lock {
+  background: radial-gradient(ellipse 780px 530px at 80% 2%,rgba(99,102,241,.16),transparent 75%), #0a0e1a;
+  color:#f1f5f9;
+  color-scheme:dark;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #lock .pinCard,
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #lock .pinCard {
+  background:linear-gradient(155deg,#182039,#141829 80%);
+  color:#f1f5f9;
+  border:1px solid #445577;
+  border-radius:20px;
+  box-shadow:0 24px 65px rgba(2,6,23,.3);
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #lock .pinCard h2,
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #lock .pinCard h2 {color:#f8fafc}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #lock .pinDots i.on,
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #lock .pinDots i.on {
+  background:#a5b4fc;border-color:#a5b4fc;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #lock .keypad button,
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #lock .keypad button {
+  min-height:48px;background:#1a2340;border:1px solid #465679;color:#f1f5f9;
+  border-radius:12px;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #lock .keypad button:hover:not(:disabled),
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #lock .keypad button:hover:not(:disabled) {
+  background:#283554;border-color:#a5b4fc;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) #lock :is(button,input):focus-visible,
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #lock :is(button,input):focus-visible {
+  outline:3px solid #a5b4fc;outline-offset:3px;
+}

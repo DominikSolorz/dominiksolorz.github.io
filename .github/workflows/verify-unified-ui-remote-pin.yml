@@ -1,0 +1,39 @@
+name: Verify unified UI and paired phone unlock cryptography
+on:
+  push:
+    branches:
+      - fix/unified-presentation-and-phone-auth-2026-11-07
+  pull_request:
+    paths:
+      - 'kamera/marketing.css'
+      - 'kamera/premium-dark-pro.css'
+      - 'kamera/remote-unlock-crypto.mjs'
+      - 'tests/remote-unlock-crypto.test.mjs'
+      - 'tests/unified-ui.test.mjs'
+      - '.github/workflows/verify-unified-ui-remote-pin.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ui-and-crypto:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test remote unlock grants (tamper, replay, expiry, same account)
+        run: node --test tests/remote-unlock-crypto.test.mjs
+      - name: Check visual consistency and unchanged PIN gate
+        run: node --test tests/unified-ui.test.mjs
