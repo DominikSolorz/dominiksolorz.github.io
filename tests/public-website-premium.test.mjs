@@ -54,6 +54,18 @@ test('new site visual layer stays public-only, responsive and accessible',async(
   assert.equal((newCss.match(/\{/g)||[]).length,(newCss.match(/\}/g)||[]).length,'CSS curly braces match');
 });
 
+test('public marketing accents use the blue-purple-teal theme without recoloring the secure panel',async()=>{
+  const [css,panel]=await Promise.all([read('kamera/marketing.css'),read('kamera/panel.html')]);
+  const theme=css.split('/* HOME SECURITY WWW Premium Dark Pro')[1];
+  for(const token of ['--m-blue:#6366f1','--m-purple:#7c3aed','--m-teal:#2dd4bf',
+    'linear-gradient(95deg,#c4b5fd 4%,#a5b4fc 54%,#5eead4 100%)',
+    'linear-gradient(115deg,var(--m-blue) 0%,var(--m-purple) 58%,#0f766e 100%)'])
+    assert.ok(theme.includes(token),'missing public accent '+token);
+  assert.match(panel,/<template id="panelStyles">/);
+  assert.match(panel,/premium-dark-pro\.css\?v=1/);
+  assert.match(panel,/id="app" hidden/);
+});
+
 test('PWA refreshes marketing appearance without changing versioned recorder runtime',async()=>{
   const [sw,app,panel]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/panel.html'].map(read));
   assert.match(sw,/kamera-domowa-shell-v181/);

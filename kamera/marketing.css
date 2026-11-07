@@ -489,13 +489,22 @@
   --m-line:#364363;
   --m-text:#f1f5f9;
   --m-muted:#c4cede;
-  --m-red:#6366f1;
+  --m-blue:#6366f1;
+  --m-purple:#7c3aed;
+  --m-teal:#2dd4bf;
+  --m-red:var(--m-blue);
   --m-gold:#c7d2fe;
-  background:var(--m-bg)!important;
+  background:
+    radial-gradient(ellipse 760px 520px at 12% 88%,rgba(45,212,191,.06),transparent 72%),
+    radial-gradient(ellipse 940px 650px at 86% 0%,rgba(99,102,241,.09),transparent 72%),
+    var(--m-bg)!important;
   color:var(--m-text);
 }
 #publicHome .mktMain,.marketingPage .mktMain{
-  background:radial-gradient(ellipse 940px 650px at 86% 0%,rgba(99,102,241,.09),transparent 72%),var(--m-bg)!important;
+  background:
+    radial-gradient(ellipse 760px 520px at 12% 88%,rgba(45,212,191,.06),transparent 72%),
+    radial-gradient(ellipse 940px 650px at 86% 0%,rgba(99,102,241,.09),transparent 72%),
+    var(--m-bg)!important;
 }
 #publicHome .mktHeader,.marketingPage .mktHeader{
   background:rgba(11,17,33,.96);
@@ -524,24 +533,27 @@
 }
 #publicHome .mktHero h1 em{
   color:#b4aaff;
-  background:linear-gradient(95deg,#d9d5ff 4%,#9ba6ff 54%,#edb5e1 100%);
+  background:linear-gradient(95deg,#c4b5fd 4%,#a5b4fc 54%,#5eead4 100%);
   -webkit-background-clip:text;
   background-clip:text;
   -webkit-text-fill-color:transparent;
 }
 #publicHome .mktHero .mktLead{font-size:clamp(1rem,1.4vw,1.14rem);line-height:1.8;color:#cbd5e1;max-width:48ch}
 #publicHome .mktEyebrow{color:#c6c8ff}
-#publicHome .mktEyebrow>span{background:#9e86ff}
+#publicHome .mktEyebrow>span{background:var(--m-teal)}
 #publicHome .mktButton,.marketingPage .mktButton{
-  border-color:#8a91fc;
-  background:linear-gradient(115deg,#6366f1 0%,#7956d4 100%);
+  border-color:#858cf7;
+  background:linear-gradient(115deg,var(--m-blue) 0%,var(--m-purple) 58%,#0f766e 100%);
   border-radius:12px;
   min-height:50px;
   padding:14px 20px;
-  box-shadow:0 10px 26px rgba(55,48,163,.22);
+  box-shadow:0 10px 26px rgba(55,48,163,.22),0 8px 24px rgba(13,148,136,.12);
   transition:background-color .2s,transform .2s,box-shadow .2s;
 }
-#publicHome .mktButton:hover,.marketingPage .mktButton:hover{background:#595cda;box-shadow:0 13px 30px rgba(55,48,163,.32)}
+#publicHome .mktButton:hover,.marketingPage .mktButton:hover{
+  background:linear-gradient(115deg,#4f46e5 0%,#6d28d9 58%,#115e59 100%);
+  box-shadow:0 13px 30px rgba(55,48,163,.32),0 10px 28px rgba(13,148,136,.2);
+}
 #publicHome .mktButtonQuiet,.marketingPage .mktButtonQuiet{
   background:#1c2540;
   border-color:#4c5b7d;
@@ -659,4 +671,3 @@
  #publicHome .mktHomeDestinations article{transition:none}
  #publicHome .mktHomeDestinations article:hover{transform:none}
 }
-
