@@ -46,17 +46,16 @@ const accountReturnBridge = `<script>(function(){
 })();</script>`;
 // Tylko uruchomienie z ikony PWA: reklama -> publiczna strona -> logowanie -> PIN.
 // Synchronizacja w head unika migniecia strony przed reklamą; bez JS jest zwykłe WWW.
-const mobileSplashHead = '<link rel="stylesheet" href="mobile-app-splash.css?v=2">'+
+const mobileSplashHead = '<link rel="stylesheet" href="mobile-app-splash.css?v=3">'+
   '<script>(function(){const q=new URLSearchParams(location.search);'+
   'if(q.has("auth")||q.has("code")||q.has("panel")||q.has("odbiorca")||location.hash)return;'+
   'const phone=/Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent||"")||'+
   '(matchMedia("(max-width:900px)").matches&&(navigator.maxTouchPoints||0)>0);'+
-  'if(!phone&&q.get("app")!=="mobile-home")return;'+
-  'try{if(sessionStorage.getItem("hs-mobile-intro-seen-v1"))return;}catch(_){}'+
+  'if(!phone)return;'+
   'window.__hsMobileSplashStarted=performance.now();'+
   'document.documentElement.classList.add("hsMobileLaunch");'+
-  'setTimeout(()=>document.documentElement.classList.remove("hsMobileLaunch"),8000);'+
-  '})();</script><script defer src="mobile-app-splash.js?v=2"></script>';
+  'setTimeout(()=>document.documentElement.classList.remove("hsMobileLaunch"),30000);'+
+  '})();</script><script defer src="mobile-app-splash.js?v=3"></script>';
 const mobileSplashBody = '<aside id="hsMobileSplash" aria-label="Reklama HOME SECURITY przed strona glowna">'+
   '<div class="hsMobileSplashSlides" role="group" aria-label="Trzy grafiki promocyjne HOME SECURITY">'+
   '<img class="hsMobileSplashImage is-active" width="900" height="506" data-src="assets/home-security-loading.webp"'+
