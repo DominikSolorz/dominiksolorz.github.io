@@ -50,4 +50,37 @@
 .legalPage tbody th{min-width:155px;color:#fff}
 .legalPage .legalDocumentList{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px}
 .legalPage .legalDocumentList li{border:1px solid #4c4658;border-radius:14px;padding:22px;background:#1d2230}
+/* Wersja 4: dokumenty w tej samej palecie co strona (indygo + turkus), czytelny spis treści. */
+.legalPage{background:radial-gradient(ellipse 700px 420px at 85% 0%,rgba(99,102,241,.16),transparent 72%),radial-gradient(ellipse 520px 360px at 0% 30%,rgba(45,212,191,.06),transparent 70%),#090b11}
+.legalPage .legalNav{position:sticky;top:0;z-index:10;background:rgba(11,13,20,.86);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom-color:#2c3350}
+.legalPage .legalNav a:first-child{font-weight:700;letter-spacing:.08em;font-size:14px}
+.legalPage .legalNav a:first-child b{color:#a5b4fc}
+.legalPage .legalNav a:last-child{border-color:#4a5585;color:#e0e7ff;background:rgba(99,102,241,.1);transition:background-color .18s,border-color .18s}
+.legalPage .legalNav a:last-child:hover{border-color:#a5b4fc;background:rgba(99,102,241,.22);color:#fff}
+.legalPage .legalHero{background:linear-gradient(135deg,#1c1f36,#12151f 78%);border-color:#323a5c}
+.legalPage .publicEyebrow{color:#a5b4fc}
+.legalPage .legalMeta{color:#9aa4c4}
+.legalPage .legalTabs a{border-color:#343c5c;background:#141827;transition:border-color .18s,background-color .18s}
+.legalPage .legalTabs a:hover{border-color:#6b78b8;background:#1a1f33}
+.legalPage .legalTabs a[aria-current="page"]{color:#fff;border-color:#818cf8;background:linear-gradient(135deg,rgba(99,102,241,.38),rgba(45,212,191,.16))}
+.legalPage .legalToc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:4px 22px;padding:18px 22px;border-color:#2f3652;background:#10131e}
+.legalPage .legalToc a{display:block;padding:8px 10px;border-radius:9px;color:#cfd5e6;text-decoration:none;line-height:1.45;transition:background-color .16s,color .16s}
+.legalPage .legalToc a:hover{background:rgba(99,102,241,.14);color:#fff}
+.legalPage .legalContent{border-color:#2f3652;background:#11141f}
+.legalPage .legalContent h2{padding-top:10px;scroll-margin-top:90px}
+.legalPage .legalContent h2+p{margin-top:10px}
+.legalPage .legalContent a{color:#a5b4fc}
+.legalPage .legalContent a:hover{color:#c7d2fe}
+.legalPage .legalContent strong{color:#eef1fa}
+.legalPage .legalNotice{background:#181b2b;color:#e0e7ff;border-left-color:#818cf8;border-top-color:#343c5c;border-right-color:#343c5c;border-bottom-color:#343c5c}
+.legalPage .legalNotice a,.legalPage .legalIdentity a,.legalPage .legalIdentity h2,.legalPage caption{color:#c7d2fe}
+.legalPage .legalIdentity{border-color:#343c5c;background:#151829}
+.legalPage .legalTableWrap{border-color:#343c5c}
+.legalPage thead{background:#1a1f33}
+.legalPage tbody tr:hover{background:rgba(99,102,241,.06)}
+.legalPage .legalDocumentList li{border-color:#343c5c;background:#141827}
+.legalPage :is(a,button):focus-visible{outline-color:#a5b4fc}
+.legalPage .mktSkip{background:#a5b4fc}
+.legalFooter{border-top-color:#2c3350}
+.legalFooter nav a:hover{color:#c7d2fe}
 @media print{.legalPage{background:#fff;color:#111}.legalPage .legalHero,.legalPage .legalContent,.legalPage .legalNotice{box-shadow:none;background:#fff;color:#111;border-color:#777}.legalPage .legalContent p,.legalPage .legalContent li,.legalPage .legalContent h2,.legalPage .legalHero h1,.legalPage .legalHero p{color:#111}.legalPage :is(.legalTabs,.legalToc,.legalNav,.legalFooter,.mktSkip){display:none}.legalPage main{width:100%;padding:0}.legalPage table{min-width:0;color:#111}.legalPage thead{background:#eee}.legalPage tbody th{color:#111}}

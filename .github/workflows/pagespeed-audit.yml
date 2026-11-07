@@ -1,4 +1,4 @@
-name: HOME SECURITY Lighthouse performance audit
+name: WWW | Wydajność | Audyt Lighthouse
 
 on:
   workflow_dispatch:
