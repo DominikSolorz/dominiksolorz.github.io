@@ -1,0 +1,335 @@
+/*
+ * HOME SECURITY — wygląd strony publicznej i dokumentów (wersja 2, według makiet właściciela).
+ * Głęboki granat, niebieskie przyciski z poświatą, szklane zaokrąglone karty,
+ * zdjęcie domu nocą w nagłówku strony głównej. Wyłącznie prezentacja:
+ * nie zmienia treści, linków, formularzy ani skryptów. Ładowany jako ostatni.
+ */
+:is(#publicHome.mktSite,.marketingPage,.legalPage){
+  --t-bg:#020814;
+  --t-bg2:#04101f;
+  --t-surface:#061428;
+  --t-raised:#0a1b34;
+  --t-line:#12294a;
+  --t-line2:#1b3a66;
+  --t-text:#eaf2ff;
+  --t-muted:#9fb2cf;
+  --t-dim:#6f84a6;
+  --t-blue:#1f7bff;
+  --t-blue2:#4a9bff;
+  --t-cyan:#22d3ee;
+  --t-green:#22c55e;
+  --t-red:#ff4561;
+  --t-amber:#f5b324;
+  --t-glow:rgba(41,121,255,.45);
+  --t-sans:Inter,"Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  --t-radius:16px;
+  --t-radius-sm:11px;
+  --m-bg:var(--t-bg);--m-surface:var(--t-surface);--m-line:var(--t-line);--m-text:var(--t-text);--m-muted:var(--t-muted);--m-gold:var(--t-cyan);--m-red:var(--t-red);
+  --m-blue:var(--t-blue);--m-purple:#2563eb;--m-teal:var(--t-cyan);
+  font-family:var(--t-sans);
+  color:var(--t-text);
+  background:
+    radial-gradient(ellipse 1200px 700px at 70% -10%,rgba(31,123,255,.2),transparent 70%),
+    radial-gradient(ellipse 900px 600px at -10% 60%,rgba(34,211,238,.06),transparent 70%),
+    var(--t-bg)!important;
+}
+body.marketingPage,body.legalPage{background-color:var(--t-bg)!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktMain,.mktPageMain,main){background:transparent!important}
+:is(#publicHome.mktSite,.marketingPage,.legalPage) ::selection{background:rgba(31,123,255,.4);color:#fff}
+
+/* ---------- Typografia ---------- */
+:is(#publicHome.mktSite,.marketingPage,.legalPage) :is(h1,h2,h3,.mktPageTitle){color:#f3f8ff;font-family:var(--t-sans);font-weight:800;letter-spacing:-.02em}
+:is(#publicHome.mktSite,.marketingPage) .mktHero h1{letter-spacing:-.03em;line-height:1.06}
+:is(#publicHome.mktSite,.marketingPage) :is(h1,h2) em{
+  font-style:normal;background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;
+  -webkit-text-fill-color:var(--t-cyan)!important;color:var(--t-cyan)!important;
+}
+:is(#publicHome.mktSite,.marketingPage,.legalPage) :is(p,li,.mktLead,.mktPageLead){color:var(--t-muted)}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktLead,.mktPageLead){color:#c2d2ea}
+:is(#publicHome.mktSite,.marketingPage) strong{color:#f3f8ff}
+:is(#publicHome.mktSite,.marketingPage,.legalPage) :is(.mktEyebrow,.publicEyebrow,.mktPublicFeatureLabel,.mktMenuGroupLabel,.mktPostCategory,.mktDemoEyebrow,.mktSetupCounter){
+  font-family:var(--t-sans)!important;letter-spacing:.12em!important;text-transform:uppercase;font-weight:800!important;color:var(--t-cyan)!important;
+}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktFeatureNumber,.mktPublicFeatureNumber,.mktScenarioNumber,.mktImageLabel,.mktArticleMeta){font-family:var(--t-sans)!important;color:var(--t-blue2)!important;letter-spacing:.06em}
+:is(#publicHome.mktSite,.marketingPage) .mktEyebrow{font-size:12px!important;display:inline-flex;align-items:center;gap:8px}
+:is(#publicHome.mktSite,.marketingPage) .mktHero .mktEyebrow{
+  padding:6px 14px;border-radius:999px;border:1px solid rgba(74,155,255,.55);background:rgba(31,123,255,.14);color:#e6f0ff!important;letter-spacing:.04em!important;text-transform:none;font-weight:600!important;
+}
+:is(#publicHome.mktSite,.marketingPage) .mktEyebrow>span:empty{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--t-cyan)!important;box-shadow:0 0 10px var(--t-cyan)}
+:is(#publicHome.mktSite,.marketingPage) .mktBreadcrumb{font-size:12.5px!important;color:var(--t-dim)!important;letter-spacing:normal!important;text-transform:none}
+:is(#publicHome.mktSite,.marketingPage) .mktBreadcrumb a{color:var(--t-muted)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktBreadcrumb a:hover{color:#fff!important}
+
+/* ---------- Nagłówek ---------- */
+:is(#publicHome.mktSite,.marketingPage) .mktHeader{
+  position:sticky;top:0;z-index:50;max-width:none;min-height:72px;
+  padding-inline:max(20px,calc((100% - 1240px)/2));
+  background:rgba(2,8,20,.82)!important;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--t-line)!important;
+}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand{font-family:var(--t-sans);letter-spacing:.01em;font-weight:800;font-size:17px;color:#f3f8ff}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand b{color:var(--t-cyan)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand small{font-family:var(--t-sans);font-size:11px!important;letter-spacing:.04em;color:var(--t-muted)!important;font-weight:500}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand img{border-radius:9px;box-shadow:0 0 0 1px var(--t-line2),0 0 18px -4px var(--t-glow)}
+:is(#publicHome.mktSite,.marketingPage) .mktHeader>nav{gap:4px!important}
+:is(#publicHome.mktSite,.marketingPage) .mktHeader>nav a{font-family:var(--t-sans);font-size:14px;font-weight:500;letter-spacing:normal;text-transform:none;color:#c7d5ec!important;padding:8px 12px;border-radius:9px;transition:background-color .15s,color .15s}
+:is(#publicHome.mktSite,.marketingPage) .mktHeader>nav a:hover{background:rgba(17,41,79,.9);color:#fff!important}
+:is(#publicHome.mktSite,.marketingPage) .mktHeader>nav a[aria-current="page"]{background:rgba(31,123,255,.22);color:#fff!important;box-shadow:inset 0 0 0 1px rgba(74,155,255,.5)}
+:is(#publicHome.mktSite,.marketingPage) .mktLogin{
+  font-family:var(--t-sans);font-size:14px;font-weight:600;letter-spacing:normal;text-transform:none;
+  border:1px solid #3d93ff!important;border-radius:var(--t-radius-sm)!important;
+  background:linear-gradient(180deg,#2b8bff,#1667ef)!important;color:#fff!important;box-shadow:0 10px 30px -12px var(--t-glow);
+  transition:filter .15s;
+}
+:is(#publicHome.mktSite,.marketingPage) .mktLogin:hover{filter:brightness(1.1)}
+:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu summary{border:1px solid var(--t-line2)!important;border-radius:var(--t-radius-sm)!important;background:var(--t-surface)!important;color:var(--t-text)!important;font-family:var(--t-sans)}
+:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu summary i{background:var(--t-text)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu>nav{background:rgba(4,14,30,.98)!important;border:1px solid var(--t-line2)!important;border-radius:var(--t-radius)!important;box-shadow:0 30px 70px rgba(0,0,0,.6)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktMenuGroup a{color:var(--t-text)!important;border-radius:9px!important}
+:is(#publicHome.mktSite,.marketingPage) .mktMenuGroup a:hover{background:rgba(31,123,255,.16)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktMenuGroup{border-color:var(--t-line)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktMenuRegister{background:var(--t-blue)!important;color:#fff!important}
+
+/* ---------- Przyciski ---------- */
+:is(#publicHome.mktSite,.marketingPage) .mktButton{
+  border-radius:var(--t-radius-sm)!important;min-height:48px;
+  font-family:var(--t-sans);font-size:15px;letter-spacing:normal;text-transform:none;font-weight:700!important;
+  background:linear-gradient(180deg,#2b8bff,#1667ef)!important;color:#fff!important;border:1px solid #3d93ff!important;
+  box-shadow:0 12px 34px -12px var(--t-glow)!important;transition:transform .16s,filter .16s;
+}
+:is(#publicHome.mktSite,.marketingPage) .mktButton:hover{filter:brightness(1.08);transform:translateY(-1px)}
+:is(#publicHome.mktSite,.marketingPage) .mktButton *{color:inherit!important}
+:is(#publicHome.mktSite,.marketingPage) .mktButton.mktButtonQuiet{background:rgba(4,14,30,.6)!important;color:#fff!important;border-color:rgba(199,213,236,.55)!important;box-shadow:none!important}
+:is(#publicHome.mktSite,.marketingPage) .mktButton.mktButtonQuiet:hover{border-color:var(--t-blue2)!important;background:rgba(17,41,79,.85)!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktButton,.mktLogin,a,summary,button):focus-visible{outline:2px solid var(--t-blue2)!important;outline-offset:3px!important}
+:is(#publicHome.mktSite,.marketingPage) .mktTextLink{color:var(--t-blue2)!important;font-family:var(--t-sans);font-size:14px!important;letter-spacing:normal;text-transform:none;font-weight:600}
+:is(#publicHome.mktSite,.marketingPage) .mktTextLink:hover{color:#fff!important}
+:is(#publicHome.mktSite,.marketingPage) :is(p,li,.mktFine,.mktNote) a:not(.mktButton):not(.mktTextLink){color:var(--t-blue2)!important;text-decoration-color:rgba(74,155,255,.5)!important}
+
+/* ---------- Karty: szkło z niebieską obwódką ---------- */
+:is(#publicHome.mktSite,.marketingPage) :is(.mktFeature,.mktPublicFeatureCard,.mktPublicSpotlight,.mktScenarioCard,.mktHomeDestinations article,.downloadCard,.mktReadingGuide,.mktPost,.mktConceptCard,.mktFaq details,.mktContactForm,.mktArticleAside,.mktSetupItem,.mktPrivacyPanel,.mktPrivacyNode,.mktDecisionOptions>*,.mktSpecs,.mktDownload,.mktOfferNotice,.mktHelpChoices>*,.mktRoadmap>*,.mktAiExample,.mktSetup,.downloadStore){
+  border-radius:var(--t-radius)!important;
+  border:1px solid var(--t-line2)!important;
+  background:linear-gradient(180deg,rgba(10,27,52,.86),rgba(6,20,40,.86))!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 22px 50px -30px #000!important;
+  transition:opacity .72s var(--mkt-ease,ease) var(--mkt-delay,0ms),transform .72s var(--mkt-ease,ease) var(--mkt-delay,0ms),border-color .2s,box-shadow .2s;
+}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktFeature,.mktPublicFeatureCard,.mktPublicSpotlight,.mktScenarioCard,.mktHomeDestinations article,.downloadCard,.mktPost,.mktConceptCard):hover{
+  border-color:rgba(74,155,255,.65)!important;box-shadow:0 0 0 1px rgba(31,123,255,.2),0 26px 60px -30px var(--t-glow)!important;
+}
+:is(#publicHome.mktSite,.marketingPage) .downloadStore{background:rgba(4,14,30,.7)!important;border-style:dashed!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktPublicFeatureIcon,.mktSetupCheck){border-radius:12px!important;border:1px solid rgba(74,155,255,.4)!important;background:rgba(31,123,255,.14)!important;color:var(--t-blue2)!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktPublicFeatureIcon,.mktSetupCheck) *{color:var(--t-blue2)!important;stroke:currentColor}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktPublicPreview,.mktDemoScreen,.mktScenarioVisual,.mktFeatureDiagram span,.mktScenarioArt){border-radius:12px!important;border-color:var(--t-line2)!important;background-color:#030b18!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktPublicPreviewTop,.mktPublicPreviewBottom,.mktScenarioVisualFoot,.mktDemoTop){font-family:var(--t-sans)!important;color:var(--t-muted)!important;border-color:var(--t-line)!important;background:transparent!important}
+:is(#publicHome.mktSite,.marketingPage) .mktPublicPreviewStage{background:radial-gradient(circle at 50% 45%,rgba(31,123,255,.2),transparent 60%),#030b18!important}
+:is(#publicHome.mktSite,.marketingPage) .mktPublicPreviewMark{border-color:var(--t-blue2)!important;color:var(--t-blue2)!important;box-shadow:0 0 30px var(--t-glow)!important;background:rgba(31,123,255,.12)!important}
+
+/* ---------- Strona główna: zdjęcie domu nocą za nagłówkiem ---------- */
+#publicHome.mktSite .mktHero{position:relative;isolation:isolate}
+#publicHome.mktSite .mktHero::before{
+  content:"";position:absolute;z-index:-1;inset:-40px calc(50% - 50vw) -30px;
+  background:
+    linear-gradient(90deg,var(--t-bg) 22%,rgba(2,8,20,.78) 46%,rgba(2,8,20,.18) 78%),
+    linear-gradient(0deg,var(--t-bg) 2%,transparent 38%),
+    url("assets/site-hero-dom.webp") 85% 35%/cover no-repeat;
+  pointer-events:none;
+}
+#publicHome.mktSite .mktHeroVisual{
+  border-radius:20px!important;border:1px solid rgba(74,155,255,.5)!important;
+  box-shadow:0 0 0 1px rgba(31,123,255,.18),0 40px 100px -40px var(--t-glow),0 30px 60px -30px #000!important;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+}
+:is(#publicHome.mktSite,.marketingPage) .mktHeroVisual figcaption{background:linear-gradient(180deg,transparent,rgba(2,8,20,.9) 45%)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktHeroVisual .mktImageLabel{color:var(--t-cyan)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktHeroVisual strong{color:#fff!important}
+:is(#publicHome.mktSite,.marketingPage) .mktHeroFacts span{
+  border-radius:999px!important;border:1px solid rgba(74,155,255,.4)!important;background:rgba(4,14,30,.65)!important;
+  font-family:var(--t-sans);font-size:13px!important;color:#dbe7fb!important;
+}
+:is(#publicHome.mktSite,.marketingPage) .mktHeroFacts span::before,:is(#publicHome.mktSite,.marketingPage) .mktHeroFacts span>i{background:var(--t-cyan)!important;box-shadow:0 0 8px var(--t-cyan)}
+
+/* Pasek możliwości i sekcje pasmowe */
+:is(#publicHome.mktSite,.marketingPage) .mktCapabilityStrip{background:rgba(4,14,30,.75)!important;border-color:var(--t-line)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktCapabilityStrip span{font-family:var(--t-sans);font-size:13.5px!important;color:#dbe7fb!important}
+:is(#publicHome.mktSite,.marketingPage) .mktCapabilityStrip :is(b,small,em,strong){color:var(--t-cyan)!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktPublicJourney,.mktProcess,.mktStage,.mktAiBand,.mktContactBand){background:linear-gradient(180deg,rgba(6,20,40,.55),rgba(2,8,20,.15))!important;border-color:var(--t-line)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktPublicJourneySteps li{border-color:var(--t-line)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktPublicJourneySteps li>:first-child{font-family:var(--t-sans)!important;color:#fff!important;background:rgba(31,123,255,.18)!important;border-color:rgba(74,155,255,.6)!important;border-radius:50%!important}
+:is(#publicHome.mktSite,.marketingPage) .mktPublicFinal{
+  border-radius:20px!important;border:1px solid rgba(74,155,255,.5)!important;
+  background:radial-gradient(ellipse at 100% 0%,rgba(31,123,255,.25),transparent 60%),linear-gradient(135deg,#0a1b34,#061428)!important;
+  box-shadow:0 40px 90px -40px var(--t-glow)!important;
+}
+
+/* Tabele, FAQ, odznaki, formularze */
+:is(#publicHome.mktSite,.marketingPage) .mktSpecs>div{border-color:var(--t-line)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktSpecs>div>:first-child{font-family:var(--t-sans);color:#fff!important;font-weight:600}
+:is(#publicHome.mktSite,.marketingPage) .mktFaq summary{color:var(--t-text)!important;font-weight:600}
+:is(#publicHome.mktSite,.marketingPage) .mktFaq details[open]{border-color:rgba(74,155,255,.65)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktBadge{border-radius:999px!important;font-family:var(--t-sans);border-color:rgba(34,197,94,.5)!important;color:var(--t-green)!important;background:rgba(34,197,94,.1)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktBadgeAmber{border-color:rgba(245,179,36,.5)!important;color:var(--t-amber)!important;background:rgba(245,179,36,.1)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktBadgeMuted{border-color:var(--t-line2)!important;color:var(--t-muted)!important;background:transparent!important}
+:is(#publicHome.mktSite,.marketingPage) :is(input,select,textarea){background:rgba(2,8,20,.72)!important;border:1px solid var(--t-line2)!important;border-radius:var(--t-radius-sm)!important;color:var(--t-text)!important}
+:is(#publicHome.mktSite,.marketingPage) :is(input,select,textarea):focus{border-color:var(--t-blue2)!important;box-shadow:0 0 0 3px rgba(31,123,255,.22)!important;outline:none}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktConceptCard img,.mktVisualImage,.mktDemoImage){border-radius:12px!important}
+:is(#publicHome.mktSite,.marketingPage) .mktGalleryDialog{background:#030b18!important;border:1px solid var(--t-line2)!important;border-radius:var(--t-radius)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktPostArt{border-radius:12px!important;border-color:var(--t-line2)!important;background:radial-gradient(ellipse at 100% 100%,rgba(31,123,255,.3),transparent 70%),#061428!important;color:var(--t-blue2)!important;font-family:var(--t-sans)}
+
+/* ---------- Stopka ---------- */
+:is(#publicHome.mktSite,.marketingPage) .mktFooter{border-top:1px solid var(--t-line)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktFooter nav b{font-family:var(--t-sans);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#fff!important}
+:is(#publicHome.mktSite,.marketingPage) .mktFooter nav a{color:var(--t-muted)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktFooter nav a:hover{color:#fff!important}
+:is(#publicHome.mktSite,.marketingPage) :is(.mktFooterNote,.mktCopyright){color:var(--t-dim)!important;font-family:var(--t-sans);font-size:12px!important;border-color:var(--t-line)!important}
+
+/* ---------- Dokumenty ---------- */
+.legalPage{font-family:var(--t-sans)}
+.legalPage .legalNav{background:rgba(2,8,20,.84)!important;border-bottom-color:var(--t-line)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.legalPage .legalNav a{font-family:var(--t-sans)}
+.legalPage .legalNav a:first-child{font-weight:800;font-size:16px;letter-spacing:.01em}
+.legalPage .legalNav a:first-child b{color:var(--t-cyan)!important}
+.legalPage .legalNav a:last-child{font-size:13.5px;font-weight:600;border-radius:var(--t-radius-sm)!important;border-color:rgba(74,155,255,.6)!important;background:rgba(31,123,255,.2)!important;color:#fff!important}
+.legalPage .legalNav a:last-child:hover{background:var(--t-blue)!important}
+.legalPage :is(.legalHero,.legalContent,.legalToc,.legalIdentity,.legalNotice,.legalDocumentList li){border-radius:var(--t-radius)!important;border-color:var(--t-line2)!important}
+.legalPage .legalHero{background:radial-gradient(ellipse at 100% 0%,rgba(31,123,255,.25),transparent 60%),linear-gradient(135deg,#0a1b34,#061428)!important;box-shadow:0 30px 80px -40px var(--t-glow)!important}
+.legalPage .legalMeta{font-size:13px;color:var(--t-muted)!important}
+.legalPage :is(.legalContent,.legalToc,.legalIdentity,.legalDocumentList li){background:linear-gradient(180deg,rgba(10,27,52,.86),rgba(6,20,40,.86))!important}
+.legalPage .legalTabs a{border-radius:var(--t-radius-sm)!important;border-color:var(--t-line2)!important;background:rgba(6,20,40,.8)!important;font-family:var(--t-sans);font-size:13.5px}
+.legalPage .legalTabs a:hover{border-color:var(--t-blue2)!important}
+.legalPage .legalTabs a[aria-current="page"]{background:linear-gradient(180deg,#2b8bff,#1667ef)!important;border-color:#3d93ff!important;color:#fff!important;box-shadow:0 10px 30px -14px var(--t-glow)}
+.legalPage .legalToc a{border-radius:9px!important;color:#c7d5ec!important}
+.legalPage .legalToc a:hover{background:rgba(31,123,255,.16)!important;color:#fff!important}
+.legalPage .legalContent h2{border-top:1px solid var(--t-line);padding-top:24px!important}
+.legalPage .legalContent h2:first-child{border-top:0;padding-top:0!important}
+.legalPage .legalContent a,.legalPage .legalNotice a,.legalPage .legalIdentity a{color:var(--t-blue2)!important}
+.legalPage .legalNotice{background:rgba(245,179,36,.08)!important;border-left:3px solid var(--t-amber)!important;color:#f6e6c0!important}
+.legalPage .legalIdentity h2,.legalPage caption{color:#fff!important;font-family:var(--t-sans)}
+.legalPage .legalTableWrap{border-radius:var(--t-radius)!important;border-color:var(--t-line2)!important}
+.legalPage thead{background:#0a1b34!important}
+.legalPage thead th{font-family:var(--t-sans);font-size:13px;color:#fff!important}
+.legalPage :is(th,td){border-top-color:var(--t-line)!important}
+.legalPage :is(a,button):focus-visible{outline:2px solid var(--t-blue2)!important}
+.legalPage .mktSkip{background:var(--t-blue)!important;color:#fff!important}
+.legalFooter{border-top-color:var(--t-line)!important}
+.legalFooter strong{font-family:var(--t-sans)}
+.legalFooter nav a{font-family:var(--t-sans);color:var(--t-muted)!important}
+.legalFooter nav a:hover{color:#fff!important}
+
+@media(max-width:700px){
+  :is(#publicHome.mktSite,.marketingPage) .mktHeader{padding-inline:14px;min-height:64px}
+  #publicHome.mktSite .mktHero::before{background:linear-gradient(180deg,rgba(2,8,20,.55),var(--t-bg) 70%),url("assets/site-hero-dom.webp") 70% 0/cover no-repeat}
+}
+@media(prefers-reduced-motion:reduce){
+  :is(#publicHome.mktSite,.marketingPage) :is(.mktButton,.mktFeature,.mktPublicFeatureCard){transition:none}
+  :is(#publicHome.mktSite,.marketingPage) .mktButton:hover{transform:none}
+}
+@media print{.legalPage{background:#fff!important}}
+#publicHome.mktSite .mktHero h1{font-size:clamp(2.4rem,4.4vw,4rem)!important;max-width:14ch!important}
+@media(max-width:700px){#publicHome.mktSite .mktHero h1{font-size:clamp(2rem,9vw,2.6rem)!important}}
+
+/* =====================================================================
+   Strona główna według makiety: pasek 4 kart, rozwiązania ze zdjęciami,
+   sekcja z telefonem i pasek faktów. Klasy mktMk* istnieją tylko w home.html.
+   ===================================================================== */
+#publicHome.mktSite .mktMkStrip{background:transparent!important;border:0!important;margin-top:8px}
+#publicHome.mktSite .mktMkStrip>.mktContainer{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:14px!important;padding-block:0 10px!important}
+#publicHome.mktSite .mktMkStrip article{display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:var(--t-radius);border:1px solid var(--t-line2);background:linear-gradient(180deg,rgba(10,27,52,.86),rgba(6,20,40,.86));box-shadow:0 20px 50px -30px #000}
+#publicHome.mktSite .mktMkStrip article:hover{border-color:rgba(74,155,255,.65)}
+#publicHome.mktSite .mktMkStrip b{display:block;font-size:15.5px;color:#fff!important}
+#publicHome.mktSite .mktMkStrip small{display:block;font-size:12.5px;color:var(--t-muted);margin-top:2px;line-height:1.4}
+#publicHome.mktSite .mktMkIco{display:grid;place-items:center;width:48px;height:48px;flex:none;border-radius:50%;border:1px solid rgba(74,155,255,.55);background:radial-gradient(circle,rgba(31,123,255,.3),rgba(31,123,255,.06));color:var(--t-blue2);box-shadow:0 0 22px -6px var(--t-glow)}
+#publicHome.mktSite :is(.mktMkIco,.mktMkSolution b,.mktMkChecks li,.mktMkFacts>div,.mktMkScreenRow)>svg{width:22px;height:22px;flex:none}
+
+#publicHome.mktSite .mktMkSolutions{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(0,2.6fr);gap:28px;align-items:center;padding-block:56px 20px}
+#publicHome.mktSite .mktMkSolutionsIntro h2{font-size:clamp(1.8rem,2.8vw,2.4rem);line-height:1.15;margin:0 0 12px}
+#publicHome.mktSite .mktMkSolutionsIntro p{margin:0 0 20px}
+#publicHome.mktSite .mktMkSolutionsGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+#publicHome.mktSite .mktMkSolution{display:flex;flex-direction:column;overflow:hidden;border-radius:var(--t-radius);border:1px solid var(--t-line2);background:linear-gradient(180deg,rgba(10,27,52,.9),rgba(6,20,40,.9));color:inherit;text-decoration:none;transition:border-color .2s,transform .2s,box-shadow .2s}
+#publicHome.mktSite .mktMkSolution:hover{border-color:rgba(74,155,255,.7);transform:translateY(-2px);box-shadow:0 26px 60px -30px var(--t-glow)}
+#publicHome.mktSite .mktMkPhoto{display:block;aspect-ratio:16/10;background:#06142a center/cover no-repeat;border-bottom:1px solid var(--t-line2)}
+#publicHome.mktSite .mktMkSolBody{position:relative;display:block;padding:14px 16px 16px}
+#publicHome.mktSite .mktMkSolution b{display:flex;align-items:center;gap:8px;font-size:15.5px;color:#fff;margin-bottom:6px}
+#publicHome.mktSite .mktMkSolution b svg{color:var(--t-cyan)}
+#publicHome.mktSite .mktMkSolution small{display:block;padding-right:22px;font-size:13px;line-height:1.45;color:var(--t-muted)}
+#publicHome.mktSite .mktMkSolution i{position:absolute;right:14px;bottom:14px;font-style:normal;color:var(--t-blue2);font-size:18px}
+
+#publicHome.mktSite .mktMkApp{display:grid;grid-template-columns:auto minmax(0,1.25fr) minmax(0,.8fr);gap:40px;align-items:center;margin-block:34px 10px;padding:30px 36px!important;border-radius:22px;border:1px solid rgba(74,155,255,.4);background:radial-gradient(ellipse at 0% 100%,rgba(31,123,255,.22),transparent 60%),linear-gradient(135deg,rgba(10,27,52,.92),rgba(4,14,30,.92));box-shadow:0 40px 100px -50px var(--t-glow)}
+#publicHome.mktSite .mktMkPhone{width:220px;padding:10px;border-radius:34px;border:2px solid #2c4b7a;background:linear-gradient(180deg,#0b1d38,#040c19);box-shadow:0 0 0 6px #030913,0 40px 80px -30px var(--t-glow);transform:rotate(-6deg)}
+#publicHome.mktSite .mktMkNotch{width:80px;height:18px;margin:-10px auto 8px;border-radius:0 0 12px 12px;background:#030913}
+#publicHome.mktSite .mktMkScreen{display:grid;gap:6px;padding:10px;border-radius:24px;background:#04101f;border:1px solid var(--t-line2)}
+#publicHome.mktSite .mktMkScreenTop{display:flex;justify-content:space-between;align-items:center;font-size:11px}
+#publicHome.mktSite .mktMkScreenTop b{color:#fff}
+#publicHome.mktSite .mktMkScreenTop b span{color:var(--t-cyan)}
+#publicHome.mktSite .mktMkScreenTop small{color:var(--t-dim);font-size:10px}
+#publicHome.mktSite .mktMkScreenPhoto{display:block;height:118px;border-radius:12px;background:center/cover no-repeat}
+#publicHome.mktSite .mktMkScreenRow{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-radius:9px;background:#0a1b34;font-size:11.5px;color:#dbe7fb}
+#publicHome.mktSite .mktMkScreenRow svg{width:16px!important;height:16px!important;color:var(--t-blue2)}
+#publicHome.mktSite .mktMkAppCopy h2{font-size:clamp(1.8rem,2.8vw,2.4rem);line-height:1.15;margin:0 0 12px}
+#publicHome.mktSite .mktMkChecks{list-style:none;margin:16px 0 22px;padding:0;display:grid;gap:10px}
+#publicHome.mktSite .mktMkChecks li{display:flex;gap:10px;align-items:center;color:#dbe7fb}
+#publicHome.mktSite .mktMkChecks svg{color:var(--t-cyan)}
+#publicHome.mktSite .mktMkQuote{align-self:stretch;display:flex;align-items:center;padding-left:26px;border-left:1px solid var(--t-line2)}
+#publicHome.mktSite .mktMkQuote p{margin:0;font-size:15px;font-style:italic;line-height:1.6;color:#c2d2ea}
+#publicHome.mktSite .mktMkQuote p::before{content:"“";display:block;font:800 52px/0.8 var(--t-sans);color:var(--t-blue2);font-style:normal;margin-bottom:8px}
+
+#publicHome.mktSite .mktMkFacts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.6fr);align-items:center;margin-block:24px 40px;padding:18px 22px!important;border-radius:20px;border:1px solid rgba(74,155,255,.4);background:linear-gradient(180deg,rgba(10,27,52,.9),rgba(6,20,40,.9))}
+#publicHome.mktSite .mktMkFacts>div{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;align-items:center;padding:6px 18px;min-width:0}
+#publicHome.mktSite .mktMkFacts>div+div{border-left:1px solid var(--t-line2)}
+#publicHome.mktSite .mktMkFacts>div>svg{grid-row:1/3;width:30px;height:30px;color:var(--t-blue2)}
+#publicHome.mktSite .mktMkFacts b{font-size:19px;font-weight:800;color:#fff;line-height:1.2}
+#publicHome.mktSite .mktMkFacts small{font-size:12.5px;color:var(--t-muted);line-height:1.35}
+#publicHome.mktSite .mktMkFacts .mktMkFactsCta{display:flex;align-items:center;justify-content:flex-end;gap:16px;flex-wrap:wrap}
+#publicHome.mktSite .mktMkFactsCta b{font-size:18px}
+
+@media(max-width:1200px){
+  #publicHome.mktSite .mktMkSolutions{grid-template-columns:minmax(0,1fr)}
+  #publicHome.mktSite .mktMkApp{grid-template-columns:auto minmax(0,1fr)}
+  #publicHome.mktSite .mktMkQuote{grid-column:1/-1;border-left:0;border-top:1px solid var(--t-line2);padding:18px 0 0}
+  #publicHome.mktSite .mktMkFacts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #publicHome.mktSite .mktMkFacts>div:nth-child(3){border-left:0}
+  #publicHome.mktSite .mktMkFacts>div:nth-child(n+3){border-top:1px solid var(--t-line2);padding-top:14px;margin-top:8px}
+  #publicHome.mktSite .mktMkFacts .mktMkFactsCta{grid-column:1/-1;justify-content:space-between;border-left:0}
+}
+@media(max-width:900px){
+  #publicHome.mktSite .mktMkStrip>.mktContainer{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #publicHome.mktSite .mktMkSolutionsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  #publicHome.mktSite .mktMkStrip>.mktContainer,#publicHome.mktSite .mktMkSolutionsGrid{grid-template-columns:minmax(0,1fr)!important}
+  #publicHome.mktSite .mktMkApp{grid-template-columns:minmax(0,1fr);padding:22px 18px!important;gap:24px}
+  #publicHome.mktSite .mktMkPhone{margin:0 auto;width:200px}
+  #publicHome.mktSite .mktMkFacts{grid-template-columns:minmax(0,1fr);padding:10px 14px!important}
+  #publicHome.mktSite .mktMkFacts>div{border-left:0!important;padding:12px 4px}
+  #publicHome.mktSite .mktMkFacts>div+div{border-top:1px solid var(--t-line2);margin-top:0}
+  #publicHome.mktSite .mktMkFacts .mktMkFactsCta{flex-direction:column;align-items:stretch}
+}
+@media(prefers-reduced-motion:reduce){
+  #publicHome.mktSite .mktMkSolution{transition:none}
+  #publicHome.mktSite .mktMkSolution:hover{transform:none}
+}
+#publicHome.mktSite .mktMkStrip{position:relative;z-index:3;margin-top:0!important;padding-top:6px}
+#publicHome.mktSite .mktMkStrip>.mktContainer{padding-top:8px!important}
+#publicHome.mktSite .mktMkStrip .mktMkIco{font-size:0!important}
+#publicHome.mktSite .mktPublicJourneySteps li>span{display:grid!important;place-items:center;width:48px;height:48px;padding:0!important;font-size:14px!important;align-self:start}
+
+/* Podstrony: baner nagłówka z nocnym zdjęciem domu, jak na makietach. */
+#publicHome.mktSite .mktPageIntro{position:relative;isolation:isolate;overflow:hidden;margin-top:28px;padding:44px 48px!important;border-radius:22px;border:1px solid rgba(74,155,255,.38);background:linear-gradient(90deg,rgba(2,8,20,.96) 0%,rgba(2,8,20,.82) 48%,rgba(2,8,20,.35) 100%),url("assets/site-hero-dom.webp") right center/cover no-repeat;box-shadow:0 40px 100px -60px var(--t-glow)}
+#publicHome.mktSite .mktPageIntro .mktPageTitle{margin-top:10px}
+#publicHome.mktSite .mktPageIntro .mktPageLead{max-width:560px;color:#c9d7ee}
+#publicHome.mktSite .mktMkTopics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-block:26px 0}
+#publicHome.mktSite .mktMkTopics a{display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:var(--t-radius);border:1px solid var(--t-line2);background:linear-gradient(180deg,rgba(10,27,52,.86),rgba(6,20,40,.86));color:inherit;text-decoration:none;transition:border-color .2s}
+#publicHome.mktSite .mktMkTopics a:hover{border-color:rgba(74,155,255,.7)}
+#publicHome.mktSite .mktMkTopics b{display:block;color:#fff;font-size:15px}
+#publicHome.mktSite .mktMkTopics small{display:block;color:var(--t-muted);font-size:12.5px;line-height:1.4;margin-top:2px}
+#publicHome.mktSite .mktFaq summary{padding-inline:20px!important}
+#publicHome.mktSite .mktFaq details>p{padding-inline:20px!important}
+#publicHome.mktSite .downloadPlatform{color:var(--t-cyan)!important}
+#publicHome.mktSite .downloadContents a{border-color:var(--t-line2)!important;background:rgba(10,27,52,.7)}
+#publicHome.mktSite .downloadCard{border-color:var(--t-line2)!important;background:linear-gradient(180deg,rgba(10,27,52,.92),rgba(6,20,40,.92))!important}
+@media(max-width:900px){#publicHome.mktSite .mktMkTopics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){
+  #publicHome.mktSite .mktPageIntro{padding:28px 20px!important;margin-top:16px;background:linear-gradient(180deg,rgba(2,8,20,.7),rgba(2,8,20,.95)),url("assets/site-hero-dom.webp") center/cover no-repeat}
+  #publicHome.mktSite .mktMkTopics{grid-template-columns:minmax(0,1fr)}
+}
+#publicHome.mktSite .hsSupportLauncher{background:linear-gradient(180deg,#2b8bff,#1667ef)!important;border-color:rgba(120,180,255,.7)!important;font-family:var(--t-sans)!important;font-size:15px!important;padding:12px 20px!important;box-shadow:0 12px 34px -10px var(--t-glow),0 8px 30px #0008!important}

@@ -8,7 +8,9 @@ const { createClient } = window.supabase;
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TURN_SERVER, DRIVE_SCRIPT_URL, driveWatchUrl } from "./config.js?v=34";
 import { b64, sign, targetString } from "./pin.js?v=14";
 import { mountLibrary } from "./library-ui.js?v=23";
-import { requireAccess } from "./lock.js?v=21";
+import { requireAccess } from "./lock.js?v=22";
+import { createRemoteUnlockHost } from "./remote-unlock-host.mjs?v=2";
+import { mountRemoteUnlockPhone } from "./remote-unlock-phone.mjs?v=2";
 import { channelFor, lock } from "./access.js?v=21";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=17";
@@ -22,7 +24,7 @@ import * as diskstore from "./diskstore.js?v=12";
 import { closeRecordingFragment } from './close-recording-fragment.mjs?v=1';
 import { createPictureInPicture } from './picture-in-picture.mjs?v=1';
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=107";
+import { mountDvr } from "./dvr-ui.js?v=108";
 import { accountClient } from "./auth.js?v=15";
 import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=15";
 import { mountAccountUI } from "./account-ui.mjs?v=3";
@@ -34,6 +36,7 @@ import { createWebUpdates } from "./core/web-updates.mjs?v=3";
 import { freshUpdateURL } from "./core/update-navigation.mjs?v=1";
 import { NativeAgentClient } from "./communication/native-agent-client.mjs";
 import { createAgentTelemetry } from "./communication/agent-telemetry.mjs?v=2";
+import { createReconnectingChannel } from "./core/reconnecting-channel.mjs?v=1";
 import { captureEventFrame } from "./workspace-panels.mjs?v=4";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
 import { createPeerDiagnostics } from "./core/peer-diagnostics.mjs";
@@ -78,7 +81,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "269"; // musi się zgadzać z version.json
+const VERSION = "272"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -936,31 +939,15 @@ window.chrome?.webview?.addEventListener("message", async event => {
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
 function reconnectingChannel({ onSignal, onSubscribed, label }) {
-  let channel = null, attempt = 0, timer = null, active = false;
-  function connect() {
-    if (!active) return;
-    clearTimeout(timer);
-    const old = channel; channel = null;
-    if (old) supabase.removeChannel(old);
-    const ch = supabase.channel(CHANNEL, { config: { broadcast: { self: false } } });
-    ch.on("broadcast", { event: "signal" }, ({ payload }) => Promise.resolve(onSignal(payload)).catch(e => setStatus(`Błąd połączenia: ${errText(e)}`)));
-    channel = ch;
-    ch.subscribe(s => {
-      if (channel !== ch) return;
-      if (s === "SUBSCRIBED") { attempt = 0; onSubscribed(ch); }
-      else if (s === "CHANNEL_ERROR" || s === "TIMED_OUT" || s === "CLOSED") {
-        const d = retryDelay(attempt++);
-        setStatus(`${label}: utracono połączenie z serwerem. Ponawiam za ${Math.round(d / 1000)} s…`);
-        clearTimeout(timer); timer = setTimeout(connect, d);
-      }
-    });
-  }
-  return {
-    get channel() { return channel; },
-    start() { active = true; attempt = 0; connect(); },
-    reconnect() { attempt = 0; connect(); },
-    stop() { active = false; clearTimeout(timer); const c = channel; channel = null; if (c) supabase.removeChannel(c); },
-  };
+  return createReconnectingChannel({
+    client: supabase,
+    name: CHANNEL,
+    onSignal,
+    onSubscribed,
+    delayForAttempt: retryDelay,
+    onError: error => setStatus(`Błąd połączenia: ${errText(error)}`),
+    onRetry: delay => setStatus(`${label}: utracono połączenie z serwerem. Ponawiam za ${Math.round(delay / 1000)} s…`),
+  });
 }
 const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", payload });
 
@@ -2186,7 +2173,14 @@ function showViewer() {
   $("roleBtn").textContent = "To jest komputer z kamerą — nadawaj z niego";
   $("roleBtn").hidden = !IS_DESKTOP;
   applyControlVisibility();
-  viewer.start();
+  if (MOBILE_OWNER_APP) {
+    document.addEventListener("hs-mobile-view-change", event => {
+      if (event.detail?.view === "camera") viewer.start();
+      else viewer.stop();
+    });
+  } else {
+    viewer.start();
+  }
 }
 
 // ---------- Przyciski ----------
@@ -2297,7 +2291,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "181";
+  const SERVICE_WORKER_BUILD = "190";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2742,7 +2736,12 @@ if (RECEIVER_ONLY) {
   $("app").hidden = false;
   showViewer();
 } else {
-  ACCESS_KEY = await requireAccess();
+  // A Windows host listens while its PIN screen is locked. Local PIN never waits on network.
+  const remoteHost= NATIVE_HOST&&panelAccount?.id
+    ? createRemoteUnlockHost({client:accountClient,ownerId:panelAccount.id})
+    : null;
+  if(remoteHost)void remoteHost.start();
+  ACCESS_KEY = await requireAccess({bindRemote:callback=>remoteHost?.bindUnlock(callback)});
   const drivePanel=$('nativeDrivePanel');drivePanel.hidden=false;
   let refreshDrive=null;
   if (window.__HOME_SECURITY_AGENT_BRIDGE__ && window.chrome?.webview) {
@@ -2777,6 +2776,12 @@ if (RECEIVER_ONLY) {
   // ekranem; obraz pokaże wtedy czytelny stan oczekiwania.
   document.body.classList.remove("accessPending");
   $("app").hidden = false; $("lockBtn").hidden = false;
+  // Pairing is available only AFTER local Windows PIN unlock, not on the login screen.
+  if(remoteHost){try{remoteHost.mountUI();}catch{/* Keep local camera operational. */}}
+  if(MOBILE_OWNER_APP&&panelAccount?.id&&!NATIVE_HOST){
+    try{mountRemoteUnlockPhone({client:accountClient,ownerId:panelAccount.id});}
+    catch{/* Phone viewing and recordings must not depend on pairing UI. */}
+  }
   mountAccountUI({
     requestReset: async expectedUserId => {
       const user = await currentAccountUser();

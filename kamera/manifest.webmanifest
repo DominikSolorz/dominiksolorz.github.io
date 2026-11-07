@@ -5,7 +5,7 @@
   "description": "Prywatny podgląd domu, nagrania i sterowanie komputerem-kamerą.",
   "lang": "pl",
   "dir": "ltr",
-  "start_url": "./panel.html?panel=owner&ui=phone",
+  "start_url": "./index.html?app=mobile-home",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

@@ -54,10 +54,36 @@ test('new site visual layer stays public-only, responsive and accessible',async(
   assert.equal((newCss.match(/\{/g)||[]).length,(newCss.match(/\}/g)||[]).length,'CSS curly braces match');
 });
 
+test('public marketing accents use the blue-purple-teal theme without recoloring the secure panel',async()=>{
+  const [css,panel]=await Promise.all([read('kamera/marketing.css'),read('kamera/panel.html')]);
+  const theme=css.split('/* HOME SECURITY WWW Premium Dark Pro')[1];
+  for(const token of ['--m-blue:#6366f1','--m-purple:#7c3aed','--m-teal:#2dd4bf',
+    'linear-gradient(95deg,#c4b5fd 4%,#a5b4fc 54%,#5eead4 100%)',
+    'linear-gradient(115deg,var(--m-blue) 0%,var(--m-purple) 58%,#0f766e 100%)'])
+    assert.ok(theme.includes(token),'missing public accent '+token);
+  assert.match(panel,/<template id="panelStyles">/);
+  assert.match(panel,/premium-dark-pro\.css\?v=1/);
+  assert.match(panel,/id="app" hidden/);
+});
+
+test('public site retains the same dark system identity as Windows and Android/iPhone',async()=>{
+  const css=await read('kamera/marketing.css');
+  assert.ok(css.includes('--m-bg:#0a0e1a'));
+  assert.ok(css.includes('--m-blue:#6366f1'));
+  assert.ok(css.includes('color-scheme:dark'));
+  assert.ok(!css.includes('@media(prefers-color-scheme:light)'),
+    'light phone preference must not turn only the landing page white');
+  assert.ok(css.includes('backdrop-filter:blur(22px)'),
+    'dark navigation stays translucent');
+  assert.ok(!css.includes('#app .mktButton'),
+    'marketing styles must never overwrite the authenticated camera UI');
+});
+
 test('PWA refreshes marketing appearance without changing versioned recorder runtime',async()=>{
   const [sw,app,panel]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/panel.html'].map(read));
-  assert.match(sw,/kamera-domowa-shell-v181/);
-  assert.match(app,/SERVICE_WORKER_BUILD = "181"/);
+  const rev=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
+  assert.ok(rev,'the app must declare the current PWA cache revision');
+  assert.ok(sw.includes('kamera-domowa-shell-v'+rev),'service worker cache must match the app');
   const css=panel.match(/marketing\.css\?v=\d+/)?.[0];
   assert.ok(css);
   assert.ok(sw.includes('./'+css));

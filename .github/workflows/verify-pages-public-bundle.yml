@@ -1,0 +1,55 @@
+name: WWW | GitHub Pages | Test paczki publikacyjnej
+on:
+  push:
+    branches:
+      - fix/pages-publish-only-website-2026-11-07
+  pull_request:
+    paths:
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/verify-pages-public-bundle.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch only the checked official Windows release and rollback
+        run: node scripts/desktop-release.mjs fetch --rollback
+      - name: Generate public website
+        run: node scripts/build-marketing.mjs
+      - name: Test the production Pages packaging step without publishing
+        shell: bash
+        run: |
+          awk '
+            /^      - name: Prepare bounded static distribution/ {inside=1; next}
+            inside && /^      - name:/ {exit}
+            inside && /^          / {print substr($0,11)}
+          ' .github/workflows/pages.yml > /tmp/home-security-pages-package.sh
+          test -s /tmp/home-security-pages-package.sh
+          bash -n /tmp/home-security-pages-package.sh
+          bash /tmp/home-security-pages-package.sh
+          test ! -e _site/tests
+          test ! -e _site/scripts
+          test ! -e _site/agent
+          test ! -e _site/native-mobile
+          # Optimized WebP variants are generated in the next production step.
+          test -d _site/docs/ui-193
+          count=$(find _site -type f | wc -l)
+          echo "Verified public distribution: $count files"
+          test "$count" -lt 450
