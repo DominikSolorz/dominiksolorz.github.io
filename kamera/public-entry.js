@@ -12,7 +12,7 @@
   try { pendingEntry = !!sessionStorage.getItem('hs-device-entry-v1'); } catch { /* private mode */ }
   const native = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview;
   const installed = window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
-  // Domyslne wejscie z ikony aplikacji otwiera strone glowna po reklamie.
+  // Domyslne wejscie z ikony aplikacji otwiera strone glowna z 30-sekundowa reklama.
   // Autoryzacja, odbiorcy i linki do nagran nadal wymagaja panel.html.
   if (params.get("app") === "mobile-home" && !privateLink && !native) return;
   if (!privateLink && !pendingEntry && !native && !installed) {
