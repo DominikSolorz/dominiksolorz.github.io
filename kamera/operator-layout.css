@@ -227,7 +227,7 @@ html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body
 html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app .chip{background:var(--pl-panel)!important;color:var(--pl-muted)!important;border:1px solid var(--pl-line2)!important;border-radius:999px!important}
 html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),select,textarea),
 html:not(.policeCommand):not(.usMilitary) body #authDialog :is(input:not([type="checkbox"]):not([type="radio"]),select){
-  background:var(--pl-bg2)!important;border:1px solid var(--pl-line2)!important;border-radius:var(--pl-radius-sm)!important;color:var(--pl-text)!important;
+  background-color:var(--pl-bg2)!important;border:1px solid var(--pl-line2)!important;border-radius:var(--pl-radius-sm)!important;color:var(--pl-text)!important;
 }
 html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(input,select,textarea):focus,
 html:not(.policeCommand):not(.usMilitary) body #authDialog :is(input,select):focus{border-color:var(--pl-blue)!important;box-shadow:0 0 0 3px rgba(47,107,255,.22)!important;outline:none!important}
@@ -331,3 +331,90 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSearch>span{f
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar>.desktopTopStatus{margin-right:auto!important;flex:0 0 auto!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar>.desktopSearch{flex:0 1 auto!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions{display:flex!important;flex-direction:row!important;align-items:center!important;flex-wrap:nowrap!important}
+
+/* =====================================================================
+   Etap 3: logowanie, rejestracja i PIN według projektów HOME SECURITY.
+   Zdjęcie domu nocą w tle, karta z marką, pola z ikonami, niebieski przycisk.
+   Tylko wygląd — pola, kolejność kroków i obsługa konta bez zmian.
+   ===================================================================== */
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBackdrop{
+  background:
+    radial-gradient(ellipse 900px 600px at 50% 40%,rgba(3,8,18,.15),rgba(3,8,18,.75) 78%),
+    linear-gradient(180deg,rgba(3,8,18,.25),rgba(3,8,18,.8)),
+    url("assets/auth-night.webp") center/cover no-repeat,#030812!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{
+  width:min(440px,calc(100vw - 24px))!important;padding:30px 30px 26px!important;
+  background:linear-gradient(180deg,rgba(10,22,40,.92),rgba(7,17,32,.94))!important;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border:1px solid rgba(91,140,255,.28)!important;border-radius:18px!important;
+  box-shadow:0 0 0 1px rgba(47,107,255,.08),0 40px 90px -30px rgba(47,107,255,.45),0 30px 60px -20px #000!important;
+}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{
+  display:grid!important;grid-template-columns:auto auto;justify-content:center;align-items:center;column-gap:12px;row-gap:2px;
+  padding:0 0 18px!important;margin:0 0 18px!important;border-bottom:1px solid var(--pl-line)!important;text-align:left;
+}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand img{grid-row:1 / span 2;width:46px!important;height:46px!important;margin:0!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p{margin:0!important;font-size:20px!important;font-weight:800!important;letter-spacing:.01em!important;color:#f3f7ff!important;line-height:1.1}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p b{color:var(--pl-blue2)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand::after{content:"Monitoring · Ochrona · Kontrola";font-size:11.5px;color:var(--pl-muted);letter-spacing:.02em}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm h2{font-size:22px!important;margin:4px 0 4px!important;text-align:center}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm>p:not(.authEyebrow){text-align:center;font-size:13px!important;color:var(--pl-muted)!important;margin:0 0 14px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authEyebrow{text-align:center;font-size:11px!important;margin:0!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label:not(.authCheck){display:block;font-size:12.5px!important;color:var(--pl-muted)!important;font-weight:500;margin:0 0 12px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label:not(.authCheck) input:not([type="checkbox"]):not([type="radio"]){
+  display:block;width:100%;height:46px!important;margin-top:6px!important;padding:0 14px 0 42px!important;font-size:14px!important;
+  background-color:rgba(3,8,18,.7)!important;background-repeat:no-repeat!important;background-position:14px 50%!important;background-size:18px 18px!important;
+}
+/* Ikony pól (dekoracja, bez wpływu na wartości). */
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label>input[type="email"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.5' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E")!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label :is(input[type="password"],input[name="password"],input[name="password_repeat"]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='10.5' width='14' height='10' rx='2'/%3E%3Cpath d='M8 10.5V7.5a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E")!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label :is(input[name="first_name"],input[name="last_name"]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.5' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E")!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label :is(input[name="address_line"],input[name="postal_code"]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z'/%3E%3C/svg%3E")!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label>input[type="tel"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='7' y='2.5' width='10' height='19' rx='2'/%3E%3Cpath d='M11 18h2'/%3E%3C/svg%3E")!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .hsPassToggle{
+  height:32px!important;padding:0 10px!important;font-size:12px!important;color:var(--pl-muted)!important;
+  background:transparent!important;border:1px solid var(--pl-line2)!important;border-radius:8px!important;
+}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .hsPassToggle:hover{color:#fff!important;border-color:var(--pl-blue)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{width:100%;height:48px!important;font-size:15px!important;margin-top:6px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authTextBtn{display:block;width:100%;text-align:center;font-size:13px!important;margin-top:12px!important;background:transparent!important;border:0!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider{color:var(--pl-muted)!important;font-size:12.5px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider::before,
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider::after{background:var(--pl-line2)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton{
+  height:46px!important;background:rgba(3,8,18,.7)!important;color:var(--pl-text)!important;border:1px solid var(--pl-line2)!important;font-weight:600!important;
+}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton:hover{border-color:var(--pl-blue)!important;background:var(--pl-hover)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck{display:flex!important;gap:10px;align-items:flex-start;font-size:12.5px!important;color:var(--pl-muted)!important;margin:4px 0 10px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck a{color:var(--pl-blue2)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGrid{gap:12px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authClose{width:36px!important;height:36px!important}
+
+/* PIN: zdjęcie w tle, pola cyfr jako kwadraty, niebieskie zatwierdzenie. */
+html:not(.policeCommand):not(.usMilitary) body .lockScreen{
+  background:
+    radial-gradient(ellipse 760px 520px at 50% 40%,rgba(3,8,18,.2),rgba(3,8,18,.78) 78%),
+    linear-gradient(180deg,rgba(3,8,18,.3),rgba(3,8,18,.85)),
+    url("assets/auth-night.webp") center/cover no-repeat,#030812!important;
+}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinCard{
+  width:min(380px,calc(100vw - 24px))!important;padding:28px 28px 24px!important;
+  background:linear-gradient(180deg,rgba(10,22,40,.92),rgba(7,17,32,.94))!important;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-color:rgba(91,140,255,.28)!important;
+}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinLogo{width:64px!important;height:64px!important;margin:0 auto 10px!important;display:grid;place-items:center}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinLogo img{width:44px!important;height:44px!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinCard h2{font-size:22px!important;margin:4px 0 4px!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinDots{gap:8px!important;margin:20px 0 10px!important;width:100%}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinDots i{
+  display:block!important;flex:0 1 46px;width:auto!important;height:auto!important;aspect-ratio:1;min-width:0;border-radius:10px!important;border:1px solid var(--pl-line2)!important;background:rgba(3,8,18,.7)!important;position:relative;
+}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinDots i.on{border-color:var(--pl-blue2)!important;background:rgba(47,107,255,.14)!important;box-shadow:0 0 0 3px rgba(47,107,255,.18)}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinDots i.on::after{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad{gap:10px!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button{min-height:56px!important;border-radius:10px!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button[data-k="ok"]{background:var(--pl-blue)!important;border-color:var(--pl-blue)!important;color:#fff!important;box-shadow:0 12px 28px -14px rgba(47,107,255,.9)!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button[data-k="ok"]:hover:not(:disabled){background:var(--pl-blue2)!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button[data-k="del"]{background:rgba(3,8,18,.7)!important;color:var(--pl-muted)!important}
