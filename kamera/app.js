@@ -79,7 +79,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "269"; // musi się zgadzać z version.json
+const VERSION = "270"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2171,7 +2171,14 @@ function showViewer() {
   $("roleBtn").textContent = "To jest komputer z kamerą — nadawaj z niego";
   $("roleBtn").hidden = !IS_DESKTOP;
   applyControlVisibility();
-  viewer.start();
+  if (MOBILE_OWNER_APP) {
+    document.addEventListener("hs-mobile-view-change", event => {
+      if (event.detail?.view === "camera") viewer.start();
+      else viewer.stop();
+    });
+  } else {
+    viewer.start();
+  }
 }
 
 // ---------- Przyciski ----------
@@ -2282,7 +2289,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "185";
+  const SERVICE_WORKER_BUILD = "186";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
