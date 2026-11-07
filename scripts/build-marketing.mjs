@@ -44,7 +44,33 @@ const accountReturnBridge = `<script>(function(){
   target.hash = location.hash;
   location.replace(target.href);
 })();</script>`;
-const publicHome=head('Monitoring domu i podgląd','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','').replace('</head>',accountReturnBridge+'<script src="public-entry.js?v=5"></script><link rel="manifest" href="manifest.webmanifest?v=3"></head>')+publicContent+'\n</body></html>\n';
+// Tylko uruchomienie z ikony PWA: reklama -> publiczna strona -> logowanie -> PIN.
+// Synchronizacja w head unika migniecia strony przed reklamą; bez JS jest zwykłe WWW.
+const mobileSplashHead = '<link rel="stylesheet" href="mobile-app-splash.css?v=3">'+
+  '<script>(function(){const q=new URLSearchParams(location.search);'+
+  'if(q.has("auth")||q.has("code")||q.has("panel")||q.has("odbiorca")||location.hash)return;'+
+  'const phone=/Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent||"")||'+
+  '(matchMedia("(max-width:900px)").matches&&(navigator.maxTouchPoints||0)>0);'+
+  'if(!phone)return;'+
+  'window.__hsMobileSplashStarted=performance.now();'+
+  'document.documentElement.classList.add("hsMobileLaunch");'+
+  'setTimeout(()=>document.documentElement.classList.remove("hsMobileLaunch"),30000);'+
+  '})();</script><script defer src="mobile-app-splash.js?v=3"></script>';
+const mobileSplashBody = '<aside id="hsMobileSplash" aria-label="Reklama HOME SECURITY przed strona glowna">'+
+  '<div class="hsMobileSplashSlides" role="group" aria-label="Trzy grafiki promocyjne HOME SECURITY">'+
+  '<img class="hsMobileSplashImage is-active" width="900" height="506" src="assets/splash-placeholder.svg" data-src="assets/home-security-loading.webp"'+
+  ' alt="HOME SECURITY: Inteligentna ochrona domu. Ilustracja reklamowa, nie transmisja z kamery.">'+
+  '<img class="hsMobileSplashImage" width="900" height="506" src="assets/splash-placeholder.svg" data-src="assets/home-security-ad-02.webp"'+
+  ' alt="Twój dom i Twoje bezpieczeństwo. Ilustracja promocyjna domu, nie aktywny system alarmowy.">'+
+  '<img class="hsMobileSplashImage" width="900" height="506" src="assets/splash-placeholder.svg" data-src="assets/home-security-ad-03.webp"'+
+  ' alt="Ilustracja monitorowanego domu z graficzną kopułą ochronną.">'+
+  '</div><div class="hsMobileSplashStatus"><div><strong>HOME SECURITY</strong>'+
+  '<small>Prezentacja aplikacji · chwilę i przejdziesz do strony głównej</small>'+
+  '<span class="hsMobileSplashBar" aria-hidden="true"></span></div>'+
+  '<button type="button">Pomiń</button></div></aside>';
+const publicHome=head('Monitoring domu i podgląd','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','')
+ .replace('</head>',accountReturnBridge+'<script src="public-entry.js?v=6"></script><link rel="manifest" href="manifest.webmanifest?v=4">'+mobileSplashHead+'</head>')
+ +mobileSplashBody+publicContent+'\n</body></html>\n';
 await emit('index.html',publicHome);
 // Keep old inbound product links working; canonical points at the single homepage.
 await emit('o-systemie.html',publicHome);
