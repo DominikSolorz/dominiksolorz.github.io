@@ -44,7 +44,24 @@ const accountReturnBridge = `<script>(function(){
   target.hash = location.hash;
   location.replace(target.href);
 })();</script>`;
-const publicHome=head('Monitoring domu i podgląd','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','').replace('</head>',accountReturnBridge+'<script src="public-entry.js?v=5"></script><link rel="manifest" href="manifest.webmanifest?v=3"></head>')+publicContent+'\n</body></html>\n';
+// Tylko uruchomienie z ikony PWA: reklama -> publiczna strona -> logowanie -> PIN.
+// Synchronizacja w head unika migniecia strony przed reklamą; bez JS jest zwykłe WWW.
+const mobileSplashHead = '<link rel="stylesheet" href="mobile-app-splash.css?v=1">'+
+  '<script>(function(){const q=new URLSearchParams(location.search);'+
+  'if(q.get("app")!=="mobile-home"||q.has("auth")||q.has("code")||q.has("panel")||location.hash)return;'+
+  'window.__hsMobileSplashStarted=performance.now();'+
+  'document.documentElement.classList.add("hsMobileLaunch");'+
+  'setTimeout(()=>document.documentElement.classList.remove("hsMobileLaunch"),8000);'+
+  '})();</script><script defer src="mobile-app-splash.js?v=1"></script>';
+const mobileSplashBody = '<aside id="hsMobileSplash" aria-label="Reklama przy uruchamianiu HOME SECURITY">'+
+  '<img class="hsMobileSplashImage" width="768" height="432" data-src="assets/home-security-loading.webp"'+
+  ' alt="HOME SECURITY — Inteligentna ochrona domu. Wizualizacja reklamowa, nie aktywna kamera.">'+
+  '<div class="hsMobileSplashStatus"><div><strong>HOME SECURITY</strong>'+
+  '<small>Uruchamianie aplikacji…</small><span class="hsMobileSplashBar" aria-hidden="true"></span></div>'+
+  '<button type="button">Pomiń</button></div></aside>';
+const publicHome=head('Monitoring domu i podgląd','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','')
+ .replace('</head>',accountReturnBridge+'<script src="public-entry.js?v=6"></script><link rel="manifest" href="manifest.webmanifest?v=4">'+mobileSplashHead+'</head>')
+ +mobileSplashBody+publicContent+'\n</body></html>\n';
 await emit('index.html',publicHome);
 // Keep old inbound product links working; canonical points at the single homepage.
 await emit('o-systemie.html',publicHome);
