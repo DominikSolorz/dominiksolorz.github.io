@@ -15,6 +15,14 @@
 <script src="core/client-layout.js?v=3"></script>
 <script>
   const routeParams = new URLSearchParams(location.search);
+  // Starsze instalacje PWA otwieraja panel bezposrednio. Przekieruj wylacznie
+  // ich domyslny start, nie skroty DVR/kamery, konta ani wersje Windows.
+  const legacyPhoneHome = routeParams.get('panel') === 'owner'
+    && routeParams.get('ui') === 'phone'
+    && [...routeParams.keys()].length === 2
+    && (window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true)
+    && window.__HOME_SECURITY_DESKTOP__ !== true && !window.chrome?.webview;
+  if (legacyPhoneHome) location.replace(new URL('./index.html?app=mobile-home',location.href).href);
   const desktopParam = routeParams.get("desktop");
   // Użytkownik może świadomie wybrać układ, niezależnie od tego, z jakiego
   // urządzenia korzysta. Wybór jest tylko ustawieniem wyglądu i nie zmienia
@@ -70,7 +78,7 @@
 </script>
 <title>HOME SECURITY — monitoring domu</title>
 <meta name="description" content="HOME SECURITY: monitoring domowy z programem Windows, podglądem na telefonie, lokalnym archiwum i diagnostyką połączenia. Poznaj funkcje i wymagania.">
-<link rel="manifest" href="manifest.webmanifest?v=3">
+<link rel="manifest" href="manifest.webmanifest?v=4">
 <link rel="icon" href="icons/kamera-192.svg" type="image/svg+xml">
 <link rel="stylesheet" href="marketing.css?v=18">
 <link rel="stylesheet" href="marketing-motion.css?v=2">
