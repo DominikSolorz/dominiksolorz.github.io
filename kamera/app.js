@@ -34,6 +34,7 @@ import { createWebUpdates } from "./core/web-updates.mjs?v=3";
 import { freshUpdateURL } from "./core/update-navigation.mjs?v=1";
 import { NativeAgentClient } from "./communication/native-agent-client.mjs";
 import { createAgentTelemetry } from "./communication/agent-telemetry.mjs?v=2";
+import { createReconnectingChannel } from "./core/reconnecting-channel.mjs?v=1";
 import { captureEventFrame } from "./workspace-panels.mjs?v=4";
 import { CommandClient, CommandDispatcher } from "./communication/commands.mjs";
 import { createPeerDiagnostics } from "./core/peer-diagnostics.mjs";
@@ -936,31 +937,15 @@ window.chrome?.webview?.addEventListener("message", async event => {
 
 // ---------- Kanał sygnalizacji z automatycznym wznawianiem ----------
 function reconnectingChannel({ onSignal, onSubscribed, label }) {
-  let channel = null, attempt = 0, timer = null, active = false;
-  function connect() {
-    if (!active) return;
-    clearTimeout(timer);
-    const old = channel; channel = null;
-    if (old) supabase.removeChannel(old);
-    const ch = supabase.channel(CHANNEL, { config: { broadcast: { self: false } } });
-    ch.on("broadcast", { event: "signal" }, ({ payload }) => Promise.resolve(onSignal(payload)).catch(e => setStatus(`Błąd połączenia: ${errText(e)}`)));
-    channel = ch;
-    ch.subscribe(s => {
-      if (channel !== ch) return;
-      if (s === "SUBSCRIBED") { attempt = 0; onSubscribed(ch); }
-      else if (s === "CHANNEL_ERROR" || s === "TIMED_OUT" || s === "CLOSED") {
-        const d = retryDelay(attempt++);
-        setStatus(`${label}: utracono połączenie z serwerem. Ponawiam za ${Math.round(d / 1000)} s…`);
-        clearTimeout(timer); timer = setTimeout(connect, d);
-      }
-    });
-  }
-  return {
-    get channel() { return channel; },
-    start() { active = true; attempt = 0; connect(); },
-    reconnect() { attempt = 0; connect(); },
-    stop() { active = false; clearTimeout(timer); const c = channel; channel = null; if (c) supabase.removeChannel(c); },
-  };
+  return createReconnectingChannel({
+    client: supabase,
+    name: CHANNEL,
+    onSignal,
+    onSubscribed,
+    delayForAttempt: retryDelay,
+    onError: error => setStatus(`Błąd połączenia: ${errText(error)}`),
+    onRetry: delay => setStatus(`${label}: utracono połączenie z serwerem. Ponawiam za ${Math.round(delay / 1000)} s…`),
+  });
 }
 const send = (ch, payload) => ch?.send({ type: "broadcast", event: "signal", payload });
 
@@ -2297,7 +2282,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "183";
+  const SERVICE_WORKER_BUILD = "184";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{

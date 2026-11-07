@@ -84,8 +84,8 @@ test('public pages follow the system light preference and preserve dark illustra
 
 test('PWA refreshes marketing appearance without changing versioned recorder runtime',async()=>{
   const [sw,app,panel]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/panel.html'].map(read));
-  assert.match(sw,/kamera-domowa-shell-v183/);
-  assert.match(app,/SERVICE_WORKER_BUILD = "183"/);
+  assert.match(sw,/kamera-domowa-shell-v184/);
+  assert.match(app,/SERVICE_WORKER_BUILD = "184"/);
   const css=panel.match(/marketing\.css\?v=\d+/)?.[0];
   assert.ok(css);
   assert.ok(sw.includes('./'+css));
