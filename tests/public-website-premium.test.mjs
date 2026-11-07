@@ -66,10 +66,24 @@ test('public marketing accents use the blue-purple-teal theme without recoloring
   assert.match(panel,/id="app" hidden/);
 });
 
+test('public pages follow the system light preference and preserve dark illustrative previews',async()=>{
+  const css=await read('kamera/marketing.css');
+  const light=css.slice(css.lastIndexOf('@media(prefers-color-scheme:light)'));
+  assert.ok(light.includes('--m-bg:#f5f7fc'));
+  assert.ok(light.includes('color-scheme:light'));
+  assert.ok(light.includes('backdrop-filter:blur(16px)'));
+  assert.ok(light.includes('.mktPublicJourney'));
+  assert.ok(light.includes('.mktMobileMenu>nav'));
+  assert.ok(!light.includes('#app'),'light theme must never target the authenticated camera workspace');
+  assert.ok(!light.includes('.mktDemo')&&!light.includes('.mktPublicPreviewStage'),
+    'illustrative product previews retain their dark, high-contrast UI');
+  assert.ok(css.slice(0,css.lastIndexOf('@media(prefers-color-scheme:light)')).includes('color-scheme:dark'));
+});
+
 test('PWA refreshes marketing appearance without changing versioned recorder runtime',async()=>{
   const [sw,app,panel]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/panel.html'].map(read));
-  assert.match(sw,/kamera-domowa-shell-v182/);
-  assert.match(app,/SERVICE_WORKER_BUILD = "182"/);
+  assert.match(sw,/kamera-domowa-shell-v183/);
+  assert.match(app,/SERVICE_WORKER_BUILD = "183"/);
   const css=panel.match(/marketing\.css\?v=\d+/)?.[0];
   assert.ok(css);
   assert.ok(sw.includes('./'+css));

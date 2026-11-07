@@ -671,3 +671,119 @@
  #publicHome .mktHomeDestinations article{transition:none}
  #publicHome .mktHomeDestinations article:hover{transform:none}
 }
+
+@media(prefers-color-scheme:light){
+ #publicHome.mktSite,.marketingPage{
+   --m-bg:#f5f7fc;
+   --m-surface:#fff;
+   --m-line:#d8dfeb;
+   --m-text:#172033;
+   --m-muted:#47536a;
+   --m-gold:#4338ca;
+   color-scheme:light;
+   color:var(--m-text);
+   background:
+     radial-gradient(ellipse 760px 520px at 12% 88%,rgba(13,148,136,.07),transparent 72%),
+     radial-gradient(ellipse 940px 650px at 86% 0%,rgba(99,102,241,.08),transparent 72%),
+     var(--m-bg)!important;
+ }
+ #publicHome .mktMain,.marketingPage .mktMain{
+   background:
+     radial-gradient(ellipse 760px 520px at 12% 88%,rgba(13,148,136,.07),transparent 72%),
+     radial-gradient(ellipse 940px 650px at 86% 0%,rgba(99,102,241,.08),transparent 72%),
+     var(--m-bg)!important;
+ }
+ #publicHome .mktHeader,.marketingPage .mktHeader{
+   background:rgba(255,255,255,.88);
+   border-color:var(--m-line);
+   box-shadow:0 8px 26px rgba(30,41,59,.06);
+   backdrop-filter:blur(16px);
+   -webkit-backdrop-filter:blur(16px);
+ }
+ #publicHome .mktBrand b,.marketingPage .mktBrand b{color:#4f46e5}
+ #publicHome .mktHeader nav,.marketingPage .mktHeader nav,
+ #publicHome .mktLogin,.marketingPage .mktLogin{color:#27334a}
+ #publicHome .mktHeader nav a:hover,.marketingPage .mktHeader nav a:hover,
+ #publicHome .mktFooter a:hover,.marketingPage .mktFooter a:hover{color:#4338ca}
+ #publicHome .mktHero h1,.marketingPage .mktPageTitle{color:#111827}
+ #publicHome .mktHero h1 em{
+   background:linear-gradient(95deg,#6d28d9 4%,#4f46e5 54%,#0f766e 100%);
+   -webkit-background-clip:text;
+   background-clip:text;
+   -webkit-text-fill-color:transparent;
+ }
+ #publicHome .mktHero .mktLead,.marketingPage .mktPageLead{color:#47536a}
+ #publicHome .mktEyebrow{color:#4338ca}
+ #publicHome .mktEyebrow>span{background:#0f766e}
+ #publicHome .mktHeroFacts span{color:#334155;background:rgba(255,255,255,.8);border-color:#cbd5e1}
+ #publicHome .mktHeroFacts span:before{background:#0f766e}
+ #publicHome .mktHero .mktFine,#publicHome .mktStartLinks,
+ #publicHome .mktCapabilityStrip span,.marketingPage .mktArticle{color:#334155}
+ #publicHome .mktStartLinks a,#publicHome .mktTextLink,
+ .marketingPage .mktArticle a,.marketingPage .mktTextLink{color:#4338ca}
+ #publicHome .mktCapabilityStrip{background:rgba(255,255,255,.82);border-color:var(--m-line)}
+ #publicHome .mktCapabilityStrip b{color:#4338ca}
+ #publicHome .mktPublicSectionHead h2,#publicHome .mktPublicJourney h2,
+ #publicHome .mktHomeDestinations h2,.marketingPage :is(.mktPageTitle,.mktArticle h2,.mktArticle h3,.mktContactLayout h2,.mktContactReasons h3,.mktFeature h3,.mktSection h2){
+   color:#172033;
+ }
+ #publicHome .mktPublicSectionHead h2 em,#publicHome .mktPublicJourney h2 em{color:#4f46e5}
+ #publicHome .mktPublicSectionHead>p,#publicHome .mktPublicFeatureGrid p,
+ #publicHome .mktPublicJourneyIntro>p:not(.mktEyebrow),
+ #publicHome .mktPublicJourneySteps p,.marketingPage .mktArticle p,
+ .marketingPage .mktArticle li,.marketingPage .mktContactLayout p,
+ .marketingPage .mktHelpChoices p,.marketingPage .mktFeature p{color:#47536a}
+ #publicHome :is(.mktPublicSpotlight,.mktPublicFeatureCard,.mktHomeDestinations article,.mktPublicFinal),
+ .marketingPage :is(.mktFeature,.mktHelpChoices article,.mktArticleAside,.mktContactForm,.mktContactReasons article,.mktReadingGuide){
+   color:#172033;
+   background:rgba(255,255,255,.88);
+   border-color:#d6deeb;
+   box-shadow:0 14px 36px rgba(30,41,59,.08);
+ }
+ #publicHome .mktPublicJourney{
+   color:#172033;
+   background:linear-gradient(115deg,#eef2ff,#f0fdfa);
+   border-color:#d6deeb;
+ }
+ #publicHome .mktPublicJourneySteps li{border-color:#d4dbea}
+ #publicHome .mktPublicJourneySteps li>span{color:#4338ca}
+ #publicHome .mktPublicFinal p:not(.mktEyebrow),
+ #publicHome .mktPublicFinal small{color:#47536a}
+ #publicHome .mktPublicFinalActions .mktTextLink{color:#4338ca}
+ #publicHome .mktPublicFeatureIcon{background:#eef2ff;border-color:#c7d2fe;color:#4338ca}
+ #publicHome .mktFooter,.marketingPage .mktFooter{border-color:var(--m-line)}
+ #publicHome .mktFooter p,.marketingPage .mktFooter p,
+ #publicHome .mktFooter nav,.marketingPage .mktFooter nav{color:#47536a}
+ #publicHome .mktFooter nav b,.marketingPage .mktFooter nav b{color:#172033}
+ .marketingPage .mktNote{color:#334155;background:#eef2ff;border-color:#6366f1}
+ .marketingPage .mktArticleMeta{color:#47536a;border-color:var(--m-line)}
+ .marketingPage .mktContactForm :is(input,select,textarea){
+   color:#172033;background:#fff;border-color:#b9c4d6;
+ }
+ .marketingPage .mktContactForm :is(input,select,textarea)::placeholder{color:#64748b}
+ #publicHome .mktButtonQuiet,.marketingPage .mktButtonQuiet{
+   color:#27334a!important;background:#fff;border-color:#aab6ca;box-shadow:none;
+ }
+ #publicHome .mktButtonQuiet:hover,.marketingPage .mktButtonQuiet:hover{
+   color:#312e81!important;background:#eef2ff;border-color:#818cf8;
+ }
+ #publicHome :is(a,button,input,select,textarea,summary):focus-visible,
+ .marketingPage :is(a,button,input,select,textarea,summary):focus-visible{
+   outline-color:#4338ca!important;
+ }
+ @media(max-width:760px){
+   #publicHome .mktHeader,.marketingPage .mktHeader{background:rgba(255,255,255,.96)}
+   #publicHome .mktMobileMenu>summary,.marketingPage .mktMobileMenu>summary{
+     color:#3730a3;background:#eef2ff;border-color:#a5b4fc;
+   }
+   #publicHome .mktMobileMenu[open]>summary,.marketingPage .mktMobileMenu[open]>summary{
+     background:#e0e7ff;border-color:#6366f1;
+   }
+   #publicHome .mktMobileMenu>nav,.marketingPage .mktMobileMenu>nav{
+     color:#172033;background:#fff;border-color:#c7d2fe;box-shadow:0 18px 40px #1e293b24;
+   }
+   #publicHome .mktMobileMenu>nav a,.marketingPage .mktMobileMenu>nav a{color:#27334a}
+   #publicHome .mktMobileMenu>nav .mktMenuGroupLabel,
+   .marketingPage .mktMobileMenu>nav .mktMenuGroupLabel{color:#4338ca}
+ }
+}
