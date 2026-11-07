@@ -54,3 +54,7 @@ SQLite działa w WAL. Polecenie jest zapisywane jako executing przed handlerem i
 Tabela commands nie ma jeszcze polityki retencji. Tabele segments i upload_jobs to schemat przyszłych repozytoriów, nie działający rejestrator ani uploader. Przed migracją produkcyjną potrzebne są wersjonowane migracje, retencja dziennika, autoryzacja operacji modyfikujących i protokół instalowania/nadzorowania agenta.
 
 Nie migrowano tokenu Apps Script, nie uruchomiono FFmpeg, nie dodano obsługi WebRTC w agencie i nie przełączono obecnego silnika app.js. Wykonano instrumentowany test rzeczywistego WebView2 i osobnego procesu agenta: wyniki oraz ograniczenia opisuje BRIDGE-INTEGRATION.md. Ręczna kontrola wizualna pozostaje do wykonania.
+
+## Nawigacja po kodzie agenta
+
+[Kompletny spis plików agenta i dokumentów technicznych](KATALOG-PLIKOW.md). Wybierz dokładną klasę po jej roli, a następnie sprawdź zależności i testy.
