@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 globalThis.crypto??=webcrypto;
 import {deriveKey} from '../kamera/pin.js';
 import {keyHash,wrapAccessKey} from '../kamera/account-security.mjs';
-import {createPairingCode,pairingProof,equalsConstantTime,unlockWithDerivedPinKey,isFreshRequest} from '../kamera/remote-unlock-protocol.mjs';
+import {createPairingCode,pairingProof,equalsConstantTime,unlockWithDerivedPinKey,isFreshRequest,createUnlockReceipt} from '../kamera/remote-unlock-protocol.mjs';
 import {generateHostIdentity,generatePhoneIdentity,exportHostPublicKey,exportPhonePublicKey,encryptUnlockGrant,decryptUnlockGrant} from '../kamera/remote-unlock-crypto.mjs';
 
 const source=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
@@ -50,17 +50,39 @@ test('PWA and native host use same versioned PIN and remote UI without exposing 
  'kamera/remote-unlock-host.mjs','supabase/migrations/20261107103600_remote_phone_unlock.sql','kamera/version.json'].map(source));
  assert.match(app,/createRemoteUnlockHost/);assert.match(app,/mountRemoteUnlockPhone/);
  assert.match(app,/requireAccess\(\{bindRemote:callback=>remoteHost\?\.bindUnlock\(callback\)\}\)/);
- assert.match(panel,/app\.js\?v=271/);assert.match(sw,/\.\/app\.js\?v=271/);
- assert.match(sw,/kamera-domowa-shell-v187/);assert.match(app,/SERVICE_WORKER_BUILD = "187"/);
- assert.equal(JSON.parse(version).version,'271');
+ assert.match(panel,/app\.js\?v=272/);assert.match(sw,/\.\/app\.js\?v=272/);
+ assert.match(sw,/kamera-domowa-shell-v188/);assert.match(app,/SERVICE_WORKER_BUILD = "188"/);
+ assert.equal(JSON.parse(version).version,'272');
  assert.match(panel,/remote-unlock-ui\.css\?v=1/);
  assert.match(lock,/sessionStorage\.setItem\('kamera-dostep',key\)/);
  assert.doesNotMatch(lock,/window\.__HOME_SECURITY_REMOTE_UNLOCK/,'never install global unlock callback');
- assert.match(phone,/awaitHost\(grant\.id,'approved'\)/);
+ assert.match(phone,/awaitHost\(grant\.id,'approved',expectedReceipt\)/);
  assert.match(phone,/PIN pozostaje na telefonie/);
  assert.match(host,/window\.confirm\('HOME SECURITY/,'physical confirmation on Windows must be mandatory');
  assert.match(host,/unlockWithDerivedPinKey\(pinKey,security,ownerId\)/);
  assert.match(db,/enable row level security/i);
  assert.match(db,/owner_id=\(select auth\.uid\(\)\)/);
  assert.doesNotMatch(phone,/payload:\{pin\}/);
+});
+
+test('Windows approval requires PIN-derived HMAC receipt bound to this exact request',async()=>{
+ const pinKey=randomBytes(32).toString('base64');
+ const ctx={requestId:randomUUID(),userId:randomUUID(),hostId:randomUUID(),phoneId:randomUUID()};
+ const expected=await createUnlockReceipt(pinKey,ctx);
+ assert.match(expected,/^[a-f0-9]{64}$/);
+ assert.equal(equalsConstantTime(expected,await createUnlockReceipt(pinKey,ctx)),true);
+ assert.equal(equalsConstantTime(expected,undefined),false,'plain approved row is NOT confirmation');
+ assert.equal(equalsConstantTime(expected,'0'.repeat(64)),false,'forged receipt fails closed');
+ for(const field of Object.keys(ctx)){
+   assert.equal(equalsConstantTime(expected,await createUnlockReceipt(pinKey,{...ctx,[field]:randomUUID()})),false,'receipt must bind '+field);
+ }
+ assert.equal(equalsConstantTime(expected,await createUnlockReceipt(randomBytes(32).toString('base64'),ctx)),false,'another account key cannot acknowledge Windows');
+});
+test('live phone rejects database-approved state without cryptographic host proof',async()=>{
+ const [phone,host,sw]=await Promise.all(['kamera/remote-unlock-phone.mjs','kamera/remote-unlock-host.mjs','kamera/sw.js'].map(source));
+ assert.match(phone,/equalsConstantTime\(data\.payload\?\.receipt,expectedReceipt\)/);
+ assert.match(phone,/awaitHost\(grant\.id,'approved',expectedReceipt\)/);
+ assert.match(host,/if\(callback\(accessKey\)\)/);
+ assert.match(host,/await mark\(row,'approved',receipt\)/);
+ for(const module of ['remote-unlock-phone.mjs?v=2','remote-unlock-host.mjs?v=2','remote-unlock-protocol.mjs?v=2']) assert.ok(sw.includes(module));
 });
