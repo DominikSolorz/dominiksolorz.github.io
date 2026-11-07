@@ -10,23 +10,23 @@ To mapa nawigacji po strukturze repozytorium na gałęzi dokumentacyjnej (stan s
 | [`agent-contracts/`](../agent-contracts/) | Kontrakty komunikacji agenta | 3 | Tak |
 | [`agent-tests/`](../agent-tests/) | Testy natywnego agenta | 10 | Tak |
 | [`agent-tests/fixtures/`](../agent-tests/fixtures/) | Testy natywnego agenta | 1 | Nie (podział narzędzia lub zasobów) |
-| [`agent/`](../agent/) | Usługa agenta Windows | 24 | Tak |
+| [`agent/`](../agent/) | Usługa agenta Windows | 25 | Tak |
 | [`aplikacja-desktopowa/`](../aplikacja-desktopowa/) | Punkt wejścia do części Windows | 1 | Tak |
 | [`aplikacja-mobilna/`](../aplikacja-mobilna/) | Punkt wejścia do telefonu | 1 | Tak |
 | [`design/`](../design/) | Makiety i materiały projektowe | 3 | Tak |
 | [`design/documents/`](../design/documents/) | Wzorce dokumentów | 7 | Tak |
 | [`design/marketing/`](../design/marketing/) | Wzorce i dane strony publicznej | 18 | Tak |
-| [`desktop-client/`](../desktop-client/) | Natywna aplikacja Windows | 16 | Tak |
+| [`desktop-client/`](../desktop-client/) | Natywna aplikacja Windows | 17 | Tak |
 | [`desktop-client/AgentTestAssets/`](../desktop-client/AgentTestAssets/) | Natywna aplikacja Windows | 2 | Nie (podział narzędzia lub zasobów) |
 | [`desktop-client/installer/`](../desktop-client/installer/) | Budowanie instalatora Windows | 4 | Tak |
 | [`desktop-client/installer/brand/`](../desktop-client/installer/brand/) | Zasoby graficzne instalatora | 4 | Tak |
-| [`docs/`](../docs/) | Dokumentacja, wersje i historia | 32 | Tak |
+| [`docs/`](../docs/) | Dokumentacja, wersje i historia | 33 | Tak |
 | [`docs/ui-193/`](../docs/ui-193/) | Dokumentacja, wersje i historia | 12 | Tak |
 | [`docs/ui-220/`](../docs/ui-220/) | Dokumentacja, wersje i historia | 1 | Tak |
 | [`drive-sync/`](../drive-sync/) | Wysyłanie nagrań na Dysk Google | 3 | Tak |
 | [`hosting/`](../hosting/) | Osobna witryna Vercel | 1 | Tak |
 | [`hosting/public-site/`](../hosting/public-site/) | Osobna witryna Vercel | 5 | Tak |
-| [`kamera/`](../kamera/) | Panel kamer, strona i PWA | 112 | Tak |
+| [`kamera/`](../kamera/) | Panel kamer, strona i PWA | 113 | Tak |
 | [`kamera/assets/`](../kamera/assets/) | Panel kamer, strona i PWA | 5 | Tak |
 | [`kamera/blog/`](../kamera/blog/) | Publiczne poradniki | 5 | Tak |
 | [`kamera/communication/`](../kamera/communication/) | Komunikacja panelu z agentem | 6 | Tak |
@@ -76,7 +76,7 @@ To mapa nawigacji po strukturze repozytorium na gałęzi dokumentacyjnej (stan s
 | [`supabase/functions/home-support/`](../supabase/functions/home-support/) | Funkcje serwerowe Supabase | 2 | Nie (podział narzędzia lub zasobów) |
 | [`supabase/migrations/`](../supabase/migrations/) | Migracje bazy SQL | 5 | Tak |
 | [`supabase/templates/`](../supabase/templates/) | Szablony wiadomości | 2 | Tak |
-| [`tests/`](../tests/) | Testy regresji aplikacji | 87 | Tak |
+| [`tests/`](../tests/) | Testy regresji aplikacji | 88 | Tak |
 
 ## Ważne reguły
 
