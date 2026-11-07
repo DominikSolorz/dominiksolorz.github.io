@@ -1,7 +1,25 @@
-# Update channels
+# HOME SECURITY — aktualizacje: stan obowiązujący
 
-- Published Windows builds are checked by the release workflow on source changes and at four scheduled times daily. This publishes downloads; it does not install them on user PCs.
-- Installed Windows checks at startup and every six hours while running. After the account panel is unlocked, a current full package downloads automatically in the background and is verified with SHA-256. A pending request is committed atomically. The running program, camera and recorder are never stopped by this download. Installation and rollback occur only on the next normal program launch, before capture starts; the package is verified again before replacement. The button retries a failed download.
-- Web/PWA has its own safe refresh mechanism. A running transmitter or unfinished form must not be reloaded automatically.
-- Live replacement of a running native/UI bundle and automatic installation of small delta packages are NOT implemented. The current manifest offers full Windows ZIP packages. Do not advertise unattended minor Windows updates until a bounded, verified delta format, compatibility checks, rollback and recorder-safe application exist.
-- Browser layout is detected locally. Account entry no longer requires selecting an OS/device. Authentication, profile consent, existing PIN gate and folder permission remain separate.
+Dokument odświeżony 7.11.2026. Dawny opis sprawdzania co 6 godzin i wymaganego ręcznego restartu jest nieaktualny dla Windows 1.4.58 i nowszych. Aktualny numer wydania sprawdzaj w `kamera/desktop-update.json`, a nie w tym dokumencie.
+
+## Kto tworzy nowe wydanie
+
+`.github/workflows/desktop-scheduled-release.yml` sprawdza, czy zmieniły się źródła wymagające nowego natywnego wydania; ma też harmonogram czterech kontroli dziennie i możliwość ręcznego uruchomienia. To budowanie i publikowanie na GitHub, NIE aktualizacja komputera użytkownika. Workflow zapisuje numer Windows, instalator i ZIP oraz sumy SHA-256 w manifeście. Nie nadpisuj tego ręcznie.
+
+## Co robi zainstalowany Windows
+
+W wersji 1.4.58+ program sprawdza dostępność przy starcie, co 10 minut podczas działania i po powrocie do aktywnego okna, z ograniczeniem częstotliwości. Nowa wersja wyświetla wyraźne pytanie po lokalnym odblokowaniu PIN-em. Pobieranie wymaga zgody. Po pobraniu i weryfikacji SHA-256 program żąda zapisania ostatniego fragmentu nagrania, a dopiero po potwierdzeniu uruchamia zewnętrzny, rollback-safe instalator. Ten czeka na zamknięcie głównego procesu, wymienia pliki i automatycznie wznawia aplikację.
+
+Brak potwierdzenia zapisu, błąd sprawdzania, przerwa internetowa lub brak gotowego panelu NIE powinny wymuszać zamknięcia programu. W takim przypadku zweryfikowany pakiet pozostaje do ponownej próby „Zainstaluj teraz”. W trakcie instalacji powstaje przerwa w bieżącym podglądzie, dlatego zamknięcie nagrywania musi być bezpieczne. Aktualizator nadal wymaga testu na konkretnym fizycznym komputerze i nie może gwarantować zerowej przerwy.
+
+Starsze instalacje mogą posiadać poprzedni kod aktualizatora i przy pierwszym przejściu na 1.4.58 wymagać ręcznego ponownego uruchomienia. Zainstalowanie nowej wersji nie następuje od samego opublikowania ZIP.
+
+## Telefon i strona
+
+Panel PWA ma własny bezpieczny mechanizm cache i wersję `kamera/version.json`; nie należy wymuszać odświeżenia trwającego nadawania ani niezapisanego formularza. Publiczna kopia Vercel posiada oddzielny numer `hosting/public-site/release.json` i nie publikuje prywatnego panelu kamer.
+
+## Zakazy i weryfikacja
+
+Nie utożsamiaj wersji Windows, PWA i Vercel. Nie przepisuj manifestu ani sum SHA-256 ręcznie. Nie kasuj archiwalnych ZIP, EXE ani punktów rollbacku bez audytu. Po zmianie wymagane są testy, zbudowany instalator, sprawdzenie manifestu i publicznego URL oraz — jeżeli ogłaszamy działanie na komputerze — test na fizycznym urządzeniu.
+
+Pełna mapa: [RELEASE-MAP.md](RELEASE-MAP.md).
