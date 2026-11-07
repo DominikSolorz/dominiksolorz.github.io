@@ -7,6 +7,18 @@
 
 To repozytorium zawiera cały system monitoringu HOME SECURITY: aplikację Windows, kamerę/nagrania, panel na telefon, stronę informacyjną, połączenia, agenta systemowego, migracje bazy i mechanizm publikacji. Nie jest repozytorium LinkTalk i nie przechowuje jego wydań.
 
+## Najprostszy podział projektu
+
+Jeżeli nie wiesz, od którego pliku zacząć, wybierz jeden z trzech obszarów:
+
+| Obszar | Wejście |
+| --- | --- |
+| **APLIKACJA DESKTOPOWA** | [aplikacja-desktopowa/README.md](aplikacja-desktopowa/README.md) |
+| **APLIKACJA MOBILNA** | [aplikacja-mobilna/README.md](aplikacja-mobilna/README.md) |
+| **STRONA WWW** | [strona-www/README.md](strona-www/README.md) |
+
+Automaty GitHub mają ten sam podział w [.github/workflows/README.md](.github/workflows/README.md) i polskie prefiksy nazw w GitHub Actions.
+
 ## Dokąd wejść
 
 | Chcę zmienić | Dokładny punkt wejścia |
