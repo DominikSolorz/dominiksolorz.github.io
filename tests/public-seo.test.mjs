@@ -12,9 +12,10 @@ function redirect(path,{native=false,pending=false,installed=false,storageBlocke
   sessionStorage:{getItem:()=>{if(storageBlocked)throw Error('private mode');return pending?'ticket':null;}}});
  return result;
 }
-test('public root, phone/desktop variants and section anchors stay public, even in private mode',()=>{
- for(const path of ['/kamera/','/kamera/?ui=phone','/kamera/?ui=computer','/kamera/index.html#faq','/kamera/?view=desktop','/kamera/?odbiorca=invalid']){
-  assert.equal(redirect(path),undefined,path);assert.equal(redirect(path,{storageBlocked:true}),undefined,path);
+test('public entries never redirect the current GitHub Pages homepage to a stale mirror',()=>{
+ for(const path of ['/kamera/','/kamera/?ui=phone','/kamera/?ui=computer','/kamera/?view=desktop','/kamera/?odbiorca=invalid']){
+  assert.equal(redirect(path),undefined,path);
+  assert.equal(redirect(path,{storageBlocked:true}),undefined,path);
  }
 });
 test('legacy auth, receiver and OAuth returns preserve their full query and fragment on the same origin',()=>{
@@ -41,7 +42,7 @@ test('homepage HTML is indexable without JavaScript and contains no private acco
 test('sitemap contains only unique indexable canonical pages, never panel, query aliases or drafts',async()=>{
  const sitemap=await read('kamera/sitemap.xml');
  const urls=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match=>match[1]);
- assert.equal(urls.length,7);assert.equal(new Set(urls).size,urls.length);
+ assert.equal(urls.length,16);assert.equal(new Set(urls).size,urls.length);
  for(const href of urls){
   const url=new URL(href);assert.equal(url.origin,'https://dominiksolorz.github.io');assert.equal(url.search,'');
   const path=url.pathname.endsWith('/')?url.pathname+'index.html':url.pathname;
@@ -59,7 +60,9 @@ test('sitemap contains only unique indexable canonical pages, never panel, query
 test('installed PWA identity and callback allow-list destination survive document separation',async()=>{
  const manifest=JSON.parse(await read('kamera/manifest.webmanifest'));
  assert.equal(manifest.id,'/kamera/owner-panel');
- for(const href of [manifest.start_url,...manifest.shortcuts.map(item=>item.url)])assert.equal(new URL(href,'https://dominiksolorz.github.io/kamera/').pathname,'/kamera/panel.html');
+ assert.equal(new URL(manifest.start_url,'https://dominiksolorz.github.io/kamera/').pathname,'/kamera/index.html');
+ assert.ok(manifest.start_url.includes('app=mobile-home'));
+ for(const href of manifest.shortcuts.map(item=>item.url))assert.equal(new URL(href,'https://dominiksolorz.github.io/kamera/').pathname,'/kamera/panel.html');
  const auth=await read('kamera/auth.js');
  const callback=auth.match(/const callbackUrl = (\(\) => [^;]+);/)[1];
  const fn=vm.runInNewContext(callback,{URL,location:{href:'https://dominiksolorz.github.io/kamera/panel.html?auth=register'}});

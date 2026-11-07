@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile,mkdtemp,mkdir,writeFile,rm,copyFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,resolve,dirname} from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 import {hardenPublicPages} from '../scripts/harden-public-pages.mjs';
 import {createSupportMarkup} from '../kamera/support-view.mjs';
@@ -21,7 +22,8 @@ test('Trusted Types support policy rejects all markup except its fixed source te
 test('deployment CSS is inline and strict CSP hashes match the exact deployed script bytes',async()=>{
  const temp=await mkdtemp(join(tmpdir(),'home-security-public-'));
  try{
-  const htmlPaths=['index.html','o-systemie.html','galeria.html','pomoc.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html','polityka-prywatnosci.html','regulamin.html','rodo.html'];
+  const topicFiles=JSON.parse(await read('design/marketing/pages.json')).map(p=>p.slug+'.html');
+  const htmlPaths=[...topicFiles,'kontakt.html','pobierz.html','index.html','o-systemie.html','galeria.html','pomoc.html','blog/index.html','blog/pierwsze-uruchomienie.html','blog/zapis-lokalny-i-drive.html','blog/diagnostyka-monitoringu.html','polityka-prywatnosci.html','regulamin.html','rodo.html'];
   const files=new Set(['kamera/sitemap.xml','kamera/public-entry.js']);
   for(const name of htmlPaths){
    const path='kamera/'+name;files.add(path);
@@ -36,13 +38,14 @@ test('deployment CSS is inline and strict CSP hashes match the exact deployed sc
    const path=join(temp,'kamera',name),html=await readFile(path,'utf8');
    assert.ok(!/<link[^>]+rel="stylesheet"/.test(html),name);
    assert.ok(!/<script src="public-entry/.test(html),name);
+   assert.ok(!/<style\b/.test(html.slice(html.indexOf('<body'))),'all inline styles must be in the head: '+name);
    const policy=html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
    assert.ok(policy.includes("'strict-dynamic'"));assert.ok(policy.includes("require-trusted-types-for 'script'"));
    assert.ok(!policy.includes("script-src 'unsafe-inline'"));assert.ok(!policy.includes("'unsafe-eval'"));
    assert.ok(!policy.includes('frame-ancestors'),'never claim unsupported meta framing protection');
    for(const [,attrs,body] of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)){
     const src=attrs.match(/src="([^"]+)"/)?.[1];
-    const content=src?await readFile(new URL(src,'file://'+path)):body;
+    const content=src?await readFile(new URL(src,pathToFileURL(path))):body;
     const hash='sha256-'+createHash('sha256').update(content).digest('base64');
     assert.ok(policy.includes("'"+hash+"'"),name);
     if(src)assert.ok(attrs.includes('integrity="'+hash+'"'),name);

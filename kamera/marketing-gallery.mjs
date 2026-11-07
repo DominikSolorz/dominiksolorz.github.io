@@ -2,12 +2,13 @@
 const galleryRoot=document.querySelector('#publicHome.mktSite');
 if(galleryRoot){
   const dialog=galleryRoot.querySelector('.mktGalleryDialog');
-  const dialogImage=dialog?.querySelector('.mktGalleryDialogImage img');
+  const imageContainer=dialog?.querySelector('.mktGalleryDialogImage');
+  let dialogImage=null;
   const dialogTitle=dialog?.querySelector('#mktGalleryDialogTitle');
   const close=dialog?.querySelector('[data-mkt-image-close]');
   let trigger=null;
 
-  if(dialog && dialogImage && dialogTitle && close && typeof dialog.showModal==='function'){
+  if(dialog && imageContainer && dialogTitle && close && typeof dialog.showModal==='function'){
     galleryRoot.querySelectorAll('a[data-mkt-image-view]').forEach(link=>{
       link.addEventListener('click',event=>{
         const image=link.querySelector('img');
@@ -15,7 +16,9 @@ if(galleryRoot){
         const title=figure?.querySelector('figcaption strong')?.textContent?.trim();
         if(!image || !title) return;
         try{
+          dialogImage=document.createElement('img');
           dialogImage.src=link.href;
+          imageContainer.replaceChildren(dialogImage);
           dialogImage.alt=image.alt;
           dialogTitle.textContent=title;
           dialog.showModal();
@@ -23,7 +26,8 @@ if(galleryRoot){
           event.preventDefault();
         }catch{
           // Preserve the ordinary link when a browser does not support the dialog.
-          dialogImage.removeAttribute('src');
+          imageContainer.replaceChildren();
+          dialogImage=null;
         }
       });
     });
@@ -32,7 +36,8 @@ if(galleryRoot){
       if(event.target===dialog)dialog.close();
     });
     dialog.addEventListener('close',()=>{
-      dialogImage.removeAttribute('src');
+      imageContainer.replaceChildren();
+      dialogImage=null;
       if(trigger?.isConnected)trigger.focus({preventScroll:true});
       trigger=null;
     });

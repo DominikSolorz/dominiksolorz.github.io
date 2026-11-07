@@ -49,9 +49,9 @@ if(dialog){
   let wasOpen=false;
   const sync=()=>{
     const opened=!dialog.hidden;
-    const visibleStep=[...dialog.querySelectorAll('[data-auth-step]')].find(el=>!el.hidden&&el.querySelector('h1'));
-    const title=visibleStep?.querySelector('h1');
-    if(title){if(!title.id)title.id='hsActiveAuthHeading';card.setAttribute('aria-labelledby',title.id);}
+    const visibleStep=[...dialog.querySelectorAll('[data-auth-step]')].find(el=>!el.hidden&&el.querySelector('h1,h2'));
+    const title=visibleStep?.querySelector('h1,h2');
+    if(title){if(!title.id)title.id='hsAuthHeading-'+visibleStep.dataset.authStep;card.setAttribute('aria-labelledby',title.id);}
     if(opened&&!wasOpen){previousFocus=document.activeElement;requestAnimationFrame(()=>{if(!dialog.hidden){const target=visibleStep?.querySelector('input:not([type="hidden"])')||dialog.querySelector('#authClose');target?.focus({preventScroll:true});}});}
     if(!opened&&wasOpen&&previousFocus?.isConnected){previousFocus.focus?.({preventScroll:true});}
     wasOpen=opened;
