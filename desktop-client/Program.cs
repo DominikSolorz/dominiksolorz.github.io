@@ -597,8 +597,8 @@ internal static class Program
                 if (IsDisposed || !panelUnlocked || downloadingUpdate ||
                     offeredUpdate?.Version != version || File.Exists(PendingUpdatePath)) return;
                 var answer = MessageBox.Show(this,
-                    $"Dostępna jest aktualizacja HOME SECURITY Desktop {version}.\\n\\n" +
-                    $"Zainstalowana wersja: {DesktopVersion}.\\n\\n" +
+                    $"Dostępna jest aktualizacja HOME SECURITY Desktop {version}.\n\n" +
+                    $"Zainstalowana wersja: {DesktopVersion}.\n\n" +
                     "Pobrać ją teraz? Kamera i nagrywanie nie zostaną przerwane. " +
                     "Instalacja nastąpi dopiero po zamknięciu i ponownym uruchomieniu programu.",
                     "HOME SECURITY · Dostępna aktualizacja",
