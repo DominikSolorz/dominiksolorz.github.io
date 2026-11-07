@@ -1,0 +1,33 @@
+// Buduje index.html projektu graficznego z index.template.html.
+// Treści prawne i dane kontaktowe są kopiowane 1:1 z design/documents,
+// żeby projekt nie zmieniał znaczenia zatwierdzonych dokumentów.
+// Użycie: node design/home-security-redesign/build.mjs [--check]
+import { readFile, writeFile } from 'node:fs/promises';
+
+const here = new URL('./', import.meta.url);
+const docs = new URL('../documents/', import.meta.url);
+const check = process.argv.includes('--check');
+const LIVE = 'https://dominiksolorz.github.io/kamera/';
+
+const escape = v => String(v).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+// Odnośniki względne w dokumentach (np. "instrukcja.html") prowadzą do opublikowanej strony.
+const absolutize = html => html.replace(/href="(?!https?:|mailto:|tel:|#)([^"]+)"/g, (_, p) => `href="${LIVE}${p}"`);
+
+let html = (await readFile(new URL('index.template.html', here), 'utf8')).replaceAll('\r\n', '\n');
+const operator = JSON.parse(await readFile(new URL('operator.json', docs), 'utf8'));
+for (const slug of ['polityka-prywatnosci', 'rodo', 'regulamin']) {
+  const body = (await readFile(new URL(slug + '.html', docs), 'utf8')).replaceAll('\r\n', '\n').trim();
+  html = html.replace(`<!--DOC:${slug}-->`, `\n<!-- BEGIN design/documents/${slug}.html -->\n${absolutize(body)}\n<!-- END design/documents/${slug}.html -->\n`);
+}
+html = html.replace(/<!--OPERATOR:(\w+)-->/g, (_, k) => escape(operator[k] ?? ''));
+if (/<!--(DOC|OPERATOR):/.test(html)) throw new Error('Niewypełniony znacznik w szablonie');
+
+const out = new URL('index.html', here);
+if (check) {
+  const current = (await readFile(out, 'utf8')).replaceAll('\r\n', '\n');
+  if (current !== html) throw new Error('index.html jest nieaktualny — uruchom build.mjs');
+  console.log('Projekt graficzny: index.html aktualny.');
+} else {
+  await writeFile(out, html);
+  console.log('Projekt graficzny: zapisano index.html.');
+}
