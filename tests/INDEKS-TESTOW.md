@@ -1,6 +1,6 @@
 # HOME SECURITY — pełny indeks testów
 
-Ten dokument obejmuje **87 plików bezpośrednio w katalogu `tests/`**, stan sprawdzony 7.11.2026. Kliknij nazwę testu, aby przejść do kodu. Przeznaczenie sugeruje nazwa testu; zakres asercji trzeba sprawdzić w jego treści.
+Ten dokument obejmuje **86 plików bezpośrednio w katalogu `tests/`**, stan sprawdzony 7.11.2026. Kliknij nazwę testu, aby przejść do kodu. Przeznaczenie sugeruje nazwa testu; zakres asercji trzeba sprawdzić w jego treści.
 
 ## Kamery, dźwięk i archiwum
 
@@ -50,7 +50,6 @@ Ten dokument obejmuje **87 plików bezpośrednio w katalogu `tests/`**, stan spr
 
 | Plik testu | Przybliżony zakres |
 | --- | --- |
-| [`README.md`](README.md) | Kontrola obszaru `README.md` |
 | [`agent-telemetry.test.mjs`](agent-telemetry.test.mjs) | Kontrola obszaru `agent telemetry` |
 | [`audit-inventory.test.mjs`](audit-inventory.test.mjs) | Kontrola obszaru `audit inventory` |
 | [`drive-pump.test.mjs`](drive-pump.test.mjs) | Kontrola obszaru `drive pump` |
