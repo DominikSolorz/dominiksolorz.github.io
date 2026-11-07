@@ -1,0 +1,456 @@
+/*
+ * HOME SECURITY — układ panelu, etap 2.
+ * Granatowy panel operatora: menu boczne z aktywną „pigułką”, pasek górny
+ * z wyszukiwaniem, duży kafel kamery z prawą kolumną zdarzeń i pasek stanu.
+ * Wyłącznie prezentacja. Nie przenosi elementów w DOM, nie zmienia ID,
+ * logowania, PIN-u, nagrywania, WebRTC, mostka Windows, geometrii wideo
+ * ani aktualizacji. Motywy policeCommand i usMilitary pozostają nietknięte.
+ * Ładowany po tech-ops.css w panelStyles.
+ */
+html:not(.policeCommand):not(.usMilitary){
+  --pl-bg:#030812;
+  --pl-bg2:#050c18;
+  --pl-panel:#071120;
+  --pl-panel2:#0a1628;
+  --pl-raised:#0e1c33;
+  --pl-hover:#10213b;
+  --pl-line:#132540;
+  --pl-line2:#1c3354;
+  --pl-text:#e7eefb;
+  --pl-muted:#8394ad;
+  --pl-dim:#5b6b84;
+  --pl-blue:#2f6bff;
+  --pl-blue2:#5b8cff;
+  --pl-cyan:#1ed3e4;
+  --pl-violet:#8b5cf6;
+  --pl-green:#34d399;
+  --pl-red:#ff4d6a;
+  --pl-amber:#fbbf24;
+  --pl-radius:14px;
+  --pl-radius-sm:10px;
+  --pl-sans:Inter,"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  --pl-num:ui-monospace,"Cascadia Mono",Consolas,Menlo,monospace;
+}
+
+/* ================= Tło i zmienne ================= */
+html:not(.publicLanding):not(.policeCommand):not(.usMilitary) body{
+  background:radial-gradient(ellipse 1100px 620px at 62% -12%,rgba(47,107,255,.13),transparent 70%),var(--pl-bg)!important;
+  color:var(--pl-text)!important;font-family:var(--pl-sans)!important;
+}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app{
+  --ui-bg:var(--pl-bg);--ui-surface:var(--pl-panel);--ui-raised:var(--pl-raised);--ui-line:var(--pl-line2);
+  --ui-text:var(--pl-text);--ui-muted:var(--pl-muted);--ui-focus:var(--pl-blue2);--ui-accent:var(--pl-blue2);--ui-red:var(--pl-red);
+  --bg:var(--pl-bg);--card:var(--pl-panel);--panel:var(--pl-panel);--line:var(--pl-line2);--text:var(--pl-text);--muted:var(--pl-muted);
+  --accent:var(--pl-blue);--neon:var(--pl-cyan);--red:var(--pl-red);--radius:var(--pl-radius);
+  --desktop-line:var(--pl-line);--desktop-green:var(--pl-green);
+  font-family:var(--pl-sans)!important;color:var(--pl-text);
+}
+/* Etykiety wracają do zwykłego kroju; cyfry czasu zostają równej szerokości. */
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body :is(#app,.desktopSidebar,.topbar,.mobileBottomNav,#lock,#authDialog,#boot) :is(button,.btn,.chip,small,p,span,b,label,summary,.mobileOverviewEyebrow,.desktopTopStatus,#topStatus,.modeNow,.mobileOverviewStatus){
+  font-family:var(--pl-sans)!important;letter-spacing:normal!important;text-transform:none!important;
+}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(#recTime,#ctrlTime,#monitorTime,#monitorDate,output,time){font-family:var(--pl-num)!important;font-variant-numeric:tabular-nums}
+
+/* ================= Karty ================= */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(.desktopCameraTile,.desktopDeviceManager,.desktopEventsDrawer,.desktopControlsScreen,.desktopSettingsScreen,.desktopEventsScreen,.desktopDiagnosticsScreen,.desktopHomeGuide,.card,.panel,.componentCard,.settingsHelp,.desktopSettingsTabs,.controlPreview),
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.card,.panel,#setCard,.archiveStorageSidebar,.mobileOverviewCard,.mobileOverviewActions button,.mobileSettingCategories button){
+  background:linear-gradient(180deg,var(--pl-panel2),var(--pl-panel))!important;
+  border:1px solid var(--pl-line)!important;
+  border-radius:var(--pl-radius)!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.025) inset,0 18px 40px -30px rgba(0,0,0,.9)!important;
+  color:var(--pl-text);
+}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(h1,h2,h3){color:#f3f7ff!important;font-family:var(--pl-sans)!important;letter-spacing:-.015em!important;font-weight:650}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(p,small,.muted){color:var(--pl-muted)}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app a{color:var(--pl-blue2)}
+
+/* ================= Menu boczne (Windows) ================= */
+html.desktopMode:not(.policeCommand):not(.usMilitary){--desktop-sidebar:236px}
+html.desktopMode.desktopSidebarCollapsed:not(.policeCommand):not(.usMilitary){--desktop-sidebar:76px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar{
+  width:var(--desktop-sidebar)!important;
+  background:linear-gradient(180deg,var(--pl-bg2),var(--pl-bg))!important;
+  border-right:1px solid var(--pl-line)!important;
+  padding:0 12px 12px!important;gap:6px;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand{
+  flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:12px!important;
+  height:auto!important;min-height:76px!important;padding:16px 6px 14px!important;margin:0 0 6px!important;
+  background:transparent!important;border:0!important;border-bottom:1px solid var(--pl-line)!important;border-radius:0!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand img{width:38px!important;height:auto!important;max-height:42px;margin:0!important;flex:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand>span{
+  position:static!important;margin:0!important;font-size:15px!important;font-weight:700!important;letter-spacing:.02em!important;color:#f3f7ff!important;white-space:nowrap;text-align:left!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand>span b{color:var(--pl-cyan)!important;font-family:var(--pl-sans)!important;letter-spacing:.02em!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #desktopCollapse{
+  position:static!important;margin-left:auto!important;width:30px!important;height:30px!important;padding:0!important;
+  border:1px solid var(--pl-line2)!important;border-radius:8px!important;background:var(--pl-panel)!important;color:var(--pl-muted)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav{gap:4px!important;padding:6px 0!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button{
+  min-height:44px!important;height:44px!important;margin:0!important;width:100%!important;padding:0 14px!important;gap:12px!important;
+  border:1px solid transparent!important;border-radius:var(--pl-radius-sm)!important;
+  background:transparent!important;color:var(--pl-muted)!important;box-shadow:none!important;font-size:14px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button :is(i,svg){width:20px!important;height:20px!important;color:currentColor!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button span{font-size:14px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button span b{font-weight:500!important;color:inherit!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button:hover:not(:disabled){background:var(--pl-hover)!important;color:var(--pl-text)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button.active{
+  background:linear-gradient(90deg,rgba(47,107,255,.30),rgba(47,107,255,.10))!important;
+  border-color:rgba(91,140,255,.55)!important;color:#fff!important;box-shadow:0 8px 24px -14px rgba(47,107,255,.9)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button.active :is(i,svg){color:var(--pl-cyan)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebarFoot{
+  margin-top:auto!important;padding:14px!important;gap:8px!important;
+  border:1px solid var(--pl-line)!important;border-radius:var(--pl-radius)!important;
+  background:linear-gradient(180deg,var(--pl-panel2),var(--pl-panel))!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebarFoot a{color:var(--pl-blue2)!important;font-size:12.5px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebarFoot :is(button,.btn){
+  min-height:38px!important;border-radius:var(--pl-radius-sm)!important;border:1px solid var(--pl-line2)!important;background:var(--pl-raised)!important;color:var(--pl-text)!important;font-size:13px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebarFoot :is(button,.btn):hover{border-color:var(--pl-blue)!important}
+
+/* ================= Pasek górny (Windows) ================= */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar{
+  left:var(--desktop-sidebar)!important;height:64px!important;padding:0 24px!important;gap:14px!important;
+  background:rgba(3,8,18,.82)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--pl-line)!important;box-shadow:none!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopTopStatus{
+  height:34px;padding:0 14px!important;border:1px solid var(--pl-line2)!important;border-radius:999px!important;
+  background:var(--pl-panel)!important;color:var(--pl-muted)!important;font-size:12.5px!important;gap:8px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSearch{
+  margin-left:auto!important;width:min(380px,32vw)!important;height:40px!important;padding:0 12px!important;gap:10px!important;
+  border:1px solid var(--pl-line2)!important;border-radius:var(--pl-radius-sm)!important;background:var(--pl-panel)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSearch:focus-within{border-color:var(--pl-blue)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSearch input{height:38px!important;font-size:13px!important;color:var(--pl-text)!important;background:transparent!important;border:0!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSearch input::placeholder{color:var(--pl-dim)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .nav{margin-left:0!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar :is(.navLink,#sourceBtn){
+  height:40px!important;padding:0 16px!important;border:1px solid var(--pl-line2)!important;border-radius:var(--pl-radius-sm)!important;
+  background:var(--pl-panel)!important;color:var(--pl-text)!important;font-size:13px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar :is(.navLink,#sourceBtn):hover{border-color:var(--pl-blue)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app{padding-top:88px!important;padding-inline:24px!important}
+
+/* ================= Nagłówek strony ================= */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext{margin-bottom:18px!important;align-items:flex-end!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext h1{font-size:24px!important;line-height:1.2!important;margin:2px 0 0!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext p{font-size:12.5px!important;color:var(--pl-muted)!important;font-weight:500}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext p :is(span,b,strong){color:var(--pl-muted)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions{gap:8px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions :is(button,.desktopCameraCount){
+  height:38px!important;padding:0 14px!important;border:1px solid var(--pl-line2)!important;border-radius:var(--pl-radius-sm)!important;
+  background:var(--pl-panel)!important;color:var(--pl-text)!important;font-size:13px!important;font-weight:500!important;box-shadow:none!important;display:inline-flex;align-items:center;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopCameraCount{color:var(--pl-muted)!important;border-radius:999px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions button:hover{border-color:var(--pl-blue)!important;background:var(--pl-hover)!important}
+
+/* ================= Pulpit: kamera | zdarzenia, pod spodem pasek stanu ================= */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview{
+  grid-template-columns:minmax(0,1fr) minmax(300px,360px)!important;gap:16px!important;align-items:stretch!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopCameraTile{overflow:hidden!important;border-color:var(--pl-line)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopTileMeta{
+  min-height:52px!important;padding:0 18px!important;background:transparent!important;border:0!important;border-bottom:1px solid var(--pl-line)!important;border-radius:0!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopTileMeta :is(b,strong,h2,h3){font-size:15px!important;color:#f3f7ff!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopTileMeta :is(small,span){font-size:12.5px!important;color:var(--pl-muted)!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app #stage{
+  background-color:#02060d!important;border-color:var(--pl-line)!important;box-shadow:none!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopCameraTile #stage{border:0!important;border-radius:0!important}
+
+/* Prawa kolumna: Ostatnie zdarzenia */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer{align-self:stretch!important;height:auto!important;overflow:hidden!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer>summary{
+  min-height:52px!important;padding:0 16px 0 18px!important;border-bottom:1px solid var(--pl-line)!important;align-items:center!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer>summary>span{font-size:15px!important;font-weight:650!important;color:#f3f7ff!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app #desktopEventCount{
+  height:30px;display:inline-flex;align-items:center;padding:0 12px!important;border:1px solid var(--pl-line2)!important;border-radius:8px!important;
+  background:var(--pl-raised)!important;color:var(--pl-text)!important;font-size:12px!important;font-weight:500!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer #viewEventsCard{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;margin:0!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer #viewEventsCard>summary{padding:12px 18px 6px!important;font-size:12.5px!important;color:var(--pl-muted)!important;border:0!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer #viewEvents{padding:6px 14px 16px!important;gap:8px!important;border:0!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer #viewEvents li{
+  border:1px solid var(--pl-line)!important;border-radius:var(--pl-radius-sm)!important;background:var(--pl-panel)!important;
+  padding:12px 14px!important;font-family:var(--pl-sans)!important;font-size:12.5px!important;color:var(--pl-muted)!important;box-shadow:none!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer #viewEvents li.muted{border-style:dashed!important;text-align:center}
+
+/* Pasek stanu pod pulpitem: jedna karta, trzy kolumny z separatorami */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary{
+  margin-top:16px!important;gap:0!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  border:1px solid var(--pl-line)!important;border-radius:var(--pl-radius)!important;overflow:hidden;
+  background:linear-gradient(180deg,var(--pl-panel2),var(--pl-panel))!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary>article{
+  background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+  padding:18px 22px!important;gap:14px!important;min-height:0!important;align-items:flex-start!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary>article+article{border-left:1px solid var(--pl-line)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary .desktopSummaryIcon{
+  width:40px!important;height:40px!important;border-radius:var(--pl-radius-sm)!important;background:rgba(47,107,255,.12)!important;color:var(--pl-blue2)!important;flex:none;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary .desktopSummaryIcon svg{width:20px!important;height:20px!important;margin:auto}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary article>div>b{display:block;font-size:12.5px!important;font-weight:500!important;color:var(--pl-muted)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary article>div>strong{display:block;margin-top:4px;font-size:18px!important;font-weight:650!important;color:#f3f7ff!important;line-height:1.3}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary article>div>small{display:block;margin-top:2px;font-size:12px!important;color:var(--pl-dim)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary article:nth-child(1) .desktopSummaryIcon{background:rgba(30,211,228,.12)!important;color:var(--pl-cyan)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary article:nth-child(3) .desktopSummaryIcon{background:rgba(139,92,246,.14)!important;color:var(--pl-violet)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .footer{margin-top:18px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app #roleBtn{color:var(--pl-muted)!important;font-size:12.5px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app #roleBtn:hover{color:var(--pl-text)!important}
+
+/* ================= Przyciski i pola ================= */
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(.btn,.dvrBtn,.navLink,.soft,.tool,.chip,.modeBtn){border-radius:var(--pl-radius-sm)!important;font-weight:500}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(.btn,.dvrBtn,.navLink,.soft,.tool,.modeBtn):not(.primary):not(.on):not(:disabled):not(#ctrlStart):not(#ctrlStop){
+  background:var(--pl-raised)!important;border:1px solid var(--pl-line2)!important;color:var(--pl-text)!important;box-shadow:none!important;
+}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(.btn,.dvrBtn,.navLink,.soft,.tool,.modeBtn):not(.primary):not(.on):not(:disabled):not(#ctrlStart):not(#ctrlStop):hover{background:var(--pl-hover)!important;border-color:var(--pl-blue)!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(.btn.primary,.dvrBtn.on,.navLink.active,.mobileOverviewPrimary,.desktopSettingsSaved),
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileOverviewPrimary{
+  background:var(--pl-blue)!important;border:1px solid var(--pl-blue)!important;color:#fff!important;border-radius:var(--pl-radius-sm)!important;
+  box-shadow:0 12px 28px -14px rgba(47,107,255,.9)!important;font-weight:600!important;
+}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(.btn.primary,.mobileOverviewPrimary):hover{background:var(--pl-blue2)!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app #ctrlStart:not(:disabled){background:rgba(52,211,153,.12)!important;border:1px solid rgba(52,211,153,.5)!important;color:#c6f6e1!important;border-radius:var(--pl-radius-sm)!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app #ctrlStop:not(:disabled){background:rgba(255,77,106,.12)!important;border:1px solid rgba(255,77,106,.5)!important;color:#ffd0d8!important;border-radius:var(--pl-radius-sm)!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app .modeList .modeBtn:is(.active,.on,[aria-pressed="true"]){border-color:var(--pl-blue)!important;background:rgba(47,107,255,.16)!important;color:#fff!important;box-shadow:none!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app .chip{background:var(--pl-panel)!important;color:var(--pl-muted)!important;border:1px solid var(--pl-line2)!important;border-radius:999px!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),select,textarea),
+html:not(.policeCommand):not(.usMilitary) body #authDialog :is(input:not([type="checkbox"]):not([type="radio"]),select){
+  background-color:var(--pl-bg2)!important;border:1px solid var(--pl-line2)!important;border-radius:var(--pl-radius-sm)!important;color:var(--pl-text)!important;
+}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(input,select,textarea):focus,
+html:not(.policeCommand):not(.usMilitary) body #authDialog :is(input,select):focus{border-color:var(--pl-blue)!important;box-shadow:0 0 0 3px rgba(47,107,255,.22)!important;outline:none!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app :is(input[type="range"],input[type="checkbox"],input[type="radio"]){accent-color:var(--pl-blue)!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app input[type="range"]::-webkit-slider-thumb{border-color:var(--pl-blue)!important;box-shadow:0 0 0 3px rgba(47,107,255,.22)!important}
+html:is(.desktopMode,.mobileOwnerMode):not(.policeCommand):not(.usMilitary) body #app .workspaceCheck{border-radius:var(--pl-radius-sm)!important;background:var(--pl-raised)!important;border-color:var(--pl-line2)!important}
+
+/* Ustawienia, zakładki, pomoc */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsTabs{padding:8px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsTabs button{border-radius:var(--pl-radius-sm)!important;color:var(--pl-muted)!important;background:transparent!important;border:1px solid transparent!important;box-shadow:none!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsTabs button:hover{background:var(--pl-hover)!important;color:var(--pl-text)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsTabs button:is(.active,[aria-selected="true"],[aria-current="page"]){
+  background:linear-gradient(90deg,rgba(47,107,255,.28),rgba(47,107,255,.08))!important;border-color:rgba(91,140,255,.5)!important;color:#fff!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app #setCard :is(.desktopPreviewTweaks>label,.setRow){border-bottom-color:var(--pl-line)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app #setCard .pipPreferences{background:var(--pl-bg2)!important;border-color:var(--pl-line)!important;border-radius:var(--pl-radius-sm)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app #setCard .desktopPreviewTweaks>label>output{border-radius:8px!important;background:var(--pl-bg2)!important}
+
+/* ================= Telefon ================= */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body :is(.mobileAppHeader,.mobileHeader,.topbar){
+  background:rgba(3,8,18,.9)!important;border-bottom:1px solid var(--pl-line)!important;box-shadow:none!important;
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileAppHeader :is(button,.btn){border-radius:var(--pl-radius-sm)!important;background:var(--pl-panel)!important;border:1px solid var(--pl-line2)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav{
+  background:rgba(3,8,18,.95)!important;border-top:1px solid var(--pl-line)!important;
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button{border-radius:var(--pl-radius-sm)!important;color:var(--pl-muted)!important;background:transparent!important;border:1px solid transparent!important;box-shadow:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button.active{
+  color:#fff!important;background:linear-gradient(180deg,rgba(47,107,255,.32),rgba(47,107,255,.12))!important;border-color:rgba(91,140,255,.55)!important;box-shadow:none!important;
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button.active :is(b,svg){color:var(--pl-cyan)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button.active::after{background:var(--pl-blue2)!important;box-shadow:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOverviewEyebrow{color:var(--pl-blue2)!important;font-size:11.5px!important;font-weight:700!important;letter-spacing:.08em!important;text-transform:uppercase!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOverviewStatus{color:var(--pl-amber)!important;font-size:13px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.mobileOverviewActions,.mobileSettingCategories) button>b{
+  background:rgba(47,107,255,.14)!important;border:0!important;border-radius:var(--pl-radius-sm)!important;color:var(--pl-blue2)!important;
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.mobileOverviewActions,.mobileSettingCategories) button>i{color:var(--pl-muted)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.mobileOverviewActions,.mobileSettingCategories) button:hover{border-color:var(--pl-line2)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileSettingsHome .eyebrow{color:var(--pl-blue2)!important;font-family:var(--pl-sans)!important;letter-spacing:.08em!important}
+
+/* ================= PIN, start, logowanie ================= */
+html:not(.policeCommand):not(.usMilitary) body :is(.bootScreen,.lockScreen){
+  background:radial-gradient(ellipse 760px 480px at 50% 0%,rgba(47,107,255,.16),transparent 70%),var(--pl-bg)!important;
+}
+html:not(.policeCommand):not(.usMilitary) body :is(.bootCard,.pinCard),
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{
+  background:linear-gradient(180deg,var(--pl-panel2),var(--pl-panel))!important;
+  border:1px solid var(--pl-line2)!important;border-radius:18px!important;
+  box-shadow:0 40px 90px -40px rgba(47,107,255,.35),0 30px 60px -30px #000!important;color:var(--pl-text)!important;
+}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button{
+  background:var(--pl-raised)!important;border:1px solid var(--pl-line2)!important;border-radius:12px!important;color:var(--pl-text)!important;
+  font-family:var(--pl-sans)!important;font-size:20px!important;font-weight:600!important;
+}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button:hover:not(:disabled){border-color:var(--pl-blue)!important;background:var(--pl-hover)!important;color:#fff!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button:active:not(:disabled){background:rgba(47,107,255,.28)!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinLogo{background:rgba(47,107,255,.08)!important;border:1px solid var(--pl-line2)!important;border-radius:16px!important;box-shadow:0 0 34px -8px rgba(47,107,255,.5)!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinMsg{font-family:var(--pl-sans)!important}
+html:not(.policeCommand):not(.usMilitary) body #bootProgress{background:linear-gradient(90deg,var(--pl-cyan),var(--pl-blue))!important;box-shadow:none!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{
+  background:var(--pl-blue)!important;border:1px solid var(--pl-blue)!important;color:#fff!important;border-radius:var(--pl-radius-sm)!important;
+  font-family:var(--pl-sans)!important;letter-spacing:normal!important;text-transform:none!important;font-weight:600!important;box-shadow:0 12px 28px -14px rgba(47,107,255,.9)!important;
+}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary:hover{background:var(--pl-blue2)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authTextBtn{color:var(--pl-blue2)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authEyebrow{color:var(--pl-blue2)!important;font-family:var(--pl-sans)!important;letter-spacing:.08em!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog :is(.authClose,.hsPassToggle){border-radius:var(--pl-radius-sm)!important;background:var(--pl-raised)!important;border-color:var(--pl-line2)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton{border-radius:var(--pl-radius-sm)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand b{color:var(--pl-cyan)!important}
+
+/* ================= Szybkie menu ================= */
+html:not(.policeCommand):not(.usMilitary) body #quickMenu{background:var(--pl-bg2)!important;border-color:var(--pl-line2)!important}
+html:not(.policeCommand):not(.usMilitary) body #quickMenu button{border-radius:var(--pl-radius-sm)!important;background:var(--pl-panel)!important;border-color:var(--pl-line)!important}
+
+/* ================= Dostępność i wąskie ekrany ================= */
+html:not(.policeCommand):not(.usMilitary) body :is(#app,#lock,#boot,#authDialog,#quickMenu,.desktopSidebar,.topbar,.mobileBottomNav) :is(a,button,input,select,textarea,summary):focus-visible{
+  outline:2px solid var(--pl-blue2)!important;outline-offset:2px!important;
+}
+@media (max-width:1180px){
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview{grid-template-columns:minmax(0,1fr) minmax(260px,300px)!important}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSearch{width:min(300px,28vw)!important}
+}
+@media (max-width:1023px){
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview{grid-template-columns:minmax(0,1fr)!important}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary{grid-template-columns:minmax(0,1fr)!important}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary>article+article{border-left:0!important;border-top:1px solid var(--pl-line)!important}
+}
+
+/* Pasek górny: stan po lewej, wyszukiwarka i komputer nadający przy prawej krawędzi. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar{justify-content:flex-start!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSearch>span{font-size:17px!important;line-height:1;color:var(--pl-muted)!important}
+/* Węższy komputer: przyciski nad kamerą w jednej linii, mniejsze liczby w pasku stanu. */
+@media (max-width:1280px){
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions{flex-wrap:nowrap!important}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions .desktopLayouts{flex-wrap:nowrap!important;gap:8px!important}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions :is(button,.desktopCameraCount){padding:0 11px!important;font-size:12.5px!important;white-space:nowrap}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary article>div>strong{font-size:15.5px!important}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary>article{padding:16px 18px!important}
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar>.desktopTopStatus{margin-right:auto!important;flex:0 0 auto!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar>.desktopSearch{flex:0 1 auto!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions{display:flex!important;flex-direction:row!important;align-items:center!important;flex-wrap:nowrap!important}
+
+/* =====================================================================
+   Etap 3: logowanie, rejestracja i PIN według projektów HOME SECURITY.
+   Zdjęcie domu nocą w tle, karta z marką, pola z ikonami, niebieski przycisk.
+   Tylko wygląd — pola, kolejność kroków i obsługa konta bez zmian.
+   ===================================================================== */
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBackdrop{
+  background:
+    radial-gradient(ellipse 900px 600px at 50% 40%,rgba(3,8,18,.15),rgba(3,8,18,.75) 78%),
+    linear-gradient(180deg,rgba(3,8,18,.25),rgba(3,8,18,.8)),
+    url("assets/auth-night.webp") center/cover no-repeat,#030812!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{
+  width:min(440px,calc(100vw - 24px))!important;padding:30px 30px 26px!important;
+  background:linear-gradient(180deg,rgba(10,22,40,.92),rgba(7,17,32,.94))!important;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border:1px solid rgba(91,140,255,.28)!important;border-radius:18px!important;
+  box-shadow:0 0 0 1px rgba(47,107,255,.08),0 40px 90px -30px rgba(47,107,255,.45),0 30px 60px -20px #000!important;
+}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{
+  display:grid!important;grid-template-columns:auto auto;justify-content:center;align-items:center;column-gap:12px;row-gap:2px;
+  padding:0 0 18px!important;margin:0 0 18px!important;border-bottom:1px solid var(--pl-line)!important;text-align:left;
+}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand img{grid-row:1 / span 2;width:46px!important;height:46px!important;margin:0!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p{margin:0!important;font-size:20px!important;font-weight:800!important;letter-spacing:.01em!important;color:#f3f7ff!important;line-height:1.1}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p b{color:var(--pl-blue2)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand::after{content:"Monitoring · Ochrona · Kontrola";font-size:11.5px;color:var(--pl-muted);letter-spacing:.02em}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm h2{font-size:22px!important;margin:4px 0 4px!important;text-align:center}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm>p:not(.authEyebrow){text-align:center;font-size:13px!important;color:var(--pl-muted)!important;margin:0 0 14px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authEyebrow{text-align:center;font-size:11px!important;margin:0!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label:not(.authCheck){display:block;font-size:12.5px!important;color:var(--pl-muted)!important;font-weight:500;margin:0 0 12px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label:not(.authCheck) input:not([type="checkbox"]):not([type="radio"]){
+  display:block;width:100%;height:46px!important;margin-top:6px!important;padding:0 14px 0 42px!important;font-size:14px!important;
+  background-color:rgba(3,8,18,.7)!important;background-repeat:no-repeat!important;background-position:14px 50%!important;background-size:18px 18px!important;
+}
+/* Ikony pól (dekoracja, bez wpływu na wartości). */
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label>input[type="email"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.5' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E")!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label :is(input[type="password"],input[name="password"],input[name="password_repeat"]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='10.5' width='14' height='10' rx='2'/%3E%3Cpath d='M8 10.5V7.5a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E")!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label :is(input[name="first_name"],input[name="last_name"]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.5' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E")!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label :is(input[name="address_line"],input[name="postal_code"]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z'/%3E%3C/svg%3E")!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label>input[type="tel"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='7' y='2.5' width='10' height='19' rx='2'/%3E%3Cpath d='M11 18h2'/%3E%3C/svg%3E")!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .hsPassToggle{
+  height:32px!important;padding:0 10px!important;font-size:12px!important;color:var(--pl-muted)!important;
+  background:transparent!important;border:1px solid var(--pl-line2)!important;border-radius:8px!important;
+}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .hsPassToggle:hover{color:#fff!important;border-color:var(--pl-blue)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{width:100%;height:48px!important;font-size:15px!important;margin-top:6px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authTextBtn{display:block;width:100%;text-align:center;font-size:13px!important;margin-top:12px!important;background:transparent!important;border:0!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider{color:var(--pl-muted)!important;font-size:12.5px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider::before,
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider::after{background:var(--pl-line2)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton{
+  height:46px!important;background:rgba(3,8,18,.7)!important;color:var(--pl-text)!important;border:1px solid var(--pl-line2)!important;font-weight:600!important;
+}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton:hover{border-color:var(--pl-blue)!important;background:var(--pl-hover)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck{display:flex!important;gap:10px;align-items:flex-start;font-size:12.5px!important;color:var(--pl-muted)!important;margin:4px 0 10px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck a{color:var(--pl-blue2)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGrid{gap:12px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authClose{width:36px!important;height:36px!important}
+
+/* PIN: zdjęcie w tle, pola cyfr jako kwadraty, niebieskie zatwierdzenie. */
+html:not(.policeCommand):not(.usMilitary) body .lockScreen{
+  background:
+    radial-gradient(ellipse 760px 520px at 50% 40%,rgba(3,8,18,.2),rgba(3,8,18,.78) 78%),
+    linear-gradient(180deg,rgba(3,8,18,.3),rgba(3,8,18,.85)),
+    url("assets/auth-night.webp") center/cover no-repeat,#030812!important;
+}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinCard{
+  width:min(380px,calc(100vw - 24px))!important;padding:28px 28px 24px!important;
+  background:linear-gradient(180deg,rgba(10,22,40,.92),rgba(7,17,32,.94))!important;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-color:rgba(91,140,255,.28)!important;
+}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinLogo{width:64px!important;height:64px!important;margin:0 auto 10px!important;display:grid;place-items:center}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinLogo img{width:44px!important;height:44px!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinCard h2{font-size:22px!important;margin:4px 0 4px!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinDots{gap:8px!important;margin:20px 0 10px!important;width:100%}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinDots i{
+  display:block!important;flex:0 1 46px;width:auto!important;height:auto!important;aspect-ratio:1;min-width:0;border-radius:10px!important;border:1px solid var(--pl-line2)!important;background:rgba(3,8,18,.7)!important;position:relative;
+}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinDots i.on{border-color:var(--pl-blue2)!important;background:rgba(47,107,255,.14)!important;box-shadow:0 0 0 3px rgba(47,107,255,.18)}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinDots i.on::after{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad{gap:10px!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button{min-height:56px!important;border-radius:10px!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button[data-k="ok"]{background:var(--pl-blue)!important;border-color:var(--pl-blue)!important;color:#fff!important;box-shadow:0 12px 28px -14px rgba(47,107,255,.9)!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button[data-k="ok"]:hover:not(:disabled){background:var(--pl-blue2)!important}
+html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button[data-k="del"]{background:rgba(3,8,18,.7)!important;color:var(--pl-muted)!important}
+
+/* ================= Telefon: wąskie ekrany (320–400 px), duża czcionka systemowa ================= */
+/* Nagłówek: tytuł zawsze ma miejsce; przycisk odblokowania komputera przechodzi do drugiego wiersza. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{flex-wrap:wrap!important;row-gap:8px!important;column-gap:8px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader>div{flex:1 1 0!important;min-width:0!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader h1{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader>:is(#deviceLayoutBtn,.mobileRelease){flex:0 0 auto!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader>.hsRemoteEntry{
+  order:10;flex:1 0 100%!important;width:100%!important;max-width:100%!important;margin:0!important;
+  min-height:40px!important;padding:8px 12px!important;font:600 13.5px/1.25 var(--pl-sans)!important;white-space:normal!important;
+  color:#fff!important;background:linear-gradient(180deg,rgba(47,107,255,.24),rgba(47,107,255,.1))!important;border-color:rgba(91,140,255,.55)!important;
+}
+/* Odtwarzacz: przyciski zawijają tekst i układają się w siatce zamiast nachodzić na siebie. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrPrecisionControls{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(92px,1fr))!important;gap:6px!important;width:100%}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrPrecisionControls .dvrPrecisionClock{grid-column:1/-1;display:flex!important;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrPrecisionControls .dvrPrecisionClock input{flex:1 1 120px;min-width:0;max-width:100%}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.dvrGroup,.dvrPrecisionControls) .dvrBtn{
+  height:auto!important;min-height:40px!important;padding:6px 6px!important;white-space:normal!important;line-height:1.2!important;
+  font-size:12.5px!important;min-width:0!important;overflow-wrap:normal;word-break:normal;text-align:center
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrCtrls .dvrGroup{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrCtrls .dvrGroup:has(>.dvrBtn:nth-child(5)){grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:4px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrCtrls .dvrGroup:has(>.dvrBtn:nth-child(5)) .dvrBtn{padding:4px 2px!important;font-size:12px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrCtrls .dvrGroup>input{grid-column:1/-1;min-width:0;width:100%;max-width:100%;box-sizing:border-box}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .dvrLegend{display:flex!important;flex-wrap:wrap;gap:6px 12px}
+/* Zdarzenia: pole daty nie wychodzi poza kartę. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .workspaceToolbar>label:first-child{min-width:0;max-width:100%;overflow:hidden}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .workspaceToolbar input[type="date"]{max-width:100%!important;box-sizing:border-box!important;-webkit-appearance:none;appearance:none;min-height:40px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(input,select,textarea){max-width:100%;box-sizing:border-box}
+/* Bardzo niskie ekrany 16:9 (np. 360×640): mniej pionowych odstępów. */
+@media (max-height:700px) and (max-width:480px){
+  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{padding-block:6px!important;min-height:52px!important}
+  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader h1{font-size:19px!important}
+  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader>:is(#deviceLayoutBtn,.mobileRelease summary){min-width:42px!important;min-height:42px!important}
+}
