@@ -41,7 +41,7 @@ const checks=[
   ['regulamin.html',['o-systemie.html','Regulamin']],
   ['rodo.html',['o-systemie.html','Informacja RODO']],
   ['panel.html',['name="home-security-build" content="'+expectedBuild+'"','id="authDialog"','id="publicHome"','interface-concept.css?v=3']],
-  ['index.html',['http-equiv="Content-Security-Policy"','require-trusted-types-for','data-source="'+currentMarketingCSS+'"','marketing-navigation.mjs?v=1','name="robots" content="index,follow"','rel="canonical" href="https://dominiksolorz.github.io/kamera/"','data-public-entry']],
+  ['index.html',['http-equiv="Content-Security-Policy"','require-trusted-types-for','data-source="'+currentMarketingCSS+'"','marketing-navigation.mjs?v=1','name="robots" content="index,follow"','rel="canonical" href="https://dominiksolorz.github.io/kamera/"','data-public-entry','id="hsMobileSplash"','mobile-app-splash.js?v=3']],
   ['sitemap.xml',['/kamera/galeria.html','/kamera/</loc>']],
   ['../index.html',['./kamera/','location.replace']]
 ];
@@ -54,7 +54,7 @@ const assets=[
  'marketing-motion.css?v=2',currentMarketingCSS,'marketing-navigation.css?v=1','marketing-navigation.mjs?v=1',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
  'assets/home-security-hero-640.webp','assets/home-security-hero.webp','assets/home-security-how-it-works-640.webp','assets/ds-logo-96.webp','assets/ds-logo-192.webp','../docs/ui-193/01-pulpit-480.webp','../docs/ui-193/01-pulpit-640.webp','../docs/ui-193/01-pulpit-720.webp','../docs/ui-193/01-pulpit-960.webp',
- 'assets/home-security-hero.png','downloads/HOME-SECURITY-Desktop-Setup-'+expectedDesktop.version+'.exe'
+ 'assets/home-security-hero.png','assets/home-security-loading.webp','assets/home-security-ad-02.webp','assets/home-security-ad-03.webp','mobile-app-splash.js?v=3','mobile-app-splash.css?v=3','downloads/HOME-SECURITY-Desktop-Setup-'+expectedDesktop.version+'.exe'
 ];
 
 let tries=0;
