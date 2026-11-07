@@ -31,7 +31,8 @@ test('phone sends derived PIN verifier encrypted, Windows re-verifies current PI
  const proofKey=await decryptUnlockGrant(grant,{hostPrivateKey:host.privateKey,pairedPhonePublicKey:await exportPhonePublicKey(phone),userId:owner,hostId,phoneId,usedIds});
  assert.equal(proofKey,pinKey);
  assert.equal(await unlockWithDerivedPinKey(proofKey,security,owner),accessKey);
- await assert.rejects(()=>decryptUnlockGrant(grant,{hostPrivateKey:host.privateKey,pairedPhonePublicKey:await exportPhonePublicKey(phone),userId:owner,hostId,phoneId,usedIds}),/Replayed/);
+ const pairedPhonePublicKey=await exportPhonePublicKey(phone);
+ await assert.rejects(()=>decryptUnlockGrant(grant,{hostPrivateKey:host.privateKey,pairedPhonePublicKey,userId:owner,hostId,phoneId,usedIds}),/Replayed/);
  const nextPinKey=await deriveKey('654321','different-salt');
  const changed={pin_hash:await keyHash(nextPinKey),pin_wrapped_access_key:await wrapAccessKey(accessKey,nextPinKey,owner)};
  assert.equal(await unlockWithDerivedPinKey(proofKey,changed,owner),null,'a rotated PIN cancels earlier proof even when original owner access key stays the same');
