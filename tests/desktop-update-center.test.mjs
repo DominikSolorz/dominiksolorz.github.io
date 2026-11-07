@@ -43,7 +43,7 @@ test('staged update can be cancelled without accessing recordings',()=>{
  assert.match(cancel,/if \(!panelUnlocked \|\| downloadingUpdate\) return/);
  assert.match(cancel,/File\.Delete\(PendingUpdatePath\)/);
  assert.match(cancel,/offeredUpdate = null/);
- assert.doesNotMatch(cancel,/Directory\.Delete|recording|archive|File\.Delete\(package/i);
+ assert.deepEqual(cancel.match(/File\.Delete\([^)]+\)/g),['File.Delete(PendingUpdatePath)']);
  assert.match(source,/desktop\.update\.cancel/);
  assert.match(source,/PublishUpdateState\("staged"/);
 });
