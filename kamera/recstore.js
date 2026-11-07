@@ -70,7 +70,7 @@ export async function makeRoom(need = 0) {
   for (;;) {
     const { free } = await space();
     if (free >= MIN_FREE + need) return removed;
-    const oldest = (await list())[0];
+    const oldest = (await list()).find(item=>!item.pendingNative);
     if (!oldest) return removed;
     await remove(oldest.name); removed++;
   }
@@ -89,7 +89,7 @@ export async function put(m, data) {
       return removed;
     } catch (e) {
       if (e?.name !== "QuotaExceededError") throw e;
-      const oldest = (await list()).find(x => x.name !== m.name);
+      const oldest = (await list()).find(x => x.name !== m.name && !x.pendingNative);
       if (!oldest) throw e;
       await remove(oldest.name); removed++;
     }

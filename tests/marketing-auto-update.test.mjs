@@ -2,13 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
+import {freshUpdateURL,pendingUpdateBuild} from '../kamera/core/update-navigation.mjs';
 
 const read = path => readFile(new URL('../'+path,import.meta.url),'utf8');
 const currentBuild=Number(JSON.parse(await read('kamera/version.json')).version);
 
-function mount({latest=currentBuild+1,marketing=true,dirty=false}={}) {
+function mount({latest=currentBuild+1,marketing=true,dirty=false,startBackground=true,href='https://example.test/kamera/o-systemie.html'}={}) {
   const controls=[],listeners={},documentEvents={},timers=new Map();
-  let nextTimer=1,reloads=0,confirmations=0,allowDiscard=false,banner=null;
+  let requests=0;
+  let nextTimer=1,reloads=0,confirmations=0,allowDiscard=false,banner=null,lastURL='';
   const session=new Map();
   const createElement = tag => {
     const item={tag,className:'',hidden:false,textContent:'',attributes:{},children:[],listeners:{},
@@ -28,8 +30,8 @@ function mount({latest=currentBuild+1,marketing=true,dirty=false}={}) {
     addEventListener:(name,handler)=>{documentEvents[name]=handler;}
   };
   const win={
-    location:{reload(){reloads++;}},
-    setTimeout(callback){const key=nextTimer++;timers.set(key,callback);return key;},
+    location:{href,replace(next){lastURL=next;reloads++;this.href=next;}},
+    setTimeout(callback,delay){const key=nextTimer++;callback.delay=delay;timers.set(key,callback);return key;},
     clearTimeout(key){timers.delete(key);},
     setInterval(){return 1;},clearInterval(){},
     addEventListener:(name,handler)=>{listeners[name]=handler;},
@@ -38,15 +40,16 @@ function mount({latest=currentBuild+1,marketing=true,dirty=false}={}) {
   const runtime={
     document:doc,window:win,
     sessionStorage:{getItem:key=>session.get(key)||null,setItem:(key,val)=>session.set(key,val)},
-    fetch:async()=>({ok:true,json:async()=>({version:String(latest)})}),
-    URL,Date,Number,Promise,console
+    fetch:async()=>{requests++;return {ok:true,json:async()=>({version:String(latest)})};},
+    URL,Date,Number,Promise,console,freshUpdateURL,pendingUpdateBuild
   };
   return {
     async run() {
       const code=(await read('kamera/marketing-auto-update.mjs'))
-        .replace(/^import[^\n]*\n/m, '')
+        .replace(/^import[^\n]*\n/gm, '')
         .replaceAll('import.meta.url',JSON.stringify('https://example.test/kamera/marketing-auto-update.mjs'));
       vm.runInNewContext(code,runtime);
+      if(startBackground){for(const [key,handler] of [...timers])if(handler.delay===30000){timers.delete(key);handler();}}
       await new Promise(resolve=>setImmediate(resolve));
       await new Promise(resolve=>setImmediate(resolve));
       return this;
@@ -54,6 +57,8 @@ function mount({latest=currentBuild+1,marketing=true,dirty=false}={}) {
     controls,documentEvents,listeners,timers,
     get banner(){return banner;},
     get reloads(){return reloads;},
+    get lastURL(){return lastURL;},
+    get requests(){return requests;},
     get confirmations(){return confirmations;},
     setDiscard(v){allowDiscard=v;},
     act(label){const button=controls.find(e=>e.tag==='button'&&e.textContent===label);assert.ok(button,label);button.listeners.click();},
@@ -69,6 +74,8 @@ test('newer public release automatically displays a clear one-click update actio
   assert.ok(x.controls.some(item=>String(item.textContent).includes('Dostępna wersja HOME SECURITY '+(currentBuild+1))));
   x.act('Zaktualizuj');
   assert.equal(x.reloads,1);
+  assert.match(x.lastURL,new RegExp('hs_release='+(currentBuild+1)));
+  assert.ok(x.lastURL.includes('hs_refresh='));
 });
 
 test('clean idle marketing page can automatically reload to the latest release',async()=>{
@@ -128,20 +135,54 @@ test('public release notice preserves live Windows installer downloads on all ma
   assert.ok(version&&worker);
   assert.ok(sw.includes('kamera-domowa-shell-v'+worker));
   assert.ok(app.includes('const VERSION = "'+version+'"'));
-  assert.ok(sw.includes('./marketing-auto-update.css?v=1'));
-  assert.ok(sw.includes('./marketing-auto-update.mjs?v=3'));
+  assert.ok(sw.includes('./marketing-auto-update.css?v=2'));
+  assert.ok(sw.includes('./marketing-auto-update.mjs?v=6'));
   assert.ok(sw.includes('./core/web-updates.mjs?v=3'));
-  assert.ok(generator.includes('marketing-auto-update.mjs?v=3'));
-  assert.ok(generator.includes('marketing-auto-update.css?v=1'));
-  assert.ok(script.includes("import './marketing-downloads.mjs?v=1'"),'new prompt must not remove the installer version updater');
+  assert.ok(generator.includes('marketing-auto-update.mjs?v=6'));
+  assert.ok(generator.includes('marketing-auto-update.css?v=2'));
+  assert.ok(script.includes("import './marketing-downloads.mjs?v=2'"),'new prompt must not remove the installer version updater');
   assert.ok(script.includes("update.textContent = 'Zaktualizuj'"));
   assert.ok(style.includes('.mktUpdateBanner[hidden]'));
   for(const path of paths){
     const html=await read(path);
     const prefix=path.startsWith('kamera/blog/')?'../':'';
     assert.ok(html.includes('home-security-build" content="'+version+'"'),path);
-    assert.ok(html.includes('href="'+prefix+'marketing-auto-update.css?v=1"'),path);
-    assert.ok(html.includes('src="'+prefix+'marketing-auto-update.mjs?v=3"'),path);
-    assert.equal((html.match(/marketing-auto-update\.mjs\?v=3/g)||[]).length,1,path);
+    assert.ok(html.includes('href="'+prefix+'marketing-auto-update.css?v=2"'),path);
+    assert.ok(html.includes('src="'+prefix+'marketing-auto-update.mjs?v=6"'),path);
+    assert.equal((html.match(/marketing-auto-update\.mjs\?v=6/g)||[]).length,1,path);
   }
+});
+
+
+test('initial load and focus never fetch release metadata before the background window',async()=>{
+ const x=await mount({startBackground:false}).run();
+ assert.equal(x.requests,0);
+ x.listeners.focus();x.documentEvents.visibilitychange();
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(x.requests,0,'early focus and visibility events cannot reintroduce a critical request');
+ assert.ok([...x.timers.values()].some(handler=>handler.delay===30000));
+ x.fireAuto();await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(x.requests,1);assert.equal(x.banner.hidden,false,'update prompt still works later');
+});
+
+test('cache-busted update route keeps existing query and fragment without cross-origin redirects',()=>{
+ const value=freshUpdateURL('https://example.test/kamera/panel.html?auth=login&ui=phone#contact',currentBuild+1,12345);
+ const u=new URL(value);
+ assert.equal(u.origin,'https://example.test');
+ assert.equal(u.pathname,'/kamera/panel.html');
+ assert.equal(u.searchParams.get('auth'),'login');
+ assert.equal(u.searchParams.get('ui'),'phone');
+ assert.equal(u.searchParams.get('hs_release'),String(currentBuild+1));
+ assert.equal(u.searchParams.get('hs_refresh'),'12345');
+ assert.equal(u.hash,'#contact');
+ assert.equal(pendingUpdateBuild(value),currentBuild+1);
+ assert.throws(()=>freshUpdateURL('javascript:alert(1)',currentBuild+1),/protocol/i);
+ assert.throws(()=>freshUpdateURL('https://example.test/',0),/build/i);
+});
+
+test('stale browser document visibly offers a retry instead of silently treating old HTML as updated',async()=>{
+ const x=await mount({latest:currentBuild+1,href:'https://example.test/kamera/?hs_release='+(currentBuild+1)}).run();
+ assert.equal(x.banner.hidden,false);
+ assert.equal(x.reloads,0);
+ assert.ok(x.controls.some(node=>node.textContent==='Zaktualizuj'));
 });

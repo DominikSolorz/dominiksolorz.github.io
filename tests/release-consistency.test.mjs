@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 const read = path => readFile(new URL('../kamera/' + path, import.meta.url), 'utf8');
 test('release manifest, runtime and HTML/SW agree', async () => {
-  const [manifest, app, html, sw, access] = await Promise.all(['version.json','app.js','index.html','sw.js','access.js'].map(read));
+  const [manifest, app, html, sw, access] = await Promise.all(['version.json','app.js','panel.html','sw.js','access.js'].map(read));
   const version = JSON.parse(manifest).version;
   assert.equal(app.match(/const VERSION = "(\d+)"/)[1], version);
   const desktop = await readFile(new URL('../desktop-client/Program.cs', import.meta.url), 'utf8');

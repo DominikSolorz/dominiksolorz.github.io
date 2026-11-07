@@ -1,4 +1,4 @@
-name: HOME SECURITY Lighthouse performance audit
+name: WWW | Wydajność | Audyt Lighthouse
 
 on:
   workflow_dispatch:
@@ -6,11 +6,25 @@ on:
     branches: [main]
     paths:
       - 'kamera/index.html'
+      - 'kamera/panel.html'
+      - 'kamera/public-entry.js'
       - 'kamera/o-systemie.html'
       - 'kamera/marketing.css'
       - 'kamera/marketing-motion.css'
+      - 'kamera/marketing-motion.mjs'
+      - 'kamera/app.js'
+      - 'kamera/panel-entry.mjs'
+      - 'scripts/minify-web-assets.mjs'
+      - 'scripts/harden-public-pages.mjs'
+      - 'scripts/bundle-public-enhancements.mjs'
+      - 'kamera/support-view.mjs'
+      - 'scripts/optimize-marketing-images.mjs'
+      - 'kamera/sw.js'
       - 'kamera/assets/**'
-      - 'design/marketing/home.html'
+      - 'design/marketing/**'
+      - 'kamera/*.html'
+      - 'kamera/blog/*.html'
+      - 'scripts/audit-page*.mjs'
       - 'scripts/summarize-lighthouse.mjs'
       - '.github/workflows/pagespeed-audit.yml'
 
@@ -34,7 +48,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install Lighthouse CLI
-        run: npm install --no-save --no-package-lock lighthouse@12
+        run: npm install --no-save --no-package-lock lighthouse@13
       - name: Confirm Chrome availability
         shell: bash
         run: |
@@ -43,7 +57,9 @@ jobs:
           test -n "$CHROME" || { echo "Chrome missing on runner"; exit 1; }
           echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
           "$CHROME" --version
-      - name: Wait for Pages to publish this web build and its compressed images
+      # Audit the same GitHub Pages origin that Lighthouse measures.
+      # Vercel is an independent deployment and must not gate this origin.
+      - name: Wait for GitHub Pages to publish this build and its optimized images
         shell: bash
         run: |
           set -euo pipefail
@@ -68,6 +84,14 @@ jobs:
           node_modules/.bin/lighthouse "https://dominiksolorz.github.io/kamera/" \
             --preset=desktop --only-categories=performance,accessibility,best-practices,seo \
             --chrome-flags="$FLAGS" --output=json --output-path=lighthouse-results/root-desktop.json --quiet
+          # Measure the EXACT URL used in the October PageSpeed report.
+          # This is now the indexable public homepage; account routes use panel.html.
+          node_modules/.bin/lighthouse "https://dominiksolorz.github.io/kamera/?ui=phone" \
+            --preset=desktop --only-categories=performance,accessibility,best-practices,seo \
+            --chrome-flags="$FLAGS" --output=json --output-path=lighthouse-results/phone-desktop.json --quiet
+          node_modules/.bin/lighthouse "https://dominiksolorz.github.io/kamera/?ui=phone" \
+            --only-categories=performance,accessibility,best-practices,seo \
+            --chrome-flags="$FLAGS" --output=json --output-path=lighthouse-results/phone-mobile.json --quiet
           node_modules/.bin/lighthouse "https://dominiksolorz.github.io/kamera/o-systemie.html" \
             --preset=desktop --only-categories=performance,accessibility,best-practices,seo \
             --chrome-flags="$FLAGS" --output=json --output-path=lighthouse-results/marketing-desktop.json --quiet
@@ -81,5 +105,55 @@ jobs:
         with:
           name: home-security-lighthouse-reports
           path: lighthouse-results/*.json
+          if-no-files-found: warn
+          retention-days: 21
+
+  inventory:
+    runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.pages.outputs.targets }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/audit-page-inventory.mjs
+            /kamera/*.html
+            /kamera/blog/*.html
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - id: pages
+        run: echo "targets=$(node scripts/audit-page-inventory.mjs)" >> "$GITHUB_OUTPUT"
+  every-page:
+    needs: [inventory, lighthouse-production]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.inventory.outputs.targets) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: /scripts/audit-page.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock lighthouse@13
+      - name: Audit this exact URL on desktop and mobile
+        env:
+          AUDIT_TARGET: ${{ toJSON(matrix) }}
+        run: node scripts/audit-page.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-page-${{ matrix.id }}
+          path: lighthouse-results/
           if-no-files-found: warn
           retention-days: 21

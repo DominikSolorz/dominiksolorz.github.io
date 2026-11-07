@@ -24,8 +24,7 @@ export function mountInstallerDownloads(){
     try{const href=await refresh();status.textContent='Pobieranie najnowszej wersji…';window.location.assign(href);}
     catch{status.textContent='Nie udało się sprawdzić najnowszej wersji. Sprawdź połączenie i spróbuj ponownie.';}
   }));
-  void refresh().catch(()=>{});
-  window.addEventListener('focus',()=>void refresh().catch(()=>{}));
-  window.setInterval(()=>{if(document.visibilityState==='visible')void refresh().catch(()=>{});},15*60*1000);
+  // The deployed link is already current. Fetch the manifest only on download intent.
+  // Opening or focusing the brochure must not delay the page with release metadata.
 }
 if(typeof document!=='undefined')mountInstallerDownloads();

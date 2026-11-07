@@ -1,4 +1,4 @@
-name: Check and publish current Windows installer
+name: DESKTOP | Windows | Zbuduj i opublikuj aktualizację
 on:
   push:
     branches: [main]
@@ -6,6 +6,11 @@ on:
     # The release job fingerprints all bundled app assets and skips duplicate builds.
     paths:
       - '.github/workflows/desktop-scheduled-release.yml'
+      - 'scripts/desktop-release.mjs'
+      - 'scripts/build-marketing.mjs'
+      - 'scripts/build-documents.mjs'
+      - 'design/marketing/**'
+      - 'design/documents/**'
       - 'desktop-client/**'
       - 'agent/**'
       - 'agent-client/**'
@@ -86,6 +91,20 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Cannot restore the source dependency lock'}
           node scripts/desktop-release.mjs finish
           if($LASTEXITCODE -ne 0){throw 'Manifest generation failed'}
+      - name: Verify recording storage in isolated real WebView2
+        if: steps.plan.outputs.changed == 'true'
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $report=Join-Path $env:GITHUB_WORKSPACE 'recording-storage-bridge.json'
+          $exe=Join-Path $env:GITHUB_WORKSPACE "desktop-client/publish-$env:RELEASE_VERSION/HomeSecurityDesktop.exe"
+          $probe=Start-Process -FilePath $exe -ArgumentList @('--recording-storage-test',('"'+$report+'"')) -WindowStyle Hidden -PassThru
+          if(-not $probe.WaitForExit(60000)){throw 'Storage bridge test timed out'}
+          if(-not (Test-Path $report)){throw 'Storage bridge report missing'}
+          $result=Get-Content -Raw $report | ConvertFrom-Json
+          if(-not $result.ok -or $result.spoolBytes -ne 1048613 -or -not $result.preservedAfterDisconnect){throw 'Native storage transfer or disconnect failed'}
       - name: Render real camera workspace in isolated WebView2
         if: steps.plan.outputs.changed == 'true'
         shell: pwsh
@@ -129,7 +148,7 @@ jobs:
           if((git rev-parse origin/main) -ne $env:GITHUB_SHA){throw 'Main changed during build. Keep current release; retry at next check.'}
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add --sparse -- desktop-client/Program.cs desktop-client/HomeSecurityDesktop.csproj desktop-client/installer/HomeSecurityDesktop.iss desktop-client/build-release.ps1 design/marketing/home.html kamera/index.html kamera/o-systemie.html kamera/blog kamera/galeria.html kamera/pomoc.html kamera/sitemap.xml scripts/verify-live-marketing.mjs kamera/desktop-update.json "kamera/updates/HomeSecurityDesktop-$env:RELEASE_VERSION-win-x64.zip" "kamera/downloads/HOME-SECURITY-Desktop-Setup-$env:RELEASE_VERSION.exe"
+          git add --sparse -- 'kamera/*.html' desktop-client/Program.cs desktop-client/HomeSecurityDesktop.csproj desktop-client/installer/HomeSecurityDesktop.iss desktop-client/build-release.ps1 design/marketing/home.html kamera/index.html kamera/panel.html kamera/o-systemie.html kamera/blog kamera/galeria.html kamera/pobierz.html kamera/pomoc.html kamera/sitemap.xml scripts/verify-live-marketing.mjs kamera/desktop-update.json "kamera/updates/HomeSecurityDesktop-$env:RELEASE_VERSION-win-x64.zip" "kamera/downloads/HOME-SECURITY-Desktop-Setup-$env:RELEASE_VERSION.exe"
           if($LASTEXITCODE -ne 0){throw 'Cannot stage release'}
           git commit -m "Publish tested Windows installer $env:RELEASE_VERSION and matching download links"
           if($LASTEXITCODE -ne 0){throw 'Cannot commit release'}

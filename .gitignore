@@ -10,8 +10,17 @@ agent-contracts/bin/
 agent-contracts/obj/
 agent-tests/bin/
 agent-tests/obj/
+drive-sync/bin/
+drive-sync/obj/
 
 # Local server credentials must never enter the static Pages distribution.
 .env
 .env.local
 supabase/functions/.env
+node_modules/
+_site/
+lighthouse-results/
+
+# Generated public hosting distribution.
+.public-site-dist/
+.vercel/
