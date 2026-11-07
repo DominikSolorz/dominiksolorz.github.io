@@ -57,7 +57,7 @@ test('offline check never claims that an update succeeded',async()=>{
 test('manifest recordings shortcut opens current mobile router, not legacy page',async()=>{
  const manifest=JSON.parse(await read('manifest.webmanifest'));
  assert.equal(manifest.id,'/kamera/owner-panel');
- assert.ok(manifest.start_url.includes('ui=phone'));
+ assert.equal(manifest.start_url,'./index.html?app=mobile-home');
  assert.ok(manifest.shortcuts.find(s=>s.short_name==='Nagrania').url.includes('mobileView=recordings'));
  const [mobile,app]=await Promise.all(['mobile.js','app.js'].map(read));
  assert.ok(mobile.includes("get('mobileView')"));assert.ok(mobile.includes('mobileBuild'));
