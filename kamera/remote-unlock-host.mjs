@@ -86,9 +86,12 @@ export function createRemoteUnlockHost({client,ownerId}){
    if(!accessKey){await mark(row,'denied');return;}
    record.usedIds=[...usedIds].slice(-250);
    await save(); // Persist nonce BEFORE unlocking; never accept replay after restart.
-   await mark(row,'approved');
    const callback=unlockCallback;unlockCallback=null;
-   if(!callback(accessKey))status('Odblokowanie telefonu nie zostało przyjęte.');
+   if(callback(accessKey))await mark(row,'approved');
+   else {
+     await mark(row,'failed');
+     status('Komputer nie przyjął odblokowania. Użyj lokalnego PIN-u.');
+   }
  };
  const poll=async()=>{
    if(ended||!ready||busy)return;
