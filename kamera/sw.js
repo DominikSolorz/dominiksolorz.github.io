@@ -7,7 +7,7 @@ SHELL.push("./dokumenty.html", "./instrukcja.html", "./zasady-korzystania.html",
 // Reklamowy obraz startowy dostępny także w zainstalowanej PWA.
 SHELL.push("./loading-campaign.css?v=1","./assets/home-security-loading.webp");
 // Trzy lekkie banery otwarcia mobilnego oraz ich kod: dostepne rowniez w PWA.
-SHELL.push("./mobile-app-splash.css?v=3","./mobile-app-splash.js?v=3","./assets/home-security-ad-02.webp","./assets/home-security-ad-03.webp");
+SHELL.push("./mobile-app-splash.css?v=3","./mobile-app-splash.js?v=3","./assets/home-security-ad-02.webp","./assets/home-security-ad-03.webp","./assets/splash-placeholder.svg");
 self.addEventListener("install", event => {
   SHELL.push("./marketing.css?v=18", "./marketing-motion.css?v=2", "./marketing-motion.mjs?v=3", "./marketing-navigation.css?v=1", "./marketing-navigation.mjs?v=1", "./marketing-gallery.css?v=4", "./marketing-gallery.mjs?v=2", "./marketing-start.css?v=3", "./marketing-start.mjs?v=2", "./marketing-auto-update.css?v=2", "./marketing-auto-update.mjs?v=6", "./marketing-contact.js?v=8", "./tech-theme.css?v=3");
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
