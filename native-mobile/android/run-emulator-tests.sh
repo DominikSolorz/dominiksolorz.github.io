@@ -18,4 +18,4 @@ adb logcat -b crash -d > emulator-evidence/crashes.txt || true
 adb shell uiautomator dump /sdcard/hs-final-ui.xml >/dev/null 2>&1
 adb pull /sdcard/hs-final-ui.xml emulator-evidence/ >/dev/null 2>&1 || true
 if [ "$instrument_exit" -ne 0 ]; then exit "$instrument_exit"; fi
-grep -Eq '^OK \(5 tests\)' emulator-evidence/instrumentation.txt
+grep -Eq '^OK \(6 tests\)' emulator-evidence/instrumentation.txt
