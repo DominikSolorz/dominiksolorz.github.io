@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 
 public final class MainActivity extends ComponentActivity {
     private WebView web;
+    private AppUpdater updater;
     private TextView status;
     private View home, error, loading, bottom;
     private boolean showingHome = true, pageFailed = false, background = false;
@@ -41,6 +42,8 @@ public final class MainActivity extends ComponentActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
         getWindow().setDecorFitsSystemWindows(false);
         setContentView(R.layout.activity_main);
+        updater=new AppUpdater(this);
+        findViewById(R.id.checkAppUpdate).setOnClickListener(v->updater.check(true));
         web = findViewById(R.id.ownerWeb); status = findViewById(R.id.nativeStatus);
         home = findViewById(R.id.homeScreen); error = findViewById(R.id.errorScreen);
         loading = findViewById(R.id.panelLoading); bottom = findViewById(R.id.nativeBottomNav);
@@ -171,7 +174,7 @@ public final class MainActivity extends ComponentActivity {
         }
     }
     @Override protected void onSaveInstanceState(Bundle state) { state.putBoolean("native.home",showingHome); state.putString("native.route",currentRoute); web.saveState(state); super.onSaveInstanceState(state); }
-    @Override protected void onPause() { if(!showingHome) web.setVisibility(View.INVISIBLE); web.onPause(); background=true; super.onPause(); }
-    @Override protected void onResume() { super.onResume(); if(web!=null) { web.onResume(); if(!showingHome && !pageFailed) web.setVisibility(View.VISIBLE); if(background && !showingHome) status.setText(R.string.returned); background=false; } }
-    @Override protected void onDestroy() { web.destroy(); super.onDestroy(); }
+    @Override protected void onPause() { if(updater!=null)updater.pause(); if(!showingHome) web.setVisibility(View.INVISIBLE); web.onPause(); background=true; super.onPause(); }
+    @Override protected void onResume() { super.onResume(); if(updater!=null)updater.resume(); if(web!=null) { web.onResume(); if(!showingHome && !pageFailed) web.setVisibility(View.VISIBLE); if(background && !showingHome) status.setText(R.string.returned); background=false; } }
+    @Override protected void onDestroy() { if(updater!=null)updater.close(); web.destroy(); super.onDestroy(); }
 }
