@@ -1,0 +1,73 @@
+name: MOBILE | Android | Udostępnij testowy APK
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/android-apk-download.yml']
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: write
+concurrency:
+  group: android-preview-download
+  cancel-in-progress: false
+jobs:
+  publish-tested-apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_SHA: 7c3871bf281c5282be2088e8500966f9f08735fb
+      TAG: android-preview-0.2.0-7c3871b
+    steps:
+      - name: Verify successful build and emulator runs from the exact source
+        shell: bash
+        run: |
+          set -euo pipefail
+          for run in 42377463088 42377463135; do
+            gh api "repos/$GH_REPO/actions/runs/$run" > "$RUNNER_TEMP/run-$run.json"
+            jq -e --arg sha "$SOURCE_SHA" '.head_sha == $sha and .head_branch == "main" and .conclusion == "success" and .event == "push"' "$RUNNER_TEMP/run-$run.json"
+          done
+      - name: Fetch the already tested signed preview artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/actions/artifacts/13576760056/zip" > "$RUNNER_TEMP/android-artifact.zip"
+          echo "c3834387c77dad74f66b6c27ff145da2cabf890b1a6ed6b357ca64f206b262cb  $RUNNER_TEMP/android-artifact.zip" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/android-input" "$RUNNER_TEMP/android-release"
+          unzip -q "$RUNNER_TEMP/android-artifact.zip" -d "$RUNNER_TEMP/android-input"
+          mapfile -t apks < <(find "$RUNNER_TEMP/android-input" -type f -path '*/debug/app-debug.apk')
+          test "${#apks[@]}" -eq 1
+          cp "${apks[0]}" "$RUNNER_TEMP/android-release/HOME-SECURITY-Android-0.2.0-preview.apk"
+      - name: Verify installable package and signature
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$RUNNER_TEMP/android-release/HOME-SECURITY-Android-0.2.0-preview.apk"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$apk" > "$RUNNER_TEMP/android-release/SIGNATURE.txt"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$apk" > "$RUNNER_TEMP/android-release/PACKAGE.txt"
+          grep -F "name='pl.solorz.homesecurity.preview'" "$RUNNER_TEMP/android-release/PACKAGE.txt"
+          grep -F "versionName='0.2.0-preview'" "$RUNNER_TEMP/android-release/PACKAGE.txt"
+          grep -F "sdkVersion:'30'" "$RUNNER_TEMP/android-release/PACKAGE.txt"
+          cd "$RUNNER_TEMP/android-release"
+          sha256sum HOME-SECURITY-Android-0.2.0-preview.apk > SHA256SUMS.txt
+      - name: Publish immutable test download without replacing existing assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/notes.txt" <<'NOTES'
+          HOME SECURITY 0.2.0 preview, Android 11+.
+          Wersja testowa do samodzielnej instalacji. Nie jest wydaniem Google Play ani produkcyjnym APK.
+          Logowanie: e-mail, hasło i istniejący PIN. Google OAuth nie jest jeszcze obsługiwany w APK; można korzystać z wersji przeglądarkowej.
+          Wymagany aktualny Android System WebView (124+). Nie potwierdzono instalacji ani transmisji na fizycznym telefonie użytkownika.
+          Ten dokładny plik pochodzi z udanego buildu 42377463088; kod źródłowy przeszedł też testy emulatora 42377463135.
+          Podpis testowy CI. Zachowaj ten APK. Kolejne testowe kompilacje mogą wymagać odinstalowania poprzedniej wersji, co usuwa lokalne dane aplikacji. Klucz produkcyjny i aktualizacje wymagają osobnego przygotowania.
+          Source: 7c3871bf281c5282be2088e8500966f9f08735fb.
+          NOTES
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            mkdir "$RUNNER_TEMP/existing"
+            gh release download "$TAG" --pattern '*.apk' --dir "$RUNNER_TEMP/existing"
+            cmp "$RUNNER_TEMP/existing/HOME-SECURITY-Android-0.2.0-preview.apk" "$RUNNER_TEMP/android-release/HOME-SECURITY-Android-0.2.0-preview.apk"
+            exit 0
+          fi
+          gh release create "$TAG" "$RUNNER_TEMP/android-release/"* --target "$SOURCE_SHA" --title "HOME SECURITY Android 0.2.0 — wersja testowa APK" --notes-file "$RUNNER_TEMP/notes.txt" --prerelease --latest=false
