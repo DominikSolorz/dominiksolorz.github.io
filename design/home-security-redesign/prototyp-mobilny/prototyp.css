@@ -250,3 +250,10 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:var(--focus-rin
 #settings .cards .row{min-height:55px}
 @media (max-height:600px){#login .scroll,#pin .scroll{padding-top:12px;gap:12px}#login .hero,#pin .hero{margin-bottom:0}#pin .keypad button{min-height:44px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* Karta mapy (demo, bez lokalizacji) */
+.mapcard{padding:12px;display:flex;flex-direction:column;gap:8px}
+.maphead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.badge-demo{font-size:.68rem;font-weight:800;letter-spacing:.08em;padding:2px 8px;border-radius:999px;border:1px solid var(--cyan);color:var(--cyan)}
+.mapview{border-radius:14px;overflow:hidden;border:1px solid var(--line);aspect-ratio:16/7;max-height:34dvh}
+.mapview svg{display:block;width:100%;height:100%}
