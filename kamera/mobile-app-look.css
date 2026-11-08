@@ -165,3 +165,12 @@ html.mobileOwnerMode .toast{top:auto;bottom:calc(14px + env(safe-area-inset-bott
 html.mobileOwnerMode .mobileMapCard .mobileMapOpen{display:none}
 html.mobileOwnerMode .mobileMapCard{margin:0}
 html.mobileOwnerMode body #app #mobileOverview .mobileOverviewActions .mobileMapTile{grid-column:1/-1}
+
+/* Sklepy w pobliżu (okno mapy) */
+.mobileMapShops{margin-top:10px;max-height:34vh;overflow:auto}
+.mobileMapShops h3{margin:0 0 6px;font-size:14px;color:#cfe8f5}
+.mobileMapShops ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.mobileMapShops li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px;padding:8px 10px;border:1px solid rgba(80,170,230,.3);border-radius:10px;background:rgba(255,255,255,.04);font-size:14px}
+.mobileMapShops li span{min-width:0;overflow-wrap:anywhere}
+.mobileMapShops a{flex:none;min-height:36px;display:inline-grid;place-items:center;padding:0 10px;border-radius:10px;color:#1de9e0;font-weight:700;font-size:13px;text-decoration:none;border:1px solid rgba(29,233,224,.5)}
+.mobileMapShopNote{margin:6px 0 0;font-size:12px;color:#8fb0c8}
