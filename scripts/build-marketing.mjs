@@ -119,7 +119,7 @@ if(!/^\d+\.\d+\.\d+$/.test(currentDesktopRelease))throw new Error('Invalid publi
 const downloadSource=(await read(source,'pobierz.html')).replaceAll('__DESKTOP_RELEASE__',currentDesktopRelease);
 const downloadStyles=downloadSource.match(/<style>[\s\S]*?<\/style>/)?.[0]||'';
 const downloads=downloadSource.replace(downloadStyles,'');
-await emit('pobierz.html',head('Pobierz aplikację na Windows, Android i iPhone','Pobierz HOME SECURITY na Windows i sprawdź, jak dodać panel na Androidzie i iPhonie. Instalator, wymagania i instrukcje w jednym miejscu.','pobierz.html').replace('</head>',downloadStyles+'</head>')+nav()+downloads+footer()+'\n</body></html>\n');
+await emit('pobierz.html',head('Pobierz aplikację na Windows, Android i iPhone','Pobierz HOME SECURITY na Windows i sprawdź, jak dodać panel na Androidzie i iPhonie. Instalator, wymagania i instrukcje w jednym miejscu.','pobierz.html').replace('</head>',downloadStyles+'<link rel="manifest" href="manifest.webmanifest?v=4"><script type="module" src="android-install.mjs?v=1"></script></head>')+nav()+downloads+footer()+'\n</body></html>\n');
 const paths=['','kontakt.html','pomoc.html',...topicPages.map(page=>page.slug+'.html'),'pobierz.html','galeria.html','blog/index.html',...posts.map(post=>'blog/'+post.slug+'.html')];
 await emit('sitemap.xml','<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+paths.map(path=>`<url><loc>${publicOrigin+path}</loc></url>`).join('\n')+'\n</urlset>\n');
 console.log((check?'Verified':'Generated')+' marketing home, UI gallery, contact, blog index, 3 articles and sitemap.');
