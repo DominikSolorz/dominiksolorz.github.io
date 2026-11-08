@@ -122,6 +122,10 @@ jobs:
             --exclude='/supabase/' \
             --exclude='/design/' \
             ./ _site/
+          # Publish only the isolated browser walkthrough, never the whole design tree.
+          mkdir -p _site/podglad-mobilny
+          rsync -a design/home-security-redesign/prototyp-mobilny/ _site/podglad-mobilny/
+          test -s _site/podglad-mobilny/index.html
           mkdir -p _site/kamera/updates
           current=$(node -p 'JSON.parse(require("fs").readFileSync("kamera/desktop-update.json","utf8")).version')
           cp "kamera/updates/HomeSecurityDesktop-${current}-win-x64.zip" _site/kamera/updates/
