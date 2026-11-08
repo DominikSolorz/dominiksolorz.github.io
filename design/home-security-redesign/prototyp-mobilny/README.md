@@ -30,3 +30,6 @@ Przełącznik wszystkich ekranów do porównywania makiet: `?demo=1`. Zwykły li
 Test przeglądarkowy, z Playwright dostępnym w środowisku: `CHROMIUM_PATH=/usr/bin/chromium node scripts/verify-mobile-walkthrough.cjs`. Zmienna `HS_PREVIEW_URL` pozwala sprawdzić ten sam przebieg na opublikowanym podglądzie. Test używa wyłącznie danych pokazowych.
 
 Workflow Pages kopiuje wyłącznie ten katalog do `/podglad-mobilny/`; pozostała zawartość `design/` nadal jest wyłączona z publikacji.
+
+## Karta „Lokalizacja” (demo)
+Schematyczna mapa na Pulpicie jest wyłącznie demonstracyjna (grafika SVG). Aplikacja nie ma obecnie funkcji lokalizacji ani adresu, więc prototyp nie pobiera lokalizacji i nie łączy się z usługą map. Wdrożenie wymaga osobnej decyzji (źródło danych, zgoda, prywatność).
