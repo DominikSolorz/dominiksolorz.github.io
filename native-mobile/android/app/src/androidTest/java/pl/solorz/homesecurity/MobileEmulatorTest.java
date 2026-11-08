@@ -120,9 +120,9 @@ public class MobileEmulatorTest {
             capture(scenario,"01-native-home");
             if(!supportedEngine()) { control("navRecordings").click();assertUpdateScreen(scenario);control("errorGoHome").click();return; }
             control("navRecordings").click();waitFor(()->visible(scenario,R.id.ownerWeb)&&!visible(scenario,R.id.panelLoading),20000);
-            assertEquals("true",js(scenario,"document.body.dataset.mobileView==='recordings'"));
+            waitFor(()->"true".equals(js(scenario,"document.body.dataset.mobileView==='recordings'")),20000);
             control("navAccount").click();waitFor(()->!visible(scenario,R.id.panelLoading),20000);
-            assertEquals("true",js(scenario,"document.body.dataset.mobileView==='settings'"));
+            waitFor(()->"true".equals(js(scenario,"document.body.dataset.mobileView==='settings'")),20000);
             device.pressBack();waitFor(()->visible(scenario,R.id.homeScreen),10000);
         }
     }
