@@ -11,7 +11,7 @@ namespace HomeSecurityDesktop;
 internal static class Program
 {
     private const string DesktopVersion = "1.4.75";
-    private const string WebPanelBuild = "275";
+    private const string WebPanelBuild = "276";
     // Desktop serves its installed Panel bundle at the existing trusted origin.
     // The website and installed UI can now be released independently without
     // migrating the user's existing session, PIN or IndexedDB recordings.
@@ -289,6 +289,7 @@ internal static class Program
         private bool downloadingUpdate;
         private bool panelUnlocked;
         private DesktopUpdateManifest? offeredUpdate;
+        private bool HasUpdateOffer => offeredUpdate is not null || File.Exists(PendingUpdatePath);
         // Check at startup, every 10 minutes and when the owner returns to the app.
         // Detection never downloads, installs or interrupts camera recording.
         private readonly System.Windows.Forms.Timer updateCheckTimer = new() { Interval = 10 * 60 * 1000 };
@@ -319,7 +320,7 @@ internal static class Program
         {
             updateState = new {
                 type = "desktop.update.state", status, version = offeredUpdate?.Version,
-                installedVersion = DesktopVersion,
+                installedVersion = DesktopVersion, hasUpdate = HasUpdateOffer,
                 lastCheckedUtc = lastSuccessfulUpdateCheckUtc.HasValue ? lastSuccessfulUpdateCheckUtc.Value.ToString("O") : null,
                 checkIntervalMinutes = 10,
                 message, percent
@@ -337,8 +338,9 @@ internal static class Program
             }
             cancelUpdateButton.Visible = File.Exists(PendingUpdatePath);
             checkUpdateButton.Enabled = !checkingUpdate && !downloadingUpdate && !File.Exists(PendingUpdatePath);
-            // The owner sees the update center only after unlocking the panel.
-            updateBar.Visible = panelUnlocked;
+            // Stay silent while current/checking/offline with no known update.
+            // Login and PIN remain required even when an offer exists.
+            updateBar.Visible = panelUnlocked && HasUpdateOffer;
             LayoutUpdateCenter();
         }
 
@@ -464,7 +466,7 @@ internal static class Program
                         }
                         if (type.GetString() == "desktop.update.visibility") {
                             panelUnlocked = root.TryGetProperty("visible", out var visible) && visible.ValueKind == JsonValueKind.True;
-                            updateBar.Visible = panelUnlocked;
+                            updateBar.Visible = panelUnlocked && HasUpdateOffer;
                             // Unlocking does NOT authorize an update download.
                             webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(updateState));
                             if (panelUnlocked) PromptForAvailableUpdate();
@@ -480,7 +482,7 @@ internal static class Program
                             if (!panelUnlocked) return;
                             // The web sidebar also uses this action for retry after a failed manifest check.
                             // With no offered version, retry discovery instead of silently doing nothing.
-                            if (offeredUpdate is null) await CheckForUpdateAsync();
+                            if (offeredUpdate is null && !File.Exists(PendingUpdatePath)) await CheckForUpdateAsync();
                             else await DownloadAndPrepareOfferedUpdateAsync();
                             return;
                         }
