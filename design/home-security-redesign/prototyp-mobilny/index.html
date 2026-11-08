@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#050d1a">
+<title>HOME SECURITY – prototyp wyglądu (demo)</title>
+<link rel="stylesheet" href="prototyp.css">
+</head>
+<body>
+<!-- Przełącznik ekranów – WYŁĄCZNIE DEMONSTRACYJNY -->
+<nav class="demo-switch" aria-label="Przełącznik ekranów (tylko demo)">
+  <button data-go="start">1 Start</button>
+  <button data-go="intro">2 Intro</button>
+  <button data-go="login">3 Logowanie</button>
+  <button data-go="pin">4 PIN</button>
+  <button data-go="dash">5 Pulpit</button>
+  <button data-go="cams">6 Kamery</button>
+  <button data-go="recs">7 Nagrania</button>
+  <button data-go="settings">8 Ustawienia</button>
+</nav>
+
+<main class="stage">
+
+<section class="screen" id="start" hidden>
+  <div class="scroll center splash">
+    <svg class="logo"><use href="#i-logo"/></svg>
+    <h1 class="brand big">HOME<br><span>SECURITY</span></h1>
+    <p class="tagline">Twój dom.<br>Twoja kontrola.<br><span>Zawsze pod ręką.</span></p>
+    <div class="load" role="progressbar" aria-label="Ładowanie aplikacji"><i></i></div>
+    <p class="muted small">Ładowanie aplikacji…</p>
+    <p class="muted small">Ekran demonstracyjny. Reklama startowa to osobny element strony głównej, poza tym prototypem.</p>
+  </div>
+</section>
+
+<section class="screen" id="intro" hidden>
+  <div class="scroll">
+    <header class="hero">
+      <svg class="logo sm"><use href="#i-logo"/></svg>
+      <h1 class="brand">HOME <span>SECURITY</span></h1>
+      <div class="hero-img" role="img" aria-label="Miejsce na ilustrację kamery"><svg><use href="#i-cam"/></svg></div>
+    </header>
+    <ul class="cards">
+      <li class="card row"><svg class="ico"><use href="#i-cam"/></svg><span>Podgląd na żywo z Twoich kamer</span></li>
+      <li class="card row"><svg class="ico"><use href="#i-bell"/></svg><span>Powiadomienia o zdarzeniach</span></li>
+      <li class="card row"><svg class="ico"><use href="#i-cloud"/></svg><span>Bezpieczne archiwum nagrań</span></li>
+    </ul>
+    <div class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+    <button class="btn primary" data-go="login">Rozpocznij <svg class="ico sm"><use href="#i-arrow"/></svg></button>
+    <p class="muted center-t">Masz już konto? <a href="#login" data-go="login">Zaloguj się</a></p>
+  </div>
+</section>
+
+<section class="screen" id="login" hidden>
+  <div class="scroll">
+    <header class="hero">
+      <svg class="logo sm"><use href="#i-logo"/></svg>
+      <h1 class="brand">HOME <span>SECURITY</span></h1>
+    </header>
+    <h2 class="title">Logowanie</h2>
+    <p class="muted center-t">Zaloguj się do swojego konta</p>
+    <form class="form" onsubmit="return false" autocomplete="off">
+      <label class="field"><svg class="ico sm"><use href="#i-mail"/></svg><span class="sr">E-mail</span><input type="email" placeholder="E-mail" disabled></label>
+      <label class="field"><svg class="ico sm"><use href="#i-lock"/></svg><span class="sr">Hasło</span><input type="password" placeholder="Hasło" disabled><svg class="ico sm dim"><use href="#i-eye"/></svg></label>
+      <label class="check"><input type="checkbox" checked disabled><i></i> Zapamiętaj mnie</label>
+      <button class="btn primary" type="button" data-go="pin">Zaloguj się <svg class="ico sm"><use href="#i-arrow"/></svg></button>
+      <p class="muted center-t">Nie masz konta? <a href="#login" data-go="login">Zarejestruj się</a></p>
+      <p class="muted center-t small">Pola są wyłączone – to tylko wygląd. Prawdziwe logowanie pozostaje bez zmian.</p>
+    </form>
+  </div>
+</section>
+
+<section class="screen" id="pin" hidden>
+  <div class="scroll">
+    <header class="hero">
+      <svg class="logo sm"><use href="#i-logo"/></svg>
+      <h1 class="brand">HOME <span>SECURITY</span></h1>
+    </header>
+    <h2 class="title">Wprowadź kod PIN</h2>
+    <div class="pin-dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+    <div class="keypad">
+      <button type="button">1</button><button type="button">2</button><button type="button">3</button>
+      <button type="button">4</button><button type="button">5</button><button type="button">6</button>
+      <button type="button">7</button><button type="button">8</button><button type="button">9</button>
+      <button type="button" class="acc" aria-label="Odcisk palca (demo)"><svg class="ico"><use href="#i-finger"/></svg></button>
+      <button type="button">0</button>
+      <button type="button" aria-label="Usuń"><svg class="ico"><use href="#i-back"/></svg></button>
+    </div>
+    <p class="muted center-t small">Klawiatura demonstracyjna – nie weryfikuje PIN-u.</p>
+    <button class="btn ghost" data-go="dash">Dalej (demo)</button>
+  </div>
+</section>
+
+<section class="screen has-nav" id="dash" hidden>
+  <header class="bar brandbar"><div class="bb"><svg class="logo sm"><use href="#i-logo"/></svg><strong class="brand2">HOME<br><span>SECURITY</span></strong></div><button class="icon-btn" aria-label="Powiadomienia"><svg class="ico"><use href="#i-bell"/></svg></button></header>
+  <div class="scroll">
+    <h2 class="greet">Witaj</h2>
+    <div class="tiles">
+      <button class="card tile sel" data-go="cams"><svg class="ico"><use href="#i-cam"/></svg><strong>Kamery</strong></button>
+      <button class="card tile" data-go="recs"><svg class="ico"><use href="#i-film"/></svg><strong>Nagrania</strong></button>
+      <button class="card tile"><svg class="ico"><use href="#i-bell"/></svg><strong>Zdarzenia</strong></button>
+      <button class="card tile" data-go="settings"><svg class="ico"><use href="#i-gear"/></svg><strong>Ustawienia</strong></button>
+      <button class="card tile"><svg class="ico"><use href="#i-cloud"/></svg><strong>Chmura</strong></button>
+      <button class="card tile"><svg class="ico"><use href="#i-user"/></svg><strong>Profil</strong></button>
+    </div>
+    <p class="muted center-t small">Wygląd demonstracyjny – bez danych użytkownika i liczników zdarzeń.</p>
+  </div>
+</section>
+
+<section class="screen has-nav" id="cams" hidden>
+  <header class="bar"><button class="icon-btn" data-go="dash" aria-label="Wstecz"><svg class="ico"><use href="#i-chev"/></svg></button><h2>Kamery</h2><button class="icon-btn" aria-label="Dodaj kamerę"><svg class="ico"><use href="#i-plus"/></svg></button></header>
+  <div class="scroll">
+    <div class="seg" role="tablist"><button class="on" role="tab" aria-selected="true">Na żywo</button><button role="tab" aria-selected="false">Wszystkie</button></div>
+    <div class="cam-grid"><article class="cam"><div class="cam-view v0"><svg><use href="#i-cam"/></svg><svg class="play"><use href="#i-play"/></svg></div><div class="cam-meta"><div><strong>Wejście</strong><span class="muted small">Miejsce na obraz</span></div><span class="dots3" aria-hidden="true">⋮</span></div></article><article class="cam"><div class="cam-view v1"><svg><use href="#i-cam"/></svg><svg class="play"><use href="#i-play"/></svg></div><div class="cam-meta"><div><strong>Ogród</strong><span class="muted small">Miejsce na obraz</span></div><span class="dots3" aria-hidden="true">⋮</span></div></article><article class="cam"><div class="cam-view v2"><svg><use href="#i-cam"/></svg><svg class="play"><use href="#i-play"/></svg></div><div class="cam-meta"><div><strong>Garaż</strong><span class="muted small">Miejsce na obraz</span></div><span class="dots3" aria-hidden="true">⋮</span></div></article></div>
+    <p class="muted center-t small">Brak transmisji w prototypie.</p>
+  </div>
+</section>
+
+<section class="screen has-nav" id="recs" hidden>
+  <header class="bar"><button class="icon-btn" data-go="dash" aria-label="Wstecz"><svg class="ico"><use href="#i-chev"/></svg></button><h2>Nagrania</h2><button class="icon-btn" aria-label="Filtr"><svg class="ico"><use href="#i-filter"/></svg></button></header>
+  <div class="scroll">
+    <button class="card date"><svg class="ico sm"><use href="#i-cal"/></svg><span>Wybierz datę</span><svg class="ico sm dim"><use href="#i-down"/></svg></button>
+    <ul class="cards">
+      <li class="card rec"><div class="thumb"><svg class="play"><use href="#i-play"/></svg></div><div class="rec-txt"><strong>--:--</strong><span>Zdarzenie – przykład</span><span class="muted">00:00:00</span></div><span class="dots3" aria-hidden="true">⋮</span></li>
+      <li class="card rec"><div class="thumb t2"><svg class="play"><use href="#i-play"/></svg></div><div class="rec-txt"><strong>--:--</strong><span>Zdarzenie – przykład</span><span class="muted">00:00:00</span></div><span class="dots3" aria-hidden="true">⋮</span></li>
+      <li class="card rec"><div class="thumb t3"><svg class="play"><use href="#i-play"/></svg></div><div class="rec-txt"><strong>--:--</strong><span>Zdarzenie – przykład</span><span class="muted">00:00:00</span></div><span class="dots3" aria-hidden="true">⋮</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="screen has-nav" id="settings" hidden>
+  <header class="bar"><button class="icon-btn" data-go="dash" aria-label="Wstecz"><svg class="ico"><use href="#i-chev"/></svg></button><h2>Ustawienia</h2><span class="icon-btn"></span></header>
+  <div class="scroll"><ul class="cards"><li class="card row"><svg class="ico"><use href="#i-cam"/></svg><span>Urządzenia i kamery</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-bell"/></svg><span>Powiadomienia</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-film"/></svg><span>Nagrywanie i archiwum</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-signal"/></svg><span>Dostęp zdalny</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-shield"/></svg><span>Bezpieczeństwo</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-lock"/></svg><span>Prywatność i RODO</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-lang"/></svg><span>Język</span><span class="muted val">Polski</span><svg class="ico sm dim"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-info"/></svg><span>Informacje o aplikacji</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li></ul></div>
+</section>
+
+<nav class="tabs" id="tabs" aria-label="Nawigacja aplikacji" hidden>
+  <button data-go="dash"><svg class="ico"><use href="#i-home"/></svg><span>Pulpit</span></button>
+  <button data-go="cams"><svg class="ico"><use href="#i-cam"/></svg><span>Kamery</span></button>
+  <button data-go="recs"><svg class="ico"><use href="#i-film"/></svg><span>Nagrania</span></button>
+  <button data-go="settings"><svg class="ico"><use href="#i-gear"/></svg><span>Więcej</span></button>
+</nav>
+</main>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<symbol id="i-logo" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M8 30 32 8l24 22"/><path d="M32 22 18 28v10c0 8 6 13 14 16 8-3 14-8 14-16V28Z"/><path d="m26 38 5 5 8-10"/></symbol>
+<symbol id="i-cam" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><path d="M4 16h26a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H4z"/><path d="m33 22 11-5v14l-11-5"/><path d="M14 32v8h8"/></symbol>
+<symbol id="i-bell" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><path d="M10 34h28l-4-6V20a10 10 0 0 0-20 0v8z"/><path d="M20 38a4 4 0 0 0 8 0"/><path d="M24 7v3"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><path d="M14 36a8 8 0 0 1-1-16 11 11 0 0 1 21 2 7 7 0 0 1 0 14z"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 7 9-7"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-finger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3a7 7 0 0 0-7 7v2M12 7a3 3 0 0 0-3 3v4a8 8 0 0 0 2 5M12 7a3 3 0 0 1 3 3v3M19 10v3a8 8 0 0 1-2 5M12 11v4a4 4 0 0 0 1 3"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M9 5h11v14H9l-6-7z"/><path d="m12 9 6 6m0-6-6 6"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="i-film" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M19 5l-2 2M7 17l-2 2"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></symbol>
+<symbol id="i-chev2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 9 7 7 7-7"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4m8-4v4"/></symbol>
+<symbol id="i-play" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="rgba(5,13,26,.7)" stroke="#d8f6ff" stroke-width="2"/><path d="m16 12 12 8-12 8z" fill="#fff"/></symbol>
+<symbol id="i-signal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="11" r="2"/><path d="M12 13v8M7 6a7 7 0 0 0 0 10M17 6a7 7 0 0 1 0 10M4 3a11 11 0 0 0 0 16M20 3a11 11 0 0 1 0 16"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+<symbol id="i-lang" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.01"/></symbol>
+</defs>
+</svg>
+<script src="prototyp.js"></script>
+</body>
+</html>
