@@ -64,7 +64,7 @@ const artifacts=process.env.HS_MOBILE_PROOF;
    await page.locator('#lock [data-k=ok]').click();
    await page.locator('#app').waitFor({state:'visible'});
    await page.locator('#mobileOverview').waitFor({state:'visible'});
-   assert.equal(await page.locator('.mobileOverviewActions button').count(),6);
+   assert.equal(await page.locator('.mobileOverviewActions button').count(),7);
    assert.equal(await page.locator('.mobileOverviewActions').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),2);
    assert.equal(await page.locator('.mobileBottomNav').count(),0);
    assert.equal(await page.locator('.mobileAppHeader #deviceLayoutBtn').count(),0);
