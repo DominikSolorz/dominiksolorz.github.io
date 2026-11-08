@@ -38,52 +38,59 @@ if (isMobileOwnerApp) {
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
     <img class="mobileBrandLogo" src="assets/mobile-app-mark.svg" width="48" height="48" alt="DS"><div><span class="mobileBrandName">HOME <b>SECURITY</b></span><h1 id="mobilePageTitle">Pulpit</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
-    <button id="deviceLayoutBtn" type="button" aria-label="Zmień układ urządzenia"><span>▣</span><b>Telefon</b></button>
-    <details class="mobileRelease"><summary>Opcje aplikacji</summary><div class="mobileOptionsBody"><small id="mobileBuild"></small><button type="button" data-web-update>Aktualizacje automatyczne</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span><button type="button" data-open-project-gallery>Projekty interfejsu</button><a href="https://dominiksolorz.github.io/kamera/dokumenty.html" target="_blank" rel="noopener noreferrer">Instrukcja i dokumenty ↗</a><div class="mobileAccountOptions"></div></div></details>`;
+    <button id="mobileMenuBtn" type="button" aria-label="Otwórz menu" aria-controls="mobileMenuPage" aria-expanded="false">•••</button>`;
   app?.insertBefore(mobileHeader, app.firstChild);
-  // Move the original profile/logout controls, retaining their handlers and identity.
-  const accountOptions=mobileHeader.querySelector('.mobileAccountOptions');
-  const moveAccountActions=()=>{const actions=mobileHeader.querySelector('.accountActions');if(actions&&actions.parentElement!==accountOptions)accountOptions.append(actions);};
+  const makePage = (id, title, intro, content) => {
+    const page = document.createElement('section');
+    page.id = id; page.className = 'mobileFunctionPage mobileHidden';
+    page.innerHTML = `<header class="mobileFunctionHeading"><h2>${title}</h2><p>${intro}</p></header>${content}`;
+    document.querySelector('.mainCol')?.append(page);
+    return page;
+  };
+  const menuPage = makePage('mobileMenuPage','Menu','Wybierz funkcję. Każda otwiera osobny ekran.',`
+    <div class="mobileFunctionLinks">
+      <button type="button" data-open-mobile-view="home">Pulpit <span>›</span></button>
+      <button type="button" data-open-mobile-view="camera">Kamery <span>›</span></button>
+      <button type="button" data-open-mobile-view="recordings">Nagrania <span>›</span></button>
+      <button type="button" data-open-mobile-view="cloud">Chmura i miejsce zapisu <span>›</span></button>
+      <button type="button" data-open-mobile-view="settings">Ustawienia <span>›</span></button>
+      <button type="button" data-open-mobile-view="appearance">Wygląd i urządzenie <span>›</span></button>
+      <button type="button" data-open-mobile-view="updates">Aktualizacje i wersja <span>›</span></button>
+      <button type="button" data-open-mobile-view="playback">Mini-okno kamery <span>›</span></button>
+      <a href="https://dominiksolorz.github.io/kamera/dokumenty.html" target="_blank" rel="noopener">Instrukcja i dokumenty ↗</a>
+    </div><div class="mobileAccountOptions"></div>`);
+  const updatesPage = makePage('mobileUpdatesPage','Aktualizacje','Sprawdź dostępność nowej wersji panelu.',
+    '<p id="mobileBuild"></p><button type="button" data-web-update>Sprawdź aktualizacje</button><p id="mobileUpdateStatus" role="status" aria-live="polite"></p><button type="button" data-open-project-gallery>Projekty interfejsu</button>');
+  makePage('mobilePlaybackPage','Mini-okno kamery','Ustaw zachowanie podglądu po przełączeniu aplikacji.','<div class="mobileOptionsBody"></div>');
+  // Retain the original profile/logout controls and their security handlers.
+  const accountOptions=menuPage.querySelector('.mobileAccountOptions');
+  const moveAccountActions=()=>{const actions=mobileHeader.querySelector('.accountActions');if(actions)accountOptions.append(actions);};
   const accountObserver=new MutationObserver(moveAccountActions);accountObserver.observe(mobileHeader,{childList:true});moveAccountActions();
   window.addEventListener('pagehide',event=>{if(!event.persisted)accountObserver.disconnect();});
   const platformName=({android:'Android',ios:'iPhone / iPad'})[document.documentElement.dataset.phonePlatform]||'Telefon';
-  byId('deviceLayoutBtn').querySelector('b').textContent=platformName;
   byId('mobileBuild').textContent=`Panel ${document.querySelector('meta[name="home-security-build"]')?.content||'—'} · ${platformName}`;
-  mobileHeader.querySelector('[data-web-update]').addEventListener('click',()=>document.dispatchEvent(new Event('hs-check-web-update')));
+  updatesPage.querySelector('[data-web-update]').addEventListener('click',()=>document.dispatchEvent(new Event('hs-check-web-update')));
   document.dispatchEvent(new Event('hs-web-update-ui-ready'));
-
-  const nav = document.createElement("nav");
-  nav.className = "mobileBottomNav";
-  nav.setAttribute("aria-label", "Nawigacja mobilna");
-  nav.innerHTML = `
-    <button class="active" type="button" data-mobile-view="home"><b>⌂</b><span>Pulpit</span></button>
-    <button type="button" data-mobile-view="camera"><b>◉</b><span>Kamery</span></button>
-    <button type="button" data-mobile-view="recordings"><b>▷</b><span>Nagrania</span></button>
-    <button type="button" data-mobile-view="settings" aria-label="Ustawienia"><b>⚙</b><span>Więcej</span></button>`;
-  const mobileIcons={home:'home',camera:'camera',alerts:'alerts',recordings:'archive',settings:'settings'};
-  nav.querySelectorAll('[data-mobile-view]').forEach(button=>{button.querySelector('b').innerHTML=iconMarkup(mobileIcons[button.dataset.mobileView]);});
-  document.body.append(nav);
+  const backHome=document.createElement('button');
+  backHome.type='button';backHome.id='mobileBackHome';backHome.textContent='← Wróć do pulpitu';backHome.hidden=true;
+  document.querySelector('.mainCol')?.prepend(backHome);
 
   const deviceSheet = document.createElement("section");
-  deviceSheet.className = "deviceLayoutSheet";
-  deviceSheet.hidden = true;
+  deviceSheet.id = "mobileAppearancePage";
+  deviceSheet.className = "mobileFunctionPage mobileAppearance mobileHidden";
+
   deviceSheet.innerHTML = `
-    <div class="deviceLayoutCard" role="dialog" aria-modal="true" aria-labelledby="deviceLayoutTitle">
-      <button class="deviceLayoutClose" type="button" aria-label="Zamknij">×</button>
+    <div class="deviceLayoutCard" aria-labelledby="deviceLayoutTitle">
       <p>UKŁAD APLIKACJI</p><h2 id="deviceLayoutTitle">Na czym oglądasz?</h2>
       <span>Zmienia się tylko wielkość i układ ekranu. Nadajnik kamery pozostaje w programie Windows.</span>
       <div>
         <button type="button" data-ui-mode="auto"><b>↔</b><strong>Automatycznie</strong><small>dopasuj do tego urządzenia i ekranu — zalecane</small></button>
-        <button type="button" data-ui-mode="phone"><b>▯</b><strong>Telefon</strong><small>duży obraz, dolna nawigacja, obsługa dotykiem</small></button>
+        <button type="button" data-ui-mode="phone"><b>▯</b><strong>Telefon</strong><small>duży obraz, osobne ekrany, obsługa dotykiem</small></button>
         <button type="button" data-ui-mode="computer"><b>▣</b><strong>Komputer</strong><small>panel boczny, pełny pulpit i więcej informacji</small></button>
       </div>
     </div>`;
-  document.body.append(deviceSheet);
-  const setDeviceSheet = open => { deviceSheet.hidden = !open; document.body.classList.toggle("deviceSheetOpen", open); if (open) deviceSheet.querySelector("[data-ui-mode='phone']")?.focus(); else byId("deviceLayoutBtn")?.focus(); };
-  document.addEventListener("keydown", event => { if (event.key === "Escape" && !deviceSheet.hidden) setDeviceSheet(false); });
-  byId("deviceLayoutBtn")?.addEventListener("click", () => setDeviceSheet(true));
+  document.querySelector(".mainCol")?.append(deviceSheet);
   deviceSheet.addEventListener("click", event => {
-    if (event.target === deviceSheet || event.target.closest(".deviceLayoutClose")) return setDeviceSheet(false);
     const button = event.target.closest("[data-ui-mode]");
     if (!button) return;
     const automatic = button.dataset.uiMode === "auto";
@@ -104,7 +111,7 @@ if (isMobileOwnerApp) {
   settingsHome.id = "mobileSettingsHome";
   settingsHome.className = "mobileSettingsHome";
   settingsHome.innerHTML = `
-    <header class="settingsTitle"><button type="button" data-settings-home aria-label="Wróć do pulpitu">←</button><div><h2>Ustawienia</h2><p>Dostosuj swój system</p></div></header>
+    <header class="settingsTitle"><div><h2>Ustawienia</h2><p>Dostosuj swój system</p></div></header>
     <div class="mobileSettingCategories">
       <button type="button" data-setting-section="controls"><b>▣</b><span><strong>Urządzenia i kamery</strong><small>Połączone źródła obrazu</small></span><i>›</i></button>
       <button type="button" data-setting-section="image"><b>◉</b><span><strong>Obraz i dźwięk</strong><small>Jakość, mikrofon i odsłuch</small></span><i>›</i></button>
@@ -114,6 +121,7 @@ if (isMobileOwnerApp) {
       <button type="button" data-settings-account><b>◇</b><span><strong>Bezpieczeństwo</strong><small>Konto i kod PIN</small></span><i>›</i></button>
       <a href="https://dominiksolorz.github.io/kamera/dokumenty.html" target="_blank" rel="noopener"><b>▧</b><span><strong>Prywatność i dokumenty</strong><small>Zgody i informacje</small></span><i>›</i></a>
     </div>
+    <button id="deviceLayoutBtn" type="button" class="settingsAbout" data-open-mobile-view="appearance">Wygląd i urządzenie <span>›</span></button>
     <button type="button" class="settingsAbout" data-setting-section="system">ⓘ Informacje o aplikacji <span>›</span></button>
     <p class="settingsVersion">HOME SECURITY · ustawienia konta i urządzeń</p>`;
   document.querySelector(".mainCol")?.append(settingsHome);
@@ -140,7 +148,7 @@ if (isMobileOwnerApp) {
       <button type="button" data-open-mobile-view="recordings"><b>${iconMarkup('archive')}</b><span><strong>Nagrania</strong></span></button>
       <button type="button" data-open-mobile-view="alerts"><b>${iconMarkup('alerts')}</b><span><strong>Zdarzenia</strong></span></button>
       <button type="button" data-open-mobile-view="settings"><b>${iconMarkup('settings')}</b><span><strong>Ustawienia</strong></span></button>
-      <button type="button" data-open-mobile-view="recordings" data-open-mobile-storage><b>${iconMarkup('cloud')}</b><span><strong>Chmura</strong></span></button>
+      <button type="button" data-open-mobile-view="cloud"><b>${iconMarkup('cloud')}</b><span><strong>Chmura</strong></span></button>
       <button type="button" data-open-mobile-profile><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-8 16-8 16 0"/></svg></b><span><strong>Profil</strong></span></button>
     </section>
     <p class="mobileOverviewStatus" id="mobileOverviewStatus" role="status">Podgląd kamery nie został uruchomiony.</p>
@@ -151,13 +159,19 @@ if (isMobileOwnerApp) {
     home: ["mobileOverview"],
     camera: ["mobileCameraInfo", "stage", "zoomBar", "audioHud", "watchPanel"],
     alerts: ["mobileEventsWorkspace"],
-    recordings: ["dvrCard", "dvrListCard", "mobileRecordingStorage"],
+    recordings: ["dvrCard", "dvrListCard"],
+    cloud: ["mobileCloudHeading", "mobileRecordingStorage"],
+    menu: ["mobileMenuPage"],
+    appearance: ["mobileAppearancePage"],
+    updates: ["mobileUpdatesPage"],
+    playback: ["mobilePlaybackPage"],
     settings: ["modeCard", "ctrlBar", "systemPanel", "setCard", "diagCard", "mobileDiagnosticWorkspace"]
   };
   const viewMemory=createViewMemory({key:'hs-mobile-view-v2',routes:Object.keys(views),fallback:'home'});
   const eventsWorkspace=document.createElement("section");eventsWorkspace.id="mobileEventsWorkspace";eventsWorkspace.className="card mobileHidden";mountEventWorkspace(eventsWorkspace);
   const diagnosticWorkspace=document.createElement("section");diagnosticWorkspace.id="mobileDiagnosticWorkspace";diagnosticWorkspace.className="card mobileHidden";mountDiagnosticWorkspace(diagnosticWorkspace);
   document.querySelector(".mainCol")?.append(eventsWorkspace,diagnosticWorkspace);
+  makePage('mobileCloudHeading','Chmura i miejsce zapisu','Wybierz, gdzie komputer zapisuje i wysyła nagrania.','');
   const recordingStorage = document.createElement("details");
   recordingStorage.id = "mobileRecordingStorage";
   recordingStorage.className = "card mobileRecordingStorage mobileHidden";
@@ -172,10 +186,13 @@ if (isMobileOwnerApp) {
   const managed = [...new Set([...Object.values(views).flat(),"viewEventsCard"])];
 
   function renderView(view) {
-    byId("mobilePageTitle").textContent = ({ home: "Pulpit", camera: "Kamery", alerts: "Zdarzenia", recordings: "Nagrania", settings: "Ustawienia" })[view] || "Panel";
+    byId("mobilePageTitle").textContent = ({ home: "Pulpit", camera: "Kamery", alerts: "Zdarzenia", recordings: "Nagrania", settings: "Ustawienia", cloud:"Chmura",menu:"Menu",appearance:"Wygląd",updates:"Aktualizacje",playback:"Mini-okno" })[view] || "Panel";
     const visible = new Set(views[view] || views.home);
     document.body.dataset.mobileView = view;
     document.body.dataset.mobileSettings = view === "settings" ? "root" : "";
+    backHome.hidden = view === 'home';
+    byId('mobileMenuBtn').setAttribute('aria-expanded',String(view==='menu'));
+    byId('mobileMenuBtn').setAttribute('aria-label',view==='menu'?'Zamknij menu':'Otwórz menu');
     settingsHome.classList.toggle("mobileHidden", view !== "settings");
     document.getElementById("mobileOverviewStatus").textContent = view === "camera"
       ? "Podgląd kamery został otwarty."
@@ -186,11 +203,6 @@ if (isMobileOwnerApp) {
       el.classList.toggle("mobileHidden", !visible.has(id));
       if (visible.has(id) && (id === "dvrCard" || id === "dvrListCard")) el.hidden = false;
     });
-    nav.querySelectorAll("button").forEach(button => {
-      const active = button.dataset.mobileView === view;
-      button.classList.toggle("active", active);
-      button.setAttribute("aria-current", active ? "page" : "false");
-    });
     try { sessionStorage.setItem("hs-mobile-view", view); } catch (_) { /* tryb prywatny */ }
     viewMemory.save(view);
     document.dispatchEvent(new CustomEvent("hs-mobile-view-change", { detail: { view } }));
@@ -198,33 +210,28 @@ if (isMobileOwnerApp) {
   }
 
   const router = createRouter({ routes: Object.keys(views), render: renderView });
-  // Aktywna karta jest czytelna również dla VoiceOver na iPhonie.
-  nav.querySelectorAll("button[data-mobile-view]").forEach(button => {
-    button.setAttribute("aria-label", button.querySelector("span")?.textContent || button.dataset.mobileView);
-  });
   const setView = view => router.navigate(view);
-  nav.addEventListener("click", event => {
-    const button = event.target.closest("button[data-mobile-view]");
-    if (button) setView(button.dataset.mobileView);
+  let beforeMenu='home';
+  byId('mobileMenuBtn').addEventListener('click',()=>{
+    if(router.current==='menu')return setView(beforeMenu);
+    beforeMenu=router.current||'home';setView('menu');
+  });
+  backHome.addEventListener('click',()=>setView('home'));
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&router.current==='menu')setView(beforeMenu);});
+  app.addEventListener('click',event=>{
+    const button=event.target.closest('[data-open-mobile-view]');
+    if(button)setView(button.dataset.openMobileView);
   });
   overview.addEventListener("click", event => {
-    const button = event.target.closest("[data-open-mobile-view]");
-    if (button) {
-      setView(button.dataset.openMobileView);
-      if (button.hasAttribute('data-open-mobile-storage')) {
-        recordingStorage.open = true;
-        recordingStorage.scrollIntoView({block:'start',behavior:'smooth'});
-      }
-    }
     if (event.target.closest('[data-open-mobile-profile]')) {
-      mobileHeader.querySelector('.accountActions > button')?.click();
+      accountOptions.querySelector('.accountActions > button')?.click();
     }
   });
   settingsHome.addEventListener("click", event => {
     if(event.target.closest('[data-settings-home]')) return setView('home');
     if(event.target.closest('[data-settings-events]')) return setView('alerts');
     if(event.target.closest('[data-settings-remote]')) return document.querySelector('.hsRemoteEntry')?.click();
-    if(event.target.closest('[data-settings-account]')) return mobileHeader.querySelector('.accountActions > button')?.click();
+    if(event.target.closest('[data-settings-account]')) return accountOptions.querySelector('.accountActions > button')?.click();
   });
   const openSettingSection = event => {
     const button = event.target.closest("button[data-setting-section]");
@@ -236,6 +243,7 @@ if (isMobileOwnerApp) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   settingsHome.addEventListener("click", openSettingSection);
+  byId("deviceLayoutBtn")?.addEventListener("click",()=>setView("appearance"));
   mediaTabs.addEventListener("click", openSettingSection);
 
   const topStatus = byId("topStatus");

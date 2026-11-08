@@ -113,3 +113,29 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSetti
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"][data-mobile-settings="image"] .mobileMediaTabs,
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"][data-mobile-settings="sound"] .mobileMediaTabs{display:flex;gap:10px;margin:10px 0}
 .mobileMediaTabs button{min-height:44px;padding:8px 24px;border:1px solid #28506a;border-radius:10px;background:#112b40;color:#d6f2ff}
+
+/* One function per screen; no floating navigation or header popover. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app{padding-bottom:max(28px,env(safe-area-inset-bottom))!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{grid-template-columns:40px minmax(0,1fr) 48px!important;gap:14px!important;align-items:center!important;box-sizing:border-box!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader>div{min-width:0!important;overflow:visible!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandLogo{width:40px!important;height:40px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandName{white-space:nowrap!important;font-size:14px!important;letter-spacing:0!important;line-height:1.4!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileMenuBtn{display:grid!important;place-items:center!important;width:48px!important;height:48px!important;min-width:48px!important;padding:0!important;margin:0!important;letter-spacing:3px;font-size:21px!important;justify-self:end!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsRemoteEntry{display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileBackHome{display:block!important;width:auto!important;min-height:44px!important;margin:6px 16px 18px!important;padding:10px 14px!important;text-align:left!important;border:1px solid var(--ma-line)!important;border-radius:12px!important;background:var(--ma-card)!important;color:var(--ma-text)!important;font:inherit!important;align-self:flex-start}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileBackHome[hidden]{display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileFunctionPage{padding:0 16px 24px!important;box-sizing:border-box!important;min-width:0!important;width:100%!important;color:var(--ma-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileFunctionHeading{margin:0 0 24px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileFunctionHeading h2{font-size:26px!important;line-height:1.2!important;margin:0 0 8px!important;color:var(--ma-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileFunctionHeading p{margin:0!important;color:var(--ma-muted)!important;line-height:1.6!important;font-size:13px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileFunctionLinks{display:grid!important;gap:10px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileFunctionPage :is(button,a){min-width:0!important;max-width:100%!important;min-height:48px!important;padding:14px!important;border:1px solid var(--ma-line)!important;border-radius:14px!important;background:var(--ma-card)!important;color:var(--ma-text)!important;text-align:left!important;text-decoration:none!important;font:inherit!important;line-height:1.4!important;white-space:normal!important;overflow-wrap:anywhere!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileFunctionLinks :is(button,a){display:flex!important;justify-content:space-between!important;align-items:center!important;gap:12px!important;width:100%!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAccountOptions .accountActions{display:flex!important;flex-wrap:wrap!important;gap:10px!important;margin-top:22px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOptionsBody{position:static!important;width:100%!important;max-height:none!important;overflow:visible!important;box-shadow:none!important;border:0!important;padding:0!important;background:none!important;box-sizing:border-box!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOptionsBody .pipPreferences{width:100%!important;max-width:100%!important;box-sizing:border-box!important;margin:0!important;overflow-wrap:anywhere!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppearance .deviceLayoutCard{width:100%!important;box-sizing:border-box!important;box-shadow:none!important;padding:20px 16px!important;background:var(--ma-card)!important;border-color:var(--ma-line)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppearance .deviceLayoutCard>div{display:grid;gap:12px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppearance :is(strong,small){display:block;white-space:normal;overflow-wrap:anywhere}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="cloud"] #mobileRecordingStorage{margin:0 16px!important;width:calc(100% - 32px)!important;box-sizing:border-box!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:is([data-mobile-view="menu"],[data-mobile-view="appearance"],[data-mobile-view="updates"],[data-mobile-view="playback"],[data-mobile-view="cloud"]) #mobilePageTitle{display:none!important}

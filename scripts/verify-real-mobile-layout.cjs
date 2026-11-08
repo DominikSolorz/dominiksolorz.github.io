@@ -66,31 +66,49 @@ const artifacts=process.env.HS_MOBILE_PROOF;
    await page.locator('#mobileOverview').waitFor({state:'visible'});
    assert.equal(await page.locator('.mobileOverviewActions button').count(),6);
    assert.equal(await page.locator('.mobileOverviewActions').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),2);
-   assert.equal(await page.locator('.mobileBottomNav [data-mobile-view]').count(),4);
+   assert.equal(await page.locator('.mobileBottomNav').count(),0);
+   assert.equal(await page.locator('.mobileAppHeader #deviceLayoutBtn').count(),0);
+   const brand=await page.locator('.mobileBrandName').boundingBox(),menu=await page.locator('#mobileMenuBtn').boundingBox();
+   assert.ok(brand.x+brand.width+8<=menu.x,'Brand and menu must have separate space');
    const originalVideo=await page.locator('#video').evaluateHandle(el=>el);
    await shot('04-real-dashboard');
-   for(const view of ['camera','recordings','settings','home']){
-    await page.locator('.mobileBottomNav [data-mobile-view="'+view+'"]').click();
+   for(const view of ['camera','recordings','settings','cloud']){
+    await page.locator('#mobileOverview [data-open-mobile-view="'+view+'"]').click();
     assert.equal(await page.locator('body').getAttribute('data-mobile-view'),view);
+    assert.equal(await page.locator('#mobileOverview').isVisible(),false);
     assert.equal(await originalVideo.evaluate(node=>node===document.getElementById('video')),true,'Navigation must preserve the real video element');
     if(view==='settings'){
-     assert.equal(await page.locator('.mobileBottomNav button:visible').count(),3);
-     assert.equal(await page.locator('.mobileBottomNav').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),3);
-     await page.locator('.settingsAbout').scrollIntoViewIfNeeded();
-     assert.equal(await page.locator('.settingsAbout').isVisible(),true);
      assert.equal(await page.locator('#mobileSettingsHome .mobileSettingCategories > *').count(),7);
-     assert.equal(await page.locator('#mobilePageTitle').isVisible(),false);
      await page.locator('#mobileSettingsHome [data-setting-section="image"]').click();
      await page.locator('.mobileMediaTabs [data-setting-section="sound"]').click();
      assert.equal(await page.locator('body').getAttribute('data-mobile-settings'),'sound');
      await page.locator('.mobileSettingsBack').click();
     }
+    if(view==='cloud')assert.equal(await page.locator('#dvrCard').isVisible(),false,'Cloud must not include the player');
+    if(view==='recordings')assert.equal(await page.locator('#mobileRecordingStorage').isVisible(),false,'Archive must not include storage settings');
     await shot('05-real-'+view);
+    await page.locator('#mobileBackHome').click();
    }
+   await page.locator('#mobileMenuBtn').click();
+   assert.equal(await page.locator('#mobileMenuPage').isVisible(),true);
+   assert.equal(await page.locator('#mobileOverview').isVisible(),false,'Menu replaces dashboard instead of overlaying it');
+   await shot('06-menu');
+   for(const view of ['appearance','updates','playback']){
+    await page.locator('#mobileMenuPage [data-open-mobile-view="'+view+'"]').click();
+    assert.equal(await page.locator('body').getAttribute('data-mobile-view'),view);
+    assert.equal(await page.locator('#mobileMenuPage').isVisible(),false);
+    assert.equal(await page.locator('#mobileOverview').isVisible(),false);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'Function page must not overflow the phone');
+    await shot('07-'+view);
+    await page.locator('#mobileBackHome').click();
+    await page.locator('#mobileMenuBtn').click();
+   }
+   await page.locator('#mobileMenuBtn').click();
+   assert.equal(await page.locator('#mobileOverview').isVisible(),true);
    await page.locator('[data-open-mobile-profile]').click();
    await page.locator('.accountDialog').waitFor({state:'visible'});
    assert.deepEqual(errors,[]);
-   console.log(`PASS ${width}x${height}: real home/login, wrong and correct PIN, six tiles, four tabs, profile and preserved video node`);
+   console.log(`PASS ${width}x${height}: real home/login, wrong and correct PIN, six tiles, separate menu/cloud/settings, no bottom navigation, profile and preserved video node`);
    await page.close();
   }
  }finally{await browser.close();}
