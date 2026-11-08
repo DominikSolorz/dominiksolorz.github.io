@@ -172,3 +172,8 @@ a{color:var(--cyan);font-weight:700}
 .skip{max-width:220px}
 .ad{flex:none}
 @media (max-height:480px){.ad{width:min(100%,calc(46dvh*16/9))}#start .small:last-child{display:none}.splash{gap:8px}}
+
+/* zdjęcia przykładowe */
+.cam-view>img,.thumb>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.thumb{position:relative;overflow:hidden}
+.thumb .play{position:relative}
