@@ -29,12 +29,13 @@ test('panel assets are inert templates and remain behind the existing secure gat
   assert.doesNotMatch(stripped, /rel="stylesheet" href="(?:style|workspace-ui|interface-concept)\.css/);
   assert.match(html, /id="panelRuntime"/);
   assert.match(html, /id="panelStyles"/);
-  assert.match(html, /panel-entry\.mjs\?v=2/);
+  assert.match(html, /panel-entry\.mjs\?v=3/);
   assert.match(html, /window\.__waitForPanel = new Promise/);
   assert.match(html, /window\.__panelRuntimeStarted&&!window\.__kameraReady/);
 });
 
-test('runtime waits for styles and the classic library before mounting account modules', async () => {
+for (const search of ['?auth=login', '?panel=owner', '?panel=wlasciciel']) {
+test(`runtime loads ${search} without releasing the account gate`, async () => {
   const source = (await readFile(new URL('../kamera/panel-entry.mjs', import.meta.url), 'utf8')).replace('export function', 'function');
   const requests = [], events = {}, callbacks = [];
   const style = { cloneNode: () => ({ href: 'panel.css' }) };
@@ -52,8 +53,9 @@ test('runtime waits for styles and the classic library before mounting account m
     documentElement: { classList: { remove() {} } },
     createElement: () => ({ setAttribute(name, value) { this[name] = value; } }),
   };
-  const window = { addEventListener: (name, callback) => { events[name] = callback; }, dispatchEvent() {} };
-  vm.runInNewContext(source, { document, window, location: { pathname: '/kamera/panel.html', search: '?auth=login', hash: '' },
+  const window = { addEventListener: (name, callback) => { events[name] = callback; }, dispatchEvent() {},
+    __openSecurePanel() { assert.fail('Runtime loading must wait for verified account entry'); } };
+  vm.runInNewContext(source, { document, window, location: { pathname: '/kamera/panel.html', search, hash: '' },
     sessionStorage: { getItem: () => null }, URLSearchParams, Event: class {} });
   assert.deepEqual(requests, ['panel.css']);
   callbacks.shift()(); await new Promise(resolve => setImmediate(resolve));
@@ -63,3 +65,28 @@ test('runtime waits for styles and the classic library before mounting account m
   assert.equal(window.__panelRuntimeStarted, true);
   assert.equal(nodes.bootError.hidden, true);
 });
+}
+
+for (const owner of ['owner', 'wlasciciel']) {
+test(`the ${owner} route requests account verification before opening the panel`, async () => {
+  const html = await readFile(new URL('../kamera/panel.html', import.meta.url), 'utf8');
+  const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)]
+    .map(match => match[1]).find(source => source.includes('window.__waitForPanel = new Promise'));
+  const home = { hidden: false };
+  let accountRequests = 0, entered = false;
+  const window = { __showAccount: () => { accountRequests++; } };
+  const location = { search: `?panel=${owner}`, href: `https://example.invalid/kamera/panel.html?panel=${owner}` };
+  vm.runInNewContext(script, { window, location, URL, URLSearchParams, document: { getElementById: () => home },
+    history: { state: null, replaceState() {} } });
+  window.__waitForPanel.then(() => { entered = true; });
+  window.__authReadyResolve();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(home.hidden, true);
+  assert.equal(window.__publicHomeActive, false);
+  assert.equal(accountRequests, 1);
+  assert.equal(entered, false);
+  window.__openSecurePanel();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(entered, true);
+});
+}

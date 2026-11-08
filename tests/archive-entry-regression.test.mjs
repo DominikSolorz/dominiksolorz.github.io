@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
 test('old archive URLs open the private panel even without a remembered device entry',async()=>{
  const script=await read('kamera/public-entry.js');
- for(const search of ['?section=recordings','?wroc=nagrania']){
+ for(const search of ['?section=recordings','?wroc=nagrania','?panel=owner','?panel=wlasciciel']){
   let destination;const location={search,hash:'',href:'https://dominiksolorz.github.io/kamera/'+search,replace:url=>destination=url};
   vm.runInNewContext(script,{location,URL,URLSearchParams,sessionStorage:{getItem:()=>null},window:{matchMedia:()=>({matches:false})},navigator:{}});
   assert.equal(new URL(destination).pathname,'/kamera/panel.html');assert.equal(new URL(destination).search,search);

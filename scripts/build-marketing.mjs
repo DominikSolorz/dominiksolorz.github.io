@@ -69,7 +69,7 @@ const mobileSplashBody = '<aside id="hsMobileSplash" aria-label="Reklama HOME SE
   '<span class="hsMobileSplashBar" aria-hidden="true"></span></div>'+
   '<button type="button">Pomiń</button></div></aside>';
 const publicHome=head('Monitoring domu i podgląd','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','')
- .replace('</head>',accountReturnBridge+'<script src="public-entry.js?v=6"></script><link rel="manifest" href="manifest.webmanifest?v=4">'+mobileSplashHead+'</head>')
+ .replace('</head>',accountReturnBridge+'<script src="public-entry.js?v=7"></script><link rel="manifest" href="manifest.webmanifest?v=4">'+mobileSplashHead+'</head>')
  +mobileSplashBody+publicContent+'\n</body></html>\n';
 await emit('index.html',publicHome);
 // Keep old inbound product links working; canonical points at the single homepage.
