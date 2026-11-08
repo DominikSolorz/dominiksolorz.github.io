@@ -139,3 +139,21 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppea
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppearance :is(strong,small){display:block;white-space:normal;overflow-wrap:anywhere}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="cloud"] #mobileRecordingStorage{margin:0 16px!important;width:calc(100% - 32px)!important;box-sizing:border-box!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:is([data-mobile-view="menu"],[data-mobile-view="appearance"],[data-mobile-view="updates"],[data-mobile-view="playback"],[data-mobile-view="cloud"]) #mobilePageTitle{display:none!important}
+
+/* Mapa lokalizacji (kamera/mobile-map.mjs) */
+.mobileMapCard{margin-top:10px}
+.mobileMapOpen{display:grid;grid-template-columns:42px minmax(0,1fr) 18px;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:14px;text-align:left;border:1px solid rgba(80,170,230,.28);border-radius:20px;background:rgba(20,44,72,.55);color:#eaf6ff}
+.mobileMapOpen b{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:rgba(29,233,224,.1);color:#1de9e0;font-size:22px}
+.mobileMapOpen strong,.mobileMapOpen small{display:block;overflow-wrap:anywhere}
+.mobileMapOpen small{margin-top:3px;color:#8fb0c8;font-size:12px}
+.mobileMapOpen i{color:#1de9e0;font-style:normal;font-size:23px}
+.mobileMapDialog{box-sizing:border-box;width:min(calc(100vw - 24px),520px);max-height:calc(100dvh - 24px);overflow:auto;padding:18px;border:1px solid rgba(80,170,230,.4);border-radius:22px;background:#0b1626;color:#eaf6ff}
+.mobileMapDialog::backdrop{background:rgba(2,8,16,.78)}
+.mobileMapDialog h2{margin:0 0 8px;font-size:20px}
+.mobileMapText{margin:0 0 12px;color:#b9cde0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.mobileMapFrame{border-radius:14px;overflow:hidden;border:1px solid rgba(80,170,230,.28);margin-bottom:12px}
+.mobileMapFrame iframe{display:block;width:100%;height:min(52dvh,360px);border:0}
+.mobileMapActions{display:grid;gap:8px}
+.mobileMapActions button{min-height:48px;border-radius:14px;font-weight:700;border:1px solid rgba(80,170,230,.4);background:transparent;color:#eaf6ff}
+.mobileMapActions .mobileMapConfirm{border:0;background:linear-gradient(90deg,#1e90ff,#14b8d4);color:#fff}
+.mobileMapActions [hidden]{display:none}

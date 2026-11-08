@@ -72,8 +72,8 @@ test('three campaign images are small local WebP assets, PWA keeps PIN and short
   assert.ok(page.includes('data-src="assets/'+path+'"'),'missing slide '+path);
   assert.ok(sw.includes('./assets/'+path),'PWA offline promo asset missing '+path);
  }
- assert.ok(sw.includes('kamera-domowa-shell-v196'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "196"'));
+ assert.ok(sw.includes('kamera-domowa-shell-v197'));
+ assert.ok(app.includes('SERVICE_WORKER_BUILD = "197"'));
  assert.ok(sw.includes('./mobile-app-splash.css?v=3')&&sw.includes('./mobile-app-splash.js?v=3'));
  const manifest=JSON.parse(manifestStr);
  assert.equal(manifest.start_url,'./index.html?app=mobile-home');
