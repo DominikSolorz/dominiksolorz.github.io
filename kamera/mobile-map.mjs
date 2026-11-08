@@ -1,9 +1,13 @@
 // Mapa telefonu: pozycja na żywo, wyszukiwarka adresów i firm, firmy w widocznym
 // obszarze oraz przejście do nawigacji. Lokalizacja jest pobierana tylko po
 // potwierdzeniu przy każdym otwarciu mapy, działa wyłącznie dopóki mapa jest
-// otwarta i nie jest zapisywana ani wysyłana na serwer HOME SECURITY.
+// otwarta. Domyślnie nie jest nigdzie zapisywana. Tylko gdy użytkownik sam włączy
+// „Zapisuj moją trasę”, punkty trafiają do jego prywatnej historii na koncie
+// (patrz location-history.mjs), widocznej wyłącznie dla niego.
 // Dane: OpenStreetMap (kafelki, Nominatim, Overpass). Zdjęcia i opinie otwiera
 // użytkownik sam w Mapach Google.
+
+import { groupRoutes } from './location-history.mjs?v=1';
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
@@ -12,6 +16,10 @@ const MIN_POI_ZOOM = 15;
 const LEAFLET_JS = new URL('./vendor/leaflet/leaflet.js', import.meta.url).href;
 const LEAFLET_CSS = new URL('./vendor/leaflet/leaflet.css', import.meta.url).href;
 const LEAFLET_IMAGES = new URL('./vendor/leaflet/images/', import.meta.url).href;
+
+const ROUTE_COLORS = ['#1de9e0', '#ffb020', '#c084fc', '#f87171'];
+let store = null;
+export function setLocationStore(next) { store = next || null; }
 
 const AMENITY = {
   pharmacy: 'Apteka', restaurant: 'Restauracja', cafe: 'Kawiarnia', fast_food: 'Bar szybkiej obsługi', bar: 'Bar', pub: 'Pub',
@@ -144,8 +152,11 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
       <div class="mobileMapRow">
         <button type="button" class="mobileMapPlaces">Firmy w tym obszarze</button>
         <button type="button" class="mobileMapFollow" aria-pressed="true">Śledź mnie: wł.</button>
+        <button type="button" class="mobileMapRecord" aria-pressed="false" hidden>Zapis trasy: wył.</button>
+        <button type="button" class="mobileMapHistory" hidden>Historia tras (24 h)</button>
       </div>
     </div>
+    <label class="mobileMapRecordOpt" hidden><input type="checkbox" name="record"><span>Zapisuj moją trasę na moim koncie HOME SECURITY (tylko dla mnie, przez 30 dni, z możliwością usunięcia). Bez zaznaczenia nic nie jest zapisywane.</span></label>
     <div class="mobileMapCanvas" hidden></div>
     <p class="mobileMapAttribution" hidden>© współtwórcy OpenStreetMap</p>
     <section class="mobileMapResults" aria-label="Wyniki" aria-live="polite" hidden></section>
@@ -158,20 +169,27 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
   const $ = selector => dialog.querySelector(selector);
   const text = $('.mobileMapText'), tools = $('.mobileMapTools'), canvas = $('.mobileMapCanvas'), attribution = $('.mobileMapAttribution');
   const results = $('.mobileMapResults'), confirm = $('.mobileMapConfirm'), cancel = $('.mobileMapCancel');
+  const recordBtn = $('.mobileMapRecord'), historyBtn = $('.mobileMapHistory'), recordOpt = $('.mobileMapRecordOpt');
   const followBtn = $('.mobileMapFollow'), placesBtn = $('.mobileMapPlaces'), searchForm = $('.mobileMapSearch');
-  let session = 0, watchId = null, map = null, me = null, accuracy = null, markers = null, here = null, follow = true;
+  let session = 0, watchId = null, map = null, me = null, accuracy = null, markers = null, here = null, follow = true, recording = false, routes = null;
 
   const syncFollow = () => {
     followBtn.textContent = follow ? 'Śledź mnie: wł.' : 'Śledź mnie: wył.';
     followBtn.setAttribute('aria-pressed', String(follow));
   };
 
+  const syncRecord = () => {
+    recordBtn.textContent = recording ? 'Zapis trasy: wł.' : 'Zapis trasy: wył.';
+    recordBtn.setAttribute('aria-pressed', String(recording));
+  };
+
   const teardown = () => {
     session += 1;
+    recording = false;
     if (watchId !== null) geolocation?.clearWatch(watchId);
     watchId = null;
     map?.remove();
-    map = me = accuracy = markers = here = null;
+    map = me = accuracy = markers = routes = here = null;
     canvas.replaceChildren();
     results.replaceChildren();
   };
@@ -193,8 +211,11 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
     cancel.textContent = 'Anuluj';
     follow = true;
     syncFollow();
+    recordOpt.hidden = !(geolocation && store);
+    recordOpt.querySelector('input').checked = false;
+    recordBtn.hidden = historyBtn.hidden = true;
     text.textContent = geolocation
-      ? 'Czy pobrać Twoją aktualną lokalizację i śledzić ją na mapie, dopóki jest otwarta? Zgoda dotyczy tylko tego otwarcia. Lokalizacja nie jest zapisywana ani wysyłana na serwer HOME SECURITY. Do mapy, wyszukiwania i listy firm współrzędne trafią do OpenStreetMap, Nominatim i Overpass.'
+      ? 'Czy pobrać Twoją aktualną lokalizację i śledzić ją na mapie, dopóki jest otwarta? Zgoda dotyczy tylko tego otwarcia. Domyślnie lokalizacja nie jest zapisywana ani wysyłana na serwer HOME SECURITY. Do mapy, wyszukiwania i listy firm współrzędne trafią do OpenStreetMap, Nominatim i Overpass.'
       : 'Lokalizacja jest niedostępna w tej przeglądarce.';
   };
 
@@ -270,9 +291,35 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
     me = L.circleMarker([latitude, longitude], { radius: 8, color: '#fff', weight: 2, fillColor: '#1de9e0', fillOpacity: 1 }).addTo(map);
     map.on('dragstart', () => { follow = false; syncFollow(); });
     setTimeout(() => map?.invalidateSize(), 50);
-    text.textContent = 'Twoja pozycja jest śledzona na żywo, dopóki mapa jest otwarta. Nic nie jest zachowane po jej zamknięciu.';
     confirm.hidden = true;
     cancel.textContent = 'Zamknij';
+    recordOpt.hidden = true;
+    recordBtn.hidden = historyBtn.hidden = !store;
+    routes = L.featureGroup().addTo(map);
+
+    const unavailableNote = () => {
+      recording = false;
+      syncRecord();
+      note('Historia tras jest niedostępna: baza nie ma jeszcze wgranej tabeli. Administrator musi zastosować migrację.');
+    };
+    const startRecording = async () => {
+      const result = await store.start();
+      if (current !== session) return;
+      if (result.unavailable) return unavailableNote();
+      if (result.error) { recording = false; syncRecord(); note('Nie udało się włączyć zapisu trasy. Spróbuj ponownie.'); return; }
+      saveHere(latitude, longitude, acc);
+    };
+    const saveHere = (la, lo, ac) => {
+      if (!recording || !store) return;
+      store.save({ lat: la, lon: lo, accuracy: ac }).then(result => {
+        if (current === session && result?.unavailable) unavailableNote();
+      });
+    };
+    syncRecord();
+    text.textContent = recording
+      ? 'Twoja pozycja jest śledzona na żywo, a trasa zapisuje się na Twoim koncie (tylko dla Ciebie, 30 dni). Wyłączysz to przyciskiem „Zapis trasy”.'
+      : 'Twoja pozycja jest śledzona na żywo, dopóki mapa jest otwarta. Nic nie jest zachowane po jej zamknięciu.';
+    if (recording && store) startRecording();
 
     watchId = geolocation.watchPosition(next => {
       if (current !== session || !map) return;
@@ -281,6 +328,7 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
       here = { lat: la, lon: lo };
       me.setLatLng([la, lo]);
       accuracy.setLatLng([la, lo]).setRadius(Math.min(ac || 30, 500));
+      saveHere(la, lo, ac);
       if (follow) map.setView([la, lo], map.getZoom(), { animate: true });
     }, error => {
       if (current === session) text.textContent = describeLocationError(error);
@@ -290,6 +338,59 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
       follow = !follow;
       syncFollow();
       if (follow && here) map.setView([here.lat, here.lon], Math.max(map.getZoom(), 16));
+    };
+
+    recordBtn.onclick = () => {
+      recording = !recording;
+      syncRecord();
+      if (recording) startRecording();
+      else text.textContent = 'Zapis trasy wyłączony. Zapisane wcześniej punkty zostają w historii do czasu usunięcia lub upływu 30 dni.';
+    };
+
+    historyBtn.onclick = async () => {
+      note('Pobieram historię tras…');
+      const result = await store.recent(24);
+      if (current !== session || !map) return;
+      if (result.unavailable) return unavailableNote();
+      if (result.error) return note('Nie udało się pobrać historii tras.');
+      routes.clearLayers();
+      const groups = groupRoutes(result.points, store.device.id);
+      if (!groups.length) return note('Brak zapisanych tras z ostatnich 24 godzin. Włącz „Zapis trasy” na telefonie lub komputerze.');
+      const list = doc.createElement('ul');
+      groups.forEach((group, index) => {
+        const color = ROUTE_COLORS[index % ROUTE_COLORS.length];
+        const latlngs = group.points.map(p => [p.lat, p.lon]);
+        L.polyline(latlngs, { color, weight: 4, opacity: 0.85 }).addTo(routes);
+        L.circleMarker(latlngs.at(-1), { radius: 6, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1 }).addTo(routes);
+        const li = doc.createElement('li');
+        const info = doc.createElement('button');
+        info.type = 'button';
+        info.className = 'mobileMapPlace';
+        const name = doc.createElement('strong');
+        name.textContent = `${group.label}${group.own ? ' (to urządzenie)' : ''}`;
+        const meta = doc.createElement('small');
+        meta.textContent = `${group.points.length} pkt · ostatnio ${new Date(group.points.at(-1).at).toLocaleString('pl-PL')}`;
+        info.append(name, meta);
+        info.addEventListener('click', () => { follow = false; syncFollow(); map.setView(latlngs.at(-1), Math.max(map.getZoom(), 16)); });
+        li.append(info);
+        list.append(li);
+      });
+      const wipe = doc.createElement('button');
+      wipe.type = 'button';
+      wipe.className = 'mobileMapWipe';
+      wipe.textContent = 'Usuń całą historię tras';
+      wipe.addEventListener('click', async () => {
+        wipe.disabled = true;
+        const done = await store.clear();
+        if (current !== session || !map) return;
+        routes.clearLayers();
+        note(done.ok ? 'Historia tras została usunięta z Twojego konta.' : 'Nie udało się usunąć historii. Spróbuj ponownie.');
+      });
+      results.replaceChildren(list, wipe);
+      results.hidden = false;
+      map.fitBounds(routes.getBounds().pad(0.2), { maxZoom: 17 });
+      follow = false;
+      syncFollow();
     };
 
     placesBtn.onclick = async () => {
@@ -323,6 +424,7 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
 
   confirm.addEventListener('click', () => {
     const current = ++session;
+    recording = !!store && recordOpt.querySelector('input').checked;
     confirm.disabled = true;
     text.textContent = 'Pobieram lokalizację…';
     Promise.all([
