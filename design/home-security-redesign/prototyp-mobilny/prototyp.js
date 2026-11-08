@@ -8,7 +8,7 @@
   var switchBtns = document.querySelectorAll('.demo-switch button');
   var tabBtns = tabs.querySelectorAll('button');
 
-  function show(id) {
+  function show(id, fromPop) {
     var target = document.getElementById(id);
     if (!target) return;
     screens.forEach(function (s) { s.hidden = s !== target; });
@@ -22,7 +22,7 @@
     tabBtns.forEach(mark);
     var sc = target.querySelector('.scroll');
     if (sc) sc.scrollTop = 0;
-    history.replaceState(null, '', location.search + '#' + id);
+    if (!fromPop && location.hash.slice(1) !== id) history.pushState(null, '', location.search + '#' + id);
   }
 
   document.addEventListener('click', function (e) {
@@ -32,8 +32,8 @@
     show(el.dataset.go);
   });
 
-  // Demo reklamy: 3 banery po 10 s, po 30 s przejście do wprowadzenia.
-  var imgs = document.querySelectorAll('#ad img'), dots = document.querySelectorAll('#adDots i'),
+  // Demo reklamy: 4 plansze (30 s łącznie), po 30 s przejście do wprowadzenia.
+  var imgs = document.querySelectorAll('#ad > img, #ad > .slide-brand'), dots = document.querySelectorAll('#adDots i'),
       bar = document.getElementById('adBar'), adTimer = null, adT0 = 0;
   function adStop() { clearInterval(adTimer); adTimer = null; }
   function adStart() {
@@ -41,18 +41,23 @@
     adTimer = setInterval(function () {
       var s = (Date.now() - adT0) / 1000;
       if (s >= 30) { adStop(); show('intro'); return; }
-      var k = Math.floor(s / 10);
+      var k = Math.min(imgs.length - 1, Math.floor(s / (30 / imgs.length)));
       imgs.forEach(function (im, i) { im.classList.toggle('on', i === k); });
       dots.forEach(function (d, i) { d.classList.toggle('on', i === k); });
       bar.style.width = (s / 30 * 100) + '%';
     }, 250);
   }
   var baseShow = show;
-  show = function (id) {
-    baseShow(id);
+  show = function (id, fromPop) {
+    baseShow(id, fromPop);
     if (id === 'start') { imgs.forEach(function (im, i) { im.classList.toggle('on', i === 0); }); bar.style.width = '0'; adStart(); }
     else adStop();
   };
+
+  window.addEventListener('popstate', function () {
+    var id = location.hash.slice(1);
+    if (document.getElementById(id)) show(id, true);
+  });
 
   var start = location.hash.slice(1);
   show(document.getElementById(start) ? start : 'start');
