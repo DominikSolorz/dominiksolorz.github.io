@@ -4,69 +4,69 @@
  * nagrywaniu, mostku Windows i aktualizacjach. Dotyczy tylko telefonu
  * (html.mobileOwnerMode) oraz ekranu PIN na wąskim ekranie. Ładowany jako ostatni.
  */
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary){
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x){
   --ma-bg:#050d1a;--ma-card:rgba(20,44,72,.55);--ma-line:rgba(80,170,230,.28);
   --ma-blue:#1e90ff;--ma-cyan:#1de9e0;--ma-text:#eaf6ff;--ma-muted:#8fb0c8;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body{
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body{
   background:radial-gradient(120% 60% at 50% 0,#0d2a4a 0,var(--ma-bg) 60%) fixed!important;
   color:var(--ma-text);overflow-x:hidden;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app .mobileAppHeader{
   background:transparent!important;border:0!important;box-shadow:none!important;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader h1{
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app .mobileAppHeader h1{
   color:var(--ma-text)!important;font-weight:800!important;letter-spacing:.01em;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader :is(button,summary,.btn){
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app .mobileAppHeader :is(button,summary,.btn){
   border-radius:14px!important;background:var(--ma-card)!important;border:1px solid var(--ma-line)!important;color:var(--ma-text)!important;
 }
 
 /* Karta „Co chcesz teraz zrobić?” */
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOverviewCard{
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app .mobileOverviewCard{
   background:linear-gradient(160deg,rgba(24,58,96,.62),rgba(8,20,38,.82))!important;
   border:1px solid var(--ma-line)!important;border-radius:24px!important;
   box-shadow:0 0 0 1px rgba(29,233,224,.06),0 16px 40px rgba(0,60,120,.28)!important;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOverviewEyebrow{color:var(--ma-cyan)!important;letter-spacing:.14em}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOverviewCard h2{color:#fff!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOverviewCard>p:not(.mobileOverviewEyebrow):not(.mobileOverviewStatus){color:var(--ma-muted)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOverviewStatus{color:#ffd37a!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOverviewPrimary:not(.ma-x):not(.ma-y){
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app .mobileOverviewEyebrow{color:var(--ma-cyan)!important;letter-spacing:.14em}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app .mobileOverviewCard h2{color:#fff!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app .mobileOverviewCard>p:not(.mobileOverviewEyebrow):not(.mobileOverviewStatus){color:var(--ma-muted)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app .mobileOverviewStatus{color:#ffd37a!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app .mobileOverviewPrimary:not(.ma-x):not(.ma-y){
   background:linear-gradient(90deg,var(--ma-blue),#14b8d4)!important;border:0!important;border-radius:16px!important;
   color:#fff!important;font-weight:800!important;box-shadow:0 8px 24px rgba(30,144,255,.35)!important;
 }
 
 /* Skróty i kategorie ustawień */
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.mobileOverviewActions button,.mobileSettingCategories button){
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app :is(.mobileOverviewActions button,.mobileSettingCategories button){
   background:var(--ma-card)!important;border:1px solid var(--ma-line)!important;border-radius:20px!important;color:var(--ma-text)!important;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.mobileOverviewActions,.mobileSettingCategories) button>b{
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app :is(.mobileOverviewActions,.mobileSettingCategories) button>b{
   background:rgba(29,233,224,.1)!important;color:var(--ma-cyan)!important;border-radius:14px!important;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.mobileOverviewActions,.mobileSettingCategories) small{color:var(--ma-muted)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.mobileOverviewActions,.mobileSettingCategories) i{color:var(--ma-cyan)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app :is(.mobileOverviewActions,.mobileSettingCategories) small{color:var(--ma-muted)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body #app :is(.mobileOverviewActions,.mobileSettingCategories) i{color:var(--ma-cyan)!important}
 
 /* Dolny pasek nawigacji: zaokrąglony, z turkusowym akcentem */
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav{
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body .mobileBottomNav{
   background:rgba(6,16,30,.94)!important;border:1px solid var(--ma-line)!important;border-radius:26px 26px 0 0!important;
   backdrop-filter:blur(12px);
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button{color:var(--ma-muted)!important;border-radius:18px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button.active{
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body .mobileBottomNav button{color:var(--ma-muted)!important;border-radius:18px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body .mobileBottomNav button.active{
   color:var(--ma-cyan)!important;background:rgba(29,233,224,.1)!important;border-color:rgba(29,233,224,.45)!important;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button.active::after{background:var(--ma-cyan)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):not(.ma-x) body .mobileBottomNav button.active::after{background:var(--ma-cyan)!important}
 
 /* Ekran PIN na telefonie */
 @media (max-width:900px){
-  html:not(.policeCommand):not(.usMilitary) body #lock .pinCard{
+  html:not(.policeCommand):not(.usMilitary):not(.ma-x) body #lock .pinCard{
     background:linear-gradient(160deg,rgba(24,58,96,.62),rgba(8,20,38,.86))!important;
     border:1px solid var(--ma-line,rgba(80,170,230,.28))!important;border-radius:28px!important;
   }
-  html:not(.policeCommand):not(.usMilitary) body #lock .keypad button{
+  html:not(.policeCommand):not(.usMilitary):not(.ma-x) body #lock .keypad button{
     background:rgba(20,44,72,.55)!important;border:1px solid rgba(80,170,230,.28)!important;border-radius:20px!important;color:#eaf6ff!important;
   }
-  html:not(.policeCommand):not(.usMilitary) body #lock .keypad button.soft{background:transparent!important;color:#8fb0c8!important}
-  html:not(.policeCommand):not(.usMilitary) body #lock .pinDots i.on{background:#1de9e0!important;border-color:#1de9e0!important}
+  html:not(.policeCommand):not(.usMilitary):not(.ma-x) body #lock .keypad button.soft{background:transparent!important;color:#8fb0c8!important}
+  html:not(.policeCommand):not(.usMilitary):not(.ma-x) body #lock .pinDots i.on{background:#1de9e0!important;border-color:#1de9e0!important}
 }
