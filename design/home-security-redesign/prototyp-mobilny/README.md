@@ -1,43 +1,32 @@
-# HOME SECURITY – prototyp wyglądu aplikacji mobilnej (demo)
+# HOME SECURITY — podgląd aplikacji mobilnej w przeglądarce
 
-Czysty HTML + CSS + JS, bez zależności i bez sieci. Otwórz `index.html` w przeglądarce
-(najlepiej Chrome na telefonie) albo uruchom: `python3 -m http.server -d design/home-security-redesign/prototyp-mobilny`.
-Adres bezpośredni do ekranu: `index.html#login`, `#pin`, `#dash` itd.
+Publiczny podgląd po wdrożeniu: https://dominiksolorz.github.io/podglad-mobilny/
 
-## Osiem ekranów
+Otwórz link w Safari lub Chrome na telefonie. Nie trzeba mieć aplikacji Android. Na komputerze podgląd ma szerokość telefonu; na telefonie wypełnia dostępny ekran. Można też dodać go do ekranu głównego jako osobny podgląd.
 
-| # | Id | Ekran |
-|---|----|-------|
-| 0 | `reklama` | Reklama: 3 banery 16:9 (co 10 s, razem 30 s), „Pomiń” → ekran startowy |
-| 1 | `start` | Ekran startowy aplikacji (dom, hasło, pasek ładowania) → wprowadzenie |
-| 2 | `intro` | Wprowadzenie |
-| 3 | `login` | Logowanie |
-| 4 | `pin` | Kod PIN |
-| 5 | `dash` | Pulpit |
-| 6 | `cams` | Kamery |
-| 7 | `recs` | Nagrania |
-| 8 | `settings` | Ustawienia |
+## Pełna ścieżka testowa
 
-Domyślnie prototyp wygląda jak aplikacja (bez paska przełączania). Przełącznik ekranów pojawia się po dodaniu `?demo=1` do adresu. „Dodaj do ekranu głównego” w Chrome otwiera go pełnoekranowo (`manifest.webmanifest`, osobny zakres, bez wpływu na istniejące PWA).
+1. Oczekiwanie: trzy banery po 10 sekund, licznik i pasek postępu. „Pomiń oczekiwanie” od razu otwiera stronę główną.
+2. Po pełnej prezentacji pojawia się krótki ekran startowy z pierwszej makiety, a następnie strona główna/wprowadzenie.
+3. „Zaloguj się” otwiera formularz z wpisanymi danymi pokazowymi. Pola są edytowalne. Nie używaj prawdziwego hasła.
+4. Po formularzu wpisz PIN pokazowy **1234**. Działa klawiatura ekranowa, kasowanie i klawiatura komputera. Błędny PIN pokazuje informację.
+5. Po PIN-ie otwiera się pulpit. Działają przejścia do kamer, nagrań i ustawień oraz dolna nawigacja.
+6. „Od początku” powtarza całą prezentację. W ustawieniach można wylogować się z podglądu. Przycisk Wstecz przeglądarki zachowuje kolejność ekranów; automatyczne przejścia nie dodają pustych etapów historii.
 
-## Wyłącznie demonstracyjne
+Osiem widoków odpowiada załączonym makietom: start, wprowadzenie, logowanie, PIN, pulpit, kamery, nagrania, ustawienia. Reklamy są osobnym etapem oczekiwania.
 
-- Górny przełącznik ekranów i przyciski „Dalej (demo)”, „Wyloguj (demo)”.
-- Pola logowania są wyłączone, klawiatura PIN nie weryfikuje niczego.
-- Zdjęcia w kamerach i nagraniach (`zdjecia/`) to przykładowe kadry z wcześniejszych makiet (kopie z `../assets/demo-*.webp`), oznaczone jako „Przykład”. To nie jest transmisja ani prawdziwe nagranie.
-- Brak imienia użytkownika, liczników zdarzeń, alarmów i statystyk.
-- Banery w `reklama/` to kopie zatwierdzonych grafik z `kamera/assets/` (`home-security-loading`, `-ad-02`, `-ad-03`). Pliki w `kamera/` nie zostały zmienione.
-- Rotacja 3 × 10 s = 30 s i „Pomiń” na ekranie 1 tylko pokazują kolejność. Prawdziwa reklama mobilna (przy odświeżeniu strony głównej w Chrome) działa w istniejącym mechanizmie i nie została tu zastąpiona ani zduplikowana.
-- Pasek pod banerem to wskaźnik czasu demo (30 s).
+## Zakres demonstracji
 
-## Czego prototyp nie dotyka
+Podgląd służy do testowania wyglądu i przejść. Dane formularza i PIN nie są zapisywane ani wysyłane do Supabase. Zdjęcia i miniatury są przykładami. Wpisanie 1234 otwiera wyłącznie demonstracyjny pulpit, bez dostępu do konta, kamery i nagrań. Odcisk palca, chmura, profil i zdarzenia pokazują jedynie informację o zakresie podglądu. Prawdziwy panel pozostaje pod `kamera/panel.html`.
 
-`kamera/`, logowanie, PIN, baza danych, nagrywanie, aplikacja Windows, PWA, reklama mobilna.
+Oryginalny baner i obraz kamery pochodzą z ZIP-a `HS_8_EKRANOW.zip` przekazanego przez użytkownika. Pliki `kamera/`, logowanie produkcyjne, PIN produkcyjny, nagrywanie i instalator Windows pozostają niezależne od tego podglądu.
 
-## Do zrobienia przed wdrożeniem
+## Uruchomienie i weryfikacja
 
-- Integracja z istniejącym panelem po zatwierdzeniu (podpięcie prawdziwego logowania, PIN-u, kamer).
-- Podmiana miejsc na obraz prawdziwymi podglądami i miniaturami.
-- Funkcje z makiet, których aplikacja nie obsługuje (np. „Chmura”, „Profil”, odcisk palca), wymagają decyzji.
-- Test na fizycznych telefonach i w Chrome (pion/poziom, małe ekrany).
-- Porównanie 1:1 z oryginalnymi PNG z ZIP-a.
+Lokalnie: `python3 -m http.server -d design/home-security-redesign/prototyp-mobilny`.
+
+Przełącznik wszystkich ekranów do porównywania makiet: `?demo=1`. Zwykły link uruchamia pełny przebieg. Bez trybu porównania bezpośredni odnośnik do pulpitu wymaga przejścia demonstracyjnego formularza i PIN-u; nie stanowi to prawdziwego uwierzytelniania.
+
+Test przeglądarkowy, z Playwright dostępnym w środowisku: `CHROMIUM_PATH=/usr/bin/chromium node scripts/verify-mobile-walkthrough.cjs`. Zmienna `HS_PREVIEW_URL` pozwala sprawdzić ten sam przebieg na opublikowanym podglądzie. Test używa wyłącznie danych pokazowych.
+
+Workflow Pages kopiuje wyłącznie ten katalog do `/podglad-mobilny/`; pozostała zawartość `design/` nadal jest wyłączona z publikacji.

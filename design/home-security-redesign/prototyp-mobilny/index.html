@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <title>HOME SECURITY – prototyp wyglądu (demo)</title>
-<link rel="stylesheet" href="prototyp.css">
+<link rel="stylesheet" href="prototyp.css?v=2">
 </head>
 <body>
 <!-- Przełącznik ekranów – WYŁĄCZNIE DEMONSTRACYJNY -->
@@ -29,19 +29,21 @@
 </nav>
 
 <main class="stage">
+<header class="preview-context"><span>Podgląd mobilny · dane pokazowe</span><button id="restartPreview" type="button">Od początku ↺</button></header>
 
 <section class="screen" id="reklama" hidden>
   <div class="scroll center splash">
     <div class="ad" id="ad" aria-live="off">
-      <img src="reklama/baner-1.webp" alt="HOME SECURITY – Inteligentna ochrona domu" class="on">
+      <img src="reklama/baner-original.jpeg" alt="HOME SECURITY – Inteligentna ochrona domu" class="on">
       <img src="reklama/baner-2.webp" alt="HOME SECURITY – Twój dom. Twoje bezpieczeństwo." loading="lazy">
       <img src="reklama/baner-3.webp" alt="HOME SECURITY – baner 3" loading="lazy">
     </div>
-    <div class="dots" aria-hidden="true" id="adDots"><i class="on"></i><i></i><i></i><i></i></div>
-    <div class="load" role="progressbar" aria-label="Ładowanie aplikacji"><i id="adBar"></i></div>
-    <p class="muted small">Ładowanie aplikacji…</p>
-    <button class="btn ghost skip" id="adSkip" data-go="start">Pomiń</button>
-    <p class="muted small">Demo kolejności: reklama 30 s (3 banery po 10 s) → dalej. Prawdziwa reklama działa w istniejącym mechanizmie strony głównej.</p>
+    <div class="dots" aria-hidden="true" id="adDots"><i class="on"></i><i></i><i></i></div>
+    <div class="load" id="adProgress" role="progressbar" aria-label="Czas prezentacji" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0"><i id="adBar"></i></div>
+    <p class="ad-countdown"><span class="spinner" aria-hidden="true"></span>Przygotowujemy HOME SECURITY <strong id="adCountdown">30 s</strong></p>
+    <p class="muted small" id="adCaption">Inteligentna ochrona domu · 1 z 3</p>
+    <button class="btn ghost skip" id="adSkip" data-go="intro">Pomiń oczekiwanie</button>
+    <p class="muted small">Za chwilę otworzy się strona główna. Możesz pominąć prezentację.</p>
   </div>
 </section>
 
@@ -63,7 +65,7 @@
     <header class="hero">
       <svg class="logo sm"><use href="#i-logo"/></svg>
       <h1 class="brand">HOME <span>SECURITY</span></h1>
-      <div class="hero-img" role="img" aria-label="Miejsce na ilustrację kamery"><svg><use href="#i-cam"/></svg></div>
+      <div class="hero-img" role="img" aria-label="Kamera HOME SECURITY z dostarczonej makiety"></div>
     </header>
     <ul class="cards">
       <li class="card row"><svg class="ico"><use href="#i-cam"/></svg><span>Podgląd na żywo z Twoich kamer</span></li>
@@ -71,8 +73,8 @@
       <li class="card row"><svg class="ico"><use href="#i-cloud"/></svg><span>Bezpieczne archiwum nagrań</span></li>
     </ul>
     <div class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
-    <button class="btn primary" data-go="login">Rozpocznij <svg class="ico sm"><use href="#i-arrow"/></svg></button>
-    <p class="muted center-t">Masz już konto? <a href="#login" data-go="login">Zaloguj się</a></p>
+    <button class="btn primary" data-go="login">Zaloguj się <svg class="ico sm"><use href="#i-arrow"/></svg></button>
+    <p class="muted center-t">Sprawdź wygląd aplikacji w przeglądarce telefonu.</p>
   </div>
 </section>
 
@@ -84,13 +86,13 @@
     </header>
     <h2 class="title">Logowanie</h2>
     <p class="muted center-t">Zaloguj się do swojego konta</p>
-    <form class="form" onsubmit="return false" autocomplete="off">
-      <label class="field"><svg class="ico sm"><use href="#i-mail"/></svg><span class="sr">E-mail</span><input type="email" placeholder="E-mail" disabled></label>
-      <label class="field"><svg class="ico sm"><use href="#i-lock"/></svg><span class="sr">Hasło</span><input type="password" placeholder="Hasło" disabled><svg class="ico sm dim"><use href="#i-eye"/></svg></label>
-      <label class="check"><input type="checkbox" checked disabled><i></i> Zapamiętaj mnie</label>
-      <button class="btn primary" type="button" data-go="pin">Zaloguj się <svg class="ico sm"><use href="#i-arrow"/></svg></button>
-      <p class="muted center-t">Nie masz konta? <a href="#login" data-go="login">Zarejestruj się</a></p>
-      <p class="muted center-t small">Pola są wyłączone – to tylko wygląd. Prawdziwe logowanie pozostaje bez zmian.</p>
+    <form class="form" id="previewLogin" autocomplete="off">
+      <label class="field"><svg class="ico sm"><use href="#i-mail"/></svg><span class="sr">E-mail</span><input id="previewEmail" name="email" type="email" placeholder="E-mail" value="podglad@example.com" autocomplete="off" required></label>
+      <label class="field"><svg class="ico sm"><use href="#i-lock"/></svg><span class="sr">Hasło</span><input id="previewPassword" name="password" type="password" placeholder="Hasło" value="podglad" autocomplete="new-password" required><button id="togglePassword" class="icon-btn" type="button" aria-label="Pokaż hasło" aria-pressed="false"><svg class="ico sm dim"><use href="#i-eye"/></svg></button></label>
+      <label class="check"><input type="checkbox" checked><i></i> Zapamiętaj mnie</label>
+      <button class="btn primary" type="submit">Zaloguj się <svg class="ico sm"><use href="#i-arrow"/></svg></button>
+      <p class="muted center-t"><a href="#intro" data-go="intro">Wróć do strony głównej</a></p>
+      <p class="muted center-t small">Dane pokazowe są już wpisane. Nie używaj swojego prawdziwego hasła. W kolejnym kroku wpisz PIN <strong>1234</strong>.</p>
     </form>
   </div>
 </section>
@@ -102,33 +104,34 @@
       <h1 class="brand">HOME <span>SECURITY</span></h1>
     </header>
     <h2 class="title">Wprowadź kod PIN</h2>
-    <div class="pin-dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+    <div class="pin-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <p id="pinStatus" class="pin-status" role="status" aria-live="polite">PIN pokazowy: 1234</p>
     <div class="keypad">
-      <button type="button">1</button><button type="button">2</button><button type="button">3</button>
-      <button type="button">4</button><button type="button">5</button><button type="button">6</button>
-      <button type="button">7</button><button type="button">8</button><button type="button">9</button>
-      <button type="button" class="acc" aria-label="Odcisk palca (demo)"><svg class="ico"><use href="#i-finger"/></svg></button>
-      <button type="button">0</button>
-      <button type="button" aria-label="Usuń"><svg class="ico"><use href="#i-back"/></svg></button>
+      <button type="button" data-pin="1">1</button><button type="button" data-pin="2">2</button><button type="button" data-pin="3">3</button>
+      <button type="button" data-pin="4">4</button><button type="button" data-pin="5">5</button><button type="button" data-pin="6">6</button>
+      <button type="button" data-pin="7">7</button><button type="button" data-pin="8">8</button><button type="button" data-pin="9">9</button>
+      <button id="biometricPreview" type="button" class="acc" aria-label="Informacja o odcisku palca"><svg class="ico"><use href="#i-finger"/></svg></button>
+      <button type="button" data-pin="0">0</button>
+      <button type="button" data-pin="delete" aria-label="Usuń cyfrę"><svg class="ico"><use href="#i-back"/></svg></button>
     </div>
-    <p class="muted center-t small">Klawiatura demonstracyjna – nie weryfikuje PIN-u.</p>
-    <button class="btn ghost" data-go="dash">Dalej (demo)</button>
+    <p class="muted center-t small">Wpisz cztery cyfry, aby zobaczyć pulpit aplikacji.</p>
+    <button class="text-button" type="button" data-go="login">Wróć do logowania</button>
   </div>
 </section>
 
 <section class="screen has-nav" id="dash" hidden>
   <header class="bar brandbar"><div class="bb"><svg class="logo sm"><use href="#i-logo"/></svg><strong class="brand2">HOME<br><span>SECURITY</span></strong></div><button class="icon-btn" aria-label="Powiadomienia"><svg class="ico"><use href="#i-bell"/></svg></button></header>
   <div class="scroll">
-    <h2 class="greet">Witaj</h2>
+    <h2 class="greet">Witaj w HOME SECURITY</h2>
     <div class="tiles">
       <button class="card tile sel" data-go="cams"><svg class="ico"><use href="#i-cam"/></svg><strong>Kamery</strong></button>
       <button class="card tile" data-go="recs"><svg class="ico"><use href="#i-film"/></svg><strong>Nagrania</strong></button>
-      <button class="card tile"><svg class="ico"><use href="#i-bell"/></svg><strong>Zdarzenia</strong></button>
+      <button class="card tile" data-info="Zdarzenia"><svg class="ico"><use href="#i-bell"/></svg><strong>Zdarzenia</strong></button>
       <button class="card tile" data-go="settings"><svg class="ico"><use href="#i-gear"/></svg><strong>Ustawienia</strong></button>
-      <button class="card tile"><svg class="ico"><use href="#i-cloud"/></svg><strong>Chmura</strong></button>
-      <button class="card tile"><svg class="ico"><use href="#i-user"/></svg><strong>Profil</strong></button>
+      <button class="card tile" data-info="Chmura"><svg class="ico"><use href="#i-cloud"/></svg><strong>Chmura</strong></button>
+      <button class="card tile" data-info="Profil"><svg class="ico"><use href="#i-user"/></svg><strong>Profil</strong></button>
     </div>
-    <p class="muted center-t small">Wygląd demonstracyjny – bez danych użytkownika i liczników zdarzeń.</p>
+    <p class="muted center-t small">Wybierz ekran i przetestuj układ. Obrazy kamer i nagrania są przykładowe.</p>
   </div>
 </section>
 
@@ -155,7 +158,7 @@
 
 <section class="screen has-nav" id="settings" hidden>
   <header class="bar"><button class="icon-btn" data-go="dash" aria-label="Wstecz"><svg class="ico"><use href="#i-chev"/></svg></button><h2>Ustawienia</h2><span class="icon-btn"></span></header>
-  <div class="scroll"><ul class="cards"><li class="card row"><svg class="ico"><use href="#i-cam"/></svg><span>Urządzenia i kamery</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-bell"/></svg><span>Powiadomienia</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-film"/></svg><span>Nagrywanie i archiwum</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-signal"/></svg><span>Dostęp zdalny</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-shield"/></svg><span>Bezpieczeństwo</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-lock"/></svg><span>Prywatność i RODO</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-lang"/></svg><span>Język</span><span class="muted val">Polski</span><svg class="ico sm dim"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-info"/></svg><span>Informacje o aplikacji</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li></ul></div>
+  <div class="scroll"><ul class="cards"><li class="card row"><svg class="ico"><use href="#i-cam"/></svg><span>Urządzenia i kamery</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-bell"/></svg><span>Powiadomienia</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-film"/></svg><span>Nagrywanie i archiwum</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-signal"/></svg><span>Dostęp zdalny</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-shield"/></svg><span>Bezpieczeństwo</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-lock"/></svg><span>Prywatność i RODO</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-lang"/></svg><span>Język</span><span class="muted val">Polski</span><svg class="ico sm dim"><use href="#i-chev2"/></svg></li><li class="card row"><svg class="ico"><use href="#i-info"/></svg><span>Informacje o aplikacji</span><svg class="ico sm dim end"><use href="#i-chev2"/></svg></li></ul><button class="btn ghost" id="previewLogout" type="button">Wyloguj z podglądu</button></div>
 </section>
 
 <nav class="tabs" id="tabs" aria-label="Nawigacja aplikacji" hidden>
@@ -165,6 +168,8 @@
   <button data-go="settings"><svg class="ico"><use href="#i-more"/></svg><span>Więcej</span></button>
 </nav>
 </main>
+
+<dialog id="previewDialog" aria-labelledby="previewDialogTitle"><form method="dialog"><button class="icon-btn" aria-label="Zamknij">✕</button></form><h2 id="previewDialogTitle"></h2><div id="previewDialogBody"></div></dialog>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
 <defs>
@@ -196,6 +201,6 @@
 <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.01"/></symbol>
 </defs>
 </svg>
-<script src="prototyp.js"></script>
+<script src="prototyp.js?v=2"></script>
 </body>
 </html>

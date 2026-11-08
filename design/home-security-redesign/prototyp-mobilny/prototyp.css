@@ -212,3 +212,41 @@ a{text-decoration:underline}
     border:1px solid var(--line);border-radius:28px;overflow:hidden;
     box-shadow:0 0 0 6px #08121f,0 24px 80px rgba(0,120,255,.18)}
 }
+
+/* Browser walkthrough: the existing theme and eight screen layouts remain shared. */
+:root{--preview-label-size:.65rem;--preview-label-height:30px;--focus-ring:3px solid var(--cyan);--error:#ffb7ac;--preview-overlay:rgba(2,8,18,.88)}
+.preview-context{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;min-height:var(--preview-label-height);padding:5px 12px;background:var(--bg);border-bottom:1px solid var(--line);color:var(--muted);font-size:var(--preview-label-size)}
+.preview-context button{color:var(--cyan);padding:5px;white-space:nowrap;font-size:inherit}
+.stage{max-width:560px}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:var(--focus-ring);outline-offset:4px}
+.field:focus-within{border-color:var(--cyan);box-shadow:0 0 0 2px var(--line)}
+.field .icon-btn{width:36px;height:44px}
+.check input:not(:checked)+i{background:transparent;border:1px solid var(--line)}
+.check input:not(:checked)+i::after{content:""}
+.check input:focus-visible+i{outline:var(--focus-ring);outline-offset:4px}
+#intro .hero-img{background-image:url('referencje/wprowadzenie.png');background-size:100% auto;background-position:center 26%;box-shadow:none;border:0;aspect-ratio:1.85;max-height:none}
+#login .scroll,#pin .scroll{padding-top:clamp(20px,5dvh,44px);gap:20px}
+#login .hero,#pin .hero{margin-bottom:12px}
+#login .form{gap:20px}
+#login .form .small{font-size:.78rem;line-height:1.6}
+.ad-countdown{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;font-size:.85rem}
+.ad-countdown strong{color:var(--cyan);min-width:34px;font-variant-numeric:tabular-nums}
+.ad-countdown .spinner{width:16px;height:16px;border-width:2px}
+#reklama .scroll{width:100%;gap:18px}
+#reklama .load{height:7px}
+.pin-status{min-height:24px;text-align:center;color:var(--muted);font-size:.8rem}
+.pin-status.error{color:var(--error)}
+.pin-dots i{position:relative;background:transparent;border-color:var(--line);border-radius:14px}
+.pin-dots i.on::after{content:"";position:absolute;inset:38%;background:var(--cyan);border-radius:50%}
+.text-button{color:var(--cyan);font-size:.85rem;padding:10px;text-decoration:underline}
+.keypad button:active,.tile:active{background:var(--bg2);border-color:var(--cyan)}
+#previewDialog{margin:auto;width:min(90vw,430px);max-height:85dvh;overflow:auto;background:var(--bg2);border:1px solid var(--line);border-radius:20px;color:var(--text);padding:24px}
+#previewDialog::backdrop{background:var(--preview-overlay)}
+#previewDialog form{display:flex;justify-content:flex-end}
+#previewDialog h2{font-size:1.25rem;margin-bottom:16px}
+#previewDialog p{font-size:.9rem;line-height:1.6;color:var(--muted)}
+#previewDialog img{width:100%;border-radius:12px;margin-bottom:16px}
+.cam,.rec{cursor:pointer}
+#settings .cards .row{min-height:55px}
+@media (max-height:600px){#login .scroll,#pin .scroll{padding-top:12px;gap:12px}#login .hero,#pin .hero{margin-bottom:0}#pin .keypad button{min-height:44px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
