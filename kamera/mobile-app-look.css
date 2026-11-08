@@ -186,3 +186,12 @@ html.mobileOwnerMode body #app #mobileOverview .mobileOverviewActions .mobileMap
 .mobileMapNote{margin:0;font-size:13px;color:#b9cde0}
 .mobileMapTools[hidden],.mobileMapCanvas[hidden],.mobileMapAttribution[hidden],.mobileMapResults[hidden]{display:none}
 @media (max-height:500px){.mobileMapCanvas{height:44dvh}.mobileMapResults{max-height:40dvh}}
+
+/* Historia tras */
+.mobileMapRecordOpt{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:10px 12px;border:1px solid rgba(80,170,230,.3);border-radius:12px;font-size:13px;line-height:1.4;color:#b9cde0}
+.mobileMapRecordOpt input{flex:none;width:22px;height:22px;margin:1px 0 0;accent-color:#1de9e0}
+.mobileMapRecordOpt[hidden],.mobileMapRecord[hidden],.mobileMapHistory[hidden]{display:none}
+.mobileMapRecord[aria-pressed="true"]{background:rgba(29,233,224,.25)}
+.mobileMapWipe{width:100%;min-height:44px;margin-top:8px;border-radius:12px;border:1px solid rgba(248,113,113,.6);background:rgba(248,113,113,.1);color:#fca5a5;font-weight:700}
+/* Globalna reguła svg{width:26px} nie może zmniejszać warstwy wektorowej mapy (pozycja, trasy) */
+.mobileMapCanvas .leaflet-pane svg{width:auto;height:auto;max-width:none}
