@@ -72,8 +72,8 @@ test('PWA route, assets, and worker cache remain consistent without changing cam
  assert.equal(m.start_url,'./index.html?app=mobile-home');
  for(const item of m.shortcuts) assert.ok(item.url.startsWith('./panel.html?panel=owner'));
  assert.match(bridge,/params\.get\("app"\) === "mobile-home"/);
- assert.match(sw,/kamera-domowa-shell-v196/);
- assert.match(app,/SERVICE_WORKER_BUILD = "196"/);
+ assert.match(sw,/kamera-domowa-shell-v197/);
+ assert.match(app,/SERVICE_WORKER_BUILD = "197"/);
  for(const asset of ['mobile-app-splash.css?v=3','mobile-app-splash.js?v=3',
    'home-security-loading.webp','home-security-ad-02.webp','home-security-ad-03.webp'])
    assert.ok(sw.includes(asset),'PWA precache missing '+asset);
