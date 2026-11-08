@@ -116,7 +116,12 @@ await emit('pomoc.html',head('Kontakt i pomoc','Skontaktuj się z administratore
 
 
 if(!/^\d+\.\d+\.\d+$/.test(currentDesktopRelease))throw new Error('Invalid published Windows version');
-const downloadSource=(await read(source,'pobierz.html')).replaceAll('__DESKTOP_RELEASE__',currentDesktopRelease);
+const androidFallback={url:'https://github.com/DominikSolorz/dominiksolorz.github.io/releases/download/android-preview-0.2.0-7c3871b/HOME-SECURITY-Android-0.2.0-preview.apk',versionName:'0.2.0-preview',size:5593362};
+const androidMeta=JSON.parse(await read(camera,'android-update.json'));
+const androidRelease=androidMeta.enabled?androidMeta:androidFallback;
+if(!/^https:\/\/github\.com\/DominikSolorz\/dominiksolorz\.github\.io\/releases\/download\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\.apk$/.test(androidRelease.url)||!/^\d+\.\d+\.\d+(?:-preview)?$/.test(androidRelease.versionName)||!Number.isSafeInteger(androidRelease.size)||androidRelease.size<=0)throw Error('Invalid Android release metadata');
+
+const downloadSource=(await read(source,'pobierz.html')).replaceAll('__DESKTOP_RELEASE__',currentDesktopRelease).replaceAll('__ANDROID_APK_URL__',escape(androidRelease.url)).replaceAll('__ANDROID_VERSION__',escape(androidRelease.versionName)).replaceAll('__ANDROID_SIZE__',(androidRelease.size/1000000).toFixed(1).replace('.',','));
 const downloadStyles=downloadSource.match(/<style>[\s\S]*?<\/style>/)?.[0]||'';
 const downloads=downloadSource.replace(downloadStyles,'');
 await emit('pobierz.html',head('Pobierz aplikację na Windows, Android i iPhone','Pobierz HOME SECURITY na Windows i sprawdź, jak dodać panel na Androidzie i iPhonie. Instalator, wymagania i instrukcje w jednym miejscu.','pobierz.html').replace('</head>',downloadStyles+'<link rel="manifest" href="manifest.webmanifest?v=4"><script type="module" src="android-install.mjs?v=1"></script></head>')+nav()+downloads+footer()+'\n</body></html>\n');
