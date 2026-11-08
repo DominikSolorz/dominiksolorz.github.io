@@ -14,6 +14,10 @@ if (isMobileOwnerApp) {
   const byId = id => document.getElementById(id);
   const app = byId("app");
   document.body.classList.add("mobileOwnerMode");
+  document.querySelectorAll('#authDialog .authBrand img, #lock .pinLogo img').forEach(image => {
+    image.src = 'assets/mobile-app-mark.svg';
+    image.alt = 'HOME SECURITY';
+  });
   const disposeCameraFrame=mountMobileCameraFrame(byId('stage'),byId('video'));
   window.addEventListener('pagehide',event=>{if(!event.persisted)disposeCameraFrame();});
   const cameraInfo=mountMobileCameraInfo({stage:byId('stage'),video:byId('video'),statusNode:byId('topStatus')});
@@ -33,7 +37,7 @@ if (isMobileOwnerApp) {
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
-    <img class="mobileBrandLogo" src="assets/ds-shield.svg" width="48" height="48" alt="DS"><div><h1 id="mobilePageTitle">Dom</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
+    <img class="mobileBrandLogo" src="assets/mobile-app-mark.svg" width="48" height="48" alt="DS"><div><span class="mobileBrandName">HOME <b>SECURITY</b></span><h1 id="mobilePageTitle">Pulpit</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
     <button id="deviceLayoutBtn" type="button" aria-label="Zmień układ urządzenia"><span>▣</span><b>Telefon</b></button>
     <details class="mobileRelease"><summary>Opcje aplikacji</summary><div class="mobileOptionsBody"><small id="mobileBuild"></small><button type="button" data-web-update>Aktualizacje automatyczne</button><span id="mobileUpdateStatus" role="status" aria-live="polite"></span><button type="button" data-open-project-gallery>Projekty interfejsu</button><a href="https://dominiksolorz.github.io/kamera/dokumenty.html" target="_blank" rel="noopener noreferrer">Instrukcja i dokumenty ↗</a><div class="mobileAccountOptions"></div></div></details>`;
   app?.insertBefore(mobileHeader, app.firstChild);
@@ -52,11 +56,10 @@ if (isMobileOwnerApp) {
   nav.className = "mobileBottomNav";
   nav.setAttribute("aria-label", "Nawigacja mobilna");
   nav.innerHTML = `
-    <button class="active" type="button" data-mobile-view="home"><b>⌂</b><span>Panel</span></button>
-    <button type="button" data-mobile-view="camera"><b>◉</b><span>Podgląd</span></button>
-    <button type="button" data-mobile-view="alerts"><b>♧</b><span>Alarmy</span></button>
+    <button class="active" type="button" data-mobile-view="home"><b>⌂</b><span>Pulpit</span></button>
+    <button type="button" data-mobile-view="camera"><b>◉</b><span>Kamery</span></button>
     <button type="button" data-mobile-view="recordings"><b>▷</b><span>Nagrania</span></button>
-    <button type="button" data-mobile-view="settings" aria-label="Ustawienia"><b>⚙</b><span>Ustaw.</span></button>`;
+    <button type="button" data-mobile-view="settings" aria-label="Ustawienia"><b>⚙</b><span>Więcej</span></button>`;
   const mobileIcons={home:'home',camera:'camera',alerts:'alerts',recordings:'archive',settings:'settings'};
   nav.querySelectorAll('[data-mobile-view]').forEach(button=>{button.querySelector('b').innerHTML=iconMarkup(mobileIcons[button.dataset.mobileView]);});
   document.body.append(nav);
@@ -122,17 +125,18 @@ if (isMobileOwnerApp) {
   overview.className = "mobileOverview mobileHidden";
   overview.innerHTML = `
     <section class="mobileOverviewCard" aria-labelledby="mobileOverviewTitle">
-      <p class="mobileOverviewEyebrow">PANEL MONITORINGU</p>
-      <h2 id="mobileOverviewTitle">Co chcesz teraz zrobić?</h2>
-      <p class="mobileOverviewStatus" id="mobileOverviewStatus" role="status">Podgląd kamery nie został uruchomiony.</p>
-      <p>Obraz nie włącza się sam po zalogowaniu. Otwórz go świadomie w zakładce Podgląd.</p>
-      <button class="mobileOverviewPrimary" type="button" data-open-mobile-view="camera">Otwórz podgląd</button>
+      <h2 id="mobileOverviewTitle">Witaj w HOME SECURITY</h2>
     </section>
     <section class="mobileOverviewActions" aria-label="Skróty panelu">
-      <button type="button" data-open-mobile-view="alerts"><b>♧</b><span><strong>Alarmy i zdarzenia</strong><small>Sprawdź ostatnie zdarzenia</small></span><i>›</i></button>
-      <button type="button" data-open-mobile-view="recordings"><b>▷</b><span><strong>Archiwum nagrań</strong><small>Przeglądaj zapisane materiały</small></span><i>›</i></button>
-      <button type="button" data-open-mobile-view="settings"><b>⚙</b><span><strong>Ustawienia</strong><small>Skonfiguruj panel i zapis</small></span><i>›</i></button>
-    </section>`;
+      <button type="button" data-open-mobile-view="camera"><b>${iconMarkup('camera')}</b><span><strong>Kamery</strong></span></button>
+      <button type="button" data-open-mobile-view="recordings"><b>${iconMarkup('archive')}</b><span><strong>Nagrania</strong></span></button>
+      <button type="button" data-open-mobile-view="alerts"><b>${iconMarkup('alerts')}</b><span><strong>Zdarzenia</strong></span></button>
+      <button type="button" data-open-mobile-view="settings"><b>${iconMarkup('settings')}</b><span><strong>Ustawienia</strong></span></button>
+      <button type="button" data-open-mobile-view="recordings" data-open-mobile-storage><b>${iconMarkup('cloud')}</b><span><strong>Chmura</strong></span></button>
+      <button type="button" data-open-mobile-profile><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-8 16-8 16 0"/></svg></b><span><strong>Profil</strong></span></button>
+    </section>
+    <p class="mobileOverviewStatus" id="mobileOverviewStatus" role="status">Podgląd kamery nie został uruchomiony.</p>
+    <p class="mobileOverviewHint">Obraz nie włącza się sam po zalogowaniu. Otwórz go świadomie w zakładce Kamery.</p>`;
   document.querySelector(".mainCol")?.prepend(overview);
 
   const views = {
@@ -160,7 +164,7 @@ if (isMobileOwnerApp) {
   const managed = [...new Set([...Object.values(views).flat(),"viewEventsCard"])];
 
   function renderView(view) {
-    byId("mobilePageTitle").textContent = ({ home: "Panel", camera: "Podgląd", alerts: "Alarmy", recordings: "Nagrania", settings: "Ustawienia" })[view] || "Panel";
+    byId("mobilePageTitle").textContent = ({ home: "Pulpit", camera: "Kamery", alerts: "Zdarzenia", recordings: "Nagrania", settings: "Ustawienia" })[view] || "Panel";
     const visible = new Set(views[view] || views.home);
     document.body.dataset.mobileView = view;
     document.body.dataset.mobileSettings = view === "settings" ? "root" : "";
@@ -197,7 +201,16 @@ if (isMobileOwnerApp) {
   });
   overview.addEventListener("click", event => {
     const button = event.target.closest("[data-open-mobile-view]");
-    if (button) setView(button.dataset.openMobileView);
+    if (button) {
+      setView(button.dataset.openMobileView);
+      if (button.hasAttribute('data-open-mobile-storage')) {
+        recordingStorage.open = true;
+        recordingStorage.scrollIntoView({block:'start',behavior:'smooth'});
+      }
+    }
+    if (event.target.closest('[data-open-mobile-profile]')) {
+      mobileHeader.querySelector('.accountActions > button')?.click();
+    }
   });
   settingsHome.addEventListener("click", event => {
     const button = event.target.closest("button[data-setting-section]");

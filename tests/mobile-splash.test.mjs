@@ -54,6 +54,7 @@ test('phone-ad decision runs on each refresh and does not run on desktop or sens
   assert.equal(r.timers[0],30000);
  }
  assert.equal(run({ua:'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130',touch:0}).classes.size,0);
+ assert.ok(run({ua:'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130',touch:0,url:'https://dominiksolorz.github.io/kamera/?layout=manual&ui=phone'}).classes.has('hsMobileWelcome'),'an explicit mobile layout also works without an Android device');
  for(const suffix of ['?auth=login','?code=confirm','?panel=owner','?odbiorca=cam-'+'a'.repeat(32)]){
   assert.equal(run({url:'https://dominiksolorz.github.io/kamera/'+suffix}).classes.size,0,suffix);
  }
@@ -71,8 +72,8 @@ test('three campaign images are small local WebP assets, PWA keeps PIN and short
   assert.ok(page.includes('data-src="assets/'+path+'"'),'missing slide '+path);
   assert.ok(sw.includes('./assets/'+path),'PWA offline promo asset missing '+path);
  }
- assert.ok(sw.includes('kamera-domowa-shell-v191'));
- assert.ok(app.includes('SERVICE_WORKER_BUILD = "191"'));
+ assert.ok(sw.includes('kamera-domowa-shell-v193'));
+ assert.ok(app.includes('SERVICE_WORKER_BUILD = "193"'));
  assert.ok(sw.includes('./mobile-app-splash.css?v=3')&&sw.includes('./mobile-app-splash.js?v=3'));
  const manifest=JSON.parse(manifestStr);
  assert.equal(manifest.start_url,'./index.html?app=mobile-home');

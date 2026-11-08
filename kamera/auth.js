@@ -166,7 +166,7 @@ async function continueWithSession(signedInUser = null) {
   const user = signedInUser || await currentAccountUser();
   if (!user) {
     section("login");
-    message("Nie udało się przywrócić sesji konta. Sprawdź, czy przeglądarka pozwala tej stronie zapisywać dane, i zaloguj się ponownie.", true);
+    message("");
     return;
   }
   const profile = await profileFor(user);

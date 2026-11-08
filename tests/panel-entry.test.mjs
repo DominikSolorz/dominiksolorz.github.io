@@ -67,7 +67,7 @@ test(`runtime loads ${search} without releasing the account gate`, async () => {
 });
 }
 
-for (const owner of ['owner', 'wlasciciel']) {
+for (const owner of ['owner', 'wlasciciel', 'mobile-default']) {
 test(`the ${owner} route requests account verification before opening the panel`, async () => {
   const html = await readFile(new URL('../kamera/panel.html', import.meta.url), 'utf8');
   const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)]
@@ -75,8 +75,9 @@ test(`the ${owner} route requests account verification before opening the panel`
   const home = { hidden: false };
   let accountRequests = 0, entered = false;
   const window = { __showAccount: () => { accountRequests++; } };
-  const location = { search: `?panel=${owner}`, href: `https://example.invalid/kamera/panel.html?panel=${owner}` };
-  vm.runInNewContext(script, { window, location, URL, URLSearchParams, document: { getElementById: () => home },
+  const search = owner === 'mobile-default' ? '' : `?panel=${owner}`;
+  const location = { search, href: `https://example.invalid/kamera/panel.html${search}` };
+  vm.runInNewContext(script, { window, location, URL, URLSearchParams, document: { getElementById: () => home, documentElement: { classList: { contains: () => owner === 'mobile-default' } } },
     history: { state: null, replaceState() {} } });
   window.__waitForPanel.then(() => { entered = true; });
   window.__authReadyResolve();
