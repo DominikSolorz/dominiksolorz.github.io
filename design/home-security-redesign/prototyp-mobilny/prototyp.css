@@ -184,3 +184,22 @@ a{color:var(--cyan);font-weight:700}
 .appsplash::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,13,26,.55),rgba(5,13,26,.9))}
 .splash-fg{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px;width:100%}
 .splash-fg .load{margin-top:8px}
+
+/* dopasowanie do makiet: typografia i odstępy */
+.title{font-weight:800;margin-top:10px}
+.btn{font-weight:800;font-size:1.05rem}
+.field .ico{color:var(--text)}.field .ico.dim{color:var(--text)}
+.field{border-color:rgba(120,190,235,.4);background:rgba(18,38,62,.7)}
+.form{gap:20px;margin-top:6px}
+.btn.primary{min-height:56px}
+a{text-decoration:underline}
+.brand{font-weight:800}
+.tile strong,.tabs button,.card.row span{font-weight:600}
+.bar h2{font-weight:800}
+.tile .ico{color:#e6f4ff;width:44px;height:44px}
+.tile.sel .ico{color:var(--cyan)}
+.tile{min-height:clamp(110px,20dvh,150px);border-radius:22px}
+.tiles{gap:14px}
+.greet{font-weight:800;margin:6px 0}
+.tabs{margin:0 8px 8px;border:1px solid var(--line);border-radius:22px;background:rgba(8,22,40,.92)}
+.card.row .ico{color:#e6f4ff}
