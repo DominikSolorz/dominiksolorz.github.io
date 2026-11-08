@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Publish only verified distribution files, then advance the update channel."""
-import base64,hashlib,json,os,pathlib,subprocess,sys,time
+import base64,hashlib,json,os,pathlib,re,subprocess,sys,time
 root=pathlib.Path(sys.argv[1]);meta=json.loads((root/'android-update.json').read_text())
 repo=os.environ['GITHUB_REPOSITORY'];tag='android-'+meta['versionName'];apk=root/('HOME-SECURITY-Android-'+meta['versionName']+'.apk')
 def gh(*args,stdin=None,check=True):
@@ -34,6 +34,19 @@ for attempt in range(3):
     result=gh('api','--method','PUT','repos/'+repo+'/contents/kamera/android-update.json','--input','-',stdin=json.dumps(payload),check=False)
     if result.returncode==0:break
     if attempt==2:raise RuntimeError('Could not advance update channel; existing channel preserved')
+    time.sleep(2)
+# Keep committed generated HTML aligned with the release manifest.
+for attempt in range(3):
+    current=json.loads(gh('api','repos/'+repo+'/contents/kamera/pobierz.html?ref=main').stdout)
+    html=base64.b64decode(current['content']).decode()
+    updated=re.sub(r'(id="android-apk" href=")[^"]+',lambda m:m.group(1)+meta['url'],html,count=1)
+    size=('{:.1f}'.format(meta['size']/1000000)).replace('.',',')
+    updated=re.sub(r'Wersja rozwojowa [0-9a-z.-]+ · [0-9,]+ MB','Wersja rozwojowa '+meta['versionName']+' · '+size+' MB',updated,count=1)
+    if updated==html:break
+    payload={'message':'Zsynchronizuj pobieranie Android '+meta['versionName'],'branch':'main','sha':current['sha'],'content':base64.b64encode(updated.encode()).decode()}
+    result=gh('api','--method','PUT','repos/'+repo+'/contents/kamera/pobierz.html','--input','-',stdin=json.dumps(payload),check=False)
+    if result.returncode==0:break
+    if attempt==2:raise RuntimeError('Could not synchronize generated download page')
     time.sleep(2)
 gh('workflow','run','pages.yml','--ref','main')
 print('Published Android',meta['versionName'],'and requested Pages deployment.')
