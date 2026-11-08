@@ -4,25 +4,24 @@
   --demo-h:0px;--tab-h:64px;
 }
 *{box-sizing:border-box;margin:0}
-html,body{height:100%;background:var(--bg);color:var(--text);
+html,body{height:100%;overscroll-behavior:none;-webkit-user-select:none;user-select:none;background:var(--bg);color:var(--text);
   font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   overflow-x:hidden;-webkit-text-size-adjust:100%}
 body{display:flex;flex-direction:column;height:100dvh;
   background:radial-gradient(120% 60% at 50% 0,#0d2a4a 0,var(--bg) 60%)}
-button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button{-webkit-tap-highlight-color:transparent;font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 a{color:var(--cyan);font-weight:700}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .muted{color:var(--muted)}.small{font-size:.8rem}.center-t{text-align:center}
 [hidden]{display:none!important}
 
 /* demo switcher */
-.demo-switch{display:flex;flex-wrap:wrap;gap:4px;padding:6px max(8px,env(safe-area-inset-left));
-  padding-top:max(6px,env(safe-area-inset-top));background:#020812;border-bottom:1px solid var(--line);flex:none}
+.demo-switch{display:flex;flex-wrap:wrap;gap:4px;padding:6px max(8px,env(safe-area-inset-left));background:#020812;border-bottom:1px solid var(--line);flex:none}
 .demo-switch button{flex:1 1 22%;min-width:0;padding:6px 4px;font-size:.72rem;border-radius:8px;
   background:#0b1b30;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .demo-switch button.on{background:var(--blue);color:#fff}
 
-.stage{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width:560px;margin:0 auto;position:relative}
+.stage{padding-top:env(safe-area-inset-top);flex:1;min-height:0;display:flex;flex-direction:column;width:100%;max-width:560px;margin:0 auto;position:relative}
 .screen{flex:1;min-height:0;display:flex;flex-direction:column}
 .scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
   padding:16px max(16px,env(safe-area-inset-left)) 20px max(16px,env(safe-area-inset-right));

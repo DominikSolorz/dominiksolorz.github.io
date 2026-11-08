@@ -1,6 +1,8 @@
 // Prototyp wizualny – przełączanie ekranów wyłącznie demonstracyjne.
 // Brak logowania, PIN-u, kamer, sieci i reklamy.
 (function () {
+  // Przełącznik ekranów tylko po dodaniu ?demo=1 do adresu.
+  if (/[?&]demo=1/.test(location.search)) document.querySelector('.demo-switch').hidden = false;
   var screens = document.querySelectorAll('.screen');
   var tabs = document.getElementById('tabs');
   var switchBtns = document.querySelectorAll('.demo-switch button');
@@ -20,7 +22,7 @@
     tabBtns.forEach(mark);
     var sc = target.querySelector('.scroll');
     if (sc) sc.scrollTop = 0;
-    history.replaceState(null, '', '#' + id);
+    history.replaceState(null, '', location.search + '#' + id);
   }
 
   document.addEventListener('click', function (e) {

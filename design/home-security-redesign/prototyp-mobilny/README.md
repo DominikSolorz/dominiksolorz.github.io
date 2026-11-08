@@ -17,6 +17,8 @@ Adres bezpośredni do ekranu: `index.html#login`, `#pin`, `#dash` itd.
 | 7 | `recs` | Nagrania |
 | 8 | `settings` | Ustawienia |
 
+Domyślnie prototyp wygląda jak aplikacja (bez paska przełączania). Przełącznik ekranów pojawia się po dodaniu `?demo=1` do adresu. „Dodaj do ekranu głównego” w Chrome otwiera go pełnoekranowo (`manifest.webmanifest`, osobny zakres, bez wpływu na istniejące PWA).
+
 ## Wyłącznie demonstracyjne
 
 - Górny przełącznik ekranów i przyciski „Dalej (demo)”, „Wyloguj (demo)”.

@@ -5,12 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#050d1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HOME SECURITY (demo)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <title>HOME SECURITY – prototyp wyglądu (demo)</title>
 <link rel="stylesheet" href="prototyp.css">
 </head>
 <body>
 <!-- Przełącznik ekranów – WYŁĄCZNIE DEMONSTRACYJNY -->
-<nav class="demo-switch" aria-label="Przełącznik ekranów (tylko demo)">
+<nav class="demo-switch" hidden aria-label="Przełącznik ekranów (tylko demo)">
   <button data-go="start">1 Start</button>
   <button data-go="intro">2 Intro</button>
   <button data-go="login">3 Logowanie</button>
