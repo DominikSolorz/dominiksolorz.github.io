@@ -30,6 +30,28 @@
     show(el.dataset.go);
   });
 
+  // Demo reklamy: 3 banery po 10 s, po 30 s przejście do wprowadzenia.
+  var imgs = document.querySelectorAll('#ad img'), dots = document.querySelectorAll('#adDots i'),
+      bar = document.getElementById('adBar'), adTimer = null, adT0 = 0;
+  function adStop() { clearInterval(adTimer); adTimer = null; }
+  function adStart() {
+    adStop(); adT0 = Date.now();
+    adTimer = setInterval(function () {
+      var s = (Date.now() - adT0) / 1000;
+      if (s >= 30) { adStop(); show('intro'); return; }
+      var k = Math.floor(s / 10);
+      imgs.forEach(function (im, i) { im.classList.toggle('on', i === k); });
+      dots.forEach(function (d, i) { d.classList.toggle('on', i === k); });
+      bar.style.width = (s / 30 * 100) + '%';
+    }, 250);
+  }
+  var baseShow = show;
+  show = function (id) {
+    baseShow(id);
+    if (id === 'start') { imgs.forEach(function (im, i) { im.classList.toggle('on', i === 0); }); bar.style.width = '0'; adStart(); }
+    else adStop();
+  };
+
   var start = location.hash.slice(1);
   show(document.getElementById(start) ? start : 'start');
 })();

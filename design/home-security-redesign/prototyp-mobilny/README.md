@@ -8,7 +8,7 @@ Adres bezpośredni do ekranu: `index.html#login`, `#pin`, `#dash` itd.
 
 | # | Id | Ekran |
 |---|----|-------|
-| 1 | `start` | Ekran startowy / ładowanie aplikacji |
+| 1 | `start` | Oczekiwanie: 3 banery reklamowe 16:9 (co 10 s), „Pomiń”, po 30 s → wprowadzenie |
 | 2 | `intro` | Wprowadzenie |
 | 3 | `login` | Logowanie |
 | 4 | `pin` | Kod PIN |
@@ -23,8 +23,9 @@ Adres bezpośredni do ekranu: `index.html#login`, `#pin`, `#dash` itd.
 - Pola logowania są wyłączone, klawiatura PIN nie weryfikuje niczego.
 - Kamery i nagrania to puste miejsca na obraz, bez transmisji i bez danych.
 - Brak imienia użytkownika, liczników zdarzeń, alarmów i statystyk.
-- Pasek ładowania jest animacją, nie pokazuje postępu.
-- Reklama startowa 30 s NIE jest częścią prototypu (istnieje osobny mechanizm w projekcie).
+- Banery w `reklama/` to kopie zatwierdzonych grafik z `kamera/assets/` (`home-security-loading`, `-ad-02`, `-ad-03`). Pliki w `kamera/` nie zostały zmienione.
+- Rotacja 10 s / 30 s i „Pomiń” na ekranie 1 tylko pokazują kolejność. Prawdziwa reklama mobilna (przy odświeżeniu strony głównej w Chrome) działa w istniejącym mechanizmie i nie została tu zastąpiona ani zduplikowana.
+- Pasek pod banerem to wskaźnik czasu demo (30 s).
 
 ## Czego prototyp nie dotyka
 

@@ -162,3 +162,13 @@ a{color:var(--cyan);font-weight:700}
 @keyframes ld{to{transform:translateX(150%)}}
 @media (prefers-reduced-motion:reduce){.load i{animation:none;width:100%}}
 @media (max-height:480px){.splash{flex-direction:column}.tagline br{display:none}}
+
+/* reklama / oczekiwanie – banery 16:9 */
+.splash{justify-content:center}
+.ad{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#06101f}
+.ad img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s}
+.ad img.on{opacity:1}
+.load i{animation:none;width:0;transform:none;transition:width .25s linear}
+.skip{max-width:220px}
+.ad{flex:none}
+@media (max-height:480px){.ad{width:min(100%,calc(46dvh*16/9))}#start .small:last-child{display:none}.splash{gap:8px}}

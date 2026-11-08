@@ -25,12 +25,16 @@
 
 <section class="screen" id="start" hidden>
   <div class="scroll center splash">
-    <svg class="logo"><use href="#i-logo"/></svg>
-    <h1 class="brand big">HOME<br><span>SECURITY</span></h1>
-    <p class="tagline">Twój dom.<br>Twoja kontrola.<br><span>Zawsze pod ręką.</span></p>
-    <div class="load" role="progressbar" aria-label="Ładowanie aplikacji"><i></i></div>
+    <div class="ad" id="ad" aria-live="off">
+      <img src="reklama/baner-1.webp" alt="HOME SECURITY – Inteligentna ochrona domu" class="on">
+      <img src="reklama/baner-2.webp" alt="HOME SECURITY – Twój dom. Twoje bezpieczeństwo." loading="lazy">
+      <img src="reklama/baner-3.webp" alt="HOME SECURITY – baner 3" loading="lazy">
+    </div>
+    <div class="dots" aria-hidden="true" id="adDots"><i class="on"></i><i></i><i></i></div>
+    <div class="load" role="progressbar" aria-label="Ładowanie aplikacji"><i id="adBar"></i></div>
     <p class="muted small">Ładowanie aplikacji…</p>
-    <p class="muted small">Ekran demonstracyjny. Reklama startowa to osobny element strony głównej, poza tym prototypem.</p>
+    <button class="btn ghost skip" id="adSkip" data-go="intro">Pomiń</button>
+    <p class="muted small">Demo kolejności: reklama 30 s (3 banery po 10 s) → dalej. Prawdziwa reklama działa w istniejącym mechanizmie strony głównej.</p>
   </div>
 </section>
 
