@@ -40,6 +40,7 @@
                         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/how_it_works_description" android:textColor="#B9C1D0" android:textSize="13sp" android:lineSpacingExtra="3dp" android:layout_marginTop="8dp"/>
                     </LinearLayout>
                 </LinearLayout>
+                <Button android:id="@+id/checkAppUpdate" style="@style/MobilePrimaryButton" android:text="@string/check_app_update" android:layout_marginTop="20dp"/>
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/preview_note" android:textColor="#B9C1D0" android:textSize="12sp" android:layout_marginTop="24dp"/>
             </LinearLayout>
         </ScrollView>

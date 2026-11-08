@@ -1,0 +1,25 @@
+name: MOBILE | Android | Kontrola aktualizatora APK
+on:
+  pull_request:
+    paths: ['native-mobile/android/**', '.github/workflows/android-updater-check.yml']
+permissions:
+  contents: read
+jobs:
+  android-updater:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: native-mobile
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Compile Android, test update policy and lint
+        working-directory: native-mobile/android
+        run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease
