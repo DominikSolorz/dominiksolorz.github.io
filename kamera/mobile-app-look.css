@@ -113,3 +113,31 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSetti
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"][data-mobile-settings="image"] .mobileMediaTabs,
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"][data-mobile-settings="sound"] .mobileMediaTabs{display:flex;gap:10px;margin:10px 0}
 .mobileMediaTabs button{min-height:44px;padding:8px 24px;border:1px solid #28506a;border-radius:10px;background:#112b40;color:#d6f2ff}
+
+/* Poprawki układu: nagłówek, menu opcji i dolny pasek nawigacji */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app{
+  padding-bottom:calc(112px + env(safe-area-inset-bottom))!important;
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav{
+  background:#07101d!important;backdrop-filter:none!important;z-index:100;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  padding:6px max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important;
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button{
+  min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+}
+/* Nagłówek: nazwa nie może wchodzić pod przycisk układu */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{flex-wrap:nowrap!important;align-items:center}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader>div{min-width:0;overflow:hidden}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .mobileBrandName{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #deviceLayoutBtn{
+  min-width:44px!important;max-width:44px;padding:0!important;display:grid;place-items:center;
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #deviceLayoutBtn b{display:none}
+/* Menu „•••” jako panel na całą szerokość, bez ucinania */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileOptionsBody{
+  position:fixed!important;left:12px!important;right:12px!important;top:calc(env(safe-area-inset-top) + 72px)!important;
+  width:auto!important;max-width:none!important;box-sizing:border-box;max-height:calc(100dvh - 190px)!important;
+  overflow:auto;z-index:120!important;background:#0b1626!important;border:1px solid var(--ma-line)!important;
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileOptionsBody *{min-width:0;overflow-wrap:anywhere}
