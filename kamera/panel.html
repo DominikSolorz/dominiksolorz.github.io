@@ -217,11 +217,12 @@
     const p = new URLSearchParams(location.search);
     const isReceiver = /^cam-[a-f0-9]{32}$/.test(p.get("odbiorca") || "");
     const authRoute = ["register", "login", "forgot"].includes(p.get("auth")) ? p.get("auth") : "";
+    const ownerEntry = ["owner", "wlasciciel"].includes(p.get("panel"));
     const home = document.getElementById("publicHome");
     let enter, opened = false;
     // Boot ma wiedzieć, czy strona główna nadal jest świadomie oglądana.
     // Dzięki temu awaryjne wznowienie nie zamknie strony informacyjnej.
-    window.__publicHomeActive = !isReceiver && !authRoute && p.get("panel") !== "owner";
+    window.__publicHomeActive = !isReceiver && !authRoute && !ownerEntry;
     window.__waitForPanel = new Promise(resolve => { enter = resolve; });
     const openPanel = () => {
       if (opened) return;
@@ -250,7 +251,7 @@
     // stronę główną. Program Windows stosuje ten sam bezpieczny przebieg co
     // strona: strona główna → logowanie → start → PIN → pulpit.
     if (isReceiver) openPanel();
-    else if (authRoute || p.get("panel") === "owner") {
+    else if (authRoute || ownerEntry) {
       home.hidden = true;
       window.__authReady.then(() => authRoute === "register" ? window.__showRegistration?.() : authRoute === "forgot" ? window.__showPasswordReset?.() : requestAccount());
     }
@@ -688,6 +689,6 @@
 <script type="module" src="desktop.js?v=51"></script>
 <script type="module" src="mobile.js?v=30"></script>
 </template>
-<script type="module" src="panel-entry.mjs?v=2"></script>
+<script type="module" src="panel-entry.mjs?v=3"></script>
 </body>
 </html>
