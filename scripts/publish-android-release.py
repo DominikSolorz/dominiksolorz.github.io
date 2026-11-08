@@ -10,12 +10,12 @@ assert meta['packageName']=='pl.solorz.homesecurity'
 assert meta['sha256']==hashlib.sha256(apk.read_bytes()).hexdigest()
 assert meta['size']==apk.stat().st_size
 notes=root/'notes.txt'
-notes.write_text('HOME SECURITY Android '+meta['versionName']+' (Android 11+).\\n'
-    'Wydanie rozwojowe, podpisane stalym kluczem wlasciciela. Aktualizator sprawdza nowe wersje po uruchomieniu, po wznowieniu i co 10 minut na pierwszym planie. Instalacje potwierdza uzytkownik w Androidzie.\\n'
-    'Logowanie: e-mail, haslo i PIN. Logowanie Google w APK nie jest jeszcze dostepne. Wymagany Android System WebView 124+.\\n'
-    'Testy: kompilacja, testy jednostkowe, lint, podpis i instalacja oraz aktualizacja na emulatorze Android API 35. Bez testu na fizycznym telefonie.\\n'
-    'Wczesniejszy APK 0.2.0-preview jest osobna aplikacja. Nie przenosimy ani nie usuwamy automatycznie jego danych.\\n'
-    'Source: '+meta['sourceCommit']+'\\n')
+notes.write_text('HOME SECURITY Android '+meta['versionName']+' (Android 11+).\n'
+    'Wydanie rozwojowe, podpisane stalym kluczem wlasciciela. Aktualizator sprawdza nowe wersje po uruchomieniu, po wznowieniu i co 10 minut na pierwszym planie. Instalacje potwierdza uzytkownik w Androidzie.\n'
+    'Logowanie: e-mail, haslo i PIN. Logowanie Google w APK nie jest jeszcze dostepne. Wymagany Android System WebView 124+.\n'
+    'Testy: kompilacja, testy jednostkowe, lint, podpis i instalacja oraz aktualizacja na emulatorze Android API 35. Bez testu na fizycznym telefonie.\n'
+    'Wczesniejszy APK 0.2.0-preview jest osobna aplikacja. Nie przenosimy ani nie usuwamy automatycznie jego danych.\n'
+    'Source: '+meta['sourceCommit']+'\n')
 existing=gh('release','view',tag,'--json','tagName',check=False)
 if existing.returncode==0:
     dest=root/'existing';dest.mkdir()
