@@ -49,7 +49,7 @@ const accountReturnBridge = `<script>(function(){
 const mobileSplashHead = '<link rel="stylesheet" href="mobile-home.css?v=1"><link rel="stylesheet" href="mobile-app-splash.css?v=3">'+
   '<script>(function(){const q=new URLSearchParams(location.search);'+
   'if(q.has("auth")||q.has("code")||q.has("panel")||q.has("odbiorca")||location.hash)return;'+
-  'const phone=/Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent||"")||'+
+  'const phone=(q.get("layout")==="manual"&&q.get("ui")==="phone")||/Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent||"")||'+
   '(matchMedia("(max-width:900px)").matches&&(navigator.maxTouchPoints||0)>0);'+
   'if(!phone)return;'+
   'if(window.__HOME_SECURITY_DESKTOP__===true||window.chrome?.webview)return;'+
@@ -75,8 +75,8 @@ const mobileWelcome = `<section id="mobileWelcome" aria-labelledby="mobileWelcom
   <h1 id="mobileWelcomeTitle">HOME <span>SECURITY</span></h1>
   <div class="mobileWelcomeCamera" role="img" aria-label="Ilustracja kamery HOME SECURITY"></div>
   <ul><li><span aria-hidden="true">◉</span>Podgląd na żywo z Twoich kamer</li><li><span aria-hidden="true">♧</span>Powiadomienia o zdarzeniach</li><li><span aria-hidden="true">▣</span>Bezpieczne archiwum nagrań</li></ul>
-  <a class="mobileWelcomeLogin" href="panel.html?auth=login&amp;layout=auto">Zaloguj się <span aria-hidden="true">→</span></a>
-  <p>Nie masz konta? <a href="panel.html?auth=register&amp;layout=auto">Zarejestruj się</a></p>
+  <a class="mobileWelcomeLogin" href="panel.html?auth=login&amp;layout=manual&amp;ui=phone">Zaloguj się <span aria-hidden="true">→</span></a>
+  <p>Nie masz konta? <a href="panel.html?auth=register&amp;layout=manual&amp;ui=phone">Zarejestruj się</a></p>
   <a class="mobileWelcomePreview" href="https://dominiksolorz.github.io/podglad-mobilny/">Przetestuj wygląd bez konta</a>
   <a class="mobileWelcomeAbout" href="jak-dziala.html">Jak działa HOME SECURITY?</a>
 </section>`;

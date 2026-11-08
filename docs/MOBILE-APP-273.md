@@ -10,6 +10,6 @@ The mobile layout is now part of the real account/PIN application. It is not a r
 - A plain mobile `/kamera/panel.html` requests account verification rather than falling back to the old marketing page. Owner and receiver security gates remain intact.
 - Web manifest version: 273. Service worker generation: 193. Mobile module: 31, account module: 16, mobile stylesheet: 2. The new asset URLs avoid reusing the old cached mobile shell; no account storage or recordings are cleared.
 
-A fresh automatic-layout entry is `/kamera/?layout=auto&hs_release=273`. `hs_release` uses the existing fresh-navigation mechanism, not a PIN or authorization shortcut.
+A fresh mobile-layout entry is `/kamera/?layout=manual&ui=phone&hs_release=273`; it also permits testing the phone layout in a desktop browser. Automatic phone detection remains active for the ordinary `/kamera/` URL. `hs_release` uses the existing fresh-navigation mechanism, not a PIN or authorization shortcut.
 
 Verification: `node --test tests/*.test.mjs kamera/tests/*.test.mjs`; `CHROMIUM_PATH=/usr/bin/chromium node scripts/verify-real-mobile-layout.cjs`. Browser tests use isolated account responses with the real PBKDF2 PIN flow and confirm that a wrong PIN does not expose the app, a valid fixture PIN does, profile opens and navigation preserves the original video element. With `HS_REAL_MOBILE_LIVE=1` the same checks target deployed assets. No physical-phone or real-camera test is implied.

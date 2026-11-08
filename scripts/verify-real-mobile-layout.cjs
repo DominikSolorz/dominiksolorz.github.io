@@ -16,8 +16,8 @@ const artifacts=process.env.HS_MOBILE_PROOF;
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
  if(artifacts)fs.mkdirSync(artifacts,{recursive:true});
  try{
-  for(const [width,height] of [[390,844],[320,568],[844,390]]){
-   const page=await browser.newPage({viewport:{width,height},isMobile:true,hasTouch:true,serviceWorkers:'block',userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1'});
+  for(const [width,height] of [[390,844],[320,568],[844,390],[1280,900]]){
+   const page=await browser.newPage({viewport:{width,height},isMobile:width<1000,hasTouch:width<1000,serviceWorkers:'block',userAgent:width>=1000?'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1'});
    const errors=[];page.on('pageerror',error=>errors.push(error.message));
    if(!process.env.HS_REAL_MOBILE_LIVE)await page.route('https://dominiksolorz.github.io/kamera/**',route=>{
     const relative=decodeURIComponent(new URL(route.request().url()).pathname.slice('/kamera/'.length))||'index.html';
@@ -36,7 +36,8 @@ const artifacts=process.env.HS_MOBILE_PROOF;
    await page.routeWebSocket('**/realtime/**',socket=>socket.close());
    const shot=async name=>{if(artifacts&&width===390)await page.screenshot({path:path.join(artifacts,name+'.png'),fullPage:true});};
    if(width===390)await page.clock.install();
-   await page.goto('https://dominiksolorz.github.io/kamera/?layout=auto&hs_release=273',{waitUntil:'networkidle'});
+   const entry='https://dominiksolorz.github.io/kamera/?hs_release=273'+(width>=1000?'&layout=manual&ui=phone':'&layout=auto');
+   await page.goto(entry,{waitUntil:'networkidle'});
    if(width===390){
     await page.clock.runFor(10000);
     assert.equal(await page.locator('.hsMobileSplashImage').nth(1).getAttribute('aria-hidden'),'false');

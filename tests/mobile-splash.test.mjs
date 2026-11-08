@@ -54,6 +54,7 @@ test('phone-ad decision runs on each refresh and does not run on desktop or sens
   assert.equal(r.timers[0],30000);
  }
  assert.equal(run({ua:'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130',touch:0}).classes.size,0);
+ assert.ok(run({ua:'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130',touch:0,url:'https://dominiksolorz.github.io/kamera/?layout=manual&ui=phone'}).classes.has('hsMobileWelcome'),'an explicit mobile layout also works without an Android device');
  for(const suffix of ['?auth=login','?code=confirm','?panel=owner','?odbiorca=cam-'+'a'.repeat(32)]){
   assert.equal(run({url:'https://dominiksolorz.github.io/kamera/'+suffix}).classes.size,0,suffix);
  }
