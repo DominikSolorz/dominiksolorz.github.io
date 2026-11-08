@@ -7,13 +7,27 @@ android {
         minSdk 30
         targetSdk 36
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-        versionCode 2
-        versionName '0.2.0'
+        versionCode 3
+        versionName '0.3.0'
     }
     buildFeatures { buildConfig true }
+    def signingPath = System.getenv('HOME_SECURITY_ANDROID_KEYSTORE')
+    if (signingPath) {
+        ['HOME_SECURITY_ANDROID_STORE_PASSWORD','HOME_SECURITY_ANDROID_KEY_ALIAS','HOME_SECURITY_ANDROID_KEY_PASSWORD'].each {
+            if (!System.getenv(it)) throw new GradleException('Missing Android signing configuration: ' + it)
+        }
+        signingConfigs {
+            ownerRelease {
+                storeFile file(signingPath)
+                storePassword System.getenv('HOME_SECURITY_ANDROID_STORE_PASSWORD')
+                keyAlias System.getenv('HOME_SECURITY_ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('HOME_SECURITY_ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         debug { applicationIdSuffix '.preview'; versionNameSuffix '-preview' }
-        release { minifyEnabled false }
+        release { minifyEnabled false; if (signingPath) signingConfig signingConfigs.ownerRelease }
     }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
