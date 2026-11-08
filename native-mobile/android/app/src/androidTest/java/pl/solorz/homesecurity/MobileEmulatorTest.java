@@ -120,9 +120,9 @@ public class MobileEmulatorTest {
             capture(scenario,"01-native-home");
             if(!supportedEngine()) { control("navRecordings").click();assertUpdateScreen(scenario);control("errorGoHome").click();return; }
             control("navRecordings").click();waitFor(()->visible(scenario,R.id.ownerWeb)&&!visible(scenario,R.id.panelLoading),20000);
-            assertEquals("true",js(scenario,"document.body.dataset.mobileView==='recordings'"));
+            waitFor(()->"true".equals(js(scenario,"document.body.dataset.mobileView==='recordings'")),20000);
             control("navAccount").click();waitFor(()->!visible(scenario,R.id.panelLoading),20000);
-            assertEquals("true",js(scenario,"document.body.dataset.mobileView==='settings'"));
+            waitFor(()->"true".equals(js(scenario,"document.body.dataset.mobileView==='settings'")),20000);
             device.pressBack();waitFor(()->visible(scenario,R.id.homeScreen),10000);
         }
     }
@@ -175,6 +175,38 @@ public class MobileEmulatorTest {
             assertEquals("true",js(scenario,"location.host==='dominiksolorz.github.io'&&innerWidth<600"));
             waitFor(()->"true".equals(js(scenario,"Boolean(document.getElementById('authDialog')&&!document.getElementById('authDialog').hidden&&!document.getElementById('loginForm').hidden)")),30000);
             assertEquals("true",js(scenario,"document.documentElement.scrollWidth<=innerWidth+1"));capture(scenario,"06-real-public-login");
+        }
+    }
+    @Test public void f_tabletLayoutVersionAndHeaderAction() throws Exception {
+        try {
+            device.executeShellCommand("wm size 1600x2560");
+            device.executeShellCommand("wm density 240");
+            device.executeShellCommand("settings put system font_scale 1.3");
+            try(ActivityScenario<MainActivity> scenario=launch(true)) {
+                waitFor(()->visible(scenario,R.id.homeScreen),10000);
+                scenario.onActivity(a->{
+                    float density=a.getResources().getDisplayMetrics().density;
+                    View content=a.findViewById(R.id.homeContent);
+                    assertTrue("Tablet content is bounded",content.getWidth()/density<=681);
+                    assertTrue("Tablet content is wide enough",content.getWidth()/density>=600);
+                    assertEquals(android.widget.LinearLayout.HORIZONTAL,((android.widget.LinearLayout)a.findViewById(R.id.homeCards)).getOrientation());
+                    assertEquals(a.getString(R.string.preview_note,BuildConfig.VERSION_NAME),((android.widget.TextView)a.findViewById(R.id.versionNote)).getText().toString());
+                    Rect root=new Rect();a.findViewById(R.id.nativeRoot).getGlobalVisibleRect(root);
+                    for(int id:new int[]{R.id.navHome,R.id.navLive,R.id.navRecordings,R.id.navAccount}) {
+                        Rect rect=new Rect();assertTrue(a.findViewById(id).getGlobalVisibleRect(rect));
+                        assertTrue("Navigation stays on screen",root.contains(rect));
+                    }
+                });
+                capture(scenario,"08-tablet-cyan-interface");
+                control("refreshPanel").click();
+                if(supportedEngine())waitFor(()->visible(scenario,R.id.ownerWeb),10000);
+                else assertUpdateScreen(scenario);
+                assertFalse("Header action opens the panel from home",visible(scenario,R.id.homeScreen));
+            }
+        } finally {
+            device.executeShellCommand("wm size reset");
+            device.executeShellCommand("wm density reset");
+            device.executeShellCommand("settings put system font_scale 1.0");
         }
     }
 }

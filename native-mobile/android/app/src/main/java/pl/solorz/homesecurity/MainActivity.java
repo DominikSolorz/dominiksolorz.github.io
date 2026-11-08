@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 
 public final class MainActivity extends ComponentActivity {
     private WebView web;
+    private int fittedHomeWidth=-1;
     private AppUpdater updater;
     private TextView status;
     private View home, error, loading, bottom;
@@ -42,6 +43,8 @@ public final class MainActivity extends ComponentActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
         getWindow().setDecorFitsSystemWindows(false);
         setContentView(R.layout.activity_main);
+        ((TextView)findViewById(R.id.versionNote)).setText(getString(R.string.preview_note,BuildConfig.VERSION_NAME));
+        findViewById(R.id.nativeRoot).addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->fitHomeContent());
         updater=new AppUpdater(this);
         findViewById(R.id.checkAppUpdate).setOnClickListener(v->updater.check(true));
         web = findViewById(R.id.ownerWeb); status = findViewById(R.id.nativeStatus);
@@ -60,7 +63,7 @@ public final class MainActivity extends ComponentActivity {
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         // Opening the camera panel is explicit; allow its video track to start when connected.
         settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setUserAgentString(settings.getUserAgentString()+" HomeSecurityNative/0.2 Android");
+        settings.setUserAgentString(settings.getUserAgentString()+" HomeSecurityNative/"+BuildConfig.VERSION_NAME+" Android");
         web.setBackgroundColor(Color.rgb(9,13,22));
         CookieManager.getInstance().setAcceptThirdPartyCookies(web,false);
         web.setWebViewClient(new WebViewClient() {
@@ -100,7 +103,7 @@ public final class MainActivity extends ComponentActivity {
         findViewById(R.id.navLive).setOnClickListener(v->openPanel("home",false));
         findViewById(R.id.navRecordings).setOnClickListener(v->openPanel("recordings",false));
         findViewById(R.id.navAccount).setOnClickListener(v->openPanel("settings",false));
-        findViewById(R.id.refreshPanel).setOnClickListener(v->{ if(!showingHome) openPanel(currentRoute,true); });
+        findViewById(R.id.refreshPanel).setOnClickListener(v->{ if(showingHome) openPanel("home",false); else openPanel(currentRoute,true); });
         findViewById(R.id.retryPanel).setOnClickListener(v->{ if(engineUpdateRequired) openEngineUpdate(); else openPanel(currentRoute,true); });
         findViewById(R.id.errorGoHome).setOnClickListener(v->showHome());
         getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true) {
@@ -110,6 +113,37 @@ public final class MainActivity extends ComponentActivity {
             currentRoute=state.getString("native.route","home");
             if(web.restoreState(state)!=null) showPanel(); else openPanel(currentRoute,true);
         } else showHome();
+    }
+    private int dp(float value) { return Math.round(value*getResources().getDisplayMetrics().density); }
+    private void fitHomeContent() {
+        int available=findViewById(R.id.homeScreen).getWidth();
+        int width=Math.min(available,dp(680));
+        if(width<=0 || width==fittedHomeWidth)return;
+        fittedHomeWidth=width;
+        View content=findViewById(R.id.homeContent);
+        android.widget.FrameLayout.LayoutParams cp=(android.widget.FrameLayout.LayoutParams)content.getLayoutParams();
+        cp.width=width;cp.gravity=android.view.Gravity.CENTER_HORIZONTAL;content.setLayoutParams(cp);
+        for(int id:new int[]{R.id.nativeHeader,R.id.nativeBottomNav}) {
+            View v=findViewById(id);
+            android.widget.LinearLayout.LayoutParams p=(android.widget.LinearLayout.LayoutParams)v.getLayoutParams();
+            p.width=width;p.gravity=android.view.Gravity.CENTER_HORIZONTAL;v.setLayoutParams(p);
+        }
+        boolean wide=width>=dp(600);
+        android.widget.LinearLayout cards=findViewById(R.id.homeCards),quick=findViewById(R.id.quickActions);
+        cards.setOrientation(wide?android.widget.LinearLayout.HORIZONTAL:android.widget.LinearLayout.VERTICAL);
+        quick.setOrientation(wide?android.widget.LinearLayout.VERTICAL:android.widget.LinearLayout.HORIZONTAL);
+        View live=findViewById(R.id.liveCard);
+        android.widget.LinearLayout.LayoutParams lp=new android.widget.LinearLayout.LayoutParams(wide?0:-1,-2,wide?1.25f:0);
+        lp.setMarginEnd(wide?dp(14):0);live.setLayoutParams(lp);
+        android.widget.LinearLayout.LayoutParams qp=new android.widget.LinearLayout.LayoutParams(wide?0:-1,-2,wide?1f:0);
+        qp.topMargin=wide?0:dp(16);quick.setLayoutParams(qp);
+        for(int id:new int[]{R.id.openRecordings,R.id.openSettings}) {
+            View v=findViewById(id);
+            android.widget.LinearLayout.LayoutParams p=new android.widget.LinearLayout.LayoutParams(wide?-1:0,-2,wide?0:1);
+            v.setLayoutParams(p);v.setMinimumHeight(dp(wide?104:136));
+        }
+        View gap=quick.getChildAt(1);
+        gap.setLayoutParams(new android.widget.LinearLayout.LayoutParams(wide?1:dp(12),wide?dp(12):1));
     }
     private void showHome() {
         web.onPause();
@@ -170,7 +204,8 @@ public final class MainActivity extends ComponentActivity {
         for(int id:new int[]{R.id.navHome,R.id.navLive,R.id.navRecordings,R.id.navAccount}) {
             TextView tab=findViewById(id); boolean active=id==selected;
             tab.setSelected(active); tab.setBackgroundResource(active?R.drawable.nav_active:0);
-            tab.setTextColor(Color.parseColor(active?"#FF8AA4":"#C4CAD5"));
+            int tint=Color.parseColor(active?"#51EAE2":"#B6CDD8");
+            tab.setTextColor(tint); tab.setCompoundDrawableTintList(android.content.res.ColorStateList.valueOf(tint));
         }
     }
     @Override protected void onSaveInstanceState(Bundle state) { state.putBoolean("native.home",showingHome); state.putString("native.route",currentRoute); web.saveState(state); super.onSaveInstanceState(state); }
