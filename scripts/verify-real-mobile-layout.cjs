@@ -73,6 +73,18 @@ const artifacts=process.env.HS_MOBILE_PROOF;
     await page.locator('.mobileBottomNav [data-mobile-view="'+view+'"]').click();
     assert.equal(await page.locator('body').getAttribute('data-mobile-view'),view);
     assert.equal(await originalVideo.evaluate(node=>node===document.getElementById('video')),true,'Navigation must preserve the real video element');
+    if(view==='settings'){
+     assert.equal(await page.locator('.mobileBottomNav button:visible').count(),3);
+     assert.equal(await page.locator('.mobileBottomNav').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),3);
+     await page.locator('.settingsAbout').scrollIntoViewIfNeeded();
+     assert.equal(await page.locator('.settingsAbout').isVisible(),true);
+     assert.equal(await page.locator('#mobileSettingsHome .mobileSettingCategories > *').count(),7);
+     assert.equal(await page.locator('#mobilePageTitle').isVisible(),false);
+     await page.locator('#mobileSettingsHome [data-setting-section="image"]').click();
+     await page.locator('.mobileMediaTabs [data-setting-section="sound"]').click();
+     assert.equal(await page.locator('body').getAttribute('data-mobile-settings'),'sound');
+     await page.locator('.mobileSettingsBack').click();
+    }
     await shot('05-real-'+view);
    }
    await page.locator('[data-open-mobile-profile]').click();

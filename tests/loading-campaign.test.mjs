@@ -12,7 +12,7 @@ test('commercial WebP belongs to the public mobile intro, not the account/PIN pa
  const cssLinks=panel.match(/<template id="panelStyles">([\s\S]*?)<\/template>/)?.[1];
  assert.ok(cssLinks,'private panel stylesheet template must exist');
  const names=[...cssLinks.matchAll(/href="([^"]+)"/g)].map(m=>m[1]);
- assert.ok(names.indexOf('operator-layout.css?v=3') < names.indexOf('mobile-app-look.css?v=2'));
+ assert.ok(names.indexOf('operator-layout.css?v=3') < names.indexOf('mobile-app-look.css?v=3'));
  assert.ok(!names.some(name=>name.includes('loading-campaign.css')),'do not show advertising after sign in');
  assert.ok(!sw.includes('./loading-campaign.css?v=1'),'do not precache obsolete private-page banner CSS');
  assert.ok(home.includes('id="hsMobileSplash"'),'public mobile introduction remains available');

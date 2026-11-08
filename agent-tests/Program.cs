@@ -74,6 +74,7 @@ try
     var recovered = new AgentDatabase(directory);
     Check(recovered.Find(pendingId)?.Reply.Status == "unknown", "unfinished command is unknown after restart, never auto-reexecuted");
     Check((await new AgentCommandClient(pipeName + ".absent").ExecuteAsync("agent.ping", empty, timeout: TimeSpan.FromMilliseconds(100))).Status == "unknown", "missing agent yields unknown");
+    await DesktopAccountOAuthTests.RunAsync(Check);
     await JobTests.RunAsync(Check, Path.Combine(directory, "jobs"));
     CredentialTests.Run(Check, Path.Combine(directory, "credentials"));
     await DriveTests.Run(Check,Path.Combine(directory,"drive"));

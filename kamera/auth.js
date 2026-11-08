@@ -1,10 +1,11 @@
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "./config.js?v=34";
 import { deriveKey, b64 } from "./pin.js?v=14";
+import { desktopGoogleCode } from './desktop-oauth.mjs?v=1';
 import { unlockSecurity, rotatedSecurity } from './account-security.mjs?v=1';
 
 const { createClient } = window.supabase;
 export const accountClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit", storageKey: "home-security-account-v1" },
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: window.chrome?.webview ? "pkce" : "implicit", storageKey: "home-security-account-v1" },
 });
 
 const $ = id => document.getElementById(id);
@@ -25,29 +26,43 @@ let resetRequestedAt = 0;
 let continuing = false;
 let googleLoginPending = false;
 
+let googleLoginController = null;
 async function signInWithGoogle() {
   if (googleLoginPending) return;
-  // Google blocks embedded user agents. Never navigate WebView2 to Google login.
-  if (window.chrome?.webview) {
-    message("Logowanie Google otwórz w Chrome lub Edge. W programie Windows możesz nadal użyć e-maila i hasła. Bezpieczne przekazanie sesji do programu wymaga osobnego mostka.", true);
+  const native = !!window.chrome?.webview;
+  if (native && window.__HOME_SECURITY_ACCOUNT_OAUTH__ !== true) {
+    message("Zaktualizuj HOME SECURITY Desktop, aby zalogować się przez Google.", true);
     return;
   }
   googleLoginPending = true;
-  const button = $("googleLoginBtn");
+  googleLoginController = new AbortController();
+  const button = $("googleLoginBtn"), cancel = $("cancelGoogleLogin");
   if (button) button.disabled = true;
-  message("Przekierowuję do Google. Po potwierdzeniu konta nadal wymagany będzie PIN.");
+  if (cancel) cancel.hidden = !native;
+  message(native ? "Dokończ logowanie Google w otwartej przeglądarce. Następnie wróć do programu i wpisz PIN." : "Przekierowuję do Google. Po potwierdzeniu konta nadal wymagany będzie PIN.");
   try {
-    const { error } = await accountClient.auth.signInWithOAuth({
+    const { data, error } = await accountClient.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: callbackUrl(), scopes: "openid email profile", queryParams: { prompt: "select_account" } },
+      options: { redirectTo: callbackUrl(), scopes: "openid email profile", queryParams: { prompt: "select_account" }, skipBrowserRedirect: native },
     });
     if (error) throw error;
-  } catch (error) {
-    message(explainAuthError(error), true);
+    if (native) {
+      const code = await desktopGoogleCode(data.url,{signal:googleLoginController.signal});
+      const result = await accountClient.auth.exchangeCodeForSession(code,data.flowId ? {flowId:data.flowId} : undefined);
+      if (result.error) throw result.error;
+      if (!result.data?.user || !result.data?.session) throw new Error('Nie potwierdzono sesji konta Google.');
+      await continueWithSession(result.data.user);
+    }
+  } catch (error) { message(explainAuthError(error), true); }
+  finally {
     googleLoginPending = false;
+    googleLoginController = null;
     if (button) button.disabled = false;
+    if (cancel) cancel.hidden = true;
   }
 }
+$("cancelGoogleLogin")?.addEventListener('click',()=>googleLoginController?.abort());
+$("authClose")?.addEventListener('click',()=>googleLoginController?.abort());
 
 $("googleLoginBtn")?.addEventListener("click", signInWithGoogle);
 function takeDeviceEntry(user) {

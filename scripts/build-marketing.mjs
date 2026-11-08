@@ -33,7 +33,8 @@ await emit('panel.html',index.replace(slot,home.trimEnd()));
 const publicContent=home;
 // Callback OAuth i potwierdzeń kont musi dotrzeć do panelu nawet w sytuacji,
 // gdy stary plik public-entry.js pozostał w pamięci PWA.
-const accountReturnBridge = `<script>(function(){
+const accountReturnBridge = `<script src="desktop-auth-return.js?v=1"></script><script>(function(){
+  if (window.__hsDesktopOAuthReturning) return;
   const query = new URLSearchParams(location.search);
   const fragment = new URLSearchParams(location.hash.slice(1));
   if (!(query.has("code") || query.has("error") || fragment.has("access_token") ||
@@ -81,7 +82,7 @@ const mobileWelcome = `<section id="mobileWelcome" aria-labelledby="mobileWelcom
   <a class="mobileWelcomeAbout" href="jak-dziala.html">Jak działa HOME SECURITY?</a>
 </section>`;
 const publicHome=head('Monitoring domu i podgląd','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','')
- .replace('</head>',accountReturnBridge+'<script src="public-entry.js?v=7"></script><link rel="manifest" href="manifest.webmanifest?v=4">'+mobileSplashHead+'</head>')
+ .replace('</head>',accountReturnBridge+'<script src="public-entry.js?v=8"></script><link rel="manifest" href="manifest.webmanifest?v=4">'+mobileSplashHead+'</head>')
  +mobileSplashBody+mobileWelcome+publicContent+'\n</body></html>\n';
 await emit('index.html',publicHome);
 // Keep old inbound product links working; canonical points at the single homepage.

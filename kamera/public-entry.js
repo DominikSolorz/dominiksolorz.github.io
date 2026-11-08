@@ -2,6 +2,7 @@
 // Private account, PIN and camera routes retain the existing same-origin panel.
 // No tracking, authentication or camera commands are issued here.
 (() => {
+  if (window.__hsDesktopOAuthReturning) return;
   const params = new URLSearchParams(location.search);
   const fragment = new URLSearchParams(location.hash.replace(/^#/, ''));
   const privateLink = params.get('section') === 'recordings' || params.get('wroc') === 'nagrania' || params.has('auth') || params.has('code') || ['owner', 'wlasciciel'].includes(params.get('panel')) ||
