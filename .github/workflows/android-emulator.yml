@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
     paths: ['native-mobile/android/**', '.github/workflows/android-emulator.yml']
+  pull_request:
+    paths: ['native-mobile/android/**', '.github/workflows/android-emulator.yml']
   workflow_dispatch:
 permissions:
   contents: read
