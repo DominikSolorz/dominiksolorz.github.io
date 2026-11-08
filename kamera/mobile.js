@@ -104,19 +104,27 @@ if (isMobileOwnerApp) {
   settingsHome.id = "mobileSettingsHome";
   settingsHome.className = "mobileSettingsHome";
   settingsHome.innerHTML = `
-    <header><p class="eyebrow">USTAWIENIA</p><h2>Konfiguracja systemu</h2><p>Wybierz kategorię — podgląd i transmisja pozostają aktywne.</p></header>
+    <header class="settingsTitle"><button type="button" data-settings-home aria-label="Wróć do pulpitu">←</button><div><h2>Ustawienia</h2><p>Dostosuj swój system</p></div></header>
     <div class="mobileSettingCategories">
-      <button type="button" data-setting-section="controls"><b>⏺</b><span><strong>Sterowanie i zapis</strong><small>start, stop zapisu, restart i tryb kamery</small></span><i>›</i></button>
-      <button type="button" data-setting-section="image"><b>◉</b><span><strong>Obraz i jakość</strong><small>jasność, kolor, siatka, jakość</small></span><i>›</i></button>
-      <button type="button" data-setting-section="sound"><b>◖</b><span><strong>Dźwięk</strong><small>mikrofon i źródło transmisji</small></span><i>›</i></button>
-      <button type="button" data-setting-section="recording"><b>▣</b><span><strong>Nagrywanie</strong><small>tryb, jakość i długość zapisu</small></span><i>›</i></button>
-      <button type="button" data-setting-section="system"><b>⌘</b><span><strong>System i diagnostyka</strong><small>połączenie, stan i kontrola</small></span><i>›</i></button>
-    </div>`;
+      <button type="button" data-setting-section="controls"><b>▣</b><span><strong>Urządzenia i kamery</strong><small>Połączone źródła obrazu</small></span><i>›</i></button>
+      <button type="button" data-setting-section="image"><b>◉</b><span><strong>Obraz i dźwięk</strong><small>Jakość, mikrofon i odsłuch</small></span><i>›</i></button>
+      <button type="button" data-setting-section="recording"><b>▤</b><span><strong>Nagrywanie i archiwum</strong><small>Zapis i przechowywanie</small></span><i>›</i></button>
+      <button type="button" data-settings-events><b>♧</b><span><strong>Powiadomienia</strong><small>Zdarzenia i alerty</small></span><i>›</i></button>
+      <button type="button" data-settings-remote><b>⌘</b><span><strong>Dostęp zdalny</strong><small>Komputer i połączenia</small></span><i>›</i></button>
+      <button type="button" data-settings-account><b>◇</b><span><strong>Bezpieczeństwo</strong><small>Konto i kod PIN</small></span><i>›</i></button>
+      <a href="https://dominiksolorz.github.io/kamera/dokumenty.html" target="_blank" rel="noopener"><b>▧</b><span><strong>Prywatność i dokumenty</strong><small>Zgody i informacje</small></span><i>›</i></a>
+    </div>
+    <button type="button" class="settingsAbout" data-setting-section="system">ⓘ Informacje o aplikacji <span>›</span></button>
+    <p class="settingsVersion">HOME SECURITY · ustawienia konta i urządzeń</p>`;
   document.querySelector(".mainCol")?.append(settingsHome);
   const backSettings = document.createElement("button");
   backSettings.type = "button";
   backSettings.className = "mobileSettingsBack";
   backSettings.textContent = "← Kategorie ustawień";
+  const mediaTabs = document.createElement("div");
+  mediaTabs.className = "mobileMediaTabs";
+  mediaTabs.innerHTML = '<button type="button" data-setting-section="image">Obraz</button><button type="button" data-setting-section="sound">Dźwięk</button>';
+  document.querySelector(".mainCol")?.prepend(mediaTabs);
   document.querySelector(".mainCol")?.prepend(backSettings);
   backSettings.addEventListener("click", () => { document.body.dataset.mobileSettings = "root"; });
 
@@ -213,6 +221,12 @@ if (isMobileOwnerApp) {
     }
   });
   settingsHome.addEventListener("click", event => {
+    if(event.target.closest('[data-settings-home]')) return setView('home');
+    if(event.target.closest('[data-settings-events]')) return setView('alerts');
+    if(event.target.closest('[data-settings-remote]')) return document.querySelector('.hsRemoteEntry')?.click();
+    if(event.target.closest('[data-settings-account]')) return mobileHeader.querySelector('.accountActions > button')?.click();
+  });
+  const openSettingSection = event => {
     const button = event.target.closest("button[data-setting-section]");
     if (!button) return;
     document.body.dataset.mobileSettings = button.dataset.settingSection;
@@ -220,7 +234,9 @@ if (isMobileOwnerApp) {
     const card=byId('setCard');
     if(card){card.setAttribute('aria-label',title);const heading=card.querySelector('h2');if(heading)heading.textContent=title;}
     window.scrollTo({ top: 0, behavior: "smooth" });
-  });
+  };
+  settingsHome.addEventListener("click", openSettingSection);
+  mediaTabs.addEventListener("click", openSettingSection);
 
   const topStatus = byId("topStatus");
   const updateStatus = () => {

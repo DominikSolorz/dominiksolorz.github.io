@@ -48,7 +48,7 @@ const checks=[
 const assets=[
  'marketing-start.css?v=3','marketing-start.mjs?v=2',
  'marketing-auto-update.css?v=2',currentUpdateModule,
- 'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=3','public-entry.js?v=7',
+ 'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=4','public-entry.js?v=8',
  'marketing-gallery.css?v=3','marketing-gallery.mjs?v=2',
  'interface-concept.css?v=3',
  'marketing-motion.css?v=2',currentMarketingCSS,'marketing-navigation.css?v=1','marketing-navigation.mjs?v=1',
@@ -85,7 +85,7 @@ for(const [path,tokens] of checks){
   console.log('OK document '+path);
 }
 // Reject the original cause of invisible releases: redirect to an outdated public mirror.
-const entryScript=await get('public-entry.js?v=7');
+const entryScript=await get('public-entry.js?v=8');
 assert.ok(!entryScript.includes('home-security-dominik-solorz.vercel.app'),'The public entry must not redirect to stale Vercel');
 assert.ok(entryScript.includes('panel.html')&&entryScript.includes('location.replace'), 'Private panel routing must remain in the deployed minified bridge');
 const publicHTML=await get('index.html');

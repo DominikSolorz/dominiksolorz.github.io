@@ -90,3 +90,26 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock .mobilePinH
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsRemoteEntry{grid-column:1 / -1!important;justify-self:end!important;width:auto!important;min-height:38px!important;padding:8px 14px!important;font-size:12px!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{border:0!important;padding-bottom:0!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand::after{content:none!important}
+
+/* Settings has one entry point: the right navigation item disappears here. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] .mobileBottomNav{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] .mobileBottomNav [data-mobile-view="settings"],
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] #mobilePageTitle,
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] .hsRemoteEntry{display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsTitle{display:flex;align-items:center;gap:14px;margin:12px 0 24px;text-align:left}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsTitle>button{border:1px solid #29435a;border-radius:12px;background:#102335;color:#c7f2ff;min-width:44px;min-height:44px;font-size:25px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsTitle h2{margin:0;color:#edfaff;font-size:27px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsTitle p{margin:5px 0 0;color:#8da9bd;font-size:13px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .mobileSettingCategories{display:grid;gap:10px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .mobileSettingCategories>a{display:flex;align-items:center;gap:13px;padding:16px;border:1px solid #25435c;border-radius:15px;background:linear-gradient(110deg,#112b40,#0d1d2c);color:#e7f5ff;text-decoration:none}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .mobileSettingCategories>a>b{display:grid;place-items:center;width:40px;height:40px;border:1px solid #24516b;border-radius:11px;color:#6cd6ff;background:#123249}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .mobileSettingCategories>a>span{flex:1}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .mobileSettingCategories>a strong{display:block;font-size:14px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .mobileSettingCategories>a small{display:block;margin-top:4px;font-size:11px;color:#91aec3}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .mobileSettingCategories>a i{font-style:normal;color:#6c9fbd}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsAbout{display:flex;justify-content:space-between;width:100%;margin-top:18px;padding:16px;border:1px solid #25435c;border-radius:12px;background:#0d1d2c;color:#bbd5e6;text-align:left}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsVersion{margin:22px 0;text-align:center;font-size:10px;color:#7894a9}
+.mobileMediaTabs{display:none}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"][data-mobile-settings="image"] .mobileMediaTabs,
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"][data-mobile-settings="sound"] .mobileMediaTabs{display:flex;gap:10px;margin:10px 0}
+.mobileMediaTabs button{min-height:44px;padding:8px 24px;border:1px solid #28506a;border-radius:10px;background:#112b40;color:#d6f2ff}

@@ -29,7 +29,7 @@ test('panel assets are inert templates and remain behind the existing secure gat
   assert.doesNotMatch(stripped, /rel="stylesheet" href="(?:style|workspace-ui|interface-concept)\.css/);
   assert.match(html, /id="panelRuntime"/);
   assert.match(html, /id="panelStyles"/);
-  assert.match(html, /panel-entry\.mjs\?v=3/);
+  assert.match(html, /panel-entry\.mjs\?v=4/);
   assert.match(html, /window\.__waitForPanel = new Promise/);
   assert.match(html, /window\.__panelRuntimeStarted&&!window\.__kameraReady/);
 });

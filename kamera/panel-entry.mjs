@@ -8,7 +8,7 @@ export function needsPanelRuntime({ search = '', hash = '', native = false, pend
     callback.has('access_token') || callback.has('error') || callback.get('type') === 'recovery';
 }
 
-if (typeof document !== 'undefined') {
+if (typeof document !== 'undefined' && !window.__hsDesktopOAuthReturning) {
   let started = false;
   const showFailure = () => {
     const box = document.getElementById('bootError');

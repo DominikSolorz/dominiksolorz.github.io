@@ -11,7 +11,7 @@ namespace HomeSecurityDesktop;
 internal static class Program
 {
     private const string DesktopVersion = "1.4.73";
-    private const string WebPanelBuild = "273";
+    private const string WebPanelBuild = "274";
     // Desktop serves its installed Panel bundle at the existing trusted origin.
     // The website and installed UI can now be released independently without
     // migrating the user's existing session, PIN or IndexedDB recordings.
@@ -404,7 +404,7 @@ internal static class Program
             await RefreshWebShellIfNeededAsync();
             new BundledPanel().Attach(webView.CoreWebView2);
             await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
-                "window.__HOME_SECURITY_DESKTOP__ = true; window.__HOME_SECURITY_DEVICE__ = 'windows'; window.__HOME_SECURITY_BUNDLED_PANEL__ = true;");
+                "window.__HOME_SECURITY_DESKTOP__ = true; window.__HOME_SECURITY_DEVICE__ = 'windows'; window.__HOME_SECURITY_BUNDLED_PANEL__ = true; window.__HOME_SECURITY_ACCOUNT_OAUTH__ = true;");
             WriteDiagnostic("webview-ready", new { dataPath });
 
             var settings = webView.CoreWebView2.Settings;
@@ -426,6 +426,10 @@ internal static class Program
                 }
             };
 
+            var accountOAuth = new DesktopAccountOAuth();
+            CancellationTokenSource? accountOAuthCancellation = null;
+            string? accountOAuthRequest = null;
+            FormClosed += (_, _) => accountOAuth.Dispose();
             webView.CoreWebView2.WebMessageReceived += async (_, e) =>
             {
                 // Never persist arbitrary page payloads, OAuth sessions or IPC arguments.
@@ -434,6 +438,30 @@ internal static class Program
                     using var message = JsonDocument.Parse(e.WebMessageAsJson);
                     var root = message.RootElement;
                     if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("type", out var type) && type.ValueKind == JsonValueKind.String) {
+                        if (type.GetString() == "desktop.auth.cancel") {
+                            if (root.TryGetProperty("id", out var cancelId) && cancelId.ValueKind == JsonValueKind.String && cancelId.GetString() == accountOAuthRequest)
+                                accountOAuthCancellation?.Cancel();
+                            return;
+                        }
+                        if (type.GetString() == "desktop.auth.google") {
+                            if (!root.TryGetProperty("id", out var authId) || authId.ValueKind != JsonValueKind.String || !Guid.TryParse(authId.GetString(), out var parsedAuthId)
+                                || !root.TryGetProperty("url", out var authUrl) || authUrl.ValueKind != JsonValueKind.String) return;
+                            var requestId = authId.GetString()!;
+                            if (accountOAuthRequest is not null) return;
+                            accountOAuthRequest = requestId;
+                            using var cancellation = new CancellationTokenSource();
+                            accountOAuthCancellation = cancellation;
+                            var source = e.Source;
+                            try {
+                                var result = await accountOAuth.SignInAsync(authUrl.GetString()!, url => Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }), cancellation.Token);
+                                // Never log the authorization URL, one-use code, state or account tokens.
+                                if (!IsDisposed && webView.CoreWebView2.Source == source && AgentWebViewBridge.Trusted(source)) {
+                                    webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { type = "desktop.auth.google.result", id = requestId, code = result.Code, error = result.Error }));
+                                    if (result.Code is not null) { if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal; Activate(); }
+                                }
+                            } finally { accountOAuthCancellation = null; accountOAuthRequest = null; }
+                            return;
+                        }
                         if (type.GetString() == "desktop.update.visibility") {
                             panelUnlocked = root.TryGetProperty("visible", out var visible) && visible.ValueKind == JsonValueKind.True;
                             updateBar.Visible = panelUnlocked;
@@ -466,7 +494,7 @@ internal static class Program
                 var safe = PanelDiagnostics.Project(e.WebMessageAsJson);
                 if (safe is not null) WriteDiagnostic("panel-state", safe);
             };
-            webView.CoreWebView2.NavigationStarting += (_, _) => { panelUnlocked = false; updateBar.Visible = false; };
+            webView.CoreWebView2.NavigationStarting += (_, _) => { panelUnlocked = false; updateBar.Visible = false; accountOAuthCancellation?.Cancel(); };
             webView.CoreWebView2.ProcessFailed += (_, e) => WriteDiagnostic("webview-process-failed", new { reason = e.Reason.ToString(), kind = e.ProcessFailedKind.ToString() });
 
             webView.CoreWebView2.NewWindowRequested += (_, e) => {

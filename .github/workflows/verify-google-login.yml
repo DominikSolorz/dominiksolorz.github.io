@@ -1,0 +1,38 @@
+name: WWW | Google i ustawienia | Test przeglądarki
+on:
+  pull_request:
+    paths:
+      - 'kamera/**'
+      - 'desktop-client/DesktopAccountOAuth.cs'
+      - 'scripts/verify-google-login.cjs'
+      - 'scripts/verify-real-mobile-layout.cjs'
+      - '.github/workflows/verify-google-login.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  google-and-settings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test tools
+        run: |
+          npm install --no-save --package-lock=false playwright
+          npx playwright install --with-deps chromium
+      - name: Verify Google bridge, PIN gate and real mobile settings
+        run: |
+          export CHROMIUM_PATH="$(node -p 'require("playwright").chromium.executablePath()')"
+          node scripts/verify-google-login.cjs
+          node scripts/verify-real-mobile-layout.cjs
