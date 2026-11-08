@@ -2,11 +2,11 @@
   "enabled": true,
   "schema": 1,
   "packageName": "pl.solorz.homesecurity",
-  "versionCode": 3002,
-  "versionName": "0.3.1",
-  "url": "https://github.com/DominikSolorz/dominiksolorz.github.io/releases/download/android-0.3.1/HOME-SECURITY-Android-0.3.1.apk",
-  "sha256": "2624823a9572821440fc8894649637fc3c6278fcad098c95807a9c38c7462234",
-  "size": 4735576,
+  "versionCode": 3004,
+  "versionName": "0.3.2",
+  "url": "https://github.com/DominikSolorz/dominiksolorz.github.io/releases/download/android-0.3.2/HOME-SECURITY-Android-0.3.2.apk",
+  "sha256": "ca90bc791db187c0e53cf12ad68bbafda8135e2675b37d67a0c47e256f04786f",
+  "size": 4738248,
   "signingCertificateSha256": "7707e0ab9616e88ea2e98416d7e6b98f30fdb79f8bd673b083f95b02a4e07d47",
-  "sourceCommit": "4b22e93e022d62d00059b3970f9a843bd26709b3"
+  "sourceCommit": "3d38c02c9033a130c31763206c25b1e4b3c97a7a"
 }
