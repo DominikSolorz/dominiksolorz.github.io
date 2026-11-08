@@ -5,6 +5,7 @@ on:
       - 'kamera/**'
       - 'desktop-client/DesktopAccountOAuth.cs'
       - 'scripts/verify-google-login.cjs'
+      - 'scripts/verify-desktop-update-visibility.cjs'
       - 'scripts/verify-real-mobile-layout.cjs'
       - '.github/workflows/verify-google-login.yml'
   workflow_dispatch:
@@ -34,5 +35,6 @@ jobs:
       - name: Verify Google bridge, PIN gate and real mobile settings
         run: |
           export CHROMIUM_PATH="$(node -p 'require("playwright").chromium.executablePath()')"
+          node scripts/verify-desktop-update-visibility.cjs
           node scripts/verify-google-login.cjs
           node scripts/verify-real-mobile-layout.cjs

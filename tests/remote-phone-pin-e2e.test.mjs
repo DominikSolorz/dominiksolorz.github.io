@@ -50,9 +50,9 @@ test('PWA and native host use same versioned PIN and remote UI without exposing 
  'kamera/remote-unlock-host.mjs','supabase/migrations/20261107103600_remote_phone_unlock.sql','kamera/version.json'].map(source));
  assert.match(app,/createRemoteUnlockHost/);assert.match(app,/mountRemoteUnlockPhone/);
  assert.match(app,/requireAccess\(\{bindRemote:callback=>remoteHost\?\.bindUnlock\(callback\)\}\)/);
- assert.match(panel,/app\.js\?v=275/);assert.match(sw,/\.\/app\.js\?v=275/);
- assert.match(sw,/kamera-domowa-shell-v195/);assert.match(app,/SERVICE_WORKER_BUILD = "195"/);
- assert.equal(JSON.parse(version).version,'275');
+ assert.match(panel,/app\.js\?v=276/);assert.match(sw,/\.\/app\.js\?v=276/);
+ assert.match(sw,/kamera-domowa-shell-v196/);assert.match(app,/SERVICE_WORKER_BUILD = "196"/);
+ assert.equal(JSON.parse(version).version,'276');
  assert.match(panel,/remote-unlock-ui\.css\?v=1/);
  assert.match(lock,/sessionStorage\.setItem\('kamera-dostep',key\)/);
  assert.doesNotMatch(lock,/window\.__HOME_SECURITY_REMOTE_UNLOCK/,'never install global unlock callback');

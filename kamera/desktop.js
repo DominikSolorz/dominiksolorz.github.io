@@ -1,3 +1,4 @@
+import {desktopUpdatePresentation} from "./desktop-update-presentation.mjs?v=1";
 import {iconMarkup} from "./ui-icons.mjs?v=1";
 // HOME SECURITY Desktop: nakładka robocza dla dużego ekranu.
 // Używa tego samego silnika transmisji, zapisu i archiwum co index.html.
@@ -52,7 +53,7 @@ if (desktopRequested) {
       <p>Stan kamery, zapisu i sieci odczytasz w Diagnostyce.</p>
       <p class="muted">Podgląd obrazu nie potwierdza zapisanego nagrania.</p>
     </section>
-    <div class="desktopSidebarFoot"><a href="https://dominiksolorz.github.io/kamera/dokumenty.html" target="_blank" rel="noopener noreferrer">Instrukcja i dokumenty ↗</a><button type="button" data-open-project-gallery>Projekty interfejsu</button><span>DS Home Security<br>Panel ${document.querySelector('meta[name="home-security-build"]')?.content||'—'}</span><a href="panel.html?panel=owner&layout=manual&ui=phone" title="Ręcznie wybierz interfejs mobilny">Widok Mobile</a><a href="panel.html?panel=owner&layout=auto" title="Dopasuj układ do tego urządzenia">Automatyczny układ</a></div>`;
+`;
   const navPaths = {
     live: '<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>',
     controls: '<rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/>',
@@ -74,11 +75,12 @@ if (desktopRequested) {
   window.chrome?.webview?.addEventListener("message", event => {
     const state = event.data;
     if (state?.type !== "desktop.update.state") return;
-    updateNotice.hidden = state.status === "none";
-    $("desktopUpdateAction").disabled = !["available", "error"].includes(state.status);
-    $("desktopUpdateAction").textContent = state.status === "available" ? `↻ Zaktualizuj do ${state.version}` : state.status === "error" ? "↻ Spróbuj ponownie" : state.status === "staged" ? `Wersja ${state.version} gotowa` : "↻ Aktualizacja programu";
+    const presentation=desktopUpdatePresentation(state);
+    updateNotice.hidden = !presentation.visible;
+    $("desktopUpdateAction").disabled = !presentation.enabled;
+    $("desktopUpdateAction").textContent = presentation.label;
     $("desktopUpdateStatus").textContent = state.message || "";
-    const progress = $("desktopUpdateProgress"); progress.hidden = state.status !== "downloading";
+    const progress = $("desktopUpdateProgress"); progress.hidden = !presentation.progress;
     if (Number.isFinite(state.percent)) progress.value = Math.max(0, Math.min(100, state.percent));
     else progress.removeAttribute("value");
   });

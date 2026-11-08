@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 const source=await readFile(new URL('../desktop-client/Program.cs',import.meta.url),'utf8');
 
 test('Windows update center is visible only after account and PIN access',()=>{
- assert.match(source,/updateBar\.Visible = panelUnlocked;/);
+ assert.match(source,/updateBar\.Visible = panelUnlocked && HasUpdateOffer;/);
  assert.match(source,/updateInfo\.Text = \$"Zainstalowana \{DesktopVersion\}/);
  assert.match(source,/lastSuccessfulUpdateCheckUtc/);
  assert.match(source,/checkIntervalMinutes = 10/);
@@ -61,7 +61,7 @@ test('failed manifest discovery retries the check instead of a no-op download',(
  const handler=source.split('if (type.GetString() == "desktop.update.request")')[1]?.split('if (type.GetString() == "desktop.update.prepared")')[0];
  assert.ok(handler,'native update request handler must exist');
  assert.match(handler,/if \(!panelUnlocked\) return/,'locked panels cannot trigger update checks');
- assert.match(handler,/if \(offeredUpdate is null\) await CheckForUpdateAsync\(\)/,'retry must recheck the manifest without an offered version');
+ assert.match(handler,/if \(offeredUpdate is null && !File\.Exists\(PendingUpdatePath\)\) await CheckForUpdateAsync\(\)/,'retry must recheck the manifest without an offered version');
  assert.match(handler,/else await DownloadAndPrepareOfferedUpdateAsync\(\)/,'offered versions still download after explicit click');
 });
 
@@ -101,5 +101,5 @@ test('network checks fail fast and slow home downloads have a bounded retry path
  assert.match(download,/ReadAsync\(buffer, downloadDeadline\.Token\)/);
  assert.match(download,/SHA256\.HashDataAsync\(packageStream\)/);
  assert.match(download,/File\.Move\(pendingTemporaryPath, PendingUpdatePath, true\)/);
- assert.match(source,/if \(offeredUpdate is null\) await CheckForUpdateAsync\(\)/);
+ assert.match(source,/if \(offeredUpdate is null && !File\.Exists\(PendingUpdatePath\)\) await CheckForUpdateAsync\(\)/);
 });
