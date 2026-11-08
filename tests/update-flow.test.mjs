@@ -18,7 +18,7 @@ test('native update verifies download and stages atomically without touching rec
  assert.ok(code.includes('await RestartIntoPreparedUpdateAsync();'),'one click must continue to install and relaunch');
  assert.ok(!code.includes('Application.Restart'),'host must use existing independently verified installer');
 });
-test('phone recordings route contains host storage status and remote chooser',()=>{assert.match(mobile,/recordings: \["dvrCard", "dvrListCard", "mobileRecordingStorage"\]/);assert.ok(mobile.includes('id="mobileRecordingState"'));assert.ok(mobile.includes('id="mobileChooseComputerFolder"'));assert.ok(!mobile.includes('showDirectoryPicker'));});
+test('phone cloud route contains host storage status and remote chooser, separate from recordings',()=>{assert.match(mobile,/cloud: \["mobileCloudHeading", "mobileRecordingStorage"\]/);assert.match(mobile,/recordings: \["dvrCard", "dvrListCard"\]/);assert.ok(mobile.includes('id="mobileRecordingState"'));assert.ok(mobile.includes('id="mobileChooseComputerFolder"'));assert.ok(!mobile.includes('showDirectoryPicker'));});
 
 test('one click starts the native update without a second confirmation dialog',()=>{
  const begin=native.indexOf('private async Task DownloadAndPrepareOfferedUpdateAsync');
