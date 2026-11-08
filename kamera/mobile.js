@@ -8,7 +8,7 @@ import { mountMobileCameraFrame } from './mobile-camera-frame.mjs?v=1';
 import { mountMobileCameraInfo } from './mobile-camera-status.mjs?v=1';
 import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { mountEventWorkspace, mountDiagnosticWorkspace } from "./workspace-panels.mjs?v=2";
-import { mountLocationMap } from "./mobile-map.mjs?v=1";
+import { mountLocationMap } from "./mobile-map.mjs?v=2";
 const isMobileOwnerApp = document.documentElement.classList.contains("mobileOwnerMode");
 
 if (isMobileOwnerApp) {
