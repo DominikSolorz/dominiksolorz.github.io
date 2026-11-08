@@ -31,5 +31,5 @@ test('mobile panel mounts the map and the service worker caches it',async()=>{
  const [mobile,sw,panel]=await Promise.all(['kamera/mobile.js','kamera/sw.js','kamera/panel.html'].map(read));
  assert.ok(mobile.includes('./mobile-map.mjs?v=1')&&mobile.includes('mountLocationMap()'));
  assert.ok(sw.includes('./mobile-map.mjs?v=1'));
- assert.ok(panel.includes('mobile.js?v=34')&&sw.includes('./mobile.js?v=34'));
+ assert.ok(panel.includes('mobile.js?v=35')&&sw.includes('./mobile.js?v=35'));
 });

@@ -154,7 +154,15 @@ if (isMobileOwnerApp) {
     </section>
     <p class="mobileOverviewStatus" id="mobileOverviewStatus" role="status">Podgląd kamery nie został uruchomiony.</p>
     <p class="mobileOverviewHint">Obraz nie włącza się sam po zalogowaniu. Otwórz go świadomie w zakładce Kamery.</p>`;
-  overview.querySelector(".mobileOverviewActions")?.after(mountLocationMap());
+  const mapCard = mountLocationMap();
+  const actions = overview.querySelector(".mobileOverviewActions");
+  const mapTile = document.createElement("button");
+  mapTile.type = "button";
+  mapTile.className = "mobileMapTile";
+  mapTile.innerHTML = '<b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg></b><span><strong>Mapa</strong></span>';
+  mapTile.addEventListener("click", () => mapCard.querySelector(".mobileMapOpen").click());
+  actions?.append(mapTile);
+  actions?.after(mapCard);
   document.querySelector(".mainCol")?.prepend(overview);
 
   const views = {
