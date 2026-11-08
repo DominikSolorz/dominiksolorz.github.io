@@ -151,8 +151,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:is([data-mobile-v
 .mobileMapDialog::backdrop{background:rgba(2,8,16,.78)}
 .mobileMapDialog h2{margin:0 0 8px;font-size:20px}
 .mobileMapText{margin:0 0 12px;color:#b9cde0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
-.mobileMapFrame{border-radius:14px;overflow:hidden;border:1px solid rgba(80,170,230,.28);margin-bottom:12px}
-.mobileMapFrame iframe{display:block;width:100%;height:min(52dvh,360px);border:0}
 .mobileMapActions{display:grid;gap:8px}
 .mobileMapActions button{min-height:48px;border-radius:14px;font-weight:700;border:1px solid rgba(80,170,230,.4);background:transparent;color:#eaf6ff}
 .mobileMapActions .mobileMapConfirm{border:0;background:linear-gradient(90deg,#1e90ff,#14b8d4);color:#fff}
@@ -166,11 +164,25 @@ html.mobileOwnerMode .mobileMapCard .mobileMapOpen{display:none}
 html.mobileOwnerMode .mobileMapCard{margin:0}
 html.mobileOwnerMode body #app #mobileOverview .mobileOverviewActions .mobileMapTile{grid-column:1/-1}
 
-/* Sklepy w pobliżu (okno mapy) */
-.mobileMapShops{margin-top:10px;max-height:34vh;overflow:auto}
-.mobileMapShops h3{margin:0 0 6px;font-size:14px;color:#cfe8f5}
-.mobileMapShops ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-.mobileMapShops li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px;padding:8px 10px;border:1px solid rgba(80,170,230,.3);border-radius:10px;background:rgba(255,255,255,.04);font-size:14px}
-.mobileMapShops li span{min-width:0;overflow-wrap:anywhere}
-.mobileMapShops a{flex:none;min-height:36px;display:inline-grid;place-items:center;padding:0 10px;border-radius:10px;color:#1de9e0;font-weight:700;font-size:13px;text-decoration:none;border:1px solid rgba(29,233,224,.5)}
-.mobileMapShopNote{margin:6px 0 0;font-size:12px;color:#8fb0c8}
+/* Interaktywna mapa: pozycja na żywo, wyszukiwarka, firmy i adresy */
+.mobileMapDialog{width:min(calc(100vw - 16px),560px);max-height:calc(100dvh - 16px);overflow:auto;overscroll-behavior:contain}
+.mobileMapTools{display:grid;gap:8px;margin-bottom:10px}
+.mobileMapSearch{display:flex;gap:8px;min-width:0}
+.mobileMapSearch input{flex:1 1 auto;min-width:0;min-height:44px;box-sizing:border-box;padding:0 12px;border-radius:12px;border:1px solid rgba(80,170,230,.35);background:rgba(255,255,255,.06);color:#fff;font-size:16px}
+.mobileMapSearch button,.mobileMapRow button{flex:none;min-height:44px;padding:0 14px;border-radius:12px;font-weight:700;font-size:14px;border:1px solid rgba(29,233,224,.5);background:rgba(29,233,224,.1);color:#1de9e0}
+.mobileMapRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mobileMapRow button{padding:0 8px}
+.mobileMapCanvas{width:100%;height:min(42dvh,380px);border-radius:14px;overflow:hidden;border:1px solid rgba(80,170,230,.28);background:#0b1626}
+.mobileMapCanvas .leaflet-container{width:100%;height:100%;font:inherit}
+.mobileMapAttribution{margin:4px 0 8px;font-size:11px;color:#8fb0c8}
+.mobileMapResults{margin-bottom:10px;max-height:32dvh;overflow:auto}
+.mobileMapResults ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.mobileMapResults li{display:grid;gap:6px;padding:8px 10px;border:1px solid rgba(80,170,230,.3);border-radius:10px;background:rgba(255,255,255,.04)}
+.mobileMapPlace{display:grid;gap:2px;width:100%;padding:0;border:0;background:none;color:inherit;text-align:left;font:inherit}
+.mobileMapPlace strong{font-size:15px;overflow-wrap:anywhere}
+.mobileMapPlace small{font-size:12px;color:#8fb0c8;overflow-wrap:anywhere}
+.mobileMapLinks{display:flex;flex-wrap:wrap;gap:6px}
+.mobileMapLinks a{min-height:36px;display:inline-grid;place-items:center;padding:0 10px;border-radius:10px;color:#1de9e0;font-weight:700;font-size:13px;text-decoration:none;border:1px solid rgba(29,233,224,.5)}
+.mobileMapNote{margin:0;font-size:13px;color:#b9cde0}
+.mobileMapTools[hidden],.mobileMapCanvas[hidden],.mobileMapAttribution[hidden],.mobileMapResults[hidden]{display:none}
+@media (max-height:500px){.mobileMapCanvas{height:44dvh}.mobileMapResults{max-height:40dvh}}

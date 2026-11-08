@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {buildMapUrl,describeLocationError,buildShopsQuery,parseShops,placeSearchUrl,formatDistance} from '../kamera/mobile-map.mjs';
+import {buildPlacesQuery,describeLocationError,parsePlaces,parseGeocode,placeSearchUrl,directionsUrl,formatDistance,validCoordinates} from '../kamera/mobile-map.mjs';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
-test('map URL is built only from valid coordinates',()=>{
- assert.match(buildMapUrl(52.2297,21.0122),/^https:\/\/www\.openstreetmap\.org\/export\/embed\.html\?bbox=.*&marker=52\.229700%2C21\.012200$/);
- for(const [a,b] of [[NaN,1],[1,Infinity],[91,0],[0,181],['52','21'],[undefined,undefined]])assert.equal(buildMapUrl(a,b),null);
+test('coordinates are validated',()=>{
+ assert.ok(validCoordinates(52.2,21));
+ for(const [a,b] of [[NaN,1],[1,Infinity],[91,0],[0,181],['52','21'],[undefined,undefined]])assert.equal(validCoordinates(a,b),false);
 });
 
 test('location errors have specific Polish messages',()=>{
@@ -17,31 +17,61 @@ test('location errors have specific Polish messages',()=>{
  assert.match(describeLocationError(),/niedostępna/);
 });
 
-test('location is requested only after confirmation and never stored or sent to the server',async()=>{
+test('location is requested only after confirmation, tracked only while the map is open and never stored or sent to HOME SECURITY',async()=>{
  const src=await read('kamera/mobile-map.mjs');
- const call=src.indexOf('getCurrentPosition');
- assert.ok(call>src.indexOf("confirm.addEventListener('click'"),'geolocation only inside the confirm handler');
+ assert.ok(src.indexOf('getCurrentPosition')>src.indexOf("confirm.addEventListener('click'"),'geolocation only inside the confirm handler');
  assert.equal((src.match(/getCurrentPosition/g)||[]).length,1);
- assert.ok(!/watchPosition|localStorage|sessionStorage|XMLHttpRequest|sendBeacon|indexedDB/.test(src));
- assert.equal((src.match(/fetch\(/g)||[]).length,1);assert.ok(src.includes("fetch(OVERPASS_URL")&&src.includes('overpass-api.de'));
- assert.ok(src.includes('maximumAge: 0'));
- assert.ok(src.includes('referrerPolicy'));
+ assert.equal((src.match(/watchPosition/g)||[]).length,1);
+ assert.ok(src.includes('clearWatch'),'tracking stops when the map closes');
+ assert.ok(!/localStorage|sessionStorage|XMLHttpRequest|sendBeacon|indexedDB|supabase/.test(src));
+ const urls=[...src.matchAll(/request\(current, ([^,]+),/g)].map(m=>m[1]);
+ assert.equal((src.match(/\bfetch\(/g)||[]).length,1,'single outgoing helper');
+ assert.ok(urls.includes('OVERPASS_URL')&&urls.some(f=>f.includes('NOMINATIM_URL')));
+ assert.ok(src.includes("credentials: 'omit'"));
+ const hosts=[...src.replace(/\/\/ .*$/gm,'').matchAll(/https:\/\/([a-z.-]+)/g)].map(m=>m[1]);
+ assert.deepEqual([...new Set(hosts)].sort(),['nominatim.openstreetmap.org','overpass-api.de','tile.openstreetmap.org','www.google.com']);
 });
 
-test('mobile panel mounts the map and the service worker caches it',async()=>{
- const [mobile,sw,panel]=await Promise.all(['kamera/mobile.js','kamera/sw.js','kamera/panel.html'].map(read));
- assert.ok(mobile.includes('./mobile-map.mjs?v=2')&&mobile.includes('mountLocationMap()'));
- assert.ok(sw.includes('./mobile-map.mjs?v=2'));
- assert.ok(panel.includes('mobile.js?v=36')&&sw.includes('./mobile.js?v=36'));
+test('places query covers businesses and institutions inside the visible box',()=>{
+ const q=buildPlacesQuery({south:52.2,west:21,north:52.3,east:21.1});
+ for(const key of ['shop','amenity','office','tourism','craft','healthcare'])assert.ok(q.includes(`nwr[${key}][name](52.200000,21.000000,52.300000,21.100000)`));
+ assert.match(q,/out center 80;$/);
 });
 
-test('nearby shops are parsed, sorted by distance and linked to Google Maps',()=>{
- assert.match(buildShopsQuery(52.2297,21.0122),/around:800,52\.229700,21\.012200/);
- const data={elements:[{lat:52.2310,lon:21.0122,tags:{name:'Dalszy'}},{lat:52.2298,lon:21.0123,tags:{name:'Bliski'}},{lat:52.23,lon:21.01,tags:{}},{center:{lat:52.2299,lon:21.0125},tags:{name:' Budynek '}},{lat:'x',lon:1,tags:{name:'Zły'}}]};
- const shops=parseShops(data,52.2297,21.0122);
- assert.deepEqual(shops.map(s=>s.name),['Bliski','Budynek','Dalszy']);
- assert.ok(shops[0].distance<shops[2].distance);
- assert.deepEqual(parseShops(null,1,1),[]);
- assert.match(placeSearchUrl({name:'Żabka & Co',lat:52.2,lon:21}),/^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=%C5%BBabka%20%26%20Co/);
+test('places are parsed with street address, sorted by distance and unnamed ones dropped',()=>{
+ const data={elements:[
+  {lat:52.2310,lon:21.0122,tags:{name:'Dalsza apteka',amenity:'pharmacy','addr:street':'Marszałkowska','addr:housenumber':'12','addr:city':'Warszawa','addr:postcode':'00-001'}},
+  {lat:52.2298,lon:21.0123,tags:{name:'Bliski sklep',shop:'convenience'}},
+  {lat:52.23,lon:21.01,tags:{shop:'convenience'}},
+  {center:{lat:52.2299,lon:21.0125},tags:{name:' Biuro ',office:'company'}},
+  {lat:'x',lon:1,tags:{name:'Zły'}}]};
+ const places=parsePlaces(data,{lat:52.2297,lon:21.0122});
+ assert.deepEqual(places.map(p=>p.name),['Bliski sklep','Biuro','Dalsza apteka']);
+ assert.equal(places[2].kind,'Apteka');
+ assert.equal(places[2].address,'Marszałkowska 12, 00-001 Warszawa');
+ assert.equal(places[0].kind,'Sklep');
+ assert.deepEqual(parsePlaces(null,null),[]);
+});
+
+test('geocoding results give name, street and number',()=>{
+ const found=parseGeocode([{lat:'52.2',lon:'21.0',name:'Kawiarnia X',type:'cafe',display_name:'Kawiarnia X, Złota 5, Warszawa',address:{road:'Złota',house_number:'5',postcode:'00-120',city:'Warszawa'}},{lat:'bad',lon:'1'}],{lat:52.2,lon:21});
+ assert.equal(found.length,1);
+ assert.equal(found[0].name,'Kawiarnia X');
+ assert.equal(found[0].address,'Złota 5, 00-120 Warszawa');
+ assert.deepEqual(parseGeocode(undefined,null),[]);
+});
+
+test('navigation and photo links open Google Maps with the place only',()=>{
+ const place={name:'Żabka & Co',lat:52.2,lon:21};
+ assert.match(placeSearchUrl(place),/^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=%C5%BBabka%20%26%20Co/);
+ assert.equal(directionsUrl(place),'https://www.google.com/maps/dir/?api=1&destination=52.200000,21.000000&travelmode=walking');
  assert.equal(formatDistance(450),'450 m');assert.equal(formatDistance(1250),'1,3 km');
+});
+
+test('Leaflet is served from the same origin and the panel mounts the map',async()=>{
+ const [mobile,sw,panel]=await Promise.all(['kamera/mobile.js','kamera/sw.js','kamera/panel.html'].map(read));
+ for(const f of ['leaflet.js','leaflet.css','LICENSE','images/marker-icon.png'])await readFile(new URL('../kamera/vendor/leaflet/'+f,import.meta.url));
+ assert.ok(mobile.includes('./mobile-map.mjs?v=3')&&mobile.includes('mountLocationMap()'));
+ assert.ok(sw.includes('./mobile-map.mjs?v=3'));
+ assert.ok(panel.includes('mobile.js?v=37')&&sw.includes('./mobile.js?v=37'));
 });
