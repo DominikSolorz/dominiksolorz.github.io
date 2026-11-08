@@ -54,12 +54,10 @@ if (typeof document !== 'undefined') {
   });
   let pendingEntry = false;
   try { pendingEntry = !!sessionStorage.getItem('hs-device-entry-v1'); } catch { /* private mode */ }
-  const ownerEntry = ['owner', 'wlasciciel'].includes(new URLSearchParams(location.search).get('panel'));
-  if (ownerEntry) {
-    // Direct owner links bypass the public landing page. Release app.js's secure
-    // entry gate as well as loading its runtime, otherwise it waits forever.
-    window.__openSecurePanel?.();
-  }
+  // Loading an owner link must not release app.js's account gate. auth.js opens
+  // it only after verifying the account, profile/consent and PIN setup. Otherwise
+  // a signed-out reload throws in __ensureAccountReady and kills startup even
+  // when the user subsequently signs in successfully.
   if (needsPanelRuntime({ search: location.search, hash: location.hash,
     native: location.pathname.endsWith('/panel.html') || window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview, pendingEntry })) start();
 }
