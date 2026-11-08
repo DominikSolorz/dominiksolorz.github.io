@@ -16,9 +16,9 @@
 .hsDownloads .downloadPlatform{color:#3bf1e7;letter-spacing:.06em}
 .hsDownloads .downloadPlatform svg{width:32px;height:32px}
 .hsDownloads .mktButton{display:flex;justify-content:center;align-items:center;min-height:54px;width:100%;border:2px solid #22e7e5;border-radius:13px;background:transparent;color:#ecffff;font:inherit;font-weight:750;text-decoration:none;cursor:pointer;box-sizing:border-box;padding:12px 16px}
-.hsDownloads #android-install{background:#27e9e3;color:#03191f;box-shadow:0 0 32px #1ee9e31a}
+.hsDownloads #android-apk{background:#27e9e3;color:#03191f;box-shadow:0 0 32px #1ee9e31a}
 .hsDownloads .mktButton:hover{background:#154b56;color:white}
-.hsDownloads #android-install:hover{background:#7bfff3;color:#03191f}
+.hsDownloads #android-apk:hover{background:#7bfff3;color:#03191f}
 .hsDownloads .mktButtonQuiet{border:1px solid #416371;font-size:15px;min-height:44px}
 .hsDownloads button:focus-visible{outline:3px solid #fff;outline-offset:5px}
 .hsDownloads button[hidden]{display:none}
@@ -47,7 +47,7 @@
 @media(prefers-reduced-motion:no-preference){.hsDownloads .mktButton{transition:background .18s,box-shadow .18s}}
 
 
-.marketingPage .hsDownloads #android-install{background:#27e9e3!important;color:#03191f!important;border-color:#27e9e3!important;box-shadow:0 0 28px #27e9e320!important}
+.marketingPage .hsDownloads #android-apk{background:#27e9e3!important;color:#03191f!important;border-color:#27e9e3!important;box-shadow:0 0 28px #27e9e320!important}
 .marketingPage .hsDownloads #windows .mktButton{background:transparent!important;border:2px solid #27e9e3!important;color:#ecffff!important}
 .marketingPage .hsDownloads .downloadCard{background:linear-gradient(145deg,#183743e8,#08131ef0)!important;border-color:#3e6e7c!important}
 .hsDownloads details.downloadInstructions{margin-top:20px;color:#b3cad4}
@@ -69,8 +69,11 @@
 <p>Wersja __DESKTOP_RELEASE__ · Windows x64 · Instalator EXE</p><details class="downloadInstructions"><summary>Instrukcja instalacji</summary><ol><li>Pobierz i uruchom instalator.</li><li>Wybierz katalog programu i uruchom HOME SECURITY.</li><li>Skonfiguruj konto, kamerę i folder nagrań.</li></ol></details><p>Program korzysta z Microsoft WebView2. Komputer nadający musi pozostać uruchomiony. Sprawdź zapis i odtwarzanie przed codziennym użyciem.</p></section>
 <section id="android" class="downloadCard" aria-labelledby="android-title">
 <div class="downloadDeviceScene" aria-hidden="true"><div class="downloadTablet"><span class="downloadDeviceBar">◇ HOME SECURITY</span><img src="assets/site-kam01.webp" alt="" width="480" height="300"><span class="downloadDeviceNav">Podgląd · Kamery · Nagrania · Ustawienia</span></div><div class="downloadPhone"><span class="downloadDeviceBar">◇ HOME SECURITY</span><img src="assets/site-kam01.webp" alt="" width="480" height="300"><span class="downloadDeviceNav">⌂　▣　⚙</span></div></div><p class="downloadDeviceNote">Wizualizacja panelu</p><div class="downloadPlatform"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3 5.5.5 4.7 1l1.5 2.6A7 7 0 0 0 3 9h18a7 7 0 0 0-3.2-5.4L19.3 1l-.8-.5L17 3a9 9 0 0 0-10 0ZM7 6h1v1H7zm9 0h1v1h-1zM3 10h18v9a2 2 0 0 1-2 2h-1v3h-3v-3H9v3H6v-3H5a2 2 0 0 1-2-2z"/></svg>NA TELEFON</div>
-<h2 id="android-title">Na telefon i tablet</h2><p>Android · instalacja bezpośrednio ze strony</p><p>Podgląd i nagrania pod własną ikoną na ekranie głównym.</p>
-<button class="mktButton" id="android-install" type="button" aria-describedby="android-install-status">Zainstaluj na Androidzie ↓</button>
+<h2 id="android-title">Na telefon i tablet</h2><p>Android · instalator APK</p><p>Podgląd i nagrania pod własną ikoną na ekranie głównym.</p>
+<a class="mktButton" id="android-apk" href="https://github.com/DominikSolorz/dominiksolorz.github.io/releases/download/android-preview-0.2.0-7c3871b/HOME-SECURITY-Android-0.2.0-preview.apk" download="HOME-SECURITY-Android-0.2.0-preview.apk" aria-describedby="android-apk-info">Pobierz APK na Androida ↓</a>
+<p id="android-apk-info">Wersja testowa 0.2.0 · 5,6 MB · Android 11 lub nowszy. Logowanie e-mailem i hasłem oraz PIN. Logowanie Google jest dostępne w wersji przeglądarkowej.</p>
+<details class="downloadInstructions"><summary>Jak zainstalować plik APK?</summary><p>Otwórz pobrany plik i potwierdź instalację w Androidzie. System może poprosić o zezwolenie na instalowanie aplikacji z Chrome. To podpisana wersja testowa, bez automatycznych aktualizacji APK. Kolejna kompilacja testowa może wymagać odinstalowania poprzedniej wersji, co usuwa jej lokalne dane.</p></details>
+<button class="mktButton mktButtonQuiet" id="android-install" type="button" aria-describedby="android-install-status">Zainstaluj wersję przeglądarkową</button>
 <p id="android-install-status" role="status" aria-live="polite">Na telefonie lub tablecie otwórz tę stronę w Chrome. Jeśli instalacja nie pojawi się automatycznie, wybierz w menu Chrome „Zainstaluj aplikację” lub „Dodaj do ekranu głównego”.</p>
 <a class="mktButton mktButtonQuiet" href="panel.html?auth=login&amp;panel=owner&amp;ui=phone">Otwórz aplikację ↗</a>
 <details class="downloadInstructions"><summary>Instrukcja instalacji</summary><ol><li>Otwórz panel w Chrome na telefonie.</li><li>W menu przeglądarki wybierz „Dodaj do ekranu głównego” lub „Zainstaluj aplikację”, jeśli ta opcja jest dostępna.</li><li>Uruchom ikonę i zaloguj się na swoje konto.</li></ol></details>
