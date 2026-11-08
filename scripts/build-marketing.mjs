@@ -46,12 +46,14 @@ const accountReturnBridge = `<script>(function(){
 })();</script>`;
 // Tylko uruchomienie z ikony PWA: reklama -> publiczna strona -> logowanie -> PIN.
 // Synchronizacja w head unika migniecia strony przed reklamą; bez JS jest zwykłe WWW.
-const mobileSplashHead = '<link rel="stylesheet" href="mobile-app-splash.css?v=3">'+
+const mobileSplashHead = '<link rel="stylesheet" href="mobile-home.css?v=1"><link rel="stylesheet" href="mobile-app-splash.css?v=3">'+
   '<script>(function(){const q=new URLSearchParams(location.search);'+
   'if(q.has("auth")||q.has("code")||q.has("panel")||q.has("odbiorca")||location.hash)return;'+
   'const phone=/Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent||"")||'+
   '(matchMedia("(max-width:900px)").matches&&(navigator.maxTouchPoints||0)>0);'+
   'if(!phone)return;'+
+  'if(window.__HOME_SECURITY_DESKTOP__===true||window.chrome?.webview)return;'+
+  'document.documentElement.classList.add("hsMobileWelcome");'+
   'window.__hsMobileSplashStarted=performance.now();'+
   'document.documentElement.classList.add("hsMobileLaunch");'+
   'setTimeout(()=>document.documentElement.classList.remove("hsMobileLaunch"),30000);'+
@@ -68,9 +70,19 @@ const mobileSplashBody = '<aside id="hsMobileSplash" aria-label="Reklama HOME SE
   '<small>Prezentacja aplikacji · chwilę i przejdziesz do strony głównej</small>'+
   '<span class="hsMobileSplashBar" aria-hidden="true"></span></div>'+
   '<button type="button">Pomiń</button></div></aside>';
+const mobileWelcome = `<section id="mobileWelcome" aria-labelledby="mobileWelcomeTitle">
+  <img class="mobileWelcomeMark" src="assets/mobile-app-mark.svg" width="64" height="64" alt="Logo HOME SECURITY">
+  <h1 id="mobileWelcomeTitle">HOME <span>SECURITY</span></h1>
+  <div class="mobileWelcomeCamera" role="img" aria-label="Ilustracja kamery HOME SECURITY"></div>
+  <ul><li><span aria-hidden="true">◉</span>Podgląd na żywo z Twoich kamer</li><li><span aria-hidden="true">♧</span>Powiadomienia o zdarzeniach</li><li><span aria-hidden="true">▣</span>Bezpieczne archiwum nagrań</li></ul>
+  <a class="mobileWelcomeLogin" href="panel.html?auth=login&amp;layout=auto">Zaloguj się <span aria-hidden="true">→</span></a>
+  <p>Nie masz konta? <a href="panel.html?auth=register&amp;layout=auto">Zarejestruj się</a></p>
+  <a class="mobileWelcomePreview" href="https://dominiksolorz.github.io/podglad-mobilny/">Przetestuj wygląd bez konta</a>
+  <a class="mobileWelcomeAbout" href="jak-dziala.html">Jak działa HOME SECURITY?</a>
+</section>`;
 const publicHome=head('Monitoring domu i podgląd','HOME SECURITY: monitoring domowy przez komputer Windows i telefon. Zobacz podgląd, archiwum nagrań, wymagania i instrukcje konfiguracji.','')
  .replace('</head>',accountReturnBridge+'<script src="public-entry.js?v=7"></script><link rel="manifest" href="manifest.webmanifest?v=4">'+mobileSplashHead+'</head>')
- +mobileSplashBody+publicContent+'\n</body></html>\n';
+ +mobileSplashBody+mobileWelcome+publicContent+'\n</body></html>\n';
 await emit('index.html',publicHome);
 // Keep old inbound product links working; canonical points at the single homepage.
 await emit('o-systemie.html',publicHome);

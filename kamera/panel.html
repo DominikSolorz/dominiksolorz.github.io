@@ -7,7 +7,7 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#070b16">
 <meta name="color-scheme" content="dark">
-<meta name="home-security-build" content="272">
+<meta name="home-security-build" content="273">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -104,8 +104,8 @@
 <link rel="stylesheet" href="premium-dark-pro.css?v=1">
 <link rel="stylesheet" href="remote-unlock-ui.css?v=1">
 <link rel="stylesheet" href="tech-ops.css?v=2">
-<link rel="stylesheet" href="mobile-app-look.css?v=1">
 <link rel="stylesheet" href="operator-layout.css?v=3">
+<link rel="stylesheet" href="mobile-app-look.css?v=2">
 </template>
 <style>html,body{margin:0;min-height:100%;background:#090b11;color:#f4f3ef;font:15px/1.5 system-ui,sans-serif}[hidden]{display:none!important}.publicLanding body>:not(#publicHome):not(script):not(template):not(#bootError){display:none!important}.publicLanding #publicHome{position:relative;z-index:200;min-height:100vh;overflow:hidden}.publicLanding #bootError{position:fixed;z-index:999;inset:auto 16px 16px;padding:18px;background:#24141a;color:#fff}</style>
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png"></head>
@@ -219,11 +219,12 @@
     const isReceiver = /^cam-[a-f0-9]{32}$/.test(p.get("odbiorca") || "");
     const authRoute = ["register", "login", "forgot"].includes(p.get("auth")) ? p.get("auth") : "";
     const ownerEntry = ["owner", "wlasciciel"].includes(p.get("panel"));
+    const mobileAccountEntry = document.documentElement.classList.contains("mobileOwnerMode") && !isReceiver;
     const home = document.getElementById("publicHome");
     let enter, opened = false;
     // Boot ma wiedzieć, czy strona główna nadal jest świadomie oglądana.
     // Dzięki temu awaryjne wznowienie nie zamknie strony informacyjnej.
-    window.__publicHomeActive = !isReceiver && !authRoute && !ownerEntry;
+    window.__publicHomeActive = !isReceiver && !authRoute && !ownerEntry && !mobileAccountEntry;
     window.__waitForPanel = new Promise(resolve => { enter = resolve; });
     const openPanel = () => {
       if (opened) return;
@@ -252,7 +253,7 @@
     // stronę główną. Program Windows stosuje ten sam bezpieczny przebieg co
     // strona: strona główna → logowanie → start → PIN → pulpit.
     if (isReceiver) openPanel();
-    else if (authRoute || ownerEntry) {
+    else if (authRoute || ownerEntry || mobileAccountEntry) {
       home.hidden = true;
       window.__authReady.then(() => authRoute === "register" ? window.__showRegistration?.() : authRoute === "forgot" ? window.__showPasswordReset?.() : requestAccount());
     }
@@ -407,6 +408,7 @@
       <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
       <button data-k="del" class="soft" aria-label="Usuń">⌫</button><button data-k="0">0</button><button data-k="ok" class="soft" aria-label="Wejdź">➜</button>
     </div>
+    <p class="mobilePinHint">PIN ma 4 lub 6 cyfr. Po wpisaniu 4 cyfr zatwierdź strzałką.</p>
     <p class="remember">PIN jest wymagany po każdym ponownym uruchomieniu aplikacji.</p>
   </div>
 </section>
@@ -684,11 +686,11 @@
 </script>
 <template id="panelRuntime">
 <script src="vendor/supabase.js?v=2.117.2"></script>
-<script type="module" src="auth.js?v=15"></script>
+<script type="module" src="auth.js?v=16"></script>
 <script type="module" src="auth-experience.mjs?v=2"></script>
-<script type="module" src="app.js?v=272"></script>
+<script type="module" src="app.js?v=273"></script>
 <script type="module" src="desktop.js?v=51"></script>
-<script type="module" src="mobile.js?v=30"></script>
+<script type="module" src="mobile.js?v=31"></script>
 </template>
 <script type="module" src="panel-entry.mjs?v=3"></script>
 </body>

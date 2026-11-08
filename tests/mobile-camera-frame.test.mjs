@@ -30,7 +30,7 @@ test('mobile layout switch remains a 48px touch target and refreshed CSS is prec
  assert.match(viewerCss,/mobileAppHeader #deviceLayoutBtn\{min-width:48px!important;min-height:48px!important\}/);
  assert.match(panelHtml,/mobile-viewer\.css\?v=5/);
  assert.match(panelHtml,/mobile-camera-frame\.css\?v=6/);
- assert.match(panelHtml,/mobile\.js\?v=30/);
+ assert.match(panelHtml,/mobile\.js\?v=31/);
  const version=appJs.match(/const VERSION = "(\d+)"/)?.[1];
  assert.ok(version);
  assert.match(panelHtml,new RegExp('app\\.js\\?v='+version));
@@ -39,7 +39,7 @@ test('mobile layout switch remains a 48px touch target and refreshed CSS is prec
  assert.match(serviceWorker,new RegExp(`kamera-domowa-shell-v${rev}`));
  assert.ok(serviceWorker.includes('./mobile-viewer.css?v=5'));
  assert.ok(serviceWorker.includes('./mobile-camera-frame.css?v=6'));
- assert.ok(serviceWorker.includes('./mobile.js?v=30'));
+ assert.ok(serviceWorker.includes('./mobile.js?v=31'));
  assert.ok(serviceWorker.includes('./app.js?v='+version));
 });
 test('device layout button hides decorative square but keeps accessible layout selection',()=>{
@@ -50,8 +50,8 @@ test('device layout button hides decorative square but keeps accessible layout s
  assert.match(mobileJs,/querySelector\('b'\)\.textContent=platformName/);
 });
 test('mobile navigation opens camera only from an explicit camera view and starts at overview',()=>{
- assert.match(mobileJs,/data-mobile-view="home"><b>⌂<\/b><span>Panel<\/span>/);
- assert.match(mobileJs,/data-mobile-view="camera"><b>◉<\/b><span>Podgląd<\/span>/);
+ assert.match(mobileJs,/data-mobile-view="home"><b>⌂<\/b><span>Pulpit<\/span>/);
+ assert.match(mobileJs,/data-mobile-view="camera"><b>◉<\/b><span>Kamery<\/span>/);
  assert.match(mobileJs,/rememberedView === "camera" \? "home" : rememberedView/);
  assert.match(mobileJs,/Obraz nie włącza się sam po zalogowaniu/);
  assert.match(appJs,/if \(MOBILE_OWNER_APP\) \{\s*document\.addEventListener\("hs-mobile-view-change", event => \{\s*if \(event\.detail\?\.view === "camera"\) viewer\.start\(\);\s*else viewer\.stop\(\);/);

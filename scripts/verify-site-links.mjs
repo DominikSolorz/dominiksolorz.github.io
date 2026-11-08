@@ -20,7 +20,10 @@ for(const [page,html] of documents){
   if(target.origin!==origin)continue;
   let pathname;try{pathname=decodeURIComponent(target.pathname);}catch{issues.push({page,url:raw,error:'invalid encoding'});continue;}
   if(pathname.endsWith('/'))pathname+='index.html';
-  const file=resolve(repository,'.'+pathname);
+  // This public alias is copied from its isolated design source by Pages.
+  const sourcePath=pathname.startsWith('/podglad-mobilny/')
+    ? '/design/home-security-redesign/prototyp-mobilny/'+pathname.slice('/podglad-mobilny/'.length) : pathname;
+  const file=resolve(repository,'.'+sourcePath);
   if(relative(repository,file).startsWith('..')){issues.push({page,url:raw,error:'outside repository'});continue;}
   const key=pathname+target.hash;
   if(!links.has(key))links.set(key,{pathname,hash:target.hash,from:[]});links.get(key).from.push(page);

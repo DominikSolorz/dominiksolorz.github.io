@@ -4,11 +4,12 @@ import { readFile } from 'node:fs/promises';
 
 const read = file => readFile(new URL('../' + file, import.meta.url), 'utf8');
 
-test('stage 2 panel layout loads last in panelStyles and is precached', async () => {
+test('desktop operator theme precedes the final scoped mobile theme and is precached', async () => {
   const [panel, sw] = await Promise.all([read('kamera/panel.html'), read('kamera/sw.js')]);
   const template = panel.match(/<template id="panelStyles">([\s\S]*?)<\/template>/)[1];
   const links = [...template.matchAll(/href="([^"]+)"/g)].map(m => m[1]);
-  assert.equal(links.at(-1), 'operator-layout.css?v=3', 'operator-layout.css must be the last panel stylesheet');
+  assert.ok(links.indexOf('operator-layout.css?v=3') > links.indexOf('tech-ops.css?v=2'));
+  assert.equal(links.at(-1), 'mobile-app-look.css?v=2', 'phone layout must override shared operator cards');
   assert.ok(sw.includes('./operator-layout.css?v=3'));
   // Never loaded on the public landing page before the secure panel starts.
   assert.doesNotMatch(panel.slice(0, panel.indexOf('<template id="panelStyles">')), /operator-layout\.css/);

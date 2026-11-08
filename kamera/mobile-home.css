@@ -1,0 +1,21 @@
+/* The phone entry page. Desktop/public documentation keeps its existing layout. */
+#mobileWelcome{display:none}
+html.hsMobileWelcome{--hm-bg:#050d1a;--hm-card:rgba(20,44,72,.55);--hm-line:rgba(80,170,230,.35);--hm-cyan:#1de9e0;--hm-blue:#1e90ff;--hm-text:#eaf6ff;--hm-muted:#8fb0c8}
+html.hsMobileWelcome body.marketingPage{background:radial-gradient(120% 60% at 50% 0,#0d2a4a 0,var(--hm-bg) 60%);color:var(--hm-text)}
+html.hsMobileWelcome #publicHome{display:none!important}
+html.hsMobileWelcome #mobileWelcome{display:flex;flex-direction:column;align-items:center;gap:18px;width:min(100%,460px);min-height:100dvh;box-sizing:border-box;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom));font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+html.hsMobileLaunch #mobileWelcome{visibility:hidden}
+#mobileWelcome .mobileWelcomeMark{width:58px;height:58px;object-fit:contain}
+#mobileWelcome h1{margin:0;color:var(--hm-text);font-size:25px;letter-spacing:.035em;line-height:1.1;font-weight:800}
+#mobileWelcome h1 span{color:var(--hm-cyan)}
+#mobileWelcome .mobileWelcomeCamera{width:100%;aspect-ratio:1.9;border-radius:18px;background:url('assets/mobile-welcome-camera.png') center 26%/107% auto no-repeat}
+#mobileWelcome ul{display:grid;gap:10px;list-style:none;padding:0;margin:0;width:100%}
+#mobileWelcome li{display:flex;align-items:center;gap:14px;min-height:62px;padding:12px 16px;box-sizing:border-box;border:1px solid var(--hm-line);border-radius:16px;background:var(--hm-card);font-size:15px;font-weight:650;color:var(--hm-text)}
+#mobileWelcome li span{display:grid;place-items:center;width:30px;flex:none;color:var(--hm-cyan);font-size:26px}
+#mobileWelcome a{color:var(--hm-cyan);text-decoration:none}
+#mobileWelcome .mobileWelcomeLogin{display:flex;align-items:center;justify-content:center;gap:24px;box-sizing:border-box;width:100%;min-height:54px;border-radius:999px;background:linear-gradient(90deg,var(--hm-cyan),var(--hm-blue));color:var(--hm-bg);font-size:17px;font-weight:800;margin-top:6px}
+#mobileWelcome p{margin:0;font-size:13px;color:var(--hm-muted);text-align:center}
+#mobileWelcome .mobileWelcomePreview,#mobileWelcome .mobileWelcomeAbout{font-size:13px;text-align:center;padding:6px;text-decoration:underline}
+#mobileWelcome .mobileWelcomeAbout{color:var(--hm-muted)}
+#mobileWelcome a:focus-visible{outline:3px solid var(--hm-cyan);outline-offset:4px}
+@media (max-height:500px){html.hsMobileWelcome #mobileWelcome{padding-top:16px;gap:12px}#mobileWelcome .mobileWelcomeCamera{max-width:300px}#mobileWelcome ul{gap:6px}#mobileWelcome li{min-height:48px}}
