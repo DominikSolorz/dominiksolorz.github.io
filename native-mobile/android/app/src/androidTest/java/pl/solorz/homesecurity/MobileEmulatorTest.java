@@ -209,4 +209,25 @@ public class MobileEmulatorTest {
             device.executeShellCommand("settings put system font_scale 1.0");
         }
     }
+    @Test public void g_distributionUpdateBoundary() throws Exception {
+        boolean play = "play".equals(BuildConfig.FLAVOR);
+        android.content.pm.PackageInfo info = context.getPackageManager().getPackageInfo(
+            context.getPackageName(), android.content.pm.PackageManager.GET_PERMISSIONS
+                | android.content.pm.PackageManager.GET_PROVIDERS);
+        boolean installerPermission = info.requestedPermissions != null && java.util.Arrays.asList(
+            info.requestedPermissions).contains("android.permission.REQUEST_INSTALL_PACKAGES");
+        assertEquals("Only direct APK may request an installer", !play, installerPermission);
+        boolean updateProvider = false;
+        if (info.providers != null) for (android.content.pm.ProviderInfo provider : info.providers)
+            if ((context.getPackageName()+".updates").equals(provider.authority)) updateProvider = true;
+        assertEquals("Only direct APK contains the update file provider", !play, updateProvider);
+        if (play) {
+            try { Class.forName("pl.solorz.homesecurity.AppUpdater"); fail("Play contains APK updater"); }
+            catch (ClassNotFoundException expected) { /* Physically excluded from Play. */ }
+        }
+        try (ActivityScenario<MainActivity> scenario = launch(true)) {
+            scenario.onActivity(a -> assertEquals(play ? View.GONE : View.VISIBLE,
+                a.findViewById(R.id.checkAppUpdate).getVisibility()));
+        }
+    }
 }

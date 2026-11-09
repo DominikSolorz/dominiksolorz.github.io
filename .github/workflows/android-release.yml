@@ -51,7 +51,7 @@ jobs:
           PY
       - name: Test and build signed release
         working-directory: native-mobile/android
-        run: gradle --no-daemon :app:testDebugUnitTest :app:lintRelease :app:assembleRelease
+        run: gradle --no-daemon :app:testDirectDebugUnitTest :app:testPlayDebugUnitTest :app:lintDirectRelease :app:lintPlayRelease :app:assembleDirectRelease :app:bundlePlayRelease
       - name: Verify signature, package and update metadata
         env:
           OWNER_CERT: 7707e0ab9616e88ea2e98416d7e6b98f30fdb79f8bd673b083f95b02a4e07d47
@@ -60,7 +60,7 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/android-dist"
           apk="$RUNNER_TEMP/android-dist/HOME-SECURITY-Android-$HOME_SECURITY_ANDROID_VERSION_NAME.apk"
-          cp native-mobile/android/app/build/outputs/apk/release/app-release.apk "$apk"
+          cp native-mobile/android/app/build/outputs/apk/direct/release/app-direct-release.apk "$apk"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$apk" > "$RUNNER_TEMP/android-dist/SIGNATURE.txt"
           grep -F "Signer #1 certificate SHA-256 digest: $OWNER_CERT" "$RUNNER_TEMP/android-dist/SIGNATURE.txt"
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$apk" > "$RUNNER_TEMP/android-dist/PACKAGE.txt"
@@ -73,14 +73,32 @@ jobs:
           (root/'android-update.json').write_text(json.dumps(data,indent=2)+'\n')
           (root/'SHA256SUMS.txt').write_text(sha+'  '+apk.name+'\n')
           PY
+      - name: Verify and retain signed Google Play bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/play-dist"
+          bundle="native-mobile/android/app/build/outputs/bundle/playRelease/app-play-release.aab"
+          python3 native-mobile/android/verify-play-bundle.py "$bundle"
+          LC_ALL=C jarsigner -verify "$bundle" > "$RUNNER_TEMP/play-dist/SIGNATURE.txt"
+          grep -F 'jar verified.' "$RUNNER_TEMP/play-dist/SIGNATURE.txt"
+          cp "$bundle" "$RUNNER_TEMP/play-dist/HOME-SECURITY-Play-$HOME_SECURITY_ANDROID_VERSION_NAME.aab"
+          cd "$RUNNER_TEMP/play-dist"
+          sha256sum *.aab > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: signed-google-play-bundle
+          path: ${{ runner.temp }}/play-dist/
+          if-no-files-found: error
+          retention-days: 30
       - name: Build next-version upgrade probe using the same owner key
         working-directory: native-mobile/android
         shell: bash
         run: |
           set -euo pipefail
           export HOME_SECURITY_ANDROID_VERSION_CODE=$((HOME_SECURITY_ANDROID_VERSION_CODE+1))
-          gradle --no-daemon :app:assembleRelease
-          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/upgrade-probe.apk"
+          gradle --no-daemon :app:assembleDirectRelease
+          cp app/build/outputs/apk/direct/release/app-direct-release.apk "$RUNNER_TEMP/upgrade-probe.apk"
       - name: Enable emulator acceleration
         shell: bash
         run: |

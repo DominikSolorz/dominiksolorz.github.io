@@ -22,4 +22,11 @@ jobs:
           gradle-version: '8.13'
       - name: Compile Android, test update policy and lint
         working-directory: native-mobile/android
-        run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease
+        run: gradle --no-daemon :app:testDirectDebugUnitTest :app:testPlayDebugUnitTest :app:lintDirectDebug :app:lintPlayRelease :app:assembleDirectDebug :app:assembleDirectRelease :app:bundlePlayRelease
+      - name: Check Play bundle has no APK updater
+        run: python3 native-mobile/android/verify-play-bundle.py native-mobile/android/app/build/outputs/bundle/playRelease/app-play-release.aab
+      - uses: actions/upload-artifact@v4
+        with:
+          name: google-play-review-unsigned
+          path: native-mobile/android/app/build/outputs/bundle/playRelease/*.aab
+          if-no-files-found: error

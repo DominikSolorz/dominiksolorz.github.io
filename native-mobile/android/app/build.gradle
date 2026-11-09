@@ -10,6 +10,11 @@ android {
         versionCode Integer.parseInt(System.getenv('HOME_SECURITY_ANDROID_VERSION_CODE') ?: '3')
         versionName System.getenv('HOME_SECURITY_ANDROID_VERSION_NAME') ?: '0.3.0'
     }
+    flavorDimensions 'distribution'
+    productFlavors {
+        direct { dimension 'distribution' }
+        play { dimension 'distribution' }
+    }
     buildFeatures { buildConfig true }
     def signingPath = System.getenv('HOME_SECURITY_ANDROID_KEYSTORE')
     if (signingPath) {
