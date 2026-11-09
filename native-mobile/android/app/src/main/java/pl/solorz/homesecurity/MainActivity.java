@@ -27,7 +27,7 @@ import java.nio.charset.StandardCharsets;
 public final class MainActivity extends ComponentActivity {
     private WebView web;
     private int fittedHomeWidth=-1;
-    private AppUpdater updater;
+    private DistributionUpdates updater;
     private TextView status;
     private View home, error, loading, bottom;
     private boolean showingHome = true, pageFailed = false, background = false;
@@ -45,8 +45,8 @@ public final class MainActivity extends ComponentActivity {
         setContentView(R.layout.activity_main);
         ((TextView)findViewById(R.id.versionNote)).setText(getString(R.string.preview_note,BuildConfig.VERSION_NAME));
         findViewById(R.id.nativeRoot).addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->fitHomeContent());
-        updater=new AppUpdater(this);
-        findViewById(R.id.checkAppUpdate).setOnClickListener(v->updater.check(true));
+        updater=new DistributionUpdates(this);
+        updater.bind(findViewById(R.id.checkAppUpdate));
         web = findViewById(R.id.ownerWeb); status = findViewById(R.id.nativeStatus);
         home = findViewById(R.id.homeScreen); error = findViewById(R.id.errorScreen);
         loading = findViewById(R.id.panelLoading); bottom = findViewById(R.id.nativeBottomNav);

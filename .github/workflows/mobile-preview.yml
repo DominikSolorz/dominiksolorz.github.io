@@ -24,16 +24,16 @@ jobs:
           gradle-version: '8.13'
       - name: Compile, test and lint Android
         working-directory: native-mobile/android
-        run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease :app:bundleRelease
+        run: gradle --no-daemon :app:testDirectDebugUnitTest :app:testPlayDebugUnitTest :app:lintDirectDebug :app:lintPlayDebug :app:assembleDirectDebug :app:assembleDirectRelease :app:bundlePlayRelease
       - name: Verify test APK signature
-        run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose native-mobile/android/app/build/outputs/apk/debug/app-debug.apk'
+        run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose native-mobile/android/app/build/outputs/apk/direct/debug/app-direct-debug.apk'
       - uses: actions/upload-artifact@v4
         with:
           name: HOME-SECURITY-Android-0.2.0-preview
           path: |
-            native-mobile/android/app/build/outputs/apk/debug/*.apk
-            native-mobile/android/app/build/outputs/apk/release/*unsigned.apk
-            native-mobile/android/app/build/outputs/bundle/release/*.aab
+            native-mobile/android/app/build/outputs/apk/direct/debug/*.apk
+            native-mobile/android/app/build/outputs/apk/direct/release/*unsigned.apk
+            native-mobile/android/app/build/outputs/bundle/playRelease/*.aab
             native-mobile/android/app/build/reports/
           retention-days: 30
   ios:

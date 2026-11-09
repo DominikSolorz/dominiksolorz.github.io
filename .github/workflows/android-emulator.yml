@@ -16,6 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         api: [30, 35]
+        distribution: [direct, play]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,7 +33,11 @@ jobs:
         run: sudo setfacl -m "u:$(id -un):rw" /dev/kvm
       - name: Build and check phone client
         working-directory: native-mobile/android
-        run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
+        env:
+          DISTRIBUTION: ${{ matrix.distribution }}
+        run: |
+          variant="${DISTRIBUTION^}"
+          gradle --no-daemon ":app:test${variant}DebugUnitTest" ":app:lint${variant}Debug" ":app:assemble${variant}Debug" ":app:assemble${variant}DebugAndroidTest"
       - name: Install APK and run phone and WebRTC tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -45,14 +50,14 @@ jobs:
           emulator-boot-timeout: 600
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -camera-back none -camera-front none
           disable-animations: true
-          script: bash native-mobile/android/run-emulator-tests.sh
+          script: bash native-mobile/android/run-emulator-tests.sh ${{ matrix.distribution }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Android-phone-API-${{ matrix.api }}
+          name: Android-${{ matrix.distribution }}-phone-API-${{ matrix.api }}
           path: |
             emulator-evidence/
             native-mobile/android/app/build/reports/
             native-mobile/android/app/build/outputs/androidTest-results/
-            native-mobile/android/app/build/outputs/apk/debug/*.apk
+            native-mobile/android/app/build/outputs/apk/${{ matrix.distribution }}/debug/*.apk
           retention-days: 30
