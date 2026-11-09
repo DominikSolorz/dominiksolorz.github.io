@@ -230,4 +230,79 @@ public class MobileEmulatorTest {
                 a.findViewById(R.id.checkAppUpdate).getVisibility()));
         }
     }
+    @Test public void h_adaptiveIconAndServerError() throws Exception {
+        assertTrue(context.getApplicationInfo().loadIcon(context.getPackageManager()) instanceof android.graphics.drawable.AdaptiveIconDrawable);
+        android.graphics.drawable.AdaptiveIconDrawable icon = (android.graphics.drawable.AdaptiveIconDrawable)
+            context.getApplicationInfo().loadIcon(context.getPackageManager());
+        assertNotNull(icon.getBackground()); assertNotNull(icon.getForeground());
+        if (android.os.Build.VERSION.SDK_INT >= 33) assertNotNull(icon.getMonochrome());
+        try (ActivityScenario<MainActivity> scenario = launch(true)) {
+            control("navLive").click();
+            if (!supportedEngine()) { assertUpdateScreen(scenario); return; }
+            waitFor(() -> !visible(scenario, R.id.panelLoading), 20000);
+            scenario.onActivity(a -> {
+                WebView web = a.findViewById(R.id.ownerWeb);
+                android.webkit.WebResourceRequest request = new android.webkit.WebResourceRequest() {
+                    public android.net.Uri getUrl() { return android.net.Uri.parse(NavigationPolicy.view("home")); }
+                    public boolean isForMainFrame() { return true; }
+                    public boolean isRedirect() { return false; }
+                    public boolean hasGesture() { return true; }
+                    public String getMethod() { return "GET"; }
+                    public java.util.Map<String,String> getRequestHeaders() { return java.util.Collections.emptyMap(); }
+                };
+                web.getWebViewClient().onReceivedHttpError(web, request,
+                    new android.webkit.WebResourceResponse("text/plain", "UTF-8", 503, "Unavailable",
+                        java.util.Collections.emptyMap(), new java.io.ByteArrayInputStream(new byte[0])));
+                assertEquals(a.getString(R.string.server_error_title), ((android.widget.TextView)a.findViewById(R.id.errorTitle)).getText().toString());
+            });
+            assertTrue(visible(scenario, R.id.errorScreen)); capture(scenario,"09-server-error");
+            control("retryPanel").click(); waitFor(() -> !visible(scenario,R.id.panelLoading),20000);
+            assertFalse(visible(scenario, R.id.errorScreen));
+        }
+    }
+    @Test public void i_locationRequiresConsentAndTrustedActivePage() throws Exception {
+        android.content.pm.PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), android.content.pm.PackageManager.GET_PERMISSIONS);
+        assertFalse(java.util.Arrays.asList(info.requestedPermissions).contains("android.permission.ACCESS_BACKGROUND_LOCATION"));
+        try (ActivityScenario<MainActivity> scenario = launch(true)) {
+            AtomicReference<Boolean> answer = new AtomicReference<>();
+            scenario.onActivity(a -> ((WebView)a.findViewById(R.id.ownerWeb)).getWebChromeClient()
+                .onGeolocationPermissionsShowPrompt(NavigationPolicy.ORIGIN, (origin,allow,retain) -> { assertFalse(retain); answer.set(allow); }));
+            assertEquals(Boolean.FALSE, answer.get()); // Native home cannot request location.
+            control("navLive").click();
+            if (!supportedEngine()) { assertUpdateScreen(scenario); return; }
+            waitFor(() -> !visible(scenario,R.id.panelLoading),20000);
+            answer.set(null);
+            scenario.onActivity(a -> ((WebView)a.findViewById(R.id.ownerWeb)).getWebChromeClient()
+                .onGeolocationPermissionsShowPrompt("https://foreign.example", (origin,allow,retain) -> answer.set(allow)));
+            assertEquals(Boolean.FALSE, answer.get());
+            scenario.onActivity(a -> assertTrue("Fixture must expose the trusted panel URL", NavigationPolicy.isPanel(((WebView)a.findViewById(R.id.ownerWeb)).getUrl())));
+            assertEquals(android.content.pm.PackageManager.PERMISSION_DENIED,
+                context.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION));
+            answer.set(null);
+            scenario.onActivity(a -> ((WebView)a.findViewById(R.id.ownerWeb)).getWebChromeClient()
+                .onGeolocationPermissionsShowPrompt(NavigationPolicy.ORIGIN, (origin,allow,retain) -> { assertFalse(retain); answer.set(allow); }));
+            UiObject2 deny = device.wait(Until.findObject(By.res(java.util.regex.Pattern.compile("(?:com\\.android|com\\.google\\.android)\\.permissioncontroller:id/permission_deny_button"))),10000);
+            if (deny == null) {
+                java.io.ByteArrayOutputStream hierarchy = new java.io.ByteArrayOutputStream();
+                device.dumpWindowHierarchy(hierarchy);
+                System.out.println("LOCATION_PERMISSION_UI="+hierarchy.toString("UTF-8"));
+                System.out.println("LOCATION_PERMISSION_RESULT="+answer.get());
+            }
+            assertNotNull("Android must ask for location permission", deny);
+            deny.click(); waitFor(() -> answer.get()!=null,10000);
+            assertEquals(Boolean.FALSE, answer.get());
+            // Only the disposable emulator test app receives approximate permission.
+            device.executeShellCommand("pm grant "+context.getPackageName()+" android.permission.ACCESS_COARSE_LOCATION");
+            assertEquals(android.content.pm.PackageManager.PERMISSION_DENIED,
+                context.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION));
+            answer.set(null);
+            scenario.onActivity(a -> ((WebView)a.findViewById(R.id.ownerWeb)).getWebChromeClient()
+                .onGeolocationPermissionsShowPrompt(NavigationPolicy.ORIGIN, (origin,allow,retain) -> { assertFalse(retain); answer.set(allow); }));
+            assertEquals("Approximate location is sufficient", Boolean.TRUE, answer.get());
+            assertEquals("true",js(scenario,"(()=>{const d=document.createElement('dialog');d.className='mobileMapDialog';document.body.append(d);d.showModal();return d.open})()"));
+            scenario.moveToState(androidx.lifecycle.Lifecycle.State.CREATED);
+            scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED);
+            assertEquals("false",js(scenario,"document.querySelector('dialog.mobileMapDialog').open"));
+        }
+    }
 }
