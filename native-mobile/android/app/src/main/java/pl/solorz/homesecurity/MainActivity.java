@@ -26,6 +26,12 @@ import java.nio.charset.StandardCharsets;
 
 public final class MainActivity extends ComponentActivity {
     private WebView web;
+    private LocationAccess locationAccess;
+    private final android.os.Handler loadingHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable loadingTimeout = () -> {
+        showError(R.string.connection_timeout_title, R.string.connection_timeout_description);
+        web.stopLoading();
+    };
     private int fittedHomeWidth=-1;
     private DistributionUpdates updater;
     private TextView status;
@@ -49,6 +55,7 @@ public final class MainActivity extends ComponentActivity {
         updater.bind(findViewById(R.id.checkAppUpdate));
         web = findViewById(R.id.ownerWeb); status = findViewById(R.id.nativeStatus);
         home = findViewById(R.id.homeScreen); error = findViewById(R.id.errorScreen);
+        locationAccess = new LocationAccess(this, () -> !showingHome && !pageFailed && getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED) ? web.getUrl() : null);
         loading = findViewById(R.id.panelLoading); bottom = findViewById(R.id.nativeBottomNav);
         findViewById(R.id.nativeRoot).setOnApplyWindowInsetsListener((v,insets)->{
             android.graphics.Insets bars = insets.getInsets(android.view.WindowInsets.Type.systemBars() | android.view.WindowInsets.Type.ime());
@@ -58,6 +65,7 @@ public final class MainActivity extends ComponentActivity {
         });
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true); settings.setDomStorageEnabled(true);
+        settings.setGeolocationEnabled(true);
         settings.setUseWideViewPort(true); settings.setLoadWithOverviewMode(true);
         settings.setAllowFileAccess(false); settings.setAllowContentAccess(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
@@ -67,6 +75,9 @@ public final class MainActivity extends ComponentActivity {
         web.setBackgroundColor(Color.rgb(9,13,22));
         CookieManager.getInstance().setAcceptThirdPartyCookies(web,false);
         web.setWebViewClient(new WebViewClient() {
+            @Override public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                locationAccess.cancel();
+            }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
                 if(!request.isForMainFrame()) return false;
@@ -82,6 +93,7 @@ public final class MainActivity extends ComponentActivity {
                 return true;
             }
             @Override public void onPageFinished(WebView view,String url) {
+                loadingHandler.removeCallbacks(loadingTimeout);
                 loading.setVisibility(View.GONE);
                 if(!pageFailed) status.setText(R.string.panel_access);
                 if(NavigationPolicy.isPanel(url)) {
@@ -91,10 +103,14 @@ public final class MainActivity extends ComponentActivity {
                 }
             }
             @Override public void onReceivedError(WebView view,WebResourceRequest request,WebResourceError failure) { if(request.isForMainFrame()) showError(); }
-            @Override public void onReceivedHttpError(WebView view,WebResourceRequest request,WebResourceResponse response) { if(request.isForMainFrame() && response.getStatusCode()>=400) showError(); }
+            @Override public void onReceivedHttpError(WebView view,WebResourceRequest request,WebResourceResponse response) { if(request.isForMainFrame() && response.getStatusCode()>=400) showError(R.string.server_error_title, R.string.server_error_description); }
         });
         web.setWebChromeClient(new WebChromeClient() {
             @Override public void onPermissionRequest(PermissionRequest request) { request.deny(); }
+            @Override public void onGeolocationPermissionsShowPrompt(String origin, android.webkit.GeolocationPermissions.Callback callback) {
+                locationAccess.request(origin, callback);
+            }
+            @Override public void onGeolocationPermissionsHidePrompt() { locationAccess.cancel(); }
         });
         findViewById(R.id.openLive).setOnClickListener(v->openPanel("home",false));
         findViewById(R.id.openRecordings).setOnClickListener(v->openPanel("recordings",false));
@@ -145,7 +161,13 @@ public final class MainActivity extends ComponentActivity {
         View gap=quick.getChildAt(1);
         gap.setLayoutParams(new android.widget.LinearLayout.LayoutParams(wide?1:dp(12),wide?dp(12):1));
     }
+    private void stopLocationMap() {
+        if (locationAccess != null) locationAccess.cancel();
+        if (web != null) web.evaluateJavascript("document.querySelector('dialog.mobileMapDialog[open]')?.close()", null);
+    }
     private void showHome() {
+        stopLocationMap();
+        loadingHandler.removeCallbacks(loadingTimeout);
         web.onPause();
         web.evaluateJavascript("document.querySelectorAll('video,audio').forEach(el=>el.pause())",null);
         showingHome=true; home.setVisibility(View.VISIBLE); web.setVisibility(View.GONE);
@@ -158,12 +180,15 @@ public final class MainActivity extends ComponentActivity {
         selectTab(currentRoute.equals("recordings")?R.id.navRecordings:currentRoute.equals("settings")?R.id.navAccount:R.id.navLive);
     }
     private void openPanel(String route,boolean refresh) {
+        stopLocationMap();
+        loadingHandler.removeCallbacks(loadingTimeout);
         boolean reuse=web.getUrl()!=null && !pageFailed && !refresh;
         NavigationPolicy.view(route); currentRoute=route; showPanel();
         if(!supportsCurrentWebView()) { showEngineUpdate(); return; }
         engineUpdateRequired=false;
         if(reuse) { applyPhoneRoute(); return; }
         pageFailed=false; status.setText(R.string.loading); loading.setVisibility(View.VISIBLE);
+        loadingHandler.postDelayed(loadingTimeout, 30000);
         if(BuildConfig.DEBUG && getIntent().getBooleanExtra("hsEmulatorFixture",false)) {
             try {
                 String html;
@@ -192,13 +217,16 @@ public final class MainActivity extends ComponentActivity {
         try { startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://play.google.com/store/apps/details?id="+Uri.encode(pkg)))); }
         catch(android.content.ActivityNotFoundException ignored) { status.setText(R.string.no_browser); }
     }
-    private void showError() {
+    private void showError() { showError(R.string.connection_error_title, R.string.connection_error_description); }
+    private void showError(int title, int description) {
+        loadingHandler.removeCallbacks(loadingTimeout);
+        stopLocationMap();
         engineUpdateRequired=false;
-        ((TextView)findViewById(R.id.errorTitle)).setText(R.string.connection_error_title);
-        ((TextView)findViewById(R.id.errorDescription)).setText(R.string.connection_error_description);
+        ((TextView)findViewById(R.id.errorTitle)).setText(title);
+        ((TextView)findViewById(R.id.errorDescription)).setText(description);
         ((TextView)findViewById(R.id.retryPanel)).setText(R.string.retry);
         pageFailed=true; loading.setVisibility(View.GONE);
-        if(!showingHome) { web.setVisibility(View.GONE); error.setVisibility(View.VISIBLE); status.setText(R.string.connection_error_title); }
+        if(!showingHome) { web.setVisibility(View.GONE); error.setVisibility(View.VISIBLE); status.setText(title); }
     }
     private void selectTab(int selected) {
         for(int id:new int[]{R.id.navHome,R.id.navLive,R.id.navRecordings,R.id.navAccount}) {
@@ -211,5 +239,6 @@ public final class MainActivity extends ComponentActivity {
     @Override protected void onSaveInstanceState(Bundle state) { state.putBoolean("native.home",showingHome); state.putString("native.route",currentRoute); web.saveState(state); super.onSaveInstanceState(state); }
     @Override protected void onPause() { if(updater!=null)updater.pause(); if(!showingHome) web.setVisibility(View.INVISIBLE); web.onPause(); background=true; super.onPause(); }
     @Override protected void onResume() { super.onResume(); if(updater!=null)updater.resume(); if(web!=null) { web.onResume(); if(!showingHome && !pageFailed) web.setVisibility(View.VISIBLE); if(background && !showingHome) status.setText(R.string.returned); background=false; } }
-    @Override protected void onDestroy() { if(updater!=null)updater.close(); web.destroy(); super.onDestroy(); }
+    @Override protected void onStop() { stopLocationMap(); super.onStop(); }
+    @Override protected void onDestroy() { loadingHandler.removeCallbacks(loadingTimeout); if(locationAccess!=null)locationAccess.cancel(); if(updater!=null)updater.close(); web.destroy(); super.onDestroy(); }
 }
