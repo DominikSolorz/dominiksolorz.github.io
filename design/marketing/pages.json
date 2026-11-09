@@ -40,5 +40,11 @@
     "title": "Pytania i odpowiedzi",
     "description": "Odpowiedzi dotyczące programu, telefonu, zapisu, konta i dostępności produktu.",
     "assets": "support"
+  },
+  {
+    "slug": "usun-konto",
+    "title": "Usunięcie konta i danych",
+    "description": "Poproś o usunięcie konta HOME SECURITY i powiązanych danych — także bez zainstalowanej aplikacji.",
+    "assets": "support"
   }
 ]

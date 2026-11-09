@@ -333,3 +333,5 @@ body.marketingPage,body.legalPage{background-color:var(--t-bg)!important}
   #publicHome.mktSite .mktMkTopics{grid-template-columns:minmax(0,1fr)}
 }
 #publicHome.mktSite .hsSupportLauncher{background:linear-gradient(180deg,#2b8bff,#1667ef)!important;border-color:rgba(120,180,255,.7)!important;font-family:var(--t-sans)!important;font-size:15px!important;padding:12px 20px!important;box-shadow:0 12px 34px -10px var(--t-glow),0 8px 30px #0008!important}
+:is(#publicHome.mktSite,.marketingPage) .mktRoadmap>article{padding:22px 22px 24px!important;border-radius:var(--t-radius)!important;border:1px solid var(--t-line2)!important;background:linear-gradient(180deg,rgba(10,27,52,.86),rgba(6,20,40,.86))!important}
+:is(#publicHome.mktSite,.marketingPage) .mktRoadmap>article h3{margin:14px 0 8px}
