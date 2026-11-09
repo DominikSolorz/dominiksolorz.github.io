@@ -167,7 +167,7 @@ if (isMobileOwnerApp) {
 
   const views = {
     home: ["mobileOverview"],
-    camera: ["mobileCameraInfo", "stage", "zoomBar", "audioHud", "watchPanel"],
+    camera: ["mobileCameraInfo", "stage", "zoomBar", "audioHud", "watchPanel", "mobileEventsWorkspace"],
     alerts: ["mobileEventsWorkspace"],
     recordings: ["dvrCard", "dvrListCard"],
     cloud: ["mobileCloudHeading", "mobileRecordingStorage"],
@@ -219,6 +219,21 @@ if (isMobileOwnerApp) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  // Stała dolna nawigacja, jak w aplikacjach monitoringu: główne ekrany jednym dotknięciem.
+  // Przyciski używają istniejącego atrybutu data-open-mobile-view, więc obsługuje je ten sam router.
+  const tabBar = document.createElement("nav");
+  tabBar.id = "mobileTabBar";
+  tabBar.className = "mobileTabBar";
+  tabBar.setAttribute("aria-label", "Główne ekrany");
+  const tabs = [["home","Pulpit","home"],["camera","Kamery","camera"],["recordings","Nagrania","archive"],["alerts","Zdarzenia","alerts"],["settings","Ustawienia","settings"]];
+  tabBar.innerHTML = tabs.map(([view,label,icon]) => `<button type="button" data-open-mobile-view="${view}" data-tab="${view}"><b aria-hidden="true">${iconMarkup(icon)}</b><span>${label}</span></button>`).join("");
+  app?.append(tabBar);
+  const paintTabs = view => tabBar.querySelectorAll("[data-tab]").forEach(button => {
+    const active = button.dataset.tab === view;
+    button.classList.toggle("active", active);
+    if (active) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current");
+  });
+  document.addEventListener("hs-mobile-view-change", event => paintTabs(event.detail?.view));
   const router = createRouter({ routes: Object.keys(views), render: renderView });
   const setView = view => router.navigate(view);
   let beforeMenu='home';
