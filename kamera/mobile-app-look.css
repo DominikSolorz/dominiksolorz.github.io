@@ -265,7 +265,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileTabBa
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileTabBar button:focus-visible{outline:2px solid var(--ma-cyan);outline-offset:2px}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app{padding-bottom:calc(84px + env(safe-area-inset-bottom))!important}
 /* Na głównych ekranach nawigację daje pasek, więc przycisk „Wróć do pulpitu” jest zbędny. */
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:is([data-mobile-view="camera"],[data-mobile-view="recordings"],[data-mobile-view="alerts"],[data-mobile-view="settings"]) #app #mobileBackHome{display:none!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:is([data-mobile-view="camera"],[data-mobile-view="recordings"],[data-mobile-view="alerts"]) #app .mainCol{padding-top:12px}
 /* Ukryta dolna nawigacja w pełnym ekranie kamery, żeby nie zasłaniała obrazu. */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary):has(#stage:fullscreen,#stage.fakeFull) body #app #mobileTabBar{display:none}
@@ -280,3 +279,8 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view=
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app #mobileEventsWorkspace::before{position:absolute;top:14px;left:14px;right:14px;margin:0!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileTabBar button{font-size:10.5px!important;letter-spacing:-.01em;padding:6px 0!important;gap:2px!important}
 @media (max-width:359px){html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileTabBar button{font-size:9.5px!important}}
+@media (orientation:landscape) and (max-height:500px){
+  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileTabBar{padding-top:4px;padding-bottom:calc(4px + env(safe-area-inset-bottom))}
+  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileTabBar button{min-height:40px;flex-direction:row;gap:6px!important}
+  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app{padding-bottom:calc(56px + env(safe-area-inset-bottom))!important}
+}
