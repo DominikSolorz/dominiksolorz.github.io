@@ -196,7 +196,7 @@ public final class MainActivity extends ComponentActivity {
                     byte[] buffer=new byte[4096]; int count; while((count=stream.read(buffer))!=-1) bytes.write(buffer,0,count);
                     html=new String(bytes.toByteArray(),StandardCharsets.UTF_8);
                 }
-                web.loadDataWithBaseURL(NavigationPolicy.view(route),html,"text/html","UTF-8",null);
+                web.loadDataWithBaseURL(NavigationPolicy.view(route),html,"text/html","UTF-8",NavigationPolicy.view(route));
             } catch(IOException failed) { showError(); }
         } else web.loadUrl(NavigationPolicy.view(route));
     }

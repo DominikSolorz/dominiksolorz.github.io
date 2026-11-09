@@ -275,6 +275,7 @@ public class MobileEmulatorTest {
             scenario.onActivity(a -> ((WebView)a.findViewById(R.id.ownerWeb)).getWebChromeClient()
                 .onGeolocationPermissionsShowPrompt("https://foreign.example", (origin,allow,retain) -> answer.set(allow)));
             assertEquals(Boolean.FALSE, answer.get());
+            scenario.onActivity(a -> assertTrue("Fixture must expose the trusted panel URL", NavigationPolicy.isPanel(((WebView)a.findViewById(R.id.ownerWeb)).getUrl())));
             assertEquals(android.content.pm.PackageManager.PERMISSION_DENIED,
                 context.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION));
             answer.set(null);
