@@ -225,3 +225,14 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view=
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar{align-self:start!important;flex:0 0 auto!important;justify-content:flex-start!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar>*{flex:0 0 auto!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .ctrlBtns{grid-auto-rows:auto!important;align-items:stretch!important}
+/* Nagrania bez połączenia: zamiast dwóch pustych pasków jeden czytelny komunikat. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #dvrCard:empty{min-height:0!important;box-sizing:border-box!important;width:auto!important;max-width:calc(100% - 32px)!important;margin:0 16px 12px!important;padding:22px 18px!important;border:1px dashed var(--ma-line)!important;border-radius:16px!important;background:var(--ma-card)!important;text-align:center}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #dvrCard:empty::before{content:"Archiwum nagrań pojawi się po połączeniu z komputerem nagrywającym.";display:block;color:var(--ma-muted);font-size:13.5px;line-height:1.55}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #dvrListCard:empty{display:none!important}
+/* Szczegóły zdarzenia i przycisk folderu w kolorach panelu. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .eventWorkspaceDetail{background:var(--ma-card)!important;border:1px solid var(--ma-line)!important;border-radius:16px!important;color:var(--ma-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .eventWorkspaceDetail p{color:var(--ma-muted)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileChooseComputerFolder{background:linear-gradient(180deg,rgba(47,107,255,.26),rgba(47,107,255,.12))!important;border:1px solid rgba(91,140,255,.55)!important;color:#fff!important;border-radius:12px!important;min-height:46px!important;font-weight:600!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileCameraInfo{background:var(--ma-card)!important;border:1px solid var(--ma-line)!important;border-radius:16px!important;color:var(--ma-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileCameraInfo .mobileCameraInfoToggle{background:rgba(47,107,255,.16)!important;border:1px solid rgba(91,140,255,.5)!important;color:#fff!important;border-radius:10px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #audioHud{border-radius:16px!important;border-color:var(--ma-line)!important;background:var(--ma-card)!important}
