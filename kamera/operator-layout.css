@@ -454,3 +454,31 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(input,se
   html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader h1{font-size:19px!important}
   html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader>:is(#deviceLayoutBtn,.mobileRelease summary){min-width:42px!important;min-height:42px!important}
 }
+
+/* ================= Komputer: sterowanie i ustawienia mieszczą się na ekranie ================= */
+@media (min-width:1100px){
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen .controlDeviceDock{grid-column:2!important;grid-row:1 / span 2!important;align-self:start}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen .controlPreview{grid-column:1!important;grid-row:1!important;max-height:max(320px,calc(100dvh - 330px));aspect-ratio:16 / 9;height:auto!important;min-height:0!important}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen #ctrlBar{grid-column:1!important;grid-row:2!important;align-self:start}
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen #ctrlBar{display:flex!important;align-items:center!important;gap:16px!important;flex-wrap:wrap!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen #ctrlBar .ctrlBtns{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;flex:1 1 420px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen #ctrlBar :is(#ctrlStart,#ctrlStop,.ctrl){min-height:48px!important}
+/* Ustawienia: menu kategorii zostaje widoczne przy przewijaniu; pomoc pod ustawieniami w węższym oknie. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsScreen .desktopSettingsTabs{position:sticky;top:76px;align-self:start}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsScreen .desktopSettingsTabs button{justify-content:flex-start;gap:10px;text-align:left}
+@media (max-width:1279px){
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsGrid .desktopSettingsControls{grid-row:1!important}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsGrid .settingsHelp{grid-row:2!important}
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsScreen :is(select,input:not([type=checkbox]):not([type=radio]):not([type=range])){max-width:100%;box-sizing:border-box}
+@media (min-width:900px) and (max-width:1099px){
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen{display:grid!important;grid-template-columns:minmax(0,1fr) 280px!important;grid-template-rows:auto auto 1fr!important;gap:14px!important;align-items:start}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen>header{grid-column:1 / -1}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen .controlWorkspace{display:contents!important}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen .controlPreview{grid-column:1!important;grid-row:2!important;aspect-ratio:16 / 9;height:auto!important;min-height:0!important;max-height:max(280px,calc(100dvh - 330px))}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen .controlDeviceDock{grid-column:2!important;grid-row:2 / span 2!important}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen #ctrlBar{grid-column:1!important;grid-row:3!important}
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .eventWorkspaceDetail{background:var(--pl-panel)!important;border:1px solid var(--pl-line2)!important;border-radius:var(--pl-radius-sm)!important;color:var(--pl-text)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .eventWorkspaceDetail p{color:var(--pl-muted)!important}
