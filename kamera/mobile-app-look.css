@@ -195,3 +195,33 @@ html.mobileOwnerMode body #app #mobileOverview .mobileOverviewActions .mobileMap
 .mobileMapWipe{width:100%;min-height:44px;margin-top:8px;border-radius:12px;border:1px solid rgba(248,113,113,.6);background:rgba(248,113,113,.1);color:#fca5a5;font-weight:700}
 /* Globalna reguła svg{width:26px} nie może zmniejszać warstwy wektorowej mapy (pozycja, trasy) */
 .mobileMapCanvas .leaflet-pane svg{width:auto;height:auto;max-width:none}
+
+/* ===== Ustawienia na telefonie: jeden przycisk powrotu, równe marginesy, zwarte sterowanie ===== */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #deviceLayoutBtn:not(.settingsAbout){display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome{padding:0 16px 24px!important;box-sizing:border-box!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsTitle{margin:4px 0 20px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .mobileSettingCategories button{min-height:66px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsAbout{
+  align-items:center!important;min-height:58px!important;margin-top:10px!important;padding:14px 16px!important;
+  border:1px solid var(--ma-line)!important;border-radius:16px!important;background:var(--ma-card)!important;color:var(--ma-text)!important;font-size:14px!important;font-weight:600!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsAbout+.settingsAbout{margin-top:10px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsAbout>span{color:var(--ma-muted)!important;font-size:18px}
+/* W kategorii ustawień zostaje tylko „← Kategorie ustawień”, w tym samym stylu co powrót do pulpitu. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"]:not([data-mobile-settings="root"]):not([data-mobile-settings=""]) #app #mobileBackHome{display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileSettingsBack{
+  width:auto!important;max-width:calc(100% - 32px)!important;min-height:44px!important;margin:6px 16px 16px!important;padding:10px 14px!important;
+  border:1px solid var(--ma-line)!important;border-radius:12px!important;background:var(--ma-card)!important;color:var(--ma-text)!important;
+  font:inherit!important;font-size:14px!important;text-align:left!important;box-shadow:none!important}
+/* Karty ustawień wyrównane do tych samych 16 px co reszta ekranu. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] #app .mainCol>:is(.card,#setCard,#ctrlBar,section.card){margin-inline:16px!important;width:auto!important;max-width:calc(100% - 32px)!important;box-sizing:border-box!important}
+/* Sterowanie: zegar i trzy przyciski w zwartym układzie zamiast kolumn na pół ekranu. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar{padding:16px!important;height:auto!important;min-height:0!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .recClock{width:auto!important;height:auto!important;min-height:0!important;aspect-ratio:auto!important;margin:0!important;padding:12px 14px!important;border-radius:14px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:12px!important;margin-bottom:14px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .ctrlBtns{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;height:auto!important;min-height:0!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .ctrlBtns .ctrl{height:auto!important;min-height:72px!important;max-height:96px!important;padding:10px 6px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;border-radius:14px!important;font-size:14px!important;line-height:1.2!important;white-space:normal!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .ctrlBtns .ctrl small{font-size:10.5px!important;line-height:1.25!important;opacity:.85}
+/* Pola i suwaki w ustawieniach nie wychodzą poza kartę. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] #app :is(select,input:not([type=checkbox]):not([type=radio]),textarea){max-width:100%!important;min-width:0!important;box-sizing:border-box!important;text-overflow:ellipsis}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar{align-self:start!important;flex:0 0 auto!important;justify-content:flex-start!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar>*{flex:0 0 auto!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .ctrlBtns{grid-auto-rows:auto!important;align-items:stretch!important}
