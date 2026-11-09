@@ -59,6 +59,7 @@ if (isMobileOwnerApp) {
       <button type="button" data-open-mobile-view="updates">Aktualizacje i wersja <span>›</span></button>
       <button type="button" data-open-mobile-view="playback">Mini-okno kamery <span>›</span></button>
       <a href="https://dominiksolorz.github.io/kamera/dokumenty.html" target="_blank" rel="noopener">Instrukcja i dokumenty ↗</a>
+      <a href="https://dominiksolorz.github.io/kamera/usun-konto.html" target="_blank" rel="noopener">Usuń konto i dane ↗</a>
     </div><div class="mobileAccountOptions"></div>`);
   const updatesPage = makePage('mobileUpdatesPage','Aktualizacje','Sprawdź dostępność nowej wersji panelu.',
     '<p id="mobileBuild"></p><button type="button" data-web-update>Sprawdź aktualizacje</button><p id="mobileUpdateStatus" role="status" aria-live="polite"></p><button type="button" data-open-project-gallery>Projekty interfejsu</button>');

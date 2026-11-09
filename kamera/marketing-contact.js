@@ -58,5 +58,10 @@ if(form){
   const chosenTopic=typeof URLSearchParams!=='undefined' && typeof location!=='undefined' ? new URLSearchParams(location.search).get('temat') : null;
   if(chosenTopic==='produkt' && !form.elements.namedItem('message').value)
     form.elements.namedItem('topic').value='Produkt i współpraca';
+  if(chosenTopic==='usuniecie-konta'){
+    form.elements.namedItem('topic').value='Konto i dostęp';
+    const text=form.elements.namedItem('message');
+    if(text&&!text.value)text.value='Proszę o usunięcie mojego konta HOME SECURITY i danych z nim powiązanych. Adres e-mail konta podaję w polu powyżej.';
+  }
   submit.disabled=false;
 }
