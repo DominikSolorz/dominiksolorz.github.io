@@ -473,7 +473,7 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettings
 }
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsScreen :is(select,input:not([type=checkbox]):not([type=radio]):not([type=range])){max-width:100%;box-sizing:border-box}
 @media (min-width:900px) and (max-width:1099px){
-  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen{display:grid!important;grid-template-columns:minmax(0,1fr) 280px!important;grid-template-rows:auto auto 1fr!important;gap:14px!important;align-items:start}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen:not([hidden]){display:grid!important;grid-template-columns:minmax(0,1fr) 280px!important;grid-template-rows:auto auto 1fr!important;gap:14px!important;align-items:start}
   html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen>header{grid-column:1 / -1}
   html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen .controlWorkspace{display:contents!important}
   html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopControlsScreen .controlPreview{grid-column:1!important;grid-row:2!important;aspect-ratio:16 / 9;height:auto!important;min-height:0!important;max-height:max(280px,calc(100dvh - 330px))}
@@ -482,3 +482,49 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettings
 }
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .eventWorkspaceDetail{background:var(--pl-panel)!important;border:1px solid var(--pl-line2)!important;border-radius:var(--pl-radius-sm)!important;color:var(--pl-text)!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .eventWorkspaceDetail p{color:var(--pl-muted)!important}
+
+/* =====================================================================
+   NOWY UKŁAD GRAFICZNY v2 — komputer i program Windows. Tylko wygląd.
+   ===================================================================== */
+html.desktopMode:not(.policeCommand):not(.usMilitary){
+  --v2-cyan:#2ee6d6;--v2-blue:#3b8bff;--v2-violet:#9b7bff;--v2-amber:#ffb547;--v2-green:#36d399;
+  --v2-panel:#0a1628;--v2-panel2:#0e1d33;--v2-line:rgba(110,170,235,.16);--v2-line2:rgba(110,170,235,.3);--v2-muted:#93a9c4;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body{background:radial-gradient(90% 60% at 70% -10%,#0f2c55 0,rgba(15,44,85,0) 60%),#030a16!important}
+/* Pasek boczny: wyraźna aktywna pozycja z akcentem. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar{background:linear-gradient(180deg,#06101f,#040b17)!important;border-right:1px solid var(--v2-line)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar .desktopBrand b{letter-spacing:.08em}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar .desktopBrand small{color:var(--v2-muted)!important;letter-spacing:.12em}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar [data-desktop-view]{position:relative;border-radius:12px!important;transition:background .15s,border-color .15s}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar [data-desktop-view]>i{display:grid!important;place-items:center;width:36px;height:36px;border-radius:10px;background:rgba(59,139,255,.08);border:1px solid var(--v2-line);color:#a9c4e6}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar [data-desktop-view].active{background:linear-gradient(90deg,rgba(46,230,214,.14),rgba(59,139,255,.08))!important;border-color:rgba(46,230,214,.4)!important;color:#fff!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar [data-desktop-view].active>i{background:rgba(46,230,214,.16);border-color:rgba(46,230,214,.5);color:var(--v2-cyan)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar [data-desktop-view].active::before{content:"";position:absolute;left:-12px;top:10px;bottom:10px;width:3px;border-radius:3px;background:var(--v2-cyan);box-shadow:0 0 12px var(--v2-cyan)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar .desktopDevice{border-radius:14px!important;border:1px solid var(--v2-line)!important;background:var(--v2-panel)!important}
+/* Górny pasek: stan transmisji jako pigułka, zaokrąglone wyszukiwanie. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar{background:rgba(3,10,22,.86)!important;backdrop-filter:blur(14px);border-bottom:1px solid var(--v2-line)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar #topStatus{border-radius:999px!important;padding:7px 14px!important;border:1px solid var(--v2-line2)!important;background:var(--v2-panel)!important;font-weight:600}
+/* Nagłówek strony: baner z nocnym zdjęciem domu. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext{
+  position:relative;overflow:hidden;min-height:112px;padding:22px 24px!important;margin-bottom:18px!important;border-radius:20px!important;align-items:flex-end!important;
+  border:1px solid var(--v2-line2)!important;box-sizing:border-box;
+  background:linear-gradient(90deg,rgba(3,10,22,.95) 0,rgba(3,10,22,.75) 45%,rgba(3,10,22,.25) 100%),url("assets/site-hero-dom.webp") 75% 42%/cover no-repeat!important;
+  box-shadow:0 30px 60px -36px rgba(46,120,255,.55)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext h1{font-size:30px!important;font-weight:800!important;letter-spacing:-.02em;text-shadow:0 2px 14px rgba(0,0,0,.6)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext p{color:var(--v2-cyan)!important;font-size:11px!important;font-weight:700!important;letter-spacing:.14em!important;text-transform:uppercase}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext p a{color:inherit!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions :is(button,span,a){border-radius:12px!important;background:rgba(10,22,40,.82)!important;border:1px solid var(--v2-line2)!important;backdrop-filter:blur(8px)}
+/* Kafelek kamery: szklany nagłówek, zegar pod nagłówkiem (nie jest już zasłonięty). */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopCameraTile{border-radius:20px!important;border:1px solid var(--v2-line2)!important;box-shadow:0 30px 60px -34px rgba(0,0,0,.95),0 0 0 1px rgba(46,230,214,.06)!important;overflow:hidden}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopCameraTile #stage .monitorClock{top:66px!important;z-index:14!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer{border-radius:20px!important;border:1px solid var(--v2-line2)!important;background:linear-gradient(180deg,var(--v2-panel2),var(--v2-panel))!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer>summary{border-bottom:1px solid var(--v2-line)!important}
+/* Karty podsumowania: kolorowe ikony jak w nowym telefonie. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary{gap:14px!important;border:0!important;background:none!important;box-shadow:none!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary>article{--chip:var(--v2-cyan);border-radius:18px!important;border:1px solid var(--v2-line)!important;background:linear-gradient(180deg,var(--v2-panel2),var(--v2-panel))!important;box-shadow:0 20px 40px -28px rgba(0,0,0,.9)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary>article:nth-child(2){--chip:var(--v2-violet)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary>article:nth-child(3){--chip:var(--v2-blue)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary>article>:first-child:not(div){color:var(--chip)!important;background:color-mix(in srgb,var(--chip) 14%,transparent)!important;border:1px solid color-mix(in srgb,var(--chip) 40%,transparent)!important;border-radius:12px!important}
+/* Wszystkie karty ekranów w jednym stylu. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(.desktopControlsScreen #ctrlBar,.controlDeviceDock .card,.desktopSettingsScreen,.desktopEventsScreen,.desktopDiagnosticsScreen,.eventWorkspace){border-radius:18px!important;border-color:var(--v2-line)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsTabs button.active{background:linear-gradient(90deg,rgba(46,230,214,.14),rgba(59,139,255,.08))!important;border-color:rgba(46,230,214,.4)!important}
