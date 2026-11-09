@@ -280,7 +280,13 @@ public class MobileEmulatorTest {
             answer.set(null);
             scenario.onActivity(a -> ((WebView)a.findViewById(R.id.ownerWeb)).getWebChromeClient()
                 .onGeolocationPermissionsShowPrompt(NavigationPolicy.ORIGIN, (origin,allow,retain) -> { assertFalse(retain); answer.set(allow); }));
-            UiObject2 deny = device.wait(Until.findObject(By.res("com.android.permissioncontroller", "permission_deny_button")),10000);
+            UiObject2 deny = device.wait(Until.findObject(By.res(java.util.regex.Pattern.compile("(?:com\\.android|com\\.google\\.android)\\.permissioncontroller:id/permission_deny_button"))),10000);
+            if (deny == null) {
+                java.io.ByteArrayOutputStream hierarchy = new java.io.ByteArrayOutputStream();
+                device.dumpWindowHierarchy(hierarchy);
+                System.out.println("LOCATION_PERMISSION_UI="+hierarchy.toString("UTF-8"));
+                System.out.println("LOCATION_PERMISSION_RESULT="+answer.get());
+            }
             assertNotNull("Android must ask for location permission", deny);
             deny.click(); waitFor(() -> answer.get()!=null,10000);
             assertEquals(Boolean.FALSE, answer.get());
