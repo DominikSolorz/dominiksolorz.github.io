@@ -851,7 +851,7 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverv
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewCard.hsPhoneHero::before,html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewCard.hsPhoneHero::after{content:none!important;display:none!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneHero h2{font-size:26px!important;max-width:none!important;text-shadow:none!important}
 html.mobileOwnerMode body #app #mobileOverview .hsPhoneHero p{margin:3px 0 0;color:var(--hp-muted);font-size:14px}
-html.mobileOwnerMode body #app .hsPhonePill{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px 0 6px;border-radius:12px;border:1px solid rgba(52,211,153,.45);background:rgba(16,80,60,.45);color:#eafff6;font:700 13.5px/1 inherit;flex:none;white-space:nowrap}
+html.mobileOwnerMode body #app .hsPhonePill{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px 0 6px;border-radius:12px;border:1px solid rgba(52,211,153,.45);background:rgba(16,80,60,.45);color:#eafff6;font-weight:700;font-size:13.5px;line-height:1;flex:none;white-space:nowrap}
 html.mobileOwnerMode body #app .hsPhonePill[data-tone="off"]{border-color:rgba(251,191,36,.45);background:rgba(80,60,16,.4);color:#fff3d6}
 html.mobileOwnerMode body #app .hsPhonePill[data-tone="live"]{border-color:rgba(56,189,248,.45);background:rgba(16,60,90,.45);color:#e8f7ff}
 html.mobileOwnerMode body #app .hsPhonePill .hsShield{display:grid;place-items:center;width:28px;height:28px;color:var(--hp-green)}
