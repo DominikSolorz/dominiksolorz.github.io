@@ -1,5 +1,5 @@
 /* Marketing only: never styles or controls the authenticated camera workspace. */
-#publicHome.mktSite,.marketingPage{--m-bg:#0a0e1a;--m-surface:#13151b;--m-line:#2b2e38;--m-text:#f4f3ef;--m-muted:#aaaeb9;--m-blue:#6366f1;--m-red:#e52b46;--m-gold:#d9b975;background:var(--m-bg)!important;color:var(--m-text);font-family:Segoe UI,system-ui,sans-serif;line-height:1.65;color-scheme:dark}
+#publicHome.mktSite,.marketingPage{--m-bg:#0b0c10;--m-surface:#13151b;--m-line:#2b2e38;--m-text:#f4f3ef;--m-muted:#aaaeb9;--m-red:#e52b46;--m-gold:#d9b975;background:var(--m-bg)!important;color:var(--m-text);font-family:Segoe UI,system-ui,sans-serif;line-height:1.65;color-scheme:dark}
 .marketingPage{margin:0}
 .mktSite *,.marketingPage *{box-sizing:border-box}
 .mktSite [hidden],.marketingPage [hidden]{display:none!important}
