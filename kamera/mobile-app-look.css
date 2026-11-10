@@ -1043,3 +1043,14 @@ html:not(.desktopMode) :is(.mobileTile,.cameraCard,.eventCard,.settingsCard){
 @media (prefers-reduced-motion:reduce){
  html:not(.desktopMode) *{transition-duration:.01ms!important;animation-duration:.01ms!important}
 }
+
+
+/* HOME SECURITY reference direction: mobile owner shell */
+html.mobileOwnerMode #app{background:radial-gradient(640px 300px at 50% -8%,rgba(18,74,105,.3),transparent 68%),#050a14;color:#eefbff}
+html.mobileOwnerMode #app :is(.mobileAppHeader,.mobileBottomNav,.mobileNav,.mobileSettingCategories){background:rgba(7,16,30,.96);border-color:rgba(113,171,198,.3);backdrop-filter:blur(16px)}
+html.mobileOwnerMode #app :is(.card,.panel,#setCard,.mobileCameraCard,.mobileRecordingCard){background:linear-gradient(155deg,rgba(15,29,49,.98),rgba(7,16,30,.98));border-color:rgba(113,171,198,.34);box-shadow:0 16px 34px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.035)}
+html.mobileOwnerMode #app :is(.mobileBottomNav button.active,.mobileNav button.active,.mobileSettingCategories button.active){color:#f3fffd;background:linear-gradient(135deg,rgba(57,230,211,.2),rgba(22,53,83,.92));border-color:rgba(57,230,211,.58);box-shadow:inset 0 -3px var(--hs-cyan),0 0 22px rgba(57,230,211,.08)}
+html.mobileOwnerMode #app :is(.btn.primary,.dvrBtn.on){background:linear-gradient(135deg,#2ad7c4,#1593b2);border-color:#6af4e6;color:#031018}
+html.mobileOwnerMode #app :is(.mobileAppHeader h1,.mobilePageTitle,h1,h2){letter-spacing:-.025em}
+html.mobileOwnerMode #app .stage{border-color:rgba(57,230,211,.46);box-shadow:0 0 0 1px rgba(57,230,211,.1),0 16px 34px rgba(0,0,0,.32)}
+@media(max-width:760px){html.mobileOwnerMode #app{padding-bottom:calc(76px + env(safe-area-inset-bottom))}html.mobileOwnerMode #app :is(.mobileBottomNav,.bottomNav){padding-bottom:max(8px,env(safe-area-inset-bottom))}}
