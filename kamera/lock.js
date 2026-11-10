@@ -50,7 +50,6 @@ export function requireAccess({bindRemote} = {}) {
       else if (k === "ok") return submit();
       else if (pin.length < 12) pin += k;
       msg.textContent = ""; render();
-      if (pin.length === 6) submit();
     }
     function onKey(e) {
       if (/^\d$/.test(e.key)) press(e.key);
