@@ -81,3 +81,63 @@ html.mobileOwnerMode .mobileFunctionPage .deviceLayoutCard { background: linear-
 html.mobileOwnerMode .mobileFunctionPage button[data-ui-mode] { min-height: 58px; background: rgba(9, 26, 46, .82); color: var(--hs-v-text); }
 html.mobileOwnerMode .mobileFunctionPage button[data-ui-mode]:focus-visible, html.mobileOwnerMode .mobileFunctionPage button[data-ui-mode]:hover { background: linear-gradient(135deg, rgba(78,141,255,.42), rgba(84,215,242,.24)); }
 html.mobileOwnerMode .eventsCard .events > li { border-color: var(--hs-v-line); border-radius: 14px; background: rgba(9, 24, 43, .55); }
+
+/* Reference layout: command-centre desktop and compact owner phone. */
+html.desktopMode #layout {
+  grid-template-columns: 188px minmax(0, 1fr) 290px;
+  gap: 18px;
+  align-items: start;
+}
+html.desktopMode .desktopSidebar {
+  position: sticky;
+  top: 18px;
+  min-height: calc(100vh - 64px);
+  background: linear-gradient(180deg, rgba(12, 30, 54, .98), rgba(5, 14, 28, .96));
+}
+html.desktopMode .desktopSidebar::before {
+  content: "HOME\A SECURITY";
+  white-space: pre;
+  display: block;
+  padding: 8px 12px 22px;
+  color: #f4f8ff;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: .02em;
+}
+html.desktopMode .mainCol { min-width: 0; }
+html.desktopMode #stage { min-height: 360px; }
+html.desktopMode .sideCol { min-width: 0; }
+html.desktopMode :is(.cardHead, .panelHead) { gap: 12px; }
+html.desktopMode :is(.cardHead, .panelHead) h2 { font-size: 17px; }
+html.desktopMode #ctrlBar { background: rgba(7, 20, 38, .92); border: 1px solid var(--hs-v-line); }
+
+html.mobileOwnerMode body { overflow-x: hidden; }
+html.mobileOwnerMode #layout { width: 100%; max-width: 520px; margin-inline: auto; box-sizing: border-box; }
+html.mobileOwnerMode .mobileAppHeader { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(18px); }
+html.mobileOwnerMode .mobileAppHeader::after {
+  content: "NA ŻYWO";
+  margin-left: auto;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(22, 177, 130, .18);
+  color: var(--hs-v-green);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .08em;
+}
+html.mobileOwnerMode #stage { min-height: 210px; }
+html.mobileOwnerMode :is(.cardHead, .panelHead) h2 { font-size: 16px; }
+html.mobileOwnerMode .mobileBottomNav { position: fixed; left: 10px; right: 10px; bottom: max(8px, env(safe-area-inset-bottom)); border: 1px solid rgba(84, 215, 242, .28); border-radius: 20px; backdrop-filter: blur(18px); }
+html.mobileOwnerMode .mobileBottomNav button, html.mobileOwnerMode .mobileBottomNav a { min-height: 54px; }
+
+@media (min-width: 901px) {
+  html.desktopMode #layout > .mainCol { grid-column: 2; }
+  html.desktopMode #layout > .sideCol { grid-column: 3; }
+}
+
+@media (max-width: 900px) {
+  html.desktopMode #layout { display: block; max-width: 620px; padding-inline: 12px; }
+  html.desktopMode .desktopSidebar { display: none; }
+  html.desktopMode .sideCol { margin-top: 14px; }
+}
