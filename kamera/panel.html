@@ -431,8 +431,10 @@
         <video id="video" autoplay playsinline muted></video>
         <div role="group" id="audioHud" class="audioHud" aria-label="Odsłuch z kamery">
           <button class="audioListenBtn" id="soundBtn" type="button" aria-pressed="false" title="Włącz odsłuch z mikrofonu kamery">🔊 Włącz odsłuch</button>
+          <button class="audioListenBtn talkbackBtn" id="talkbackBtn" type="button" aria-pressed="false" hidden>🎙 Rozmawiaj z komputerem</button>
           <div class="audioVolume"><label for="listenVolume">Głośność</label><input id="listenVolume" type="range" min="0" max="100" value="100" step="1" aria-label="Głośność odsłuchu"><output id="listenVolumeLabel" for="listenVolume">100%</output></div>
           <span id="listenState" class="listenState" role="status">Odsłuch wyłączony</span>
+          <span id="talkbackState" class="listenState" role="status"></span>
         </div>
         <div id="zoomBar" class="zoomBar" hidden>
           <button id="zoomOut" aria-label="Oddal">−</button>
@@ -700,3 +702,4 @@
 <script type="module" src="panel-entry.mjs?v=4"></script>
 </body>
 </html>
+
