@@ -150,8 +150,8 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
         <button type="submit">Szukaj</button>
       </form>
       <div class="mobileMapRow">
-        <button type="button" class="mobileMapPlaces">Firmy w tym obszarze</button>
-        <button type="button" class="mobileMapFollow" aria-pressed="true">Śledź mnie: wł.</button>
+        <button type="button" class="mobileMapPlaces">⌕ Firmy w tym obszarze</button>
+        <button type="button" class="mobileMapFollow" aria-pressed="true">◎ Śledzę Twoją pozycję</button>
         <button type="button" class="mobileMapRecord" aria-pressed="false" hidden>Zapis trasy: wył.</button>
         <button type="button" class="mobileMapHistory" hidden>Historia tras (24 h)</button>
       </div>
@@ -174,7 +174,7 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
   let session = 0, watchId = null, map = null, me = null, accuracy = null, markers = null, here = null, follow = true, recording = false, routes = null;
 
   const syncFollow = () => {
-    followBtn.textContent = follow ? 'Śledź mnie: wł.' : 'Śledź mnie: wył.';
+    followBtn.textContent = follow ? '◎ Śledzę Twoją pozycję' : '◎ Wróć do mojej pozycji';
     followBtn.setAttribute('aria-pressed', String(follow));
   };
 
@@ -250,7 +250,7 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
       });
       const links = doc.createElement('span');
       links.className = 'mobileMapLinks';
-      for (const [label, href] of [['Prowadź', directionsUrl(place)], ['Zdjęcia i opinie', placeSearchUrl(place)]]) {
+      for (const [label, href] of [['➜ Prowadź', directionsUrl(place)], ['Zdjęcia i opinie ↗', placeSearchUrl(place)]]) {
         const a = doc.createElement('a');
         a.href = href;
         a.target = '_blank';

@@ -362,3 +362,30 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSetti
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app #stage:not(:fullscreen):not(.fakeFull){border-radius:20px!important;border:1px solid var(--v2-line2)!important;box-shadow:0 26px 50px -26px rgba(0,0,0,.9),0 0 0 1px rgba(46,230,214,.08)!important;overflow:hidden}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.workspaceToolbar label,.workspaceToolbar button,.workspaceToolbar select,.workspaceToolbar input){border-radius:12px!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mainCol :is(h2,h3){letter-spacing:-.01em}
+
+/* Cofanie podglądu: „⟲ 5 min wstecz” na obrazie kamery (telefon, komputer, pełny ekran).
+   Pokazywane dopiero, gdy odtwarzacz nagrań jest gotowy (dvr-ui.js zdejmuje hidden). */
+html #stage #liveRewind:not([hidden]){position:absolute;left:12px;bottom:12px;z-index:6;display:flex;gap:6px;align-items:center;flex-wrap:wrap;max-width:calc(100% - 24px);pointer-events:auto}
+html #stage #liveRewind button{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid rgba(140,190,255,.35);background:rgba(4,10,22,.72);color:#eaf2ff;font:600 13px/1 var(--pl-sans,system-ui,sans-serif);letter-spacing:.01em;cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 4px 14px rgba(0,0,0,.35)}
+html #stage #liveRewind button:hover{background:rgba(20,44,86,.85);border-color:rgba(160,205,255,.6)}
+html #stage #liveRewind button:focus-visible{outline:2px solid #5b8cff;outline-offset:2px}
+html #stage #liveRewind .liveRewindMain{background:linear-gradient(135deg,rgba(47,107,255,.92),rgba(30,211,228,.82));border-color:transparent;color:#fff;min-height:40px;padding:0 16px;font-size:14px}
+html #stage #liveRewind .liveRewindMain:hover{filter:brightness(1.08)}
+@media (max-width:430px){html #stage #liveRewind:not([hidden]){left:8px;bottom:8px;gap:4px}html #stage #liveRewind button{min-height:34px;padding:0 10px;font-size:12px}html #stage #liveRewind .liveRewindMain{min-height:38px;padding:0 13px;font-size:13px}}
+
+/* Sterowanie zapisem: równe, duże przyciski; Restart wyróżniony bursztynem (telefon i komputer). */
+html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .ctrl{min-height:52px;min-width:0}
+html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .ctrl small{white-space:normal}
+html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar #ctrlRestart:not(:disabled){border-color:rgba(251,191,36,.55)!important;background:linear-gradient(180deg,rgba(251,191,36,.16),rgba(251,191,36,.06))!important;color:#fde68a!important}
+html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar #ctrlRestart:not(:disabled):hover{border-color:rgba(251,191,36,.85)!important;background:rgba(251,191,36,.22)!important}
+
+/* Mapa: po zgodzie na lokalizację zajmuje cały ekran telefonu, większa mapa i wyraźny stan śledzenia. */
+@media (max-width:600px){
+  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])){width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0;padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom))}
+  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapText{font-size:13px;margin-bottom:8px}
+  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapCanvas{height:max(260px,calc(100dvh - 300px - env(safe-area-inset-top) - env(safe-area-inset-bottom)))}
+  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapActions{position:sticky;bottom:0;padding-top:8px;background:linear-gradient(180deg,rgba(11,22,38,0),#0b1626 30%)}
+}
+.mobileMapRow .mobileMapFollow[aria-pressed="true"]{background:linear-gradient(90deg,#1e90ff,#14b8d4);border-color:transparent;color:#fff}
+.mobileMapResults li{background:rgba(20,44,72,.45)}
+.mobileMapLinks a:first-child{background:linear-gradient(90deg,#1e90ff,#14b8d4);border-color:transparent;color:#fff}

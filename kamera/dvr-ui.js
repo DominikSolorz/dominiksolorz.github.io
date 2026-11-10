@@ -43,12 +43,12 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
   // Prawy klik na obrazie otwiera pełne archiwum. To te same działające elementy,
   // więc w oknie jest prawdziwy obraz kamery/odtwarzacz i prawdziwy pasek doby.
   function openArchive() {
-    if (archiveModal) return;
+    if (archiveModal) return Promise.resolve();
     restoreStage = document.createComment("kamera-stage");
     restoreDvr = document.createComment("kamera-dvr");
     stage.before(restoreStage); root.before(restoreDvr);
     if (listRoot) { restoreList = document.createComment("kamera-dvr-list"); listRoot.before(restoreList); }
-    const closeBtn = el("button", { className: "archiveClose", type: "button", textContent: "← Wróć do kamery na żywo", onclick: () => closeArchive() });
+    const closeBtn = el("button", { className: "archiveClose", type: "button", textContent: "● Wróć na żywo", onclick: () => closeArchive() });
     const hint = el("p", { className: "archiveHint", textContent: "Wybierz dzień i nagranie. Kolorowe odcinki na osi czasu oznaczają dostępny zapis. Kamera i nagrywanie działają niezależnie od tego widoku." });
     const body = el("div", { className: "archiveModalBody" });
     body.append(stage, root);
@@ -65,7 +65,7 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
     document.body.append(archiveModal); document.body.classList.add("archiveOpen"); closeBtn.focus();
     stage.hidden = false;
     progressBadge.hidden = false; progressBadge.textContent = "Wybierz nagranie lub dzień. Otwarcie archiwum nie zmienia stanu kamery ani zapisu.";
-    refresh().then(() => {
+    return refresh().then(() => {
       const latest = files.filter(f => !f.recording).at(-1);
       if (latest) {latestButton.hidden=false;progressBadge.hidden=false;progressBadge.textContent='Archiwum gotowe. Wybierz nagranie — plik zostanie wczytany dopiero po naciśnięciu odtwarzania.';}
       else { progressBadge.hidden = false; progressBadge.textContent = "Brak zamkniętych nagrań z wybranego dnia. Wybierz inny dzień."; }
@@ -88,6 +88,29 @@ export function mountDvr({ client, drive, allowUpload = true, removeRecording=nu
   document.addEventListener("keydown", e => { if (e.key === "Escape" && archiveModal) closeArchive(); });
   document.addEventListener("hs-open-recordings", openArchive);
   document.addEventListener("hs-close-recordings",closeArchive);
+  // „Co było przed chwilą”: otwiera archiwum od wskazanej chwili. Tylko zapisane,
+  // zamknięte pliki — bieżący fragment jest dostępny dopiero po jego zamknięciu.
+  async function openAt(at){
+    if(!Number.isFinite(at))return;
+    await openArchive();
+    const targetDay=dayKey(new Date(at));
+    if(targetDay!==day)await setDay(targetDay,true);
+    cursor=at;draw();
+    const f=fileAt(at);
+    if(f&&!f.recording){latestButton.hidden=true;await play(f,at-f.start);return;}
+    progressBadge.hidden=false;
+    progressBadge.textContent=f?.recording
+      ?`Fragment z ${hms(at)} jest jeszcze zapisywany na komputerze. Będzie do obejrzenia po zamknięciu pliku. Możesz odtworzyć ostatnie gotowe nagranie.`
+      :`Brak nagrania z ${hms(at)}. Cofanie działa tylko wtedy, gdy komputer z kamerą nagrywa.`;
+    latestButton.hidden=!files.some(x=>!x.recording);
+  }
+  document.addEventListener("hs-open-recordings-at",e=>{void openAt(Number(e.detail?.at));});
+  const rewindBar=document.getElementById("liveRewind");
+  if(rewindBar){
+    rewindBar.hidden=false;
+    rewindBar.addEventListener("click",e=>{const b=e.target.closest("[data-rewind-minutes]");if(!b)return;e.stopPropagation();void openAt(Date.now()-Number(b.dataset.rewindMinutes)*60000);});
+    rewindBar.addEventListener("dblclick",e=>e.stopPropagation());
+  }
 
   // ----- układ -----
   const dateInput = el("input", { type: "date", className: "dvrDate", value: day, onchange: () => setDay(dateInput.value) });
