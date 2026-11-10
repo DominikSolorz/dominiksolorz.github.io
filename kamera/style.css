@@ -1012,3 +1012,25 @@ body.mobileOwnerMode{margin:0;min-width:0;width:100%;min-height:100dvh;backgroun
 
 /* Keep the PIN title size while using a correctly nested dialog heading. */
 .pinCard h2{margin:0 0 6px;font-size:24px}
+
+
+/* HOME SECURITY UI polish: shared interaction and responsive states */
+:where(button,a,input,select,summary):focus-visible{outline:3px solid var(--accent2,#a78bfa);outline-offset:3px}
+:where(button,a,.tool,.btn){-webkit-tap-highlight-color:transparent}
+:where(.btn,.tool,.navLink,.audioListenBtn,.dvrBtn){min-height:42px}
+:where(.btn,.tool,.navLink,.audioListenBtn,.dvrBtn):disabled{filter:saturate(.65);}
+.statusPill,.connectionStatus,.recordingStatus{display:inline-flex;align-items:center;gap:7px;min-height:28px;padding:5px 10px;border:1px solid var(--line2);border-radius:999px;background:rgba(7,11,22,.72);font-size:12px;font-weight:700;line-height:1.2}
+.statusPill::before,.connectionStatus::before,.recordingStatus::before{content:"";width:8px;height:8px;flex:none;border-radius:50%;background:var(--muted);box-shadow:0 0 0 3px color-mix(in srgb,var(--muted) 18%,transparent)}
+.statusPill[data-state="online"]::before,.connectionStatus[data-state="online"]::before{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 18%,transparent)}
+.statusPill[data-state="recording"]::before,.recordingStatus[data-state="recording"]::before{background:var(--red);box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 18%,transparent)}
+.statusPill[data-state="offline"]::before,.connectionStatus[data-state="offline"]::before{background:#f59e0b;box-shadow:0 0 0 3px color-mix(in srgb,#f59e0b 18%,transparent)}
+.stage{isolation:isolate}
+.stage .placeholder{background:linear-gradient(180deg,rgba(3,6,13,.18),rgba(3,6,13,.72));backdrop-filter:blur(2px)}
+@media(max-width:760px){
+  main{padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}
+  .stage{border-radius:16px;min-height:clamp(200px,52vw,360px);aspect-ratio:16/10}
+  .toolbar{gap:8px}
+  .toolbar :where(.tool,.btn){min-height:48px;padding-inline:10px}
+  .zoomBar{right:8px;bottom:8px;max-width:calc(100% - 16px);overflow:auto}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
