@@ -1,4 +1,4 @@
-param([string]$Version = '1.4.92')
+param([string]$Version = '1.4.93')
 $ErrorActionPreference = 'Stop'
 if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid release version.' }
 $desktopRoot = $PSScriptRoot
