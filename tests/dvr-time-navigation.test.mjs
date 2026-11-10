@@ -55,3 +55,13 @@ test('DVR controls are attached to the real file player, not to a decorative dem
  assert.match(nav,/NEVER certified forensic frame accuracy/);
  assert.doesNotMatch(dvr,/setInterval\(\(\)=>\{.*currentTime\+=/);
 });
+
+test('live view offers an honest "5 min back" shortcut that opens saved recordings only',async()=>{
+ const [dvr,panel]=await Promise.all([readFile(new URL('../kamera/dvr-ui.js',import.meta.url),'utf8'),readFile(new URL('../kamera/panel.html',import.meta.url),'utf8')]);
+ assert.match(panel,/id="liveRewind"[^>]*hidden/);
+ assert.match(panel,/data-rewind-minutes="5"/);
+ assert.match(dvr,/hs-open-recordings-at/);
+ assert.match(dvr,/rewindBar\.hidden=false/);
+ assert.match(dvr,/Brak nagrania z \$\{hms\(at\)\}/);
+ assert.match(dvr,/jest jeszcze zapisywany/);
+});

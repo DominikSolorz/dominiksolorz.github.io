@@ -12,7 +12,7 @@ import { requireAccess } from "./lock.js?v=22";
 import { createRemoteUnlockHost } from "./remote-unlock-host.mjs?v=2";
 import { mountRemoteUnlockPhone } from "./remote-unlock-phone.mjs?v=2";
 import { createLocationStore } from "./location-history.mjs?v=1";
-import { setLocationStore } from "./mobile-map.mjs?v=4";
+import { setLocationStore } from "./mobile-map.mjs?v=5";
 import { channelFor, lock } from "./access.js?v=21";
 import { createDetector, EVENT_LABEL } from "./detect.js?v=33";
 import { createZoomer, normalize, MAX_ZOOM } from "./zoom.js?v=17";
@@ -26,7 +26,7 @@ import * as diskstore from "./diskstore.js?v=12";
 import { closeRecordingFragment } from './close-recording-fragment.mjs?v=1';
 import { createPictureInPicture } from './picture-in-picture.mjs?v=1';
 import { serve as serveRecordings, createClient as createRecClient } from "./recproto.js?v=34";
-import { mountDvr } from "./dvr-ui.js?v=108";
+import { mountDvr } from "./dvr-ui.js?v=109";
 import { accountClient } from "./auth.js?v=17";
 import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=17";
 import { mountAccountUI } from "./account-ui.mjs?v=3";
@@ -83,7 +83,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "278"; // musi się zgadzać z version.json
+const VERSION = "279"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -2293,7 +2293,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "198";
+  const SERVICE_WORKER_BUILD = "199";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{

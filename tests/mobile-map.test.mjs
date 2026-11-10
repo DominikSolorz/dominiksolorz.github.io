@@ -71,7 +71,7 @@ test('navigation and photo links open Google Maps with the place only',()=>{
 test('Leaflet is served from the same origin and the panel mounts the map',async()=>{
  const [mobile,sw,panel]=await Promise.all(['kamera/mobile.js','kamera/sw.js','kamera/panel.html'].map(read));
  for(const f of ['leaflet.js','leaflet.css','LICENSE','images/marker-icon.png'])await readFile(new URL('../kamera/vendor/leaflet/'+f,import.meta.url));
- assert.ok(mobile.includes('./mobile-map.mjs?v=4')&&mobile.includes('mountLocationMap()'));
- assert.ok(sw.includes('./mobile-map.mjs?v=4'));
- assert.ok(panel.includes('mobile.js?v=41')&&sw.includes('./mobile.js?v=41'));
+ assert.ok(mobile.includes('./mobile-map.mjs?v=5')&&mobile.includes('mountLocationMap()'));
+ assert.ok(sw.includes('./mobile-map.mjs?v=5'));
+ assert.ok(panel.includes('mobile.js?v=42')&&sw.includes('./mobile.js?v=42'));
 });
