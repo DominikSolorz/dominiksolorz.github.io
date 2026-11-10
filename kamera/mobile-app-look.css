@@ -842,3 +842,96 @@ html.mobileOwnerMode body #app #audioHud #talkbackState:not(:empty){order:11;dis
 html #stage:has(#placeholder:not([hidden])) #liveRewind{display:none!important}
 @media (max-width:430px){html #stage #liveRewind:not([hidden]){flex-wrap:nowrap}html #stage #liveRewind button{white-space:nowrap}}
 html.mobileOwnerMode body #app #audioHud #talkbackBtn[aria-pressed="true"]{border-color:#fb7185!important;background:linear-gradient(90deg,rgba(225,29,72,.42),rgba(190,24,93,.3))!important;color:#fff!important}
+/* ===== Projekt „Mój dom” (telefon) ===== */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body{--hp-panel:#0b1729;--hp-panel2:#0e1d33;--hp-line:rgba(120,168,230,.18);--hp-cyan:#22c7ee;--hp-green:#34d399;--hp-amber:#fbbf24;--hp-muted:#93a6c1}
+html.mobileOwnerMode body #app .hsPhoneBell{display:grid;place-items:center;width:44px;height:44px;margin-left:auto;border-radius:13px;border:1px solid var(--hp-line);background:var(--hp-panel);color:#e5eefb;flex:none}
+html.mobileOwnerMode body #app .hsPhoneBell svg{width:22px;height:22px}
+html.mobileOwnerMode body #app .mobileAppHeader #mobileMenuBtn{margin-left:8px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewCard.hsPhoneHero{display:flex!important;align-items:center;justify-content:space-between;gap:12px;min-height:0!important;padding:4px 2px 2px!important;background:none!important;border:0!important;box-shadow:none!important;order:1}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewCard.hsPhoneHero::before,html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewCard.hsPhoneHero::after{content:none!important;display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneHero h2{font-size:26px!important;max-width:none!important;text-shadow:none!important}
+html.mobileOwnerMode body #app #mobileOverview .hsPhoneHero p{margin:3px 0 0;color:var(--hp-muted);font-size:14px}
+html.mobileOwnerMode body #app .hsPhonePill{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px 0 6px;border-radius:12px;border:1px solid rgba(52,211,153,.45);background:rgba(16,80,60,.45);color:#eafff6;font:700 13.5px/1 inherit;flex:none;white-space:nowrap}
+html.mobileOwnerMode body #app .hsPhonePill[data-tone="off"]{border-color:rgba(251,191,36,.45);background:rgba(80,60,16,.4);color:#fff3d6}
+html.mobileOwnerMode body #app .hsPhonePill[data-tone="live"]{border-color:rgba(56,189,248,.45);background:rgba(16,60,90,.45);color:#e8f7ff}
+html.mobileOwnerMode body #app .hsPhonePill .hsShield{display:grid;place-items:center;width:28px;height:28px;color:var(--hp-green)}
+html.mobileOwnerMode body #app .hsPhonePill[data-tone="off"] .hsShield{color:var(--hp-amber)}
+html.mobileOwnerMode body #app .hsPhonePill[data-tone="live"] .hsShield{color:#38bdf8}
+html.mobileOwnerMode body #app .hsPhonePill svg{width:20px;height:20px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.hsPhoneLive{order:2}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.hsPhoneCams{order:3}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.hsPhoneEvents{order:4}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.hsPhoneShortcutsTitle{order:5;margin:6px 2px -2px;font-size:17px;color:#fff}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.mobileOverviewActions{order:6}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.mobileOverviewStatus,html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.mobileOverviewHint{order:8}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>:not(.mobileOverviewCard):not(.mobileOverviewStatus):not(.mobileOverviewHint):not(.mobileOverviewActions):not(.hsPhoneLive):not(.hsPhoneCams):not(.hsPhoneEvents):not(.hsPhoneShortcutsTitle){order:7}
+html.mobileOwnerMode body #app .hsPhoneLiveTile{position:relative;display:block;width:100%;aspect-ratio:16/10;padding:0;border-radius:18px;overflow:hidden;border:1px solid rgba(120,168,230,.28);background:radial-gradient(80% 80% at 50% 40%,#12304f,#050b16);color:#fff}
+html.mobileOwnerMode body #app .hsPhoneLiveTile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+html.mobileOwnerMode body #app .hsPhoneLiveTile video[hidden],html.mobileOwnerMode body #app .hsPhoneLiveEmpty[hidden]{display:none}
+html.mobileOwnerMode body #app .hsPhoneLiveEmpty{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:6px;text-align:center;padding:16px}
+html.mobileOwnerMode body #app .hsPhoneLiveEmpty b{font-size:16px}
+html.mobileOwnerMode body #app .hsPhoneLiveEmpty small{color:var(--hp-muted);font-size:12.5px}
+html.mobileOwnerMode body #app .hsPhoneLiveEmpty .hsPlay{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#22c7ee,#0e7fc0);color:#04121f;box-shadow:0 10px 30px -8px rgba(34,199,238,.7)}
+html.mobileOwnerMode body #app .hsPhoneLiveEmpty .hsPlay svg{width:24px;height:24px;margin-left:3px}
+html.mobileOwnerMode body #app .hsPhoneLiveTile .hsChip{position:absolute;left:12px;top:12px;padding:7px 11px;border-radius:10px;background:rgba(4,10,20,.75);font-size:13px;font-weight:700}
+html.mobileOwnerMode body #app :is(.hsPhoneCams,.hsPhoneEvents){padding:16px;border-radius:18px;border:1px solid var(--hp-line);background:linear-gradient(160deg,var(--hp-panel2),var(--hp-panel))}
+html.mobileOwnerMode body #app .hsCardHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+html.mobileOwnerMode body #app .hsCardHead h2{margin:0;font-size:17px;color:#fff}
+html.mobileOwnerMode body #app .hsCardHead h2 span{color:var(--hp-muted)}
+html.mobileOwnerMode body #app .hsLink{border:0;background:none;color:#38bdf8;font-weight:600;font-size:13.5px;padding:4px;min-height:0}
+html.mobileOwnerMode body #app .hsPhoneCamStrip{display:flex;gap:10px;overflow-x:auto}
+html.mobileOwnerMode body #app .hsPhoneCamStrip .hsCamTile{position:relative;flex:0 0 46%;aspect-ratio:16/10;padding:0;border-radius:14px;overflow:hidden;border:2px solid var(--hp-cyan);background:#071222;color:#fff}
+html.mobileOwnerMode body #app .hsCamThumb{position:absolute;inset:0;display:grid;place-items:center;color:#4b6a8f}
+html.mobileOwnerMode body #app .hsCamThumb svg{width:34px;height:34px}
+html.mobileOwnerMode body #app .hsPhoneCamStrip .hsCamLabel{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:6px;padding:16px 10px 8px;background:linear-gradient(180deg,transparent,rgba(2,6,14,.9));font-size:13px;font-weight:700}
+html.mobileOwnerMode body #app .hsDot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:#64748b}
+html.mobileOwnerMode body #app .hsDot.on{background:var(--hp-green)}
+html.mobileOwnerMode body #app .hsEventList{list-style:none;margin:0;padding:0;display:grid}
+html.mobileOwnerMode body #app .hsEventRow{display:grid;grid-template-columns:42px 34px minmax(0,1fr) 76px;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--hp-line)}
+html.mobileOwnerMode body #app .hsEventRow:last-child{border-bottom:0}
+html.mobileOwnerMode body #app .hsEventTime{color:var(--hp-muted);font-size:13px;font-weight:600}
+html.mobileOwnerMode body #app .hsEventIcon{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:rgba(56,189,248,.14);color:#38bdf8}
+html.mobileOwnerMode body #app .hsEventIcon svg{width:18px;height:18px}
+html.mobileOwnerMode body #app .hsEventText strong{display:block;font-size:14px;color:#fff}
+html.mobileOwnerMode body #app .hsEventText small{display:block;color:var(--hp-muted);font-size:12px}
+html.mobileOwnerMode body #app .hsEventThumb{position:relative;width:76px;height:44px;padding:0;min-height:0;border-radius:9px;overflow:hidden;border:1px solid var(--hp-line);background:#0a1424}
+html.mobileOwnerMode body #app .hsEventThumb img{width:100%;height:100%;object-fit:cover}
+html.mobileOwnerMode body #app .hsPlay{display:grid;place-items:center}
+html.mobileOwnerMode body #app .hsEventThumb .hsPlay{position:absolute;inset:0;margin:auto;width:24px;height:24px;border-radius:50%;background:rgba(2,6,14,.75);color:#fff}
+html.mobileOwnerMode body #app .hsEventThumb .hsPlay svg{width:12px;height:12px}
+html.mobileOwnerMode body #app .hsEventEmpty{list-style:none;padding:18px 10px;border:1px dashed var(--hp-line);border-radius:12px;color:var(--hp-muted);text-align:center;font-size:13.5px}
+/* Nakładka na obrazie w zakładce Kamery */
+html.mobileOwnerMode body #stage .hsLiveTop{position:absolute;left:10px;right:10px;top:10px;z-index:7;display:flex;gap:6px;pointer-events:none}
+html.mobileOwnerMode body #stage .hsLiveTop>*{pointer-events:auto}
+html.mobileOwnerMode body #stage .hsLiveTop .hsCamName{display:none}
+html.mobileOwnerMode body #stage .hsLiveTopRight{margin-left:auto;display:flex;gap:6px}
+html.mobileOwnerMode body #stage .hsChip{display:inline-flex;align-items:center;min-height:32px;padding:0 10px;border-radius:9px;background:rgba(4,10,20,.72);color:#fff;font-size:12.5px;font-weight:700}
+html.mobileOwnerMode body #stage .hsIconBtn{display:grid;place-items:center;width:40px;height:40px;min-height:0;padding:0;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(4,10,20,.72);color:#fff}
+html.mobileOwnerMode body #stage .hsIconBtn svg{width:20px;height:20px}
+html.mobileOwnerMode body #stage .hsIconBtn.on{background:linear-gradient(135deg,#1ea5d8,#0e7fc0);border-color:transparent}
+html.mobileOwnerMode body #stage .hsRec.on{background:linear-gradient(135deg,#e11d48,#be123c)}
+html.mobileOwnerMode body #stage .hsLiveBar{position:absolute;left:0;right:0;bottom:0;z-index:7;display:flex;gap:8px;padding:28px 10px 10px;background:linear-gradient(180deg,transparent,rgba(2,6,14,.8));pointer-events:none}
+html.mobileOwnerMode body #stage .hsLiveBar>*{pointer-events:auto}
+html.mobileOwnerMode body #stage .hsLiveActions{margin-left:auto;display:flex;gap:8px}
+html.mobileOwnerMode body #stage .hsLiveBar .hsSound,html.mobileOwnerMode body #stage .hsLiveTop .hsQuality{display:none}
+html.mobileOwnerMode body #stage:has(#placeholder:not([hidden])) :is(.hsLiveBar,.hsLiveTop){display:none}
+html.mobileOwnerMode body #stage:has(#liveRewind:not([hidden])) .hsLiveBar{bottom:46px;background:none;padding-top:0}
+/* Dolny pasek zakładek (tylko przeglądarka/PWA — aplikacja APK ma własny) */
+html.mobileOwnerMode body .hsTabBar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(4,1fr);padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:rgba(6,13,26,.94);border-top:1px solid var(--hp-line);backdrop-filter:blur(14px)}
+html.mobileOwnerMode body .hsTabBar button{display:grid;justify-items:center;gap:3px;min-height:52px;padding:4px 0;border:0;background:none;color:#8ea2bd;font-size:11.5px;font-weight:600}
+html.mobileOwnerMode body .hsTabBar button svg{width:23px;height:23px}
+html.mobileOwnerMode body .hsTabBar button.active{color:var(--hp-cyan)}
+html.mobileOwnerMode body.hsHasTabBar #app{padding-bottom:calc(84px + env(safe-area-inset-bottom))!important}
+html.mobileOwnerMode body.hsHasTabBar[data-mobile-view="playback"] .hsTabBar{display:none}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{grid-template-columns:40px minmax(0,1fr) 44px 48px!important;gap:10px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #mobileMenuBtn{margin-left:0!important}
+html.mobileOwnerMode body #app .hsPhoneBell{margin-left:0}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneHero{flex-wrap:wrap}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneHero h2{white-space:nowrap}
+html.mobileOwnerMode body #app .hsPhoneCamStrip .hsCamTile{display:block;text-align:left}
+html.mobileOwnerMode body #app .hsPhoneCamStrip .hsCamLabel{justify-content:flex-start;text-align:left;line-height:1.2}
+html.mobileOwnerMode body #app .hsCardHead h2,html.mobileOwnerMode body #app .hsLink{white-space:nowrap}
+html.mobileOwnerMode body #app .hsPhoneLiveEmpty{padding-top:44px}
+@media (max-width:360px){html.mobileOwnerMode body #app .hsPhonePill{font-size:12.5px;min-height:36px}html.mobileOwnerMode body #app .hsPhoneCamStrip .hsCamTile{flex-basis:62%}html.mobileOwnerMode body #app .hsEventRow{grid-template-columns:38px 30px minmax(0,1fr) 62px}html.mobileOwnerMode body #app .hsEventThumb{width:62px}}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>:is(.hsPhoneLive,.hsPhoneCams,.hsPhoneEvents){margin:0 0 12px!important}
+@media (max-width:360px){html.mobileOwnerMode body #app .hsPhoneEvents .hsCardHead{flex-wrap:wrap;gap:2px}html.mobileOwnerMode body #app .hsPhoneLiveTile{aspect-ratio:auto;min-height:220px}}
