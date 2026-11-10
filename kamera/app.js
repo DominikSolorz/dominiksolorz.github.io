@@ -87,7 +87,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "281"; // musi się zgadzać z version.json
+const VERSION = "282"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1254,13 +1254,25 @@ const sender = (() => {
       audio.playsInline = true;
       audio.setAttribute("aria-hidden", "true");
       audio.srcObject = event.streams[0] || new MediaStream([event.track]);
-      audio.play().catch(() => {
-        systemStore.component("talkback", { status: "blocked", message: "Kliknij stronę komputera, aby włączyć rozmowę." });
-      });
+      audio.volume = 1;
       peer.talkAudio?.remove();
       peer.talkAudio = audio;
       document.body.append(audio);
-      systemStore.component("talkback", { status: "connected", message: "Rozmowa z telefonu jest odtwarzana na głośniku komputera." });
+      // Telefon dostaje potwierdzenie, czy jego głos naprawdę gra na tym komputerze.
+      const report = status => { if (peers.get(viewerId) === peer) send(ch, { type: "talkback-status", viewerId, status }); };
+      const started = () => {
+        report("playing");
+        systemStore.component("talkback", { status: "connected", message: "Rozmowa z telefonu jest odtwarzana na głośniku komputera." });
+        toastMsg("🎙 Telefon mówi — głos słychać z głośnika tego komputera.");
+      };
+      audio.play().then(started).catch(() => {
+        report("blocked");
+        systemStore.component("talkback", { status: "blocked", message: "Kliknij stronę komputera, aby włączyć rozmowę." });
+        toastMsg("🎙 Telefon chce rozmawiać. Kliknij dowolne miejsce w tym oknie, aby włączyć dźwięk.");
+        const resume = () => { if (peer.talkAudio === audio) audio.play().then(started).catch(() => {}); };
+        document.addEventListener("pointerdown", resume, { once: true, capture: true });
+        document.addEventListener("keydown", resume, { once: true, capture: true });
+      });
     };
     // Kanał danych: telefon ogląda i pobiera nagrania z pamięci tego komputera.
     serveRecordings(pc.createDataChannel("nagrania", { ordered: true }), archive.local);
@@ -1777,7 +1789,16 @@ const viewer = (() => {
     return requireCommandSuccess(result);
   }
   let pc = null, pending = [], lastSeen = 0, lastJoin = 0, brokenSince = 0, watchdog = null, active = false;
-  let talkStream = null, talkEnabled = false;
+  let talkStream = null, talkEnabled = false, talkConfirmTimer = 0;
+  // Odpowiedź komputera na rozmowę: czy głos z telefonu naprawdę gra na głośniku.
+  function showTalkStatus(status) {
+    const state = $("talkbackState");
+    if (!talkEnabled || !state) return;
+    clearTimeout(talkConfirmTimer);
+    state.textContent = status === "playing"
+      ? "✅ Komputer odtwarza Twój głos — mów"
+      : "🔇 Komputer wyciszył rozmowę. Kliknij okno HOME SECURITY na komputerze albo zaktualizuj program.";
+  }
   let camOff = false, liveNote = false;
   const chan = reconnectingChannel({
     label: "Podgląd",
@@ -1804,6 +1825,7 @@ const viewer = (() => {
     if (!button || !TALKBACK_AVAILABLE) return;
     if (talkEnabled) {
       talkEnabled = false;
+      clearTimeout(talkConfirmTimer);
       stopTalkback();
       button.textContent = "🎙 Rozmawiaj z komputerem";
       button.setAttribute("aria-pressed", "false");
@@ -1817,9 +1839,13 @@ const viewer = (() => {
       talkEnabled = true;
       button.textContent = "🔴 Zakończ rozmowę";
       button.setAttribute("aria-pressed", "true");
-      if (state) state.textContent = "Mikrofon telefonu działa · mów do komputera";
+      if (state) state.textContent = "Mikrofon telefonu działa · łączę z głośnikiem komputera…";
       reset();
       if (chan.channel) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: true });
+      clearTimeout(talkConfirmTimer);
+      talkConfirmTimer = setTimeout(() => {
+        if (talkEnabled && state) state.textContent = "Komputer nie potwierdził rozmowy. Sprawdź, czy kamera jest włączona, a program HOME SECURITY na komputerze zaktualizowany.";
+      }, 15000);
     } catch (error) {
       talkEnabled = false;
       stopTalkback();
@@ -1872,6 +1898,7 @@ const viewer = (() => {
     if (sig.type === "alert") return showAlert(sig);
     if (sig.type === "zoom-state") return zoomUi.apply(sig);
     if (sig.viewerId !== viewerId) return;
+    if (sig.type === "talkback-status") return showTalkStatus(sig.status);
     if (sig.type === "busy") { showPlaceholder(`Ogląda już ${MAX_VIEWERS} osób — spróbuję ponownie za chwilę…`); return; }
     if (sig.type === "offer") {
       reset();
@@ -2365,7 +2392,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "201";
+  const SERVICE_WORKER_BUILD = "202";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
