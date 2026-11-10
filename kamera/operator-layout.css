@@ -541,3 +541,333 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body .mobileMapCanvas{heig
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .mobileMapResults ul{grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:10px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .cardLabel{flex-basis:100%;margin:0 0 4px;font:600 10.5px/1.3 var(--pl-sans);letter-spacing:.16em;text-transform:uppercase;color:var(--pl-sky,#7fb2ff)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .setCardIntro{font-size:12.5px;margin:2px 0 0}
+
+/* HOME SECURITY — dopracowany system stanowiska Windows i komputera. */
+html.desktopMode:not(.policeCommand):not(.usMilitary){
+  --hs3-cyan:#42dce8;
+  --hs3-blue:#4b8dff;
+  --hs3-green:#42d5a0;
+  --hs3-red:#ff667d;
+  --hs3-amber:#f2b94f;
+  --hs3-surface:#0b1a2d;
+  --hs3-raised:#10233e;
+  --hs3-edge:rgba(126,174,229,.2);
+  --hs3-edge-strong:rgba(91,157,246,.42);
+  --hs3-text:#eff6ff;
+  --hs3-muted:#9aabc2;
+  --hs3-radius:18px;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary):not(.publicLanding) body{
+  background:
+    radial-gradient(80% 52% at 70% -12%,rgba(28,86,151,.22),transparent 70%),
+    linear-gradient(180deg,rgba(4,11,22,.9),rgba(4,11,22,.97) 52%),
+    url("assets/site-hero-dom.webp") 70% 0/cover no-repeat fixed,var(--pl-bg)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app{
+  color:var(--hs3-text);
+  padding-inline:clamp(18px,2vw,32px)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar{
+  background:linear-gradient(180deg,rgba(7,19,37,.97),rgba(4,11,22,.98))!important;
+  border-right:1px solid var(--hs3-edge)!important;
+  box-shadow:12px 0 36px -32px rgba(45,120,214,.75);
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand{
+  border-bottom-color:var(--hs3-edge)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button{
+  min-height:48px!important;
+  border-radius:13px!important;
+  color:var(--hs3-muted)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button.active{
+  border-color:rgba(66,220,232,.36)!important;
+  background:linear-gradient(100deg,rgba(48,195,215,.14),rgba(62,129,238,.13))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 12px 28px -24px rgba(48,154,255,.9)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button.active>i{
+  color:var(--hs3-cyan)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar{
+  background:rgba(5,14,27,.82)!important;
+  border-bottom-color:var(--hs3-edge)!important;
+  box-shadow:0 12px 28px -26px rgba(0,0,0,.95)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar #topStatus{
+  min-height:38px;
+  border-color:var(--hs3-edge)!important;
+  background:rgba(12,29,51,.94)!important;
+  color:var(--hs3-text)!important;
+  font-variant-numeric:tabular-nums;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext{
+  min-height:122px;
+  padding:22px clamp(20px,2.4vw,34px)!important;
+  border:1px solid var(--hs3-edge-strong)!important;
+  border-radius:22px!important;
+  background:
+    linear-gradient(90deg,rgba(4,13,26,.96),rgba(4,13,26,.78) 48%,rgba(4,13,26,.26)),
+    url("assets/site-hero-dom.webp") 72% 46%/cover no-repeat!important;
+  box-shadow:0 30px 64px -44px rgba(48,129,230,.72),inset 0 1px 0 rgba(255,255,255,.06);
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext h1{
+  color:#fff!important;
+  font-size:clamp(26px,2.1vw,34px)!important;
+  line-height:1.12!important;
+  letter-spacing:-.03em!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext p{
+  color:#a9eaf2!important;
+  font-size:11px!important;
+  font-weight:700!important;
+  letter-spacing:.14em!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions{
+  gap:9px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions :is(button,a){
+  min-height:44px!important;
+  border-color:var(--hs3-edge-strong)!important;
+  border-radius:13px!important;
+  background:rgba(10,27,48,.88)!important;
+  color:var(--hs3-text)!important;
+  backdrop-filter:blur(10px);
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(.desktopCameraTile,.desktopEventsDrawer,.desktopSummary>article,.desktopControlsScreen,.desktopSettingsScreen,.desktopEventsScreen,.desktopDiagnosticsScreen,.desktopHomeGuide,.controlPreview,.settingsHelp,.eventWorkspace){
+  border-color:var(--hs3-edge)!important;
+  border-radius:var(--hs3-radius)!important;
+  background:linear-gradient(155deg,rgba(15,35,60,.92),rgba(8,20,36,.96))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 22px 52px -40px rgba(0,0,0,.92)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview{
+  grid-template-columns:minmax(0,1fr) minmax(276px,340px)!important;
+  gap:16px!important;
+  align-items:stretch!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopCameraTile{
+  overflow:hidden!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopCameraTile .desktopTileMeta{
+  min-height:58px!important;
+  padding-inline:18px!important;
+  border-bottom-color:var(--hs3-edge)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer{
+  overflow:hidden!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer>summary{
+  min-height:58px!important;
+  border-bottom-color:var(--hs3-edge)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer #viewEvents{
+  gap:9px!important;
+  padding:12px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopEventsDrawer #viewEvents li{
+  min-width:0;
+  border:1px solid rgba(126,174,229,.15)!important;
+  border-left:3px solid var(--hs3-blue)!important;
+  border-radius:13px!important;
+  background:rgba(8,23,42,.76)!important;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary{
+  gap:12px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary>article{
+  min-width:0;
+  padding:18px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopHomeGuide{
+  align-items:center;
+  gap:18px;
+  padding:17px 20px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopHomeGuide nav{
+  gap:8px;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(.btn,.dvrBtn,.tool,.modeBtn,.soft,.desktopContextActions button,.desktopSettingsTabs button){
+  min-height:44px!important;
+  box-sizing:border-box;
+  border-radius:13px!important;
+  font-family:var(--pl-sans)!important;
+  font-weight:650!important;
+  line-height:1.25!important;
+  transition:background .16s ease,border-color .16s ease,transform .16s ease;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(.btn.primary,.tool.primary,.dvrBtn.primary){
+  border-color:rgba(91,157,246,.8)!important;
+  background:linear-gradient(135deg,#2d7df2,#285fd0)!important;
+  color:#fff!important;
+  box-shadow:0 10px 24px -18px rgba(67,144,255,.95);
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(.btn.ghost,.tool:not(.primary),.dvrBtn:not(.primary),.modeBtn,.soft){
+  border:1px solid var(--hs3-edge)!important;
+  background:rgba(12,29,51,.86)!important;
+  color:var(--hs3-text)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(button,a,input,select,textarea):focus-visible{
+  outline:3px solid rgba(66,220,232,.78);
+  outline-offset:2px;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .ctrlBtns{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .ctrl{
+  min-width:0!important;
+  min-height:48px!important;
+  border-radius:13px!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar #ctrlStart:not(:disabled){
+  border-color:rgba(66,213,160,.5)!important;
+  background:rgba(20,116,88,.26)!important;
+  color:#b7f5dc!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar #ctrlStop:not(:disabled){
+  border-color:rgba(255,102,125,.58)!important;
+  background:rgba(130,31,54,.3)!important;
+  color:#ffd2d9!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app #ctrlBar #ctrlRestart:not(:disabled){
+  border-color:rgba(242,185,79,.58)!important;
+  background:rgba(111,72,20,.32)!important;
+  color:#ffe5b1!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsScreen{
+  gap:18px 22px!important;
+  padding:24px!important;
+  border-color:var(--hs3-edge)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsHeader{
+  min-width:0;
+  border-bottom-color:var(--hs3-edge)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsTabs button{
+  min-width:0;
+  justify-content:flex-start!important;
+  border-color:transparent!important;
+  border-radius:12px!important;
+  color:var(--hs3-muted)!important;
+  overflow-wrap:anywhere;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsTabs button.active{
+  border-color:rgba(66,220,232,.34)!important;
+  background:linear-gradient(110deg,rgba(55,196,215,.14),rgba(67,133,241,.12))!important;
+  color:#e9fcff!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsGrid.settingsOnly{
+  grid-template-columns:minmax(0,1fr) minmax(230px,270px)!important;
+  gap:16px!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .settingsHelp{
+  border-left-color:var(--hs3-cyan)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsFooter{
+  border-top-color:var(--hs3-edge)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(#dvrCard,#dvrListCard){
+  min-width:0;
+  border:1px solid var(--hs3-edge)!important;
+  border-radius:var(--hs3-radius)!important;
+  background:linear-gradient(155deg,rgba(15,35,60,.92),rgba(8,20,36,.96))!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app #dvrCard input[type="range"]{
+  min-height:44px;
+  accent-color:var(--hs3-cyan);
+  touch-action:pan-x;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(.desktopEventsScreen,.desktopDiagnosticsScreen) h2{
+  color:var(--hs3-text)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(input,select,textarea){
+  min-width:0;
+  border-color:var(--hs3-edge)!important;
+  border-radius:12px;
+}
+@media (max-width:1180px){
+  html.desktopMode:not(.policeCommand):not(.usMilitary){--desktop-sidebar:208px}
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview{
+    grid-template-columns:minmax(0,1fr) minmax(258px,34%)!important;
+    gap:12px!important;
+  }
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsScreen{
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:"head" "tabs" "grid" "foot"!important;
+  }
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsTabs{
+    position:static!important;
+    flex-direction:row!important;
+    flex-wrap:wrap!important;
+  }
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsTabs button{
+    flex:1 1 128px;
+  }
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsGrid.settingsOnly{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .settingsHelp{
+    position:static!important;
+  }
+}
+@media (max-width:900px){
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+}
+@media (min-width:1600px){
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app{
+    padding-inline:36px!important;
+  }
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview{
+    grid-template-columns:minmax(0,1fr) minmax(320px,380px)!important;
+    gap:20px!important;
+  }
+}
+@media (max-height:820px){
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext{
+    min-height:98px;
+    padding-block:16px!important;
+  }
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary>article{
+    padding-block:13px!important;
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(button,a,.desktopEventsDrawer #viewEvents li){
+    transition:none;
+  }
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authCard,
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .lockScreen{
+  max-height:calc(100dvh - 28px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-color:rgba(91,157,246,.48) rgba(6,16,31,.6);
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{
+  border:1px solid rgba(100,172,255,.7)!important;
+  background:linear-gradient(125deg,#28c5d6,#2e73ea)!important;
+  color:#041323!important;
+  box-shadow:0 12px 28px -18px rgba(46,139,255,.84)!important;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label a{
+  color:#91caff!important;
+  text-underline-offset:3px;
+}
+@media (max-height:820px){
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{
+    padding:20px 24px!important;
+  }
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{
+    margin-bottom:12px!important;
+    padding-bottom:12px!important;
+  }
+  html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label:not(.authCheck){
+    margin-bottom:9px!important;
+  }
+}
