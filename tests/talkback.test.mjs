@@ -53,3 +53,12 @@ test('turning the microphone on keeps listening on iPhone and warns about an out
   assert.match(app, /resumeListening\(wasMuted\)/);
   assert.match(app, /hostBuild < 283/);
 });
+
+test('listening the owner switched on survives a reconnect, and older computers get no reconnect signal', async () => {
+  const app = await read('kamera/app.js');
+  assert.match(app, /let listeningWanted = false/);
+  assert.match(app, /if \(listeningWanted && !sender\.live && video\.muted\)/);
+  assert.match(app, /listeningWanted = !video\.muted/);
+  assert.match(app, /const legacyTalkHost = \(\) =>/);
+  assert.match(app, /!\(legacyTalkHost\(\) && talkSender\)/);
+});
