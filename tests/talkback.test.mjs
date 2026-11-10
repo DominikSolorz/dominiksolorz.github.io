@@ -33,3 +33,15 @@ test('Android app grants only the microphone, only to the official site, after t
   assert.match(access, /RequestPermission\(\)/);
   assert.doesNotMatch(access, /RESOURCE_VIDEO_CAPTURE/);
 });
+
+test('turning the phone microphone on or off never restarts the live picture or listening', async () => {
+  const app = await read('kamera/app.js');
+  const toggle = app.slice(app.indexOf('async function toggleTalkback()'), app.indexOf('async function onSignal(sig)', app.indexOf('async function toggleTalkback()')));
+  assert.doesNotMatch(toggle, /\breset\(\)/, 'the microphone button must not tear down the connection');
+  assert.match(toggle, /talkSender\.replaceTrack\(talkStream\.getAudioTracks\(\)\[0\] \|\| null\)/);
+  assert.match(toggle, /talkSender\?\.replaceTrack\(null\)/);
+  assert.match(toggle, /enabled: true, live: true/);
+  assert.match(app, /talkTransceiver\.direction = "sendrecv"/);
+  assert.match(app, /if \(!sig\.live \|\| !peer/, 'older phones still get a fresh connection');
+  assert.match(app, /if \(peer\.talkWanted\) return playTalk\(peer, sig\.viewerId, chan\.channel\)/);
+});
