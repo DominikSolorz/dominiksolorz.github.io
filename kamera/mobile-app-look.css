@@ -392,3 +392,12 @@ html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar #ctrlRestart:not(:d
 .mobileMapRow .mobileMapFollow[aria-pressed="true"]{background:linear-gradient(90deg,#1e90ff,#14b8d4);border-color:transparent;color:#fff}
 .mobileMapResults li{background:rgba(20,44,72,.45)}
 .mobileMapLinks a:first-child,.mobileMapLinks a:first-child:visited{background:linear-gradient(90deg,#1e90ff,#14b8d4)!important;border-color:transparent!important;color:#fff!important}
+
+/* Wyniki mapy: logo / miniaturka, nazwa i odległość z czasem dojścia. */
+.mobileMapResults .mobileMapPlace{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:center}
+.mobileMapThumb{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(135deg,#1e3a64,#0f2440);border:1px solid rgba(80,170,230,.3);color:#cfe6ff;font:800 20px/1 var(--pl-sans,system-ui,sans-serif)}
+.mobileMapThumb.hasLogo{background:#fff;border-color:rgba(255,255,255,.6)}
+.mobileMapThumb img{width:100%;height:100%;object-fit:contain;padding:4px;box-sizing:border-box}
+.mobileMapPlaceText{display:grid;gap:2px;min-width:0}
+.mobileMapPlaceText strong{font-size:16px}
+.mobileMapResults .mobileMapPlace .mobileMapDistance{color:#5eead4;font-weight:700;font-size:13px}

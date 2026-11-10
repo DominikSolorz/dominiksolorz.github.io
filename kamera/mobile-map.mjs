@@ -13,6 +13,11 @@ const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 // Główny serwer Overpass bywa przeciążony; jeden zapasowy serwer tej samej usługi.
 const OVERPASS_FALLBACK_URL = 'https://overpass.kumi.systems/api/interpreter';
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+// Logo sieci (np. Biedronka, Żabka): identyfikator marki z OpenStreetMap → plik logo w Wikimedia Commons.
+// Do tych usług trafia tylko identyfikator marki, nigdy pozycja użytkownika.
+const WIKIDATA_URL = 'https://www.wikidata.org/w/api.php';
+const COMMONS_FILE_URL = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
+const logoCache = new Map(); // tylko w pamięci, do zamknięcia strony
 const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const MIN_POI_ZOOM = 15;
 const LEAFLET_JS = new URL('./vendor/leaflet/leaflet.js', import.meta.url).href;
@@ -49,6 +54,24 @@ export function distanceMeters(lat1, lon1, lat2, lon2) {
   return 12742000 * Math.asin(Math.sqrt(a));
 }
 
+export const brandId = value => (typeof value === 'string' && /^Q\d{1,12}$/.test(value.trim()) ? value.trim() : '');
+
+export function logoUrl(file, width = 96) {
+  return typeof file === 'string' && file ? `${COMMONS_FILE_URL}${encodeURIComponent(file.replace(/ /g, '_'))}?width=${width}` : '';
+}
+
+export function parseLogos(data) {
+  const out = {};
+  for (const [id, entity] of Object.entries(data?.entities || {})) {
+    const file = entity?.claims?.P154?.[0]?.mainsnak?.datavalue?.value;
+    if (brandId(id) && typeof file === 'string' && /\.(svg|png|jpe?g|webp|gif)$/i.test(file)) out[id] = file;
+  }
+  return out;
+}
+
+// Pieszo ok. 4,8 km/h.
+export const walkingMinutes = meters => Math.max(1, Math.round(meters / 80));
+
 export function formatDistance(meters) {
   return meters < 1000 ? `${Math.round(meters)} m` : `${(meters / 1000).toFixed(1).replace('.', ',')} km`;
 }
@@ -57,6 +80,29 @@ export function buildPlacesQuery({ south, west, north, east }) {
   const box = [south, west, north, east].map(v => v.toFixed(6)).join(',');
   const keys = ['shop', 'amenity', 'office', 'tourism', 'craft', 'healthcare'];
   return `[out:json][timeout:15];(${keys.map(k => `nwr[${k}][name](${box});`).join('')});out center 80;`;
+}
+
+// Sieci sklepów i firmy po nazwie lub marce w pobliżu (np. „Biedronka”, „Żabka”).
+export function buildNameQuery(text, { lat, lng }, radius = 5000) {
+  const term = String(text || '').replace(/[^\p{L}\p{N} '&-]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
+  if (term.length < 2 || !validCoordinates(lat, lng)) return '';
+  const around = `(around:${Math.round(radius)},${lat.toFixed(6)},${lng.toFixed(6)})`;
+  return `[out:json][timeout:15];(nwr["name"~"${term}",i]${around};nwr["brand"~"${term}",i]${around};);out center 60;`;
+}
+
+// Łączy wyniki obu źródeł bez duplikatów (ta sama nazwa w promieniu 60 m).
+export function mergePlaces(...lists) {
+  const out = [];
+  for (const place of lists.flat()) {
+    const twin = out.find(p => p.name.toLowerCase() === place.name.toLowerCase() && distanceMeters(p.lat, p.lon, place.lat, place.lon) < 60);
+    if (!twin) { out.push({ ...place }); continue; }
+    twin.brand ||= place.brand;
+    if (!twin.address && place.address) twin.address = place.address;
+  }
+  // Ta sama sieć pod tą samą nazwą: logo także dla punktów bez oznaczonej marki.
+  const brands = new Map(out.filter(p => p.brand).map(p => [p.name.toLowerCase(), p.brand]));
+  for (const p of out) p.brand ||= brands.get(p.name.toLowerCase()) || '';
+  return out;
 }
 
 function kindLabel(tags) {
@@ -83,7 +129,7 @@ export function parsePlaces(data, from, limit = 40) {
     const lat = el.lat ?? el.center?.lat, lon = el.lon ?? el.center?.lon;
     if (!name || !validCoordinates(lat, lon)) continue;
     out.push({
-      name, lat, lon, kind: kindLabel(tags),
+      name, lat, lon, kind: kindLabel(tags), brand: brandId(tags['brand:wikidata']),
       address: joinAddress(tags['addr:street'], tags['addr:housenumber'], tags['addr:postcode'], tags['addr:city']),
       distance: from ? Math.round(distanceMeters(from.lat, from.lon, lat, lon)) : null
     });
@@ -116,7 +162,7 @@ export function parseGeocode(data, from, limit = 8) {
     const address = joinAddress(a.road || a.pedestrian || '', a.house_number, a.postcode, city);
     const name = String(item.name || item.display_name || '').split(',')[0].trim().slice(0, 80) || address || 'Miejsce';
     out.push({
-      name, lat, lon, kind: AMENITY[item.type] || String(item.type || '').replace(/_/g, ' ') || 'Miejsce',
+      name, lat, lon, brand: brandId(item.extratags?.['brand:wikidata']), kind: AMENITY[item.type] || String(item.type || '').replace(/_/g, ' ') || 'Miejsce',
       address: address || String(item.display_name || '').slice(0, 120),
       distance: from ? Math.round(distanceMeters(from.lat, from.lon, lat, lon)) : null
     });
@@ -221,6 +267,34 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
     results.hidden = false;
   };
 
+  const paintLogos = () => {
+    for (const thumb of results.querySelectorAll('.mobileMapThumb[data-brand]:not(.hasLogo)')) {
+      const file = logoCache.get(thumb.dataset.brand);
+      if (!file) continue;
+      const img = doc.createElement('img');
+      img.alt = '';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.referrerPolicy = 'no-referrer';
+      img.src = logoUrl(file);
+      img.addEventListener('error', () => { img.remove(); thumb.classList.remove('hasLogo'); });
+      thumb.replaceChildren(img);
+      thumb.classList.add('hasLogo');
+    }
+  };
+
+  const loadLogos = async (current, places) => {
+    const ids = [...new Set(places.map(p => p.brand).filter(id => id && !logoCache.has(id)))].slice(0, 25);
+    if (ids.length) {
+      try {
+        const data = await request(current, `${WIKIDATA_URL}?${new URLSearchParams({ action: 'wbgetentities', ids: ids.join('|'), props: 'claims', format: 'json', origin: '*' })}`, { referrerPolicy: 'no-referrer' });
+        const found = parseLogos(data);
+        for (const id of ids) logoCache.set(id, found[id] || '');
+      } catch { return; }
+    }
+    if (current === session) paintLogos();
+  };
+
   const showAsk = () => {
     teardown();
     canvas.hidden = tools.hidden = attribution.hidden = results.hidden = true;
@@ -256,11 +330,27 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
       const info = doc.createElement('button');
       info.type = 'button';
       info.className = 'mobileMapPlace';
+      const thumb = doc.createElement('span');
+      thumb.className = 'mobileMapThumb';
+      thumb.setAttribute('aria-hidden', 'true');
+      thumb.textContent = (place.name.match(/[\p{L}\p{N}]/u)?.[0] || '•').toUpperCase();
+      if (place.brand) thumb.dataset.brand = place.brand;
+      const text = doc.createElement('span');
+      text.className = 'mobileMapPlaceText';
       const name = doc.createElement('strong');
       name.textContent = place.name;
       const meta = doc.createElement('small');
-      meta.textContent = [place.kind, place.address, place.distance === null ? '' : formatDistance(place.distance)].filter(Boolean).join(' · ');
-      info.append(name, meta);
+      meta.textContent = [place.kind, place.address].filter(Boolean).join(' · ');
+      text.append(name, meta);
+      if (place.distance !== null) {
+        const far = doc.createElement('small');
+        far.className = 'mobileMapDistance';
+        far.textContent = place.distance <= 3000
+          ? `${formatDistance(place.distance)} · ok. ${walkingMinutes(place.distance)} min pieszo`
+          : formatDistance(place.distance);
+        text.append(far);
+      }
+      info.append(thumb, text);
       info.addEventListener('click', () => {
         follow = false;
         syncFollow();
@@ -282,6 +372,7 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
     }
     results.replaceChildren(list);
     results.hidden = false;
+    void loadLogos(session, places);
     follow = false;
     syncFollow();
     const layers = markers.getLayers();
@@ -439,11 +530,26 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
       if (!q) return;
       const mine = ++query;
       note('Szukam…');
-      const params = new URLSearchParams({ format: 'jsonv2', addressdetails: '1', limit: '15', 'accept-language': 'pl', q, viewbox: searchViewbox(map.getCenter()) });
+      const base = { format: 'jsonv2', addressdetails: '1', extratags: '1', limit: '15', 'accept-language': 'pl', q, viewbox: searchViewbox(map.getCenter()) };
       try {
-        const data = await request(current, `${NOMINATIM_URL}?${params}`, { referrerPolicy: 'origin' });
+        // Najpierw tylko okolica (np. „Biedronka” → sklepy w pobliżu), dopiero potem cała mapa.
+        const nameQuery = buildNameQuery(q, map.getCenter());
+        const nearby = nameQuery
+          ? request(current, OVERPASS_URL, { method: 'POST', body: new URLSearchParams({ data: nameQuery }), referrerPolicy: 'no-referrer' }).then(d => parsePlaces(d, here, 40), () => [])
+          : Promise.resolve([]);
+        const empty = 'Nic nie znaleziono. Spróbuj podać ulicę, miasto lub nazwę firmy.';
+        let data = await request(current, `${NOMINATIM_URL}?${new URLSearchParams({ ...base, bounded: '1' })}`, { referrerPolicy: 'origin' });
         if (mine !== query) return;
-        renderPlaces(L, nearestResults(parseGeocode(data, here, 15)), 'Nic nie znaleziono. Spróbuj podać ulicę, miasto lub nazwę firmy.');
+        let found = parseGeocode(data, here, 15);
+        // Wyniki pokazujemy od razu; sklepy z okolicy (Overpass) dochodzą, gdy serwer odpowie.
+        if (found.length) renderPlaces(L, nearestResults(found, 12), empty);
+        const near = await nearby;
+        if (mine !== query) return;
+        if (!found.length && !near.length) {
+          found = parseGeocode(await request(current, `${NOMINATIM_URL}?${new URLSearchParams(base)}`, { referrerPolicy: 'origin' }), here, 15);
+          if (mine !== query) return;
+        }
+        if (near.length || !results.querySelector('li')) renderPlaces(L, nearestResults(mergePlaces(found, near), 12), empty);
       } catch (error) {
         if (error.message !== 'stale' && mine === query) note('Wyszukiwanie jest chwilowo niedostępne. Spróbuj ponownie.');
       }
