@@ -8,9 +8,9 @@ test('desktop operator theme precedes the final scoped mobile theme and is preca
   const [panel, sw] = await Promise.all([read('kamera/panel.html'), read('kamera/sw.js')]);
   const template = panel.match(/<template id="panelStyles">([\s\S]*?)<\/template>/)[1];
   const links = [...template.matchAll(/href="([^"]+)"/g)].map(m => m[1]);
-  assert.ok(links.indexOf('operator-layout.css?v=7') > links.indexOf('tech-ops.css?v=2'));
-  assert.equal(links.at(-1), 'mobile-app-look.css?v=24', 'phone layout must override shared operator cards');
-  assert.ok(sw.includes('./operator-layout.css?v=7'));
+  assert.ok(links.indexOf('operator-layout.css?v=11') > links.indexOf('tech-ops.css?v=2'));
+  assert.equal(links.at(-1), 'mobile-app-look.css?v=25', 'phone layout must override shared operator cards');
+  assert.ok(sw.includes('./operator-layout.css?v=11'));
   // Never loaded on the public landing page before the secure panel starts.
   assert.doesNotMatch(panel.slice(0, panel.indexOf('<template id="panelStyles">')), /operator-layout\.css/);
 });
