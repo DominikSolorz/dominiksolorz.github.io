@@ -10,7 +10,7 @@ namespace HomeSecurityDesktop;
 
 internal static class Program
 {
-    private const string DesktopVersion = "1.4.100";
+    private const string DesktopVersion = "1.4.101";
     private const string WebPanelBuild = "287";
     // Desktop serves its installed Panel bundle at the existing trusted origin.
     // The website and installed UI can now be released independently without
