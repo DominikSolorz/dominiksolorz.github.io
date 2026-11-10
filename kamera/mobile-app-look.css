@@ -379,13 +379,16 @@ html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .ctrl small{white-s
 html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar #ctrlRestart:not(:disabled){border-color:rgba(251,191,36,.55)!important;background:linear-gradient(180deg,rgba(251,191,36,.16),rgba(251,191,36,.06))!important;color:#fde68a!important}
 html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar #ctrlRestart:not(:disabled):hover{border-color:rgba(251,191,36,.85)!important;background:rgba(251,191,36,.22)!important}
 
-/* Mapa: po zgodzie na lokalizację zajmuje cały ekran telefonu, większa mapa i wyraźny stan śledzenia. */
+/* Mapa: po zgodzie na lokalizację zajmuje cały ekran telefonu. Układ kolumnowy: mapa
+   wypełnia wolne miejsce, a lista wyników i przycisk Zamknij zawsze są widoczne. */
 @media (max-width:600px){
-  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])){width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0;padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom))}
+  .mobileMapDialog[open]:has(.mobileMapCanvas:not([hidden])){display:flex;flex-direction:column;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0;overflow:hidden;padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom))}
+  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) > *{flex:none}
   .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapText{font-size:13px;margin-bottom:8px}
-  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapCanvas{height:max(260px,calc(100dvh - 300px - env(safe-area-inset-top) - env(safe-area-inset-bottom)))}
-  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapActions{position:sticky;bottom:0;padding-top:8px;background:linear-gradient(180deg,rgba(11,22,38,0),#0b1626 30%)}
+  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapCanvas{flex:1 1 auto;height:auto;min-height:200px}
+  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapResults{max-height:34dvh;margin-bottom:8px}
+  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapActions{padding-top:4px}
 }
 .mobileMapRow .mobileMapFollow[aria-pressed="true"]{background:linear-gradient(90deg,#1e90ff,#14b8d4);border-color:transparent;color:#fff}
 .mobileMapResults li{background:rgba(20,44,72,.45)}
-.mobileMapLinks a:first-child{background:linear-gradient(90deg,#1e90ff,#14b8d4);border-color:transparent;color:#fff}
+.mobileMapLinks a:first-child,.mobileMapLinks a:first-child:visited{background:linear-gradient(90deg,#1e90ff,#14b8d4)!important;border-color:transparent!important;color:#fff!important}
