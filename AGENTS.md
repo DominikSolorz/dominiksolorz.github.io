@@ -23,5 +23,14 @@ Jeśli użytkownik poda alias typu `HS-PANEL`, `HS-TELEFON` lub `HS-AKTUALIZATOR
 - Wymagaj kontroli zapisów nagrań przed restartem Windows. Nigdy nie obchodź blokady PIN, RLS i zgody użytkownika na aktualizacje.
 - Ogranicz pliki i sekrety do uprawnionych środowisk; nie kopiuj ich do publicznej strony.
 
+
+## Zasady zmian CSS i widoków HAEM
+- Przed edycją znajdź źródłowy plik, wszystkie odwołania w HTML/JS oraz kolejność ładowania arkuszy. Nie dodawaj kolejnego pliku CSS ani !important tylko po to, by ominąć poprzednią regułę.
+- Oddziel stronę marketingową (kamera/marketing.css i generator) od prywatnego panelu (kamera/panel.html), Windows i mobilnej PWA. Nie zakładaj, że ostatni arkusz jest źródłem prawdy.
+- Przed usunięciem selektora zbadaj wszystkie jego użycia, media queries, specyficzność, tryby policeCommand/usMilitary i wpływ na PIN, kamerę oraz nagrywanie. Usuwaj tylko potwierdzone duplikaty.
+- Po zmianach sprawdź URL ?v= w HTML, listę SHELL i CACHE w kamera/sw.js oraz manifest kamera/version.json. CSS jest obsługiwany cache-first, więc commit nie gwarantuje widocznej aktualizacji. Nie zmieniaj numeru wydania bez faktycznej publikacji.
+- Testuj desktop, telefon, PWA, tryby specjalne i atrybut hidden. Zmiany wyłącznie na osobnej gałęzi i przez PR.
+- Mapa odpowiedzialności i wykryte ryzyka: docs/CSS-OWNERSHIP-AUDIT.md.
+
 ## Zakończenie zadania
 Podaj repo, pełne ścieżki plików, gałąź, PR, uruchomione testy, numer rzeczywiście opublikowanego wydania oraz kanał (GitHub Pages / Windows / Vercel / PWA). Jeśli nie ma testu na fizycznym komputerze, napisz o tym otwarcie. Nie deklaruj gotowej publikacji na podstawie samego commita.
