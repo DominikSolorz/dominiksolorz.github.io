@@ -1023,3 +1023,23 @@ html.mobileOwnerMode body #app [data-tone="off"]{border-color:rgba(244,184,75,.4
 @media(prefers-reduced-motion:reduce){
   html.desktopMode body #app *,html.mobileOwnerMode body #app *{transition-duration:.01ms!important;animation-duration:.01ms!important}
 }
+
+
+/* HOME SECURITY unified mobile controls */
+html:not(.desktopMode) :is(button,a[role="button"],.button,.action,.toolButton,.mobileTile):focus-visible{
+  outline:3px solid #22d3ee;
+  outline-offset:3px;
+}
+html:not(.desktopMode) :is(button,a[role="button"],.button,.action,.toolButton){
+  min-height:44px;
+  border-radius:14px;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+html:not(.desktopMode) :is(.mobileTile,.cameraCard,.eventCard,.settingsCard){
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+@media (prefers-reduced-motion:reduce){
+ html:not(.desktopMode) *{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}

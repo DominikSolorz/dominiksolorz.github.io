@@ -871,3 +871,24 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm
     margin-bottom:9px!important;
   }
 }
+
+
+/* HOME SECURITY unified operator controls */
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(button,a[role="button"],.button,.action,.toolButton,.navItem):focus-visible{
+  outline:3px solid #22d3ee;
+  outline-offset:3px;
+}
+html.desktopMode:not(.policeCommand):not(.usMilitary) :is(button,a[role="button"],.button,.action,.toolButton){
+  min-height:44px;
+  border-radius:12px;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background-color .16s ease;
+}
+@media (hover:hover){
+ html.desktopMode:not(.policeCommand):not(.usMilitary) :is(button,a[role="button"],.button,.action,.toolButton):hover:not(:disabled){
+   transform:translateY(-1px);
+   box-shadow:0 10px 24px rgba(34,211,238,.14);
+ }
+}
+@media (prefers-reduced-motion:reduce){
+ html.desktopMode:not(.policeCommand):not(.usMilitary) *{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}

@@ -335,3 +335,24 @@ body.marketingPage,body.legalPage{background-color:var(--t-bg)!important}
 #publicHome.mktSite .hsSupportLauncher{background:linear-gradient(180deg,#2b8bff,#1667ef)!important;border-color:rgba(120,180,255,.7)!important;font-family:var(--t-sans)!important;font-size:15px!important;padding:12px 20px!important;box-shadow:0 12px 34px -10px var(--t-glow),0 8px 30px #0008!important}
 :is(#publicHome.mktSite,.marketingPage) .mktRoadmap>article{padding:22px 22px 24px!important;border-radius:var(--t-radius)!important;border:1px solid var(--t-line2)!important;background:linear-gradient(180deg,rgba(10,27,52,.86),rgba(6,20,40,.86))!important}
 :is(#publicHome.mktSite,.marketingPage) .mktRoadmap>article h3{margin:14px 0 8px}
+
+
+/* HOME SECURITY unified experience: final interaction layer */
+:is(#publicHome.mktSite,.marketingPage,.legalPage) :is(a,button,input,select,textarea,summary):focus-visible{
+  outline:3px solid color-mix(in srgb,var(--t-cyan) 82%,white 18%);
+  outline-offset:3px;
+}
+:is(#publicHome.mktSite,.marketingPage,.legalPage) :is(.mktButton,.mktLogin,.mktMobileMenu summary,a[role="button"],button){
+  min-height:46px;
+  border-radius:14px;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background-color .18s ease;
+}
+@media (hover:hover){
+  :is(#publicHome.mktSite,.marketingPage,.legalPage) :is(.mktButton,.mktLogin,.mktMobileMenu summary,a[role="button"],button):hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 30px rgba(31,123,255,.22);
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  :is(#publicHome.mktSite,.marketingPage,.legalPage) *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
