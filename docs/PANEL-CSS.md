@@ -57,6 +57,10 @@ Po publikacji:
 3. W przeglądarce: DevTools → Application → Service Workers (aktywny nowy `sw.js`), Network → `panel.css` (z sieci lub 304).
 4. Testy: `node --test tests/*.test.mjs` (w tym `panel-css-single-source`, `sw-fresh-assets`).
 
+## Program Windows
+
+Instalator pakuje `kamera/` do `Panel/`, a `desktop-client/BundledPanel.cs` podaje te pliki pod adresem `https://dominiksolorz.github.io/kamera/*`. Plik spoza pakietu zwraca 404 i nie jest pobierany z sieci. Warianty WebP (`ds-logo-96.webp`, `home-security-hero-640.webp` …) powstają podczas wdrożenia Pages, więc `desktop-client/build-release.ps1` generuje je tym samym skryptem (`scripts/optimize-marketing-images.mjs`) i kopiuje do `Panel/assets`. Bez tego program Windows pokazywał puste logo i obraz strony startowej.
+
 ## Historia: konsolidacja z 10.11.2026
 
 Wcześniej panel ładował 19 arkuszy (`style.css` … `mobile-app-look.css`, ok. 557 KB, 13 435 deklaracji, 2 662 `!important`). Zostały scalone w `panel.css` w tej samej kolejności kaskady. Usunięto 1 430 deklaracji, które nigdy nie działały (w tym 263 identyczne duplikaty i 290 `!important`), oraz 285 pustych reguł. Pozostało 12 005 deklaracji i 2 372 `!important`.

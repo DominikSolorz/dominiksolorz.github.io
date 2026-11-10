@@ -41,3 +41,18 @@ test('panel.css keeps the protected modes, PIN, camera and recorder selectors', 
   assert.doesNotMatch(css, /@import/);
   assert.equal((css.match(/\{/g) || []).length, (css.match(/\}/g) || []).length, 'balanced braces');
 });
+
+test('the Windows package contains the WebP variants that public pages in Panel/ reference', async () => {
+  const [build, optimizer] = await Promise.all([read('desktop-client/build-release.ps1'), read('scripts/optimize-marketing-images.mjs')]);
+  assert.match(build, /scripts\/optimize-marketing-images\.mjs/);
+  assert.match(build, /Panel\/assets/);
+  // Every kamera/assets/*.webp referenced by a bundled page is produced by the optimizer.
+  const produced = new Set([...optimizer.matchAll(/out:'kamera\/assets\/([^']+\.webp)'/g)].map(m => m[1]));
+  const {readdir} = await import('node:fs/promises');
+  const committed = new Set((await readdir(new URL('../kamera/assets/', import.meta.url))).filter(f => f.endsWith('.webp')));
+  for (const page of ['kamera/index.html', 'kamera/panel.html', 'kamera/pobierz.html', 'kamera/o-systemie.html']) {
+    for (const [, name] of (await read(page)).matchAll(/assets\/([\w.-]+\.webp)/g))
+      assert.ok(committed.has(name) || produced.has(name), `${page}: ${name} would be 404 in the Windows app`);
+  }
+  for (const name of produced) assert.ok(build.includes(name), 'release check must verify ' + name);
+});
