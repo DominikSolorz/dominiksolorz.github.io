@@ -87,7 +87,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "285"; // musi się zgadzać z version.json
+const VERSION = "286"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1860,14 +1860,19 @@ const viewer = (() => {
       talkEnabled = true;
       button.textContent = "🔴 Zakończ rozmowę";
       button.setAttribute("aria-pressed", "true");
-      if (state) state.textContent = "Mikrofon telefonu działa · łączę z głośnikiem komputera…";
+      const linked = pc?.connectionState === "connected";
+      if (state) state.textContent = linked
+        ? "Mikrofon telefonu działa · łączę z głośnikiem komputera…"
+        : "Mikrofon gotowy, ale telefon nie jest połączony z komputerem z kamerą. Rozmowa zacznie się sama po połączeniu — sprawdź, czy program HOME SECURITY na komputerze jest włączony.";
       // Bez zrywania połączenia: mikrofon wchodzi w istniejącą ścieżkę głosu,
       // obraz i odsłuch z komputera grają dalej.
       if (talkSender && pc?.connectionState === "connected") await talkSender.replaceTrack(talkStream.getAudioTracks()[0] || null);
       if (chan.channel) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: true, live: true });
       clearTimeout(talkConfirmTimer);
       talkConfirmTimer = setTimeout(() => {
-        if (talkEnabled && state) state.textContent = "Komputer nie potwierdził rozmowy. Sprawdź, czy kamera jest włączona, a program HOME SECURITY na komputerze zaktualizowany.";
+        if (talkEnabled && state) state.textContent = pc?.connectionState === "connected"
+          ? "Komputer nie potwierdził rozmowy. Zaktualizuj program HOME SECURITY na komputerze (↻ Zaktualizuj)."
+          : "Brak połączenia z komputerem z kamerą — rozmowa czeka. Włącz program HOME SECURITY na komputerze i sprawdź internet.";
       }, 15000);
     } catch (error) {
       talkEnabled = false;
@@ -2425,7 +2430,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "205";
+  const SERVICE_WORKER_BUILD = "206";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
