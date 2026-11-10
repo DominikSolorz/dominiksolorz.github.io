@@ -141,3 +141,28 @@ html.mobileOwnerMode .mobileBottomNav button, html.mobileOwnerMode .mobileBottom
   html.desktopMode .desktopSidebar { display: none; }
   html.desktopMode .sideCol { margin-top: 14px; }
 }
+
+/* Mobile correction: keep the owner panel dense and readable. */
+@media (max-width: 600px) {
+  html.mobileOwnerMode body { background: #07111f; }
+  html.mobileOwnerMode #layout { padding: 8px 10px 88px; }
+  html.mobileOwnerMode .mobileAppHeader { min-height: 72px; padding: 8px 12px !important; }
+  html.mobileOwnerMode .mobileAppHeader h1,
+  html.mobileOwnerMode .mobileAppHeader h2 { font-size: 20px; line-height: 1.08; }
+  html.mobileOwnerMode #stage { min-height: 0; aspect-ratio: 16 / 9; border-radius: 18px; background: #02060b; }
+  html.mobileOwnerMode #stage video,
+  html.mobileOwnerMode #stage img,
+  html.mobileOwnerMode #stage canvas { object-fit: cover; }
+  html.mobileOwnerMode #watchPanel { padding: 6px; }
+  html.mobileOwnerMode #watchPanel :is(button, .btn, .tool) { min-height: 42px; }
+  html.mobileOwnerMode #ctrlBar { padding: 8px; border-radius: 16px; }
+  html.mobileOwnerMode #ctrlBar .ctrlBtns { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  html.mobileOwnerMode #ctrlBar .ctrl { min-height: 46px; padding: 4px 2px; font-size: 12px; }
+  html.mobileOwnerMode #audioHud { padding: 8px; gap: 6px; }
+  html.mobileOwnerMode #audioHud :is(.audioListenBtn, .talkbackBtn) { flex: 1 1 100%; min-height: 44px; font-size: 14px; }
+  html.mobileOwnerMode :is(.card, .panel, .eventsCard) { box-shadow: 0 10px 26px rgba(0,0,0,.24); }
+  html.mobileOwnerMode .eventsCard { padding: 12px; }
+  html.mobileOwnerMode .eventsCard .events > li { min-height: 64px; margin: 6px 0; padding: 8px; }
+  html.mobileOwnerMode .eventsCard .events > li img { width: 58px; height: 42px; object-fit: cover; border-radius: 9px; }
+  html.mobileOwnerMode :is(.toast, .eventToast, #eventToast, .alert) { max-width: calc(100vw - 28px); margin: 0 auto; font-size: 14px; line-height: 1.25; }
+}
