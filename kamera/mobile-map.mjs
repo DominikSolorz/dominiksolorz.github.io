@@ -1,5 +1,5 @@
-// Mapa telefonu: pozycja na żywo, wyszukiwarka adresów i firm, firmy w widocznym
-// obszarze oraz przejście do nawigacji. Lokalizacja jest pobierana tylko po
+// Mapa telefonu: pozycja na żywo, wyszukiwarka adresów i firm oraz punkty w widocznym
+// obszarze. Mapa służy wyłącznie do podglądu lokalizacji, bez prowadzenia trasy.
 // potwierdzeniu przy każdym otwarciu mapy, działa wyłącznie dopóki mapa jest
 // otwarta. Domyślnie nie jest nigdzie zapisywana. Tylko gdy użytkownik sam włączy
 // „Zapisuj moją trasę”, punkty trafiają do jego prywatnej historii na koncie
@@ -53,11 +53,19 @@ export function formatDistance(meters) {
 
 export function buildPlacesQuery({ south, west, north, east }) {
   const box = [south, west, north, east].map(v => v.toFixed(6)).join(',');
-  const keys = ['shop', 'amenity', 'office', 'tourism', 'craft', 'healthcare'];
-  return `[out:json][timeout:15];(${keys.map(k => `nwr[${k}][name](${box});`).join('')});out center 80;`;
+  const filters = [
+    '[shop][name]', '[amenity][name]', '[office][name]', '[tourism][name]',
+    '[craft][name]', '[healthcare][name]', '[lawyer][name]', '[debt_collection][name]',
+    '[social_facility][name]', '[company][name]'
+  ];
+  return `[out:json][timeout:15];(${filters.map(filter => `nwr${filter}(${box});`).join('')});out center 120;`;
 }
 
 function kindLabel(tags) {
+  const searchable = `${tags.name || ''} ${tags.office || ''} ${tags.amenity || ''}`.toLowerCase();
+  if (tags.lawyer || /kancelari|adwokat|radca prawny/.test(searchable)) return 'Kancelaria prawna';
+  if (tags.debt_collection || /windykacj|inkaso|należnośc/.test(searchable)) return 'Windykacja';
+  if (tags.company) return 'Firma';
   if (tags.amenity) return AMENITY[tags.amenity] || 'Instytucja / usługa';
   if (tags.shop) return 'Sklep';
   if (tags.office) return 'Biuro / firma';
@@ -109,10 +117,6 @@ export function parseGeocode(data, from, limit = 8) {
 
 export function placeSearchUrl(place) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name} ${place.lat.toFixed(6)},${place.lon.toFixed(6)}`)}`;
-}
-
-export function directionsUrl(place) {
-  return `https://www.google.com/maps/dir/?api=1&destination=${place.lat.toFixed(6)},${place.lon.toFixed(6)}&travelmode=walking`;
 }
 
 let leafletPromise = null;
@@ -250,7 +254,7 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
       });
       const links = doc.createElement('span');
       links.className = 'mobileMapLinks';
-      for (const [label, href] of [['➜ Prowadź', directionsUrl(place)], ['Zdjęcia i opinie ↗', placeSearchUrl(place)]]) {
+      for (const [label, href] of [['Otwórz w Google Maps ↗', placeSearchUrl(place)]]) {
         const a = doc.createElement('a');
         a.href = href;
         a.target = '_blank';
@@ -447,3 +451,4 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
   });
   return section;
 }
+
