@@ -401,3 +401,10 @@ html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar #ctrlRestart:not(:d
 .mobileMapPlaceText{display:grid;gap:2px;min-width:0}
 .mobileMapPlaceText strong{font-size:16px}
 .mobileMapResults .mobileMapPlace .mobileMapDistance{color:#5eead4;font-weight:700;font-size:13px}
+
+/* Rozmowa głosowa telefon ↔ komputer. Mikrofon uruchamia się dopiero po
+   świadomym kliknięciu właściciela na telefonie. */
+.talkbackBtn[aria-pressed="true"]{border-color:#fb7185!important;background:linear-gradient(90deg,rgba(225,29,72,.35),rgba(190,24,93,.25))!important;color:#fff!important}
+#talkbackState:empty{display:none}
+#talkbackState{color:#8be9df;font-size:12px}
+

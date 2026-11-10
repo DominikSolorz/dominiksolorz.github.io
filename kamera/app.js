@@ -1216,7 +1216,13 @@ const sender = (() => {
   });
 
   function renderViewers() { showLive(live && stream && prefs.mode !== "off" ? `NA ŻYWO · oglądający: ${peers.size}` : ""); }
-  function closePeer(id) { peers.get(id)?.pc.close(); peers.delete(id); renderViewers(); }
+  function closePeer(id) {
+    const peer = peers.get(id);
+    peer?.pc.close();
+    peer?.talkAudio?.remove();
+    peers.delete(id);
+    renderViewers();
+  }
   function closeAll() { peers.forEach(p => p.pc.close()); peers.clear(); renderViewers(); }
 
   async function connectViewer(viewerId) {
@@ -1231,6 +1237,27 @@ const sender = (() => {
     // „Tylko zapis”: bez obrazu i dźwięku na żywo — zostaje kanał danych (telefon nadal przegląda nagrania).
     const out = zoomer?.stream || stream;
     if (prefs.mode !== "rec-only") out.getTracks().forEach(t => pc.addTrack(t, out));
+    // Zostawiamy dwukierunkową ścieżkę audio dla rozmowy telefon ↔ komputer.
+    // Gdy kamera nie nadaje dźwięku, ta transceiver nadal pozwala telefonowi
+    // wysłać swój mikrofon do głośnika przy komputerze.
+    const audioTransceiver = pc.getTransceivers().find(t => t.receiver?.track?.kind === "audio");
+    if (audioTransceiver) audioTransceiver.direction = "sendrecv";
+    else pc.addTransceiver("audio", { direction: "sendrecv" });
+    pc.ontrack = event => {
+      if (event.track.kind !== "audio") return;
+      const audio = document.createElement("audio");
+      audio.autoplay = true;
+      audio.playsInline = true;
+      audio.setAttribute("aria-hidden", "true");
+      audio.srcObject = event.streams[0] || new MediaStream([event.track]);
+      audio.play().catch(() => {
+        systemStore.component("talkback", { status: "blocked", message: "Kliknij stronę komputera, aby włączyć rozmowę." });
+      });
+      peer.talkAudio?.remove();
+      peer.talkAudio = audio;
+      document.body.append(audio);
+      systemStore.component("talkback", { status: "connected", message: "Rozmowa z telefonu jest odtwarzana na głośniku komputera." });
+    };
     // Kanał danych: telefon ogląda i pobiera nagrania z pamięci tego komputera.
     serveRecordings(pc.createDataChannel("nagrania", { ordered: true }), archive.local);
     preferH264(pc);
@@ -1246,6 +1273,7 @@ const sender = (() => {
   async function onSignal(sig) {
     if (typeof sig.type === "string" && sig.type.startsWith("lib-") && sig.type !== "lib-reply") return library.handle(sig, chan.channel);
     if (sig.type === "viewer-join") return connectViewer(sig.viewerId);
+    if (sig.type === "viewer-talkback") return connectViewer(sig.viewerId);
     if (sig.type === "zoom" && zoomer) { zoomer.set(sig); return sendZoomState(); }
     if (sig.type === "zoom-get") return sendZoomState();
     // Drugi nadajnik (inna przeglądarka lub profil na tym samym komputerze) ma już obraz z kamery,
@@ -1745,6 +1773,7 @@ const viewer = (() => {
     return requireCommandSuccess(result);
   }
   let pc = null, pending = [], lastSeen = 0, lastJoin = 0, brokenSince = 0, watchdog = null, active = false;
+  let talkStream = null, talkEnabled = false;
   let camOff = false, liveNote = false;
   const chan = reconnectingChannel({
     label: "Podgląd",
@@ -1759,6 +1788,41 @@ const viewer = (() => {
     video.srcObject = null;
     showLive(""); showPlaceholder("Łączenie…"); $("startHere").hidden = true;
     setListeningAvailable(false);
+  }
+
+  function stopTalkback() {
+    talkStream?.getTracks().forEach(track => track.stop());
+    talkStream = null;
+  }
+
+  async function toggleTalkback() {
+    const button = $("talkbackBtn"), state = $("talkbackState");
+    if (!button || !MOBILE_OWNER_APP) return;
+    if (talkEnabled) {
+      talkEnabled = false;
+      stopTalkback();
+      button.textContent = "🎙 Rozmawiaj z komputerem";
+      button.setAttribute("aria-pressed", "false");
+      if (state) state.textContent = "Mikrofon telefonu wyłączony";
+      if (chan.channel) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: false });
+      return;
+    }
+    button.disabled = true;
+    try {
+      talkStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
+      talkEnabled = true;
+      button.textContent = "🔴 Zakończ rozmowę";
+      button.setAttribute("aria-pressed", "true");
+      if (state) state.textContent = "Mikrofon telefonu działa · mów do komputera";
+      reset();
+      if (chan.channel) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: true });
+    } catch (error) {
+      talkEnabled = false;
+      stopTalkback();
+      if (state) state.textContent = error?.name === "NotAllowedError" ? "Zezwól Chrome na mikrofon, aby rozmawiać" : "Nie udało się uruchomić mikrofonu telefonu";
+    } finally {
+      button.disabled = false;
+    }
   }
 
   async function onSignal(sig) {
@@ -1830,6 +1894,7 @@ const viewer = (() => {
         } else if (st === "failed") { showLive(""); setStatus(TURN_SERVER ? "Nie udało się zestawić połączenia WebRTC. Sprawdź diagnostykę ICE." : "Nie udało się zestawić połączenia WebRTC. Brak serwera TURN — przez LTE/5G lub restrykcyjny NAT obraz może nie przejść."); }
         else if (st === "disconnected") { showLive(""); setStatus("Połączenie przerwane — wznawiam…"); }
       };
+      if (talkEnabled && talkStream) talkStream.getAudioTracks().forEach(track => conn.addTrack(track, talkStream));
       await conn.setRemoteDescription(sig.sdp);
       for (const c of pending.splice(0)) await conn.addIceCandidate(c);
       const answer = await conn.createAnswer();
@@ -1839,6 +1904,9 @@ const viewer = (() => {
       if (pc?.remoteDescription) await pc.addIceCandidate(sig.candidate); else pending.push(sig.candidate);
     }
   }
+
+  $("talkbackBtn")?.addEventListener("click", toggleTalkback);
+  if (MOBILE_OWNER_APP && $("talkbackBtn")) $("talkbackBtn").hidden = false;
 
   // Przyciski trybu kamery na telefonie: podświetlony = bieżący tryb komputera.
   function applyMode(m, until = 0) {
@@ -1884,7 +1952,7 @@ const viewer = (() => {
   }
 
   window.addEventListener("online", () => { if (active) chan.reconnect(); });
-  window.addEventListener("beforeunload", () => { if (active) send(chan.channel, { type: "viewer-leave", viewerId }); });
+  window.addEventListener("beforeunload", () => { stopTalkback(); if (active) send(chan.channel, { type: "viewer-leave", viewerId }); });
 
   function sendZoom(st) { send(chan.channel, { type: "zoom", ...st }); }
 
@@ -2841,3 +2909,4 @@ if (RECEIVER_ONLY) {
     renderDiag({ cam: "", camLive: false, w: 0, h: 0, fps: 0, mic: "", micOn: false, recording: false, lastFile: "", quality: "", mode: "", viewers: 0, version: VERSION, camError: detail, light: 0, webrtc: webRtcDiagnostics.snapshot() }, [diagRow(false, "Panel nie nawiązał jeszcze połączenia z usługą transmisji.")]);
   }
 }
+
