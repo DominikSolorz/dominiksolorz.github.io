@@ -420,11 +420,12 @@ internal static class Program
 
             // Ten program jest komputerem-kamerą. Zgoda dotyczy wyłącznie
             // oficjalnej strony HOME SECURITY, nie dowolnej strony internetowej.
+            // Lokalizacja: tylko dla mapy, którą strona otwiera po potwierdzeniu użytkownika.
             webView.CoreWebView2.PermissionRequested += (_, e) =>
             {
                 if (Uri.TryCreate(e.Uri, UriKind.Absolute, out var permissionUri) &&
                     string.Equals(permissionUri.Host, PublicHost, StringComparison.OrdinalIgnoreCase) &&
-                    e.PermissionKind is CoreWebView2PermissionKind.Camera or CoreWebView2PermissionKind.Microphone)
+                    e.PermissionKind is CoreWebView2PermissionKind.Camera or CoreWebView2PermissionKind.Microphone or CoreWebView2PermissionKind.Geolocation)
                 {
                     e.State = CoreWebView2PermissionState.Allow;
                     WriteDiagnostic("media-permission-allowed", new { e.Uri, permission = e.PermissionKind.ToString() });

@@ -7,7 +7,7 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#070b16">
 <meta name="color-scheme" content="dark">
-<meta name="home-security-build" content="283">
+<meta name="home-security-build" content="284">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -105,8 +105,8 @@
 <link rel="stylesheet" href="premium-dark-pro.css?v=1">
 <link rel="stylesheet" href="remote-unlock-ui.css?v=1">
 <link rel="stylesheet" href="tech-ops.css?v=2">
-<link rel="stylesheet" href="operator-layout.css?v=5">
-<link rel="stylesheet" href="mobile-app-look.css?v=20">
+<link rel="stylesheet" href="operator-layout.css?v=6">
+<link rel="stylesheet" href="mobile-app-look.css?v=21">
 </template>
 <style>html,body{margin:0;min-height:100%;background:#090b11;color:#f4f3ef;font:15px/1.5 system-ui,sans-serif}[hidden]{display:none!important}.publicLanding body>:not(#publicHome):not(script):not(template):not(#bootError){display:none!important}.publicLanding #publicHome{position:relative;z-index:200;min-height:100vh;overflow:hidden}.publicLanding #bootError{position:fixed;z-index:999;inset:auto 16px 16px;padding:18px;background:#24141a;color:#fff}</style>
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png"></head>
@@ -274,16 +274,16 @@
 <aside id="quickMenu" class="quickMenu" aria-label="Szybkie menu kamery" aria-hidden="true">
   <div class="quickMenuHead"><div><b>Menu kamery</b><small>Działa bez przerywania transmisji</small></div><button id="quickMenuClose" type="button" aria-label="Zamknij menu">✕</button></div>
   <div class="quickMenuList">
-    <button type="button" data-menu-view="live"><span>●</span><b>Podgląd na żywo</b><small>kamera i bieżący stan systemu</small></button>
-    <button type="button" data-menu-view="controls"><span>⏺</span><b>Sterowanie i zapis</b><small>wyłącznie tryb pracy oraz zapis</small></button>
-    <button type="button" data-menu-view="settings"><span>⚙</span><b>Ustawienia kamery</b><small>wyłącznie jasność, jakość i dźwięk</small></button>
-    <button type="button" data-menu-view="archive"><span>⏪</span><b>Nagrania DVR</b><small>wyłącznie oś czasu i archiwum</small></button>
+    <button type="button" data-menu-view="live"><span><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg></span><b>Podgląd na żywo</b><small>kamera i bieżący stan systemu</small></button>
+    <button type="button" data-menu-view="controls"><span><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5v14l11-7z"/></svg></span><b>Sterowanie i zapis</b><small>wyłącznie tryb pracy oraz zapis</small></button>
+    <button type="button" data-menu-view="settings"><span><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg></span><b>Ustawienia kamery</b><small>wyłącznie jasność, jakość i dźwięk</small></button>
+    <button type="button" data-menu-view="archive"><span><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></svg></span><b>Nagrania DVR</b><small>wyłącznie oś czasu i archiwum</small></button>
   </div>
   <div class="quickMenuActions">
-    <button id="installAppBtn" type="button" hidden><span>📲</span><span><b>Zainstaluj aplikację Android</b><small id="installAppHint">otwiera się osobno, jak prawdziwa aplikacja</small></span></button>
-    <button id="menuGrid" type="button"><span>▦</span><span><b>Siatka kadru</b><small id="menuGridState">pokaż na obrazie</small></span></button>
-    <button id="menuFullscreen" type="button"><span>⛶</span><span><b>Pełny ekran</b><small>powiększ bieżący obraz</small></span></button>
-    <button id="menuPip" type="button"><span>▣</span><span><b>Mini-okno</b><small>obraz nad innymi aplikacjami</small></span></button>
+    <button id="installAppBtn" type="button" hidden><span><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/></svg></span><span><b>Zainstaluj aplikację Android</b><small id="installAppHint">otwiera się osobno, jak prawdziwa aplikacja</small></span></button>
+    <button id="menuGrid" type="button"><span><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span><b>Siatka kadru</b><small id="menuGridState">pokaż na obrazie</small></span></button>
+    <button id="menuFullscreen" type="button"><span><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></span><span><b>Pełny ekran</b><small>powiększ bieżący obraz</small></span></button>
+    <button id="menuPip" type="button"><span><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="6" rx="1"/></svg></span><span><b>Mini-okno</b><small>obraz nad innymi aplikacjami</small></span></button>
   </div>
 </aside>
 
@@ -398,6 +398,7 @@
 <section id="lock" class="lockScreen" hidden>
   <div class="pinCard">
     <div class="pinLogo"><img class="dsPanelLogo" src="assets/ds-shield.svg" width="96" height="96" alt="Logo DS"></div>
+    <p class="pinEyebrow">DOSTĘP DO PANELU · PIN WŁAŚCICIELA</p>
     <h2>Wpisz PIN</h2>
     <p class="muted small">Dostęp do kamery i nagrań tylko z PIN-em.</p>
     <div class="pinDots" aria-hidden="true"></div>
@@ -436,7 +437,7 @@
           <span id="listenState" class="listenState" role="status">Odsłuch wyłączony</span>
           <span id="talkbackState" class="listenState" role="status"></span>
         </div>
-        <div id="zoomBar" class="zoomBar" hidden>
+        <div id="zoomBar" class="zoomBar" role="group" aria-label="Przybliżenie cyfrowe" hidden>
           <button id="zoomOut" aria-label="Oddal">−</button>
           <span id="zoomLabel">1.0×</span>
           <button id="zoomIn" aria-label="Przybliż">+</button>
@@ -467,14 +468,14 @@
       <div class="rightCol">
         <section id="systemPanel" class="card panel systemPanel" aria-label="System monitoringu">
           <div class="panelHead"><div><h2>System monitoringu</h2><p>Aktualny stan i ustawienia kamery</p></div><span id="systemStateBadge" class="systemStateBadge">ŁĄCZENIE</span></div>
-          <ul class="sysList">
+          <ul class="sysList" aria-label="Bieżący stan">
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><span><small>Teraz oglądasz</small><b id="systemView">Obraz na żywo</b></span></li>
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span><small>Praca kamery</small><b id="systemMode">Sprawdzam…</b></span></li>
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span><small>Zapis</small><b id="systemArchive">—</b></span></li>
           </ul>
         </section>
         <section id="setCard" class="card panel setCard" aria-label="Ustawienia obrazu">
-          <div class="panelHead"><div><h2>Ustawienia obrazu</h2></div></div>
+          <div class="panelHead"><div><h2>Ustawienia obrazu</h2><p class="setCardIntro">Jasność, jakość, źródło dźwięku i czas zapisu kamery.</p></div></div>
           <div class="setRow" id="ownerLight"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><div class="lightBox"><span class="lightHead">Jasność kamery <b id="lightVal">0 (neutralnie)</b></span><div class="lightCtl"><button type="button" id="lightDown" aria-label="Ciemniej">−</button><input type="range" id="lightPick" min="-3" max="3" step="1" value="0"><button type="button" id="lightUp" aria-label="Jaśniej">+</button></div></div></div>
           <div class="setRow" id="ownerQuality"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M6 9v6M6 12h4M10 9v6M14 9v6h1.5a3 3 0 0 0 0-6z"/></svg><label>Jakość nagrywania<select id="viewQuality"></select></label></div>
           <div class="setRow" id="ownerMedia"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><label>Źródło (transmisja i zapis)<select id="mediaPick">
@@ -497,32 +498,33 @@
             <option value="contrast">Wysoki kontrast</option>
           </select></label></div>
           <label class="setRow switchRow"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Siatka na obrazie</span><input type="checkbox" id="gridToggle" class="switch"></label>
-          <button class="tool reloadPc" id="reloadPcBtn" type="button">⟳ Odśwież komputer-kamerę</button>
+          <button class="tool reloadPc" id="reloadPcBtn" type="button"><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>Odśwież komputer-kamerę</button>
         </section>
       </div>
 
       <div id="dvrCard" class="card panel dvrCard" hidden></div>
       <section id="dvrListCard" class="card panel dvrListCard" hidden aria-label="Lista nagrań"></section>
 
-      <div id="ctrlBar" class="card ctrlBar">
+      <div id="ctrlBar" class="card ctrlBar" role="group" aria-labelledby="ctrlBarTitle">
+        <p class="cardLabel" id="ctrlBarTitle">Transmisja i zapis</p>
         <div class="recClock" id="recClock">
           <span class="recDot" id="ctrlDot"></span>
           <div><strong id="ctrlTime">00:00:00</strong><small id="ctrlLabel">łączenie…</small></div>
         </div>
         <div class="ctrlBtns">
-          <button class="ctrl start" id="ctrlStart" type="button">▶ Start<small>na żywo + nagrywanie</small></button>
-          <button class="ctrl stop" id="ctrlStop" type="button" title="Zatrzymaj nagrywanie, zachowując obraz i dźwięk na żywo">⏹ Stop<small>zatrzymaj zapis</small></button>
-          <button class="ctrl restart" id="ctrlRestart" type="button">↻ Restart<small>uruchom ponownie</small></button>
+          <button class="ctrl start" id="ctrlStart" type="button"><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5v14l11-7z"/></svg>Start<small>na żywo + nagrywanie</small></button>
+          <button class="ctrl stop" id="ctrlStop" type="button" title="Zatrzymaj nagrywanie, zachowując obraz i dźwięk na żywo"><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>Stop<small>zatrzymaj zapis</small></button>
+          <button class="ctrl restart" id="ctrlRestart" type="button"><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>Restart<small>uruchom ponownie</small></button>
         </div>
         <p id="ctrlActionStatus" class="ctrlActionStatus" role="status" aria-live="polite">Gotowe do sterowania</p>
       </div>
       <!-- Podgląd -->
-      <div id="watchPanel" class="toolbar" hidden>
-        <button class="tool" id="fullBtn">⛶ Pełny ekran</button>
-        <button class="tool" id="pipBtn" type="button" title="Małe okno nad innymi aplikacjami">▣ Mini-okno</button>
-        <button class="tool" id="fitBtn" type="button">▣ Cały kadr</button>
-        <button class="tool" id="reconnectBtn">↻ Połącz</button>
-        <a class="tool primary" href="nagrania.html">📼 Nagrania</a>
+      <div id="watchPanel" class="toolbar" role="group" aria-label="Narzędzia podglądu" hidden>
+        <button class="tool" id="fullBtn"><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Pełny ekran</span></button>
+        <button class="tool" id="pipBtn" type="button" title="Małe okno nad innymi aplikacjami"><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="6" rx="1"/></svg><span>Mini-okno</span></button>
+        <button class="tool" id="fitBtn" type="button"><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="1.5"/><path d="M8 10v4M16 10v4"/></svg><span>Cały kadr</span></button>
+        <button class="tool" id="reconnectBtn"><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg><span>Połącz</span></button>
+        <a class="tool primary" href="nagrania.html"><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></svg><span>Nagrania</span></a>
       </div>
       <div id="recStatus" class="recStatus" hidden></div>
       <div id="status" class="status" role="status" aria-live="polite" hidden></div>
@@ -532,7 +534,7 @@
         <ul id="diagList" class="diagList"></ul>
       </details>
       <details id="viewEventsCard" class="card eventsCard fold">
-        <summary><span>🔔 Zdarzenia</span><span class="muted small">ruch i dźwięk</span></summary>
+        <summary><span><svg class="uiIco" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg>Zdarzenia</span><span class="muted small">ruch i dźwięk</span></summary>
         <ul id="viewEvents" class="events"></ul>
       </details>
     </section>
@@ -695,9 +697,9 @@
 <script src="vendor/supabase.js?v=2.117.2"></script>
 <script type="module" src="auth.js?v=17"></script>
 <script type="module" src="auth-experience.mjs?v=2"></script>
-<script type="module" src="app.js?v=283"></script>
-<script type="module" src="desktop.js?v=52"></script>
-<script type="module" src="mobile.js?v=44"></script>
+<script type="module" src="app.js?v=284"></script>
+<script type="module" src="desktop.js?v=53"></script>
+<script type="module" src="mobile.js?v=45"></script>
 </template>
 <script type="module" src="panel-entry.mjs?v=4"></script>
 </body>
