@@ -408,3 +408,12 @@ html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar #ctrlRestart:not(:d
 #talkbackState:empty{display:none}
 #talkbackState{color:#8be9df;font-size:12px}
 
+
+/* Ikony SVG w menu i przyciskach (pomysł z rundy Replit) — jeden rozmiar na telefonie i komputerze. */
+html body :is(#app,#quickMenu) svg.uiIco{width:18px!important;height:18px!important;flex:none;vertical-align:-3px;margin-right:6px}
+html body .lockScreen .pinEyebrow{margin:0 0 6px;text-align:center;font:600 10.5px/1.4 var(--pl-sans,system-ui,sans-serif);letter-spacing:.16em;color:#7fb2ff}
+html.mobileOwnerMode body #app .cardLabel{margin:0 0 6px;font:700 11px/1.3 var(--pl-sans,system-ui,sans-serif);letter-spacing:.14em;text-transform:uppercase;color:#7fb2ff}
+html.mobileOwnerMode body #app .setCardIntro{font-size:13px;margin:2px 0 0;color:#9fb3cc}
+/* Zwinięte menu Windows: sama ikona mapy. */
+html.desktopMode.desktopSidebarCollapsed body .desktopSidebar .mobileMapOpen :is(span,i){display:none}
+html.desktopMode.desktopSidebarCollapsed body .desktopSidebar .mobileMapOpen{justify-content:center;padding:8px}

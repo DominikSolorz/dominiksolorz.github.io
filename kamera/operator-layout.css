@@ -528,3 +528,16 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSummary>
 /* Wszystkie karty ekranów w jednym stylu. */
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(.desktopControlsScreen #ctrlBar,.controlDeviceDock .card,.desktopSettingsScreen,.desktopEventsScreen,.desktopDiagnosticsScreen,.eventWorkspace){border-radius:18px!important;border-color:var(--v2-line)!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopSettingsTabs button.active{background:linear-gradient(90deg,rgba(46,230,214,.14),rgba(59,139,255,.08))!important;border-color:rgba(46,230,214,.4)!important}
+
+/* Mapa w programie Windows (pomysł z rundy Replit): przycisk w menu bocznym, większe okno. */
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar .mobileMapCard{min-width:0;margin:10px 0 0;background:transparent;border:0}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar .mobileMapOpen{display:flex;align-items:center;width:100%;min-height:52px;padding:8px 10px;gap:10px;border-radius:12px;background:var(--pl-panel);border:1px solid var(--pl-line);color:var(--pl-text);text-align:left;cursor:pointer}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar .mobileMapOpen:hover{border-color:var(--pl-line2);background:var(--pl-hover)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar .mobileMapOpen b{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;background:rgba(55,175,230,.15);color:var(--pl-cyan)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar .mobileMapOpen span{display:grid;gap:2px;min-width:0;flex:1}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar .mobileMapOpen small{color:var(--pl-muted)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .mobileMapDialog[open]:has(.mobileMapCanvas:not([hidden])){width:min(calc(100vw - 48px),1180px);max-height:calc(100dvh - 48px);padding:22px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .mobileMapCanvas{height:min(58dvh,620px)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .mobileMapResults ul{grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:10px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .cardLabel{flex-basis:100%;margin:0 0 4px;font:600 10.5px/1.3 var(--pl-sans);letter-spacing:.16em;text-transform:uppercase;color:var(--pl-sky,#7fb2ff)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .setCardIntro{font-size:12.5px;margin:2px 0 0}

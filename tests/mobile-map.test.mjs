@@ -73,7 +73,7 @@ test('Leaflet is served from the same origin and the panel mounts the map',async
  for(const f of ['leaflet.js','leaflet.css','LICENSE','images/marker-icon.png'])await readFile(new URL('../kamera/vendor/leaflet/'+f,import.meta.url));
  assert.ok(mobile.includes('./mobile-map.mjs?v=7')&&mobile.includes('mountLocationMap()'));
  assert.ok(sw.includes('./mobile-map.mjs?v=7'));
- assert.ok(panel.includes('mobile.js?v=44')&&sw.includes('./mobile.js?v=44'));
+ assert.ok(panel.includes('mobile.js?v=45')&&sw.includes('./mobile.js?v=45'));
 });
 
 test('search prefers the surroundings and drops far-away name matches',()=>{
@@ -114,4 +114,12 @@ test('chain name search looks nearby by name or brand and merges duplicates',()=
  assert.equal(buildNameQuery('a',{lat:52,lng:21}),'');
  const m=mergePlaces([{name:'Biedronka',lat:52.2,lon:21,address:'',brand:''}],[{name:'biedronka',lat:52.20001,lon:21,address:'Prosta 1',brand:'Q857182'},{name:'Biedronka',lat:52.21,lon:21}]);
  assert.equal(m.length,2);assert.equal(m[0].brand,'Q857182');assert.equal(m[0].address,'Prosta 1');
+});
+
+test('Windows panel opens the same consent-first map; WebView2 grants location only to the official site',async()=>{
+ const [desktop,program,css]=await Promise.all([read('kamera/desktop.js'),read('desktop-client/Program.cs'),read('kamera/operator-layout.css')]);
+ assert.match(desktop,/import \{ mountLocationMap \} from "\.\/mobile-map\.mjs\?v=7"/);
+ assert.equal((desktop.match(/mountLocationMap\(\)/g)||[]).length,1,'map mounted once');
+ assert.match(program,/string\.Equals\(permissionUri\.Host, PublicHost[\s\S]{0,200}CoreWebView2PermissionKind\.Geolocation/);
+ assert.match(css,/\.desktopSidebar \.mobileMapOpen\{/);
 });

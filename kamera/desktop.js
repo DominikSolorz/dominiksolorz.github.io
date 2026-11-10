@@ -9,6 +9,10 @@ import { systemStore } from "./core/store.mjs";
 import { operatorStatus } from "./core/operator-status.mjs?v=1";
 import { mountCameraWorkspace } from './camera-workspace.mjs?v=2';
 import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=4";
+import { mountLocationMap } from "./mobile-map.mjs?v=7";
+// „Łączenie…” mówi więcej: z czym się łączymy (pomysł z rundy Replit).
+const clarifyConnectionText=()=>{const node=document.getElementById("placeholder");if(!node)return;const fix=()=>{if(node.textContent.trim()==="Łączenie…")node.textContent="Łączenie z komputerem z kamerą…";};const watch=new MutationObserver(fix);watch.observe(node,{childList:true,characterData:true,subtree:true});fix();window.addEventListener("pagehide",()=>watch.disconnect(),{once:true});};
+
 const isTransmitter = location.hash === "#nadaj";
 // Tryb urządzenia jest rozstrzygany raz, przed załadowaniem CSS w index.html.
 // Dzięki temu Chrome w telefonie i wersja instalowana PWA nie rozchodzą się
@@ -65,6 +69,8 @@ if (desktopRequested) {
   shell.querySelectorAll('[data-desktop-view]').forEach(button => {
     button.querySelector('i').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${navPaths[button.dataset.desktopView]}</svg>`;
   });
+  // Mapa (OSM, ta sama zgoda na lokalizację przy każdym otwarciu) także w programie Windows.
+  shell.append(mountLocationMap());
   document.body.prepend(shell);
   const updateNotice = document.createElement("section");
   updateNotice.id = "desktopUpdateNotice"; updateNotice.className = "desktopUpdateNotice"; updateNotice.hidden = true;
@@ -144,6 +150,7 @@ if (desktopRequested) {
   overview.insertAdjacentElement("beforebegin", homeGuide);
   const liveTile = overview.querySelector(".desktopCameraLive");
   if (liveStage && liveTile) liveTile.append(liveStage);
+  clarifyConnectionText();
   $('desktopAddCamera').onclick=()=>{
     if(cameraWorkspace)void cameraWorkspace.openSetup();
     else $('desktopCameraCount').textContent='Konfiguracja kamer jest dostępna po zalogowaniu właściciela.';
