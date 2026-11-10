@@ -150,3 +150,16 @@ html:not(.policeCommand):not(.usMilitary) :is(input,select,textarea):focus-visib
  html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button{transition:none}
  html.desktopMode:not(.policeCommand):not(.usMilitary) .desktopNav button:hover{transform:none}
 }
+
+
+/* HOME SECURITY reference direction: navy/cyan product shell */
+:root{--hs-ink:#050a14;--hs-navy:#091426;--hs-surface:#0f1d31;--hs-surface-2:#132640;--hs-cyan:#39e6d3;--hs-cyan-soft:rgba(57,230,211,.16);--hs-border:rgba(113,171,198,.28)}
+html.desktopMode #app{background:radial-gradient(900px 420px at 12% -10%,rgba(18,74,105,.26),transparent 65%),var(--hs-ink)}
+html.desktopMode #app :is(.desktopNav,.topbar,.desktopShellHeader){background:linear-gradient(180deg,rgba(9,20,38,.98),rgba(5,12,24,.96));border-color:var(--hs-border)}
+html.desktopMode #app :is(.card,.panel,.desktopCameraTile,.desktopDeviceManager,.desktopEventsDrawer,.desktopControlsScreen,.desktopSettingsScreen,.desktopEventsScreen,.desktopDiagnosticsScreen){background:linear-gradient(150deg,rgba(15,29,49,.98),rgba(7,16,30,.98));border:1px solid var(--hs-border);box-shadow:0 18px 42px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.035)}
+html.desktopMode #app :is(h1,h2,h3,.cardHead h2,.desktopNav button strong){letter-spacing:-.02em}
+html.desktopMode #app :is(.desktopNav button.active,.navLink.active){color:#f3fffd;background:linear-gradient(135deg,rgba(57,230,211,.18),rgba(22,53,83,.88));border-color:rgba(57,230,211,.6);box-shadow:inset 3px 0 var(--hs-cyan),0 0 24px rgba(57,230,211,.08)}
+html.desktopMode #app :is(.btn.primary,.authPrimary,#ctrlStart,.dvrBtn.on){background:linear-gradient(135deg,#2ad7c4,#1593b2);border-color:#6af4e6;color:#031018;box-shadow:0 8px 22px rgba(21,147,178,.25)}
+html.desktopMode #app :is(.connectionStatus,.recordingStatus,.statusPill){background:rgba(4,15,28,.82);border-color:var(--hs-border)}
+html.desktopMode #app .stage{border-color:rgba(57,230,211,.4);box-shadow:0 0 0 1px rgba(57,230,211,.08),0 20px 50px rgba(0,0,0,.35)}
+@media(max-width:900px){html.desktopMode #app :is(.desktopNav,.sideNav){position:sticky;top:0;z-index:20}}

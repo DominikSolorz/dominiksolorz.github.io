@@ -51,7 +51,7 @@ test('PWA and native host use same versioned PIN and remote UI without exposing 
  assert.match(app,/createRemoteUnlockHost/);assert.match(app,/mountRemoteUnlockPhone/);
  assert.match(app,/requireAccess\(\{bindRemote:callback=>remoteHost\?\.bindUnlock\(callback\)\}\)/);
  assert.match(panel,/app\.js\?v=289/);assert.match(sw,/\.\/app\.js\?v=289/);
- assert.match(sw,/kamera-domowa-shell-v209/);assert.match(app,/SERVICE_WORKER_BUILD = "209"/);
+ assert.match(sw,/kamera-domowa-shell-v289/);assert.match(app,/SERVICE_WORKER_BUILD = "289"/);
  assert.equal(JSON.parse(version).version,'289');
  assert.match(panel,/remote-unlock-ui\.css\?v=1/);
  assert.match(lock,/sessionStorage\.setItem\('kamera-dostep',key\)/);

@@ -19,3 +19,14 @@
 #authDialog [hidden]{display:none!important}
 @media(max-width:600px){#authDialog{padding:10px}#authDialog .authCard{padding:22px 18px;border-radius:17px;max-height:94dvh}#authDialog .authGrid{grid-template-columns:1fr}#authDialog .authForm :is(h1,h2){font-size:30px}}
 @media(prefers-reduced-motion:reduce){#authDialog .authForm input{transition:none}}
+
+
+/* HOME SECURITY authentication visual system */
+:where(.authShell,.authPage,.pinShell,.pinPage){background:radial-gradient(700px 360px at 50% -8%,rgba(18,74,105,.34),transparent 68%),#050a14;color:#eefbff}
+:where(.authCard,.authPanel,.pinCard){background:linear-gradient(155deg,rgba(15,29,49,.98),rgba(7,16,30,.98));border:1px solid rgba(113,171,198,.34);box-shadow:0 24px 60px rgba(0,0,0,.36),inset 0 1px rgba(255,255,255,.04)}
+:where(.authCard,.authPanel,.pinCard) :is(h1,h2,h3){letter-spacing:-.03em;color:#f5feff}
+:where(.authPrimary,.pinSubmit,.authCard .btn.primary){background:linear-gradient(135deg,#2ad7c4,#1593b2);border-color:#6af4e6;color:#031018;box-shadow:0 10px 26px rgba(21,147,178,.24)}
+:where(.authCard input,.authPanel input,.pinCard input){background:#071426;border-color:rgba(113,171,198,.38);color:#f5feff}
+:where(.authCard input,.authPanel input,.pinCard input):focus{border-color:#39e6d3;box-shadow:0 0 0 3px rgba(57,230,211,.16)}
+:where(.authError,.pinMsg[data-state="error"]){border-color:rgba(248,113,113,.55);background:rgba(127,29,29,.26);color:#fecaca}
+:where(.authSuccess,.pinMsg[data-state="success"]){border-color:rgba(57,230,211,.5);background:rgba(20,83,79,.28);color:#b9fff4}

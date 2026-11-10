@@ -692,3 +692,14 @@
 #publicHome :is(.mktFeature,.mktScenarioCard,.mktHomeDestinations article),.marketingPage :is(.mktFeature,.mktScenarioCard){transition:border-color .2s,box-shadow .2s}
 #publicHome :is(.mktFeature,.mktScenarioCard):hover,.marketingPage :is(.mktFeature,.mktScenarioCard):hover{border-color:#5b6aa0;box-shadow:0 18px 48px rgba(10,12,30,.45)}
 #publicHome .mktTextLink,.marketingPage .mktTextLink{text-underline-offset:4px}
+
+
+/* HOME SECURITY public product direction */
+.mktSite{--mkt-ink:#050a14;--mkt-navy:#091426;--mkt-surface:#0f1d31;--mkt-cyan:#39e6d3;--mkt-cyan-2:#54c9ff;--mkt-line:rgba(113,171,198,.28);background:radial-gradient(900px 420px at 8% -5%,rgba(18,74,105,.34),transparent 66%),var(--mkt-ink);color:#eefbff}
+.mktSite :is(.mktNav,.mktHeader,.mktFooter){background:rgba(5,12,24,.86);border-color:var(--mkt-line);backdrop-filter:blur(16px)}
+.mktSite :is(.mktCard,.mktFeature,.mktPost,.mktPanel,.mktDownloadCard){background:linear-gradient(155deg,rgba(15,29,49,.98),rgba(7,16,30,.98));border:1px solid var(--mkt-line);box-shadow:0 18px 42px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.035)}
+.mktSite :is(h1,h2,h3,.mktPageTitle){letter-spacing:-.035em;color:#f5feff}
+.mktSite :is(.mktEyebrow,.mktPostCategory){color:var(--mkt-cyan);letter-spacing:.12em}
+.mktSite :is(.mktButton,.mktCta,.mktPrimary){background:linear-gradient(135deg,#2ad7c4,#1593b2);border-color:#6af4e6;color:#031018;box-shadow:0 10px 26px rgba(21,147,178,.24)}
+.mktSite :is(a,.mktTextLink):focus-visible{outline:3px solid var(--mkt-cyan);outline-offset:4px}
+@media(max-width:760px){.mktSite :is(.mktNav,.mktHeader){padding-inline:max(14px,env(safe-area-inset-left)) max(14px,env(safe-area-inset-right))}.mktSite :is(.mktCard,.mktFeature,.mktPost){border-radius:18px}.mktSite :is(h1,.mktPageTitle){font-size:clamp(2rem,9vw,3.2rem)}}
