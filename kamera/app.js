@@ -87,7 +87,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "282"; // musi się zgadzać z version.json
+const VERSION = "283"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1229,6 +1229,27 @@ const sender = (() => {
   }
   function closeAll() { peers.forEach(p => p.pc.close()); peers.clear(); renderViewers(); }
 
+  // Głos z telefonu na głośniku komputera + potwierdzenie dla telefonu.
+  function playTalk(peer, viewerId, ch) {
+    const audio = peer.talkAudio;
+    const report = status => { if (peers.get(viewerId) === peer) send(ch, { type: "talkback-status", viewerId, status }); };
+    if (!audio) return report("waiting");
+    const started = () => {
+      if (!peer.talkWanted || peer.talkAudio !== audio) return;
+      report("playing");
+      systemStore.component("talkback", { status: "connected", message: "Rozmowa z telefonu jest odtwarzana na głośniku komputera." });
+      toastMsg("🎙 Telefon mówi — głos słychać z głośnika tego komputera.");
+    };
+    audio.play().then(started).catch(() => {
+      report("blocked");
+      systemStore.component("talkback", { status: "blocked", message: "Kliknij stronę komputera, aby włączyć rozmowę." });
+      toastMsg("🎙 Telefon chce rozmawiać. Kliknij dowolne miejsce w tym oknie, aby włączyć dźwięk.");
+      const resume = () => { if (peer.talkWanted && peer.talkAudio === audio) audio.play().then(started).catch(() => {}); };
+      document.addEventListener("pointerdown", resume, { once: true, capture: true });
+      document.addEventListener("keydown", resume, { once: true, capture: true });
+    });
+  }
+
   async function connectViewer(viewerId) {
     const ch = chan.channel;
     if (!ch || !stream) return;
@@ -1247,10 +1268,11 @@ const sender = (() => {
     const audioTransceiver = pc.getTransceivers().find(t => t.receiver?.track?.kind === "audio");
     if (audioTransceiver) audioTransceiver.direction = "sendrecv";
     else pc.addTransceiver("audio", { direction: "sendrecv" });
+    // Ścieżka głosu telefonu istnieje przez całe połączenie (cisza, dopóki telefon
+    // nie włączy mikrofonu), więc rozmowa nie wymaga ponownego łączenia obrazu.
     pc.ontrack = event => {
       if (event.track.kind !== "audio") return;
       const audio = document.createElement("audio");
-      audio.autoplay = true;
       audio.playsInline = true;
       audio.setAttribute("aria-hidden", "true");
       audio.srcObject = event.streams[0] || new MediaStream([event.track]);
@@ -1258,21 +1280,7 @@ const sender = (() => {
       peer.talkAudio?.remove();
       peer.talkAudio = audio;
       document.body.append(audio);
-      // Telefon dostaje potwierdzenie, czy jego głos naprawdę gra na tym komputerze.
-      const report = status => { if (peers.get(viewerId) === peer) send(ch, { type: "talkback-status", viewerId, status }); };
-      const started = () => {
-        report("playing");
-        systemStore.component("talkback", { status: "connected", message: "Rozmowa z telefonu jest odtwarzana na głośniku komputera." });
-        toastMsg("🎙 Telefon mówi — głos słychać z głośnika tego komputera.");
-      };
-      audio.play().then(started).catch(() => {
-        report("blocked");
-        systemStore.component("talkback", { status: "blocked", message: "Kliknij stronę komputera, aby włączyć rozmowę." });
-        toastMsg("🎙 Telefon chce rozmawiać. Kliknij dowolne miejsce w tym oknie, aby włączyć dźwięk.");
-        const resume = () => { if (peer.talkAudio === audio) audio.play().then(started).catch(() => {}); };
-        document.addEventListener("pointerdown", resume, { once: true, capture: true });
-        document.addEventListener("keydown", resume, { once: true, capture: true });
-      });
+      if (peer.talkWanted) playTalk(peer, viewerId, ch);
     };
     // Kanał danych: telefon ogląda i pobiera nagrania z pamięci tego komputera.
     serveRecordings(pc.createDataChannel("nagrania", { ordered: true }), archive.local);
@@ -1289,7 +1297,18 @@ const sender = (() => {
   async function onSignal(sig) {
     if (typeof sig.type === "string" && sig.type.startsWith("lib-") && sig.type !== "lib-reply") return library.handle(sig, chan.channel);
     if (sig.type === "viewer-join") return connectViewer(sig.viewerId);
-    if (sig.type === "viewer-talkback") return connectViewer(sig.viewerId);
+    if (sig.type === "viewer-talkback") {
+      const peer = peers.get(sig.viewerId);
+      // Starsze telefony (bez „live”) same zrywają połączenie i czekają na nowe.
+      if (!sig.live || !peer || ["failed", "closed"].includes(peer.pc.connectionState)) {
+        if (peer) peer.talkWanted = !!sig.enabled;
+        return connectViewer(sig.viewerId).then(() => { const next = peers.get(sig.viewerId); if (next) next.talkWanted = !!sig.enabled; });
+      }
+      peer.talkWanted = !!sig.enabled;
+      if (peer.talkWanted) return playTalk(peer, sig.viewerId, chan.channel);
+      peer.talkAudio?.pause();
+      return;
+    }
     if (sig.type === "zoom" && zoomer) { zoomer.set(sig); return sendZoomState(); }
     if (sig.type === "zoom-get") return sendZoomState();
     // Drugi nadajnik (inna przeglądarka lub profil na tym samym komputerze) ma już obraz z kamery,
@@ -1789,12 +1808,13 @@ const viewer = (() => {
     return requireCommandSuccess(result);
   }
   let pc = null, pending = [], lastSeen = 0, lastJoin = 0, brokenSince = 0, watchdog = null, active = false;
-  let talkStream = null, talkEnabled = false, talkConfirmTimer = 0;
+  let talkStream = null, talkEnabled = false, talkConfirmTimer = 0, talkSender = null;
   // Odpowiedź komputera na rozmowę: czy głos z telefonu naprawdę gra na głośniku.
   function showTalkStatus(status) {
     const state = $("talkbackState");
     if (!talkEnabled || !state) return;
     clearTimeout(talkConfirmTimer);
+    if (status === "waiting") return;
     state.textContent = status === "playing"
       ? "✅ Komputer odtwarza Twój głos — mów"
       : "🔇 Komputer wyciszył rozmowę. Kliknij okno HOME SECURITY na komputerze albo zaktualizuj program.";
@@ -1826,11 +1846,12 @@ const viewer = (() => {
     if (talkEnabled) {
       talkEnabled = false;
       clearTimeout(talkConfirmTimer);
+      talkSender?.replaceTrack(null).catch(() => {});
       stopTalkback();
       button.textContent = "🎙 Rozmawiaj z komputerem";
       button.setAttribute("aria-pressed", "false");
       if (state) state.textContent = "Mikrofon telefonu wyłączony";
-      if (chan.channel) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: false });
+      if (chan.channel) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: false, live: true });
       return;
     }
     button.disabled = true;
@@ -1840,8 +1861,10 @@ const viewer = (() => {
       button.textContent = "🔴 Zakończ rozmowę";
       button.setAttribute("aria-pressed", "true");
       if (state) state.textContent = "Mikrofon telefonu działa · łączę z głośnikiem komputera…";
-      reset();
-      if (chan.channel) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: true });
+      // Bez zrywania połączenia: mikrofon wchodzi w istniejącą ścieżkę głosu,
+      // obraz i odsłuch z komputera grają dalej.
+      if (talkSender && pc?.connectionState === "connected") await talkSender.replaceTrack(talkStream.getAudioTracks()[0] || null);
+      if (chan.channel) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: true, live: true });
       clearTimeout(talkConfirmTimer);
       talkConfirmTimer = setTimeout(() => {
         if (talkEnabled && state) state.textContent = "Komputer nie potwierdził rozmowy. Sprawdź, czy kamera jest włączona, a program HOME SECURITY na komputerze zaktualizowany.";
@@ -1922,11 +1945,21 @@ const viewer = (() => {
           brokenSince = 0; showPlaceholder(""); showLive("NA ŻYWO"); setStatus("");
           send(chan.channel, { type: "zoom-get" });
           $("fullBtn").disabled = false;
+          // Po odnowieniu połączenia komputer ma od razu znów grać rozmowę.
+          if (talkEnabled) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: true, live: true });
         } else if (st === "failed") { showLive(""); setStatus(TURN_SERVER ? "Nie udało się zestawić połączenia WebRTC. Sprawdź diagnostykę ICE." : "Nie udało się zestawić połączenia WebRTC. Brak serwera TURN — przez LTE/5G lub restrykcyjny NAT obraz może nie przejść."); }
         else if (st === "disconnected") { showLive(""); setStatus("Połączenie przerwane — wznawiam…"); }
       };
-      if (talkEnabled && talkStream) talkStream.getAudioTracks().forEach(track => conn.addTrack(track, talkStream));
       await conn.setRemoteDescription(sig.sdp);
+      // Zawsze odpowiadamy z dwukierunkową ścieżką głosu (bez mikrofonu = cisza).
+      // Włączenie rozmowy podmienia tylko ścieżkę — bez ponownego łączenia.
+      const talkTransceiver = conn.getTransceivers().find(t => t.receiver?.track?.kind === "audio");
+      talkSender = null;
+      if (talkTransceiver) {
+        talkTransceiver.direction = "sendrecv";
+        talkSender = talkTransceiver.sender;
+        if (talkEnabled && talkStream) await talkSender.replaceTrack(talkStream.getAudioTracks()[0] || null);
+      }
       for (const c of pending.splice(0)) await conn.addIceCandidate(c);
       const answer = await conn.createAnswer();
       await conn.setLocalDescription(answer);
@@ -2392,7 +2425,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "202";
+  const SERVICE_WORKER_BUILD = "203";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
