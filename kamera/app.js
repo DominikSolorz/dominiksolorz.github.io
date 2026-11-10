@@ -87,7 +87,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "286"; // musi się zgadzać z version.json
+const VERSION = "287"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1835,9 +1835,20 @@ const viewer = (() => {
     setListeningAvailable(false);
   }
 
+  // iPhone/iPad (WebKit): włączenie mikrofonu przełącza sesję audio i potrafi
+  // zatrzymać lub wyciszyć odtwarzany obraz z dźwiękiem. Utrzymujemy odsłuch.
+  function setPhoneAudioSession(type) { try { if (navigator.audioSession) navigator.audioSession.type = type; } catch { /* brak wsparcia */ } }
+  function resumeListening(wasMuted) {
+    video.muted = wasMuted;
+    video.play().catch(() => {});
+    paintListeningControls();
+  }
   function stopTalkback() {
+    const wasMuted = video.muted;
     talkStream?.getTracks().forEach(track => track.stop());
     talkStream = null;
+    setPhoneAudioSession("auto");
+    resumeListening(wasMuted);
   }
 
   async function toggleTalkback() {
@@ -1856,12 +1867,18 @@ const viewer = (() => {
     }
     button.disabled = true;
     try {
+      const wasMuted = video.muted;
+      setPhoneAudioSession("play-and-record");
       talkStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
       talkEnabled = true;
+      resumeListening(wasMuted);
       button.textContent = "🔴 Zakończ rozmowę";
       button.setAttribute("aria-pressed", "true");
       const linked = pc?.connectionState === "connected";
-      if (state) state.textContent = linked
+      const hostBuild = Number(ctrlState.hostVersion) || 0;
+      if (state) state.textContent = linked && hostBuild && hostBuild < 283
+        ? `Komputer ma starszy program (panel ${hostBuild}) — przy rozmowie obraz połączy się ponownie. Zaktualizuj program HOME SECURITY na komputerze (↻ Zaktualizuj), wtedy obraz i odsłuch nie będą się przerywać.`
+        : linked
         ? "Mikrofon telefonu działa · łączę z głośnikiem komputera…"
         : "Mikrofon gotowy, ale telefon nie jest połączony z komputerem z kamerą. Rozmowa zacznie się sama po połączeniu — sprawdź, czy program HOME SECURITY na komputerze jest włączony.";
       // Bez zrywania połączenia: mikrofon wchodzi w istniejącą ścieżkę głosu,
@@ -2430,7 +2447,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "206";
+  const SERVICE_WORKER_BUILD = "207";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
