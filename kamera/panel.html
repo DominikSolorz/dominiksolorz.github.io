@@ -30,10 +30,9 @@
   // tego, który komputer jest nadajnikiem kamery.
   let savedUiMode = "";
   let layoutPreference = "auto";
-  try {
-    layoutPreference = localStorage.getItem("hs-layout-mode-v2") || "auto";
-    savedUiMode = localStorage.getItem("hs-layout-choice-v2") || "";
-  } catch (_) { /* tryb prywatny */ }
+  // Zwykłe wejście zawsze wykrywa bieżące urządzenie i szerokość okna.
+  // Ręczny układ dotyczy wyłącznie adresu wybranego w ustawieniach;
+  // stary zapis z innego widoku nie może wyłączać automatyki.
   if (routeParams.get("layout") === "auto") layoutPreference = "auto";
   if (routeParams.get("layout") === "manual" && ["phone", "computer"].includes(routeParams.get("ui"))) {
     layoutPreference = "manual";
