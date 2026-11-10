@@ -10,6 +10,8 @@
 import { groupRoutes } from './location-history.mjs?v=1';
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
+// Główny serwer Overpass bywa przeciążony; jeden zapasowy serwer tej samej usługi.
+const OVERPASS_FALLBACK_URL = 'https://overpass.kumi.systems/api/interpreter';
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const MIN_POI_ZOOM = 15;
@@ -25,7 +27,7 @@ const AMENITY = {
   pharmacy: 'Apteka', restaurant: 'Restauracja', cafe: 'Kawiarnia', fast_food: 'Bar szybkiej obsługi', bar: 'Bar', pub: 'Pub',
   bank: 'Bank', atm: 'Bankomat', fuel: 'Stacja paliw', hospital: 'Szpital', clinic: 'Przychodnia', doctors: 'Lekarz', dentist: 'Dentysta',
   school: 'Szkoła', kindergarten: 'Przedszkole', university: 'Uczelnia', post_office: 'Poczta', police: 'Policja', fire_station: 'Straż pożarna',
-  townhall: 'Urząd', library: 'Biblioteka', cinema: 'Kino', theatre: 'Teatr', parking: 'Parking', place_of_worship: 'Miejsce kultu', veterinary: 'Weterynarz'
+  townhall: 'Urząd', bus_stop: 'Przystanek', tram_stop: 'Przystanek tramwajowy', station: 'Stacja', viewpoint: 'Punkt widokowy', attraction: 'Atrakcja', museum: 'Muzeum', hotel: 'Hotel', supermarket: 'Supermarket', convenience: 'Sklep', mall: 'Centrum handlowe', house: 'Budynek', building: 'Budynek', public: 'Budynek publiczny', residential: 'Ulica', primary: 'Ulica', secondary: 'Ulica', tertiary: 'Ulica', city: 'Miasto', town: 'Miasto', village: 'Wieś', suburb: 'Dzielnica', postcode: 'Kod pocztowy', administrative: 'Obszar', library: 'Biblioteka', cinema: 'Kino', theatre: 'Teatr', parking: 'Parking', place_of_worship: 'Miejsce kultu', veterinary: 'Weterynarz'
 };
 
 export function describeLocationError(error) {
@@ -87,6 +89,21 @@ export function parsePlaces(data, from, limit = 40) {
     });
   }
   return out.sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0)).slice(0, limit);
+}
+
+// Wyszukiwanie preferuje okolicę (~40 km od środka mapy), nie tylko widoczny wycinek ulicy.
+export function searchViewbox(center, km = 40) {
+  const dLat = km / 111, dLon = km / (111 * Math.max(0.2, Math.cos(center.lat * Math.PI / 180)));
+  return [center.lng - dLon, center.lat + dLat, center.lng + dLon, center.lat - dLat].map(v => v.toFixed(5)).join(',');
+}
+
+// Najbliższe wyniki najpierw; odrzuca odległe zbieżności nazw (np. w innym kraju),
+// gdy blisko jest trafienie. Bez znanej pozycji zostawia kolejność serwera.
+export function nearestResults(places, limit = 8) {
+  if (!places.length || places.some(p => p.distance === null)) return places.slice(0, limit);
+  const sorted = [...places].sort((a, b) => a.distance - b.distance);
+  const reach = Math.max(30000, sorted[0].distance * 3);
+  return sorted.filter(p => p.distance <= reach).slice(0, limit);
 }
 
 export function parseGeocode(data, from, limit = 8) {
@@ -171,7 +188,7 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
   const results = $('.mobileMapResults'), confirm = $('.mobileMapConfirm'), cancel = $('.mobileMapCancel');
   const recordBtn = $('.mobileMapRecord'), historyBtn = $('.mobileMapHistory'), recordOpt = $('.mobileMapRecordOpt');
   const followBtn = $('.mobileMapFollow'), placesBtn = $('.mobileMapPlaces'), searchForm = $('.mobileMapSearch');
-  let session = 0, watchId = null, map = null, me = null, accuracy = null, markers = null, here = null, follow = true, recording = false, routes = null;
+  let session = 0, query = 0, resizeWatch = null, watchId = null, map = null, me = null, accuracy = null, markers = null, here = null, follow = true, recording = false, routes = null;
 
   const syncFollow = () => {
     followBtn.textContent = follow ? '◎ Śledzę Twoją pozycję' : '◎ Wróć do mojej pozycji';
@@ -188,6 +205,8 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
     recording = false;
     if (watchId !== null) geolocation?.clearWatch(watchId);
     watchId = null;
+    resizeWatch?.disconnect();
+    resizeWatch = null;
     map?.remove();
     map = me = accuracy = markers = routes = here = null;
     canvas.replaceChildren();
@@ -285,6 +304,8 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
     L.Icon.Default.imagePath = LEAFLET_IMAGES;
     canvas.hidden = tools.hidden = attribution.hidden = false;
     map = L.map(canvas, { attributionControl: false }).setView([latitude, longitude], 17);
+    // Lista wyników zmienia wysokość mapy — Leaflet musi przeliczyć rozmiar.
+    if (typeof ResizeObserver === 'function') { resizeWatch = new ResizeObserver(() => map?.invalidateSize()); resizeWatch.observe(canvas); }
     L.tileLayer(TILE_URL, { maxZoom: 19, referrerPolicy: 'origin' }).addTo(map);
     markers = L.featureGroup().addTo(map);
     accuracy = L.circle([latitude, longitude], { radius: Math.min(acc || 30, 500), color: '#1de9e0', weight: 1, fillOpacity: 0.1 }).addTo(map);
@@ -396,13 +417,19 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
     placesBtn.onclick = async () => {
       if (map.getZoom() < MIN_POI_ZOOM) return note('Przybliż mapę, aby zobaczyć firmy i instytucje w tym obszarze.');
       const b = map.getBounds();
+      const mine = ++query;
       note('Szukam firm i instytucji…');
       try {
         const body = new URLSearchParams({ data: buildPlacesQuery({ south: b.getSouth(), west: b.getWest(), north: b.getNorth(), east: b.getEast() }) });
-        const data = await request(current, OVERPASS_URL, { method: 'POST', body, referrerPolicy: 'no-referrer' });
+        const options = { method: 'POST', body, referrerPolicy: 'no-referrer' };
+        const data = await request(current, OVERPASS_URL, options).catch(error => {
+          if (error.message === 'stale') throw error;
+          return request(current, OVERPASS_FALLBACK_URL, options);
+        });
+        if (mine !== query) return;
         renderPlaces(L, parsePlaces(data, here), 'W tym obszarze nie ma firm ani instytucji w danych OpenStreetMap.');
       } catch (error) {
-        if (error.message !== 'stale') note('Nie udało się pobrać listy firm. Mapa działa bez niej.');
+        if (error.message !== 'stale' && mine === query) note('Nie udało się pobrać listy firm (serwer OpenStreetMap nie odpowiada). Spróbuj za chwilę — mapa działa bez niej.');
       }
     };
 
@@ -410,14 +437,15 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
       event.preventDefault();
       const q = new FormData(searchForm).get('q')?.toString().trim();
       if (!q) return;
+      const mine = ++query;
       note('Szukam…');
-      const b = map.getBounds();
-      const params = new URLSearchParams({ format: 'jsonv2', addressdetails: '1', limit: '8', 'accept-language': 'pl', q, viewbox: [b.getWest(), b.getNorth(), b.getEast(), b.getSouth()].join(',') });
+      const params = new URLSearchParams({ format: 'jsonv2', addressdetails: '1', limit: '15', 'accept-language': 'pl', q, viewbox: searchViewbox(map.getCenter()) });
       try {
         const data = await request(current, `${NOMINATIM_URL}?${params}`, { referrerPolicy: 'origin' });
-        renderPlaces(L, parseGeocode(data, here), 'Nic nie znaleziono. Spróbuj podać ulicę, miasto lub nazwę firmy.');
+        if (mine !== query) return;
+        renderPlaces(L, nearestResults(parseGeocode(data, here, 15)), 'Nic nie znaleziono. Spróbuj podać ulicę, miasto lub nazwę firmy.');
       } catch (error) {
-        if (error.message !== 'stale') note('Wyszukiwanie jest chwilowo niedostępne. Spróbuj ponownie.');
+        if (error.message !== 'stale' && mine === query) note('Wyszukiwanie jest chwilowo niedostępne. Spróbuj ponownie.');
       }
     };
   };

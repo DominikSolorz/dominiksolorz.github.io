@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {buildPlacesQuery,describeLocationError,parsePlaces,parseGeocode,placeSearchUrl,directionsUrl,formatDistance,validCoordinates} from '../kamera/mobile-map.mjs';
+import {nearestResults,searchViewbox,buildPlacesQuery,describeLocationError,parsePlaces,parseGeocode,placeSearchUrl,directionsUrl,formatDistance,validCoordinates} from '../kamera/mobile-map.mjs';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
@@ -29,7 +29,7 @@ test('location is requested only after confirmation, tracked only while the map 
  assert.ok(urls.includes('OVERPASS_URL')&&urls.some(f=>f.includes('NOMINATIM_URL')));
  assert.ok(src.includes("credentials: 'omit'"));
  const hosts=[...src.replace(/\/\/ .*$/gm,'').matchAll(/https:\/\/([a-z.-]+)/g)].map(m=>m[1]);
- assert.deepEqual([...new Set(hosts)].sort(),['nominatim.openstreetmap.org','overpass-api.de','tile.openstreetmap.org','www.google.com']);
+ assert.deepEqual([...new Set(hosts)].sort(),['nominatim.openstreetmap.org','overpass-api.de','overpass.kumi.systems','tile.openstreetmap.org','www.google.com']);
 });
 
 test('places query covers businesses and institutions inside the visible box',()=>{
@@ -71,7 +71,25 @@ test('navigation and photo links open Google Maps with the place only',()=>{
 test('Leaflet is served from the same origin and the panel mounts the map',async()=>{
  const [mobile,sw,panel]=await Promise.all(['kamera/mobile.js','kamera/sw.js','kamera/panel.html'].map(read));
  for(const f of ['leaflet.js','leaflet.css','LICENSE','images/marker-icon.png'])await readFile(new URL('../kamera/vendor/leaflet/'+f,import.meta.url));
- assert.ok(mobile.includes('./mobile-map.mjs?v=5')&&mobile.includes('mountLocationMap()'));
- assert.ok(sw.includes('./mobile-map.mjs?v=5'));
- assert.ok(panel.includes('mobile.js?v=42')&&sw.includes('./mobile.js?v=42'));
+ assert.ok(mobile.includes('./mobile-map.mjs?v=6')&&mobile.includes('mountLocationMap()'));
+ assert.ok(sw.includes('./mobile-map.mjs?v=6'));
+ assert.ok(panel.includes('mobile.js?v=43')&&sw.includes('./mobile.js?v=43'));
+});
+
+test('search prefers the surroundings and drops far-away name matches',()=>{
+ const vb=searchViewbox({lat:52.23,lng:21.01}).split(',').map(Number);
+ assert.ok(vb[0]<21.01&&vb[2]>21.01&&vb[1]>52.23&&vb[3]<52.23);
+ const out=nearestResults([{name:'Odesa',distance:1100000},{name:'Warszawa',distance:900},{name:'Kijów',distance:690000}]);
+ assert.deepEqual(out.map(p=>p.name),['Warszawa']);
+ const far=nearestResults([{name:'Kraków A',distance:250000},{name:'Kraków B',distance:260000}]);
+ assert.equal(far.length,2,'a single distant city is still found');
+ assert.equal(nearestResults([{name:'x',distance:null},{name:'y',distance:null}]).length,2);
+});
+
+test('map list and close button stay visible on a full-screen phone map',async()=>{
+ const css=await read('kamera/mobile-app-look.css'), src=await read('kamera/mobile-map.mjs');
+ assert.match(css,/\.mobileMapDialog\[open\]:has\(\.mobileMapCanvas:not\(\[hidden\]\)\)\{display:flex;flex-direction:column/);
+ assert.match(css,/\.mobileMapCanvas\{flex:1 1 auto/);
+ assert.match(src,/ResizeObserver\(\(\) => map\?\.invalidateSize\(\)\)/);
+ assert.match(src,/mine !== query/);
 });
