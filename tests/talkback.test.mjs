@@ -45,3 +45,11 @@ test('turning the phone microphone on or off never restarts the live picture or 
   assert.match(app, /if \(!sig\.live \|\| !peer/, 'older phones still get a fresh connection');
   assert.match(app, /if \(peer\.talkWanted\) return playTalk\(peer, sig\.viewerId, chan\.channel\)/);
 });
+
+test('turning the microphone on keeps listening on iPhone and warns about an outdated computer', async () => {
+  const app = await read('kamera/app.js');
+  assert.match(app, /navigator\.audioSession\.type = type/);
+  assert.match(app, /setPhoneAudioSession\("play-and-record"\)/);
+  assert.match(app, /resumeListening\(wasMuted\)/);
+  assert.match(app, /hostBuild < 283/);
+});
