@@ -21,9 +21,10 @@ test('real boot ignores legacy saved phone preference and old phone URL on deskt
 test('real boot detects iPhone in landscape regardless of old desktop URL',()=>{
  assert.equal(start({phone:true,width:932,search:'?ui=computer&view=desktop'}).dataset.clientMode,'mobile');
 });
-test('manual choice persists in this browser and auto explicitly restores detection',()=>{
+test('manual URL selects layout while normal entry restores automatic detection',()=>{
  const storage=new Map();assert.equal(start({search:'?layout=manual&ui=phone',storage}).dataset.clientMode,'mobile');
- assert.equal(start({storage}).dataset.clientMode,'mobile');
+ assert.equal(start({storage}).dataset.clientMode,'desktop');
+ assert.equal(start({phone:true,storage:new Map([['hs-layout-mode-v2','manual'],['hs-layout-choice-v2','computer']])}).dataset.clientMode,'mobile');
  assert.equal(start({search:'?layout=auto&ui=phone',storage}).dataset.clientMode,'desktop');
  assert.equal(start({storage}).dataset.clientMode,'desktop');
 });
