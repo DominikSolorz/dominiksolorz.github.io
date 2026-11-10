@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
@@ -33,7 +34,7 @@ test('installer workflow builds and validates genuine Windows EXE without alteri
   '--prerelease', 'contents: write', 'UI220-PREVIEW-Setup.exe']){
   assert.ok(workflow.includes(part),'Missing installer safety/build requirement: '+part);
  }
- assert.ok(panel.includes('interface-concept.css?v='));
+ assert.ok(panelStylesheet(panel),'operator screens ship inside the single panel stylesheet');
  const native=await read('desktop-client/Program.cs');
  assert.equal(JSON.parse(stableManifest).version,native.match(/DesktopVersion = "([\d.]+)"/)?.[1]);
  assert.ok(!workflow.includes('desktop-update.json'),'preview may not switch stable update channel');

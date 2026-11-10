@@ -7,6 +7,7 @@ import {deriveKey} from '../kamera/pin.js';
 import {keyHash,wrapAccessKey} from '../kamera/account-security.mjs';
 import {createPairingCode,pairingProof,equalsConstantTime,unlockWithDerivedPinKey,isFreshRequest,createUnlockReceipt} from '../kamera/remote-unlock-protocol.mjs';
 import {generateHostIdentity,generatePhoneIdentity,exportHostPublicKey,exportPhonePublicKey,encryptUnlockGrant,decryptUnlockGrant} from '../kamera/remote-unlock-crypto.mjs';
+import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 
 const source=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 test('physically shown pairing code binds exactly one phone, owner, PC and request',async()=>{
@@ -53,7 +54,7 @@ test('PWA and native host use same versioned PIN and remote UI without exposing 
  assert.match(panel,/app\.js\?v=289/);assert.match(sw,/\.\/app\.js\?v=289/);
  assert.match(sw,/kamera-domowa-shell-v289/);assert.match(app,/SERVICE_WORKER_BUILD = "289"/);
  assert.equal(JSON.parse(version).version,'289');
- assert.match(panel,/remote-unlock-ui\.css\?v=1/);
+ assert.ok(sw.includes('./'+panelStylesheet(panel)));assert.match(await panelSection('remote-unlock-ui.css'),/\S/);
  assert.match(lock,/sessionStorage\.setItem\('kamera-dostep',key\)/);
  assert.doesNotMatch(lock,/window\.__HOME_SECURITY_REMOTE_UNLOCK/,'never install global unlock callback');
  assert.match(phone,/awaitHost\(grant\.id,'approved',expectedReceipt\)/);

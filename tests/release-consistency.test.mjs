@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {createHash} from 'node:crypto';
+import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 const read = path => readFile(new URL('../kamera/' + path, import.meta.url), 'utf8');
 test('release manifest, runtime and HTML/SW agree', async () => {
   const [manifest, app, html, sw, access] = await Promise.all(['version.json','app.js','panel.html','sw.js','access.js'].map(read));
@@ -17,7 +18,7 @@ test('release manifest, runtime and HTML/SW agree', async () => {
   assert.equal(app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)[1], sw.match(/kamera-domowa-shell-v(\d+)/)[1]);
   const auth = html.match(/auth.js\?v=\d+/)[0];
   for (const source of [app,sw,access]) assert.ok(source.includes(auth));
-  assert.ok(sw.includes(html.match(/style.css\?v=\d+/)[0]));
+  assert.ok(sw.includes('./' + panelStylesheet(html)), 'service worker precaches the exact panel stylesheet revision');
 });
 
 test('desktop runtime, project and installer version agree', async () => {

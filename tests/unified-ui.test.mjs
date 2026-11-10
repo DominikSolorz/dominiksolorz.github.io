@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 test('public site remains dark regardless of Android/iOS light preference',async()=>{
   const css=await read('kamera/marketing.css');
@@ -10,7 +11,7 @@ test('public site remains dark regardless of Android/iOS light preference',async
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/,'retain reduced motion support');
 });
 test('Windows and mobile PIN screen share the same authenticated dark palette',async()=>{
-  const css=await read('kamera/premium-dark-pro.css');
+  const css=await panelSection('premium-dark-pro.css');
   assert.match(css,/HOME SECURITY unified PIN screen/);
   assert.match(css,/html\.desktopMode:not\(\.policeCommand\):not\(\.usMilitary\) #lock/);
   assert.match(css,/html\.mobileOwnerMode:not\(\.policeCommand\):not\(\.usMilitary\) #lock/);

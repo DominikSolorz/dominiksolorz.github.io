@@ -70,12 +70,12 @@ jobs:
           & './desktop-client/build-release.ps1' -Version '1.4.9'
           if($LASTEXITCODE -ne 0){throw 'Native compilation failed'}
           $root='desktop-client/publish-1.4.9'
-          foreach($name in @('HomeSecurityDesktop.exe','Panel/index.html','Panel/interface-concept.css','Agent/1.4.9/HomeSecurityAgent.exe')){
+          foreach($name in @('HomeSecurityDesktop.exe','Panel/index.html','Panel/panel.css','Agent/1.4.9/HomeSecurityAgent.exe')){
             if(-not (Test-Path (Join-Path $root $name))){throw "Missing native release file: $name"}
           }
           $panel=Get-Content -Raw "$root/Panel/panel.html"
           if(-not $panel.Contains('home-security-build" content="221"')){throw 'Expected web UI 221 is not packaged'}
-          if(-not $panel.Contains('interface-concept.css?v=2')){throw 'New owner interface is not packaged'}
+          if(-not $panel.Contains('panel.css?v=')){throw 'New owner interface is not packaged'}
       - name: Build and verify stable ZIP and Windows installer
         shell: pwsh
         run: |

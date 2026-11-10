@@ -9,7 +9,7 @@ Jeśli użytkownik poda alias typu `HS-PANEL`, `HS-TELEFON` lub `HS-AKTUALIZATOR
 ## Wyznaczanie celu
 1. Użytkownik mówi „strona główna” → źródło: `kamera/marketing.css`, `kamera/index.html`, generator `scripts/build-marketing.mjs`. Odnajdź rzeczywiste źródło zamiast ręcznie modyfikować wygenerowane HTML.
 2. „Program Windows” → `desktop-client/Program.cs` i komponenty `desktop-client/`; przy zmianach w interfejsie także lokalnie pakowany `kamera/panel.html` i `kamera/app.js`. `app.js` w korzeniu to INNY plik.
-3. „Telefon” → `kamera/mobile.js` / `kamera/sw.js` / pliki mobile CSS. Nie myl PWA z natywnym `native-mobile/`.
+3. „Telefon” → `kamera/mobile.js` / `kamera/sw.js` / sekcje telefonu w `kamera/panel.css` (07, 12, 19). Nie myl PWA z natywnym `native-mobile/`.
 4. „Nagrywanie” → `kamera/app.js`, `kamera/recording-*.mjs`, `agent/` oraz testy. Zmiany muszą zachować zapis i domknięcie fragmentów.
 5. „Odblokowanie PIN” → `kamera/lock.js`, `kamera/account-security.mjs`, `kamera/remote-unlock-*.mjs`. Nigdy nie wysyłaj PIN, JWT ani kluczy w jawnej postaci.
 6. „Pobierz / aktualizacja” → `kamera/desktop-update.json`, `kamera/pobierz.html`, `desktop-client/Program.cs`, `scripts/desktop-release.mjs`, `.github/workflows/desktop-scheduled-release.yml`.
@@ -25,12 +25,12 @@ Jeśli użytkownik poda alias typu `HS-PANEL`, `HS-TELEFON` lub `HS-AKTUALIZATOR
 
 
 ## Zasady zmian CSS i widoków HAEM
-- Przed edycją znajdź źródłowy plik, wszystkie odwołania w HTML/JS oraz kolejność ładowania arkuszy. Nie dodawaj kolejnego pliku CSS ani !important tylko po to, by ominąć poprzednią regułę.
-- Oddziel stronę marketingową (kamera/marketing.css i generator) od prywatnego panelu (kamera/panel.html), Windows i mobilnej PWA. Nie zakładaj, że ostatni arkusz jest źródłem prawdy.
-- Przed usunięciem selektora zbadaj wszystkie jego użycia, media queries, specyficzność, tryby policeCommand/usMilitary i wpływ na PIN, kamerę oraz nagrywanie. Usuwaj tylko potwierdzone duplikaty.
-- Po zmianach sprawdź URL ?v= w HTML, listę SHELL i CACHE w kamera/sw.js oraz manifest kamera/version.json. CSS jest obsługiwany cache-first, więc commit nie gwarantuje widocznej aktualizacji. Nie zmieniaj numeru wydania bez faktycznej publikacji.
-- Testuj desktop, telefon, PWA, tryby specjalne i atrybut hidden. Zmiany wyłącznie na osobnej gałęzi i przez PR.
-- Mapa odpowiedzialności i wykryte ryzyka: docs/CSS-OWNERSHIP-AUDIT.md.
+- **Prywatny panel (PIN, kamera, nagrania, ustawienia, telefon/PWA, Windows) ma jeden arkusz: `kamera/panel.css`.** Ładuje go wyłącznie `<template id="panelStyles">` w `kamera/panel.html`. Opis sekcji, trybów i procedury: [docs/PANEL-CSS.md](docs/PANEL-CSS.md).
+- Strona publiczna ma osobne arkusze (`kamera/marketing*.css`, `kamera/tech-theme.css`, generator `scripts/build-marketing.mjs`). Nie mieszaj ich z panelem. `kamera/style.css` i `kamera/workspace-ui.css` służą tylko dokumentom i `nagrania.html`; panel ich nie ładuje.
+- Zmieniaj istniejącą deklarację w odpowiedniej sekcji `panel.css`. **Nie twórz** nowych plików-nakładek (`new-style.css`, `final-design.css`, `visual-refresh-2.css` itp.), nie dopisuj na końcu kopii selektora z nową wartością i nie dodawaj `!important` tylko po to, by przebić poprzednią regułę. `tests/panel-css-single-source.test.mjs` odrzuca nieznane pliki `.css` i martwe (nadpisane) deklaracje.
+- Zachowaj identyfikatory i klasy używane przez JS, atrybut `hidden` oraz tryby `desktopMode`, `mobileOwnerMode`, `policeCommand`, `usMilitary`. Kolejność sekcji to kolejność kaskady.
+- Po zmianie wyglądu podnieś `?v=` arkusza w `panel.html` i w `SHELL` w `kamera/sw.js`. Service worker pobiera CSS/JS najpierw z sieci (kopia offline tylko bez sieci), więc zmiana dotrze po publikacji. Numer wydania (`kamera/version.json`, `CACHE`) zmieniaj tylko przy faktycznym wydaniu.
+- Testuj komputer, telefon (320–430 px), tablet, krótkie okno Windows, tryby specjalne i `hidden`. Zmiany wyłącznie na osobnej gałęzi i przez PR. Sprawdzenie po publikacji: docs/PANEL-CSS.md → „Jak sprawdzić, że zmiana dotrze do użytkownika”.
 
 ## Zakończenie zadania
 Podaj repo, pełne ścieżki plików, gałąź, PR, uruchomione testy, numer rzeczywiście opublikowanego wydania oraz kanał (GitHub Pages / Windows / Vercel / PWA). Jeśli nie ma testu na fizycznym komputerze, napisz o tym otwarcie. Nie deklaruj gotowej publikacji na podstawie samego commita.

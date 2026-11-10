@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'kamera/panel.html'
-      - 'kamera/premium-dark-pro.css'
+      - 'kamera/panel.css'
       - 'kamera/sw.js'
       - 'tests/premium-dark-pro.test.mjs'
       - '.github/workflows/verify-premium-dark-pro.yml'
@@ -41,7 +41,7 @@ jobs:
       - name: Validate new stylesheet syntax
         run: |
           npm install --prefix "$RUNNER_TEMP/html-validator" --no-save --no-package-lock vnu-jar@26.10.12
-          java -jar "$RUNNER_TEMP/html-validator/node_modules/vnu-jar/build/dist/vnu.jar" --css kamera/premium-dark-pro.css
+          java -jar "$RUNNER_TEMP/html-validator/node_modules/vnu-jar/build/dist/vnu.jar" --css kamera/panel.css
   native-windows-build:
     runs-on: windows-latest
     timeout-minutes: 35
@@ -64,6 +64,6 @@ jobs:
         shell: pwsh
         run: |
           $panel = Get-Content -Raw kamera/panel.html
-          $theme = Get-Content -Raw kamera/premium-dark-pro.css
-          if (-not $panel.Contains('premium-dark-pro.css?v=1')) { throw 'New UI stylesheet not linked in secure panel' }
+          $theme = Get-Content -Raw kamera/panel.css
+          if (-not ($panel -match 'panelStyles">\s*(<!--[^>]*-->\s*)?<link rel="stylesheet" href="panel\.css\?v=[0-9]+"')) { throw 'Single panel stylesheet not linked in secure panel' }
           if (-not $theme.Contains('#ctrlStart') -or -not $theme.Contains('#ctrlStop')) { throw 'Real recording controls not covered by theme' }

@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
 test('real HOME SECURITY 220 owner interface loads the UI-concept design last and offline',async()=>{
  const [html,sw,css,version,app]=await Promise.all([
-  'kamera/panel.html','kamera/sw.js','kamera/interface-concept.css',
+  'kamera/panel.html','kamera/sw.js','kamera/panel.css',
   'kamera/version.json','kamera/app.js'].map(read));
  const release=JSON.parse(version).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
@@ -18,14 +19,14 @@ test('real HOME SECURITY 220 owner interface loads the UI-concept design last an
  assert.ok(html.includes('app.js?v='+release));
  const desktopScript=html.match(/desktop\.js\?v=\d+/)?.[0];assert.ok(desktopScript);
  assert.ok(sw.includes('./'+desktopScript));
- assert.ok(html.includes('href="interface-concept.css?v=3"'));
- assert.ok(sw.includes('./interface-concept.css?v=3'));
- assert.ok(html.indexOf('interface-concept.css?v=3')>html.indexOf('interface-theme.css?v=3'));
+ const sheet=panelStylesheet(html);
+ assert.ok(sw.includes('./'+sheet),'the single panel stylesheet is available offline');
+ assert.ok((await panelSection('interface-concept.css')).length>10000);
  assert.ok(css.length>10000,'design is implemented in production CSS, not merely a concept document');
 });
 
 test('the styling applies to all real operator screens and is not a fake screenshot overlay',async()=>{
- const css=await read('kamera/interface-concept.css');
+ const css=await panelSection('interface-concept.css');
  for(const selector of ['.desktopSidebar','.desktopNav','.desktopBrand','.topbar','.desktopContext',
   '.desktopCameraTile','.desktopEventsDrawer','.desktopControlsScreen','.desktopSettingsScreen',
   '.desktopEventsScreen','.desktopDiagnosticsScreen','.componentCards','.componentCard',
@@ -45,7 +46,7 @@ test('the styling applies to all real operator screens and is not a fake screens
 });
 
 test('special-purpose police and military themes remain independent and user motion settings are respected',async()=>{
- const css=await read('kamera/interface-concept.css');
+ const css=await panelSection('interface-concept.css');
  for(const cls of ['html.desktopMode:not(.policeCommand):not(.usMilitary)',
   'html.mobileOwnerMode:not(.policeCommand):not(.usMilitary)'])
   assert.ok(css.includes(cls));

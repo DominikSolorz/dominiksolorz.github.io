@@ -1,22 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 
 const read = file => readFile(new URL('../' + file, import.meta.url), 'utf8');
 
 test('desktop operator theme precedes the final scoped mobile theme and is precached', async () => {
-  const [panel, sw] = await Promise.all([read('kamera/panel.html'), read('kamera/sw.js')]);
-  const template = panel.match(/<template id="panelStyles">([\s\S]*?)<\/template>/)[1];
-  const links = [...template.matchAll(/href="([^"]+)"/g)].map(m => m[1]);
-  assert.ok(links.indexOf('operator-layout.css?v=11') > links.indexOf('tech-ops.css?v=2'));
-  assert.equal(links.at(-1), 'mobile-app-look.css?v=25', 'phone layout must override shared operator cards');
-  assert.ok(sw.includes('./operator-layout.css?v=11'));
+  const [panel, sw, all] = await Promise.all([read('kamera/panel.html'), read('kamera/sw.js'), read('kamera/panel.css')]);
+  const sheet = panelStylesheet(panel);
+  const at = name => all.indexOf('(dawniej ' + name + ')');
+  assert.ok(at('operator-layout.css') > at('tech-ops.css') && at('tech-ops.css') > 0);
+  assert.ok(at('mobile-app-look.css') > at('operator-layout.css'), 'phone layout must override shared operator cards');
+  assert.equal(all.indexOf('(dawniej ', at('mobile-app-look.css') + 1), -1, 'phone section is the last one');
+  assert.ok(sw.includes('./' + sheet));
   // Never loaded on the public landing page before the secure panel starts.
-  assert.doesNotMatch(panel.slice(0, panel.indexOf('<template id="panelStyles">')), /operator-layout\.css/);
+  assert.doesNotMatch(panel.slice(0, panel.indexOf('<template id="panelStyles">')), /panel\.css/);
 });
 
 test('stage 2 panel layout is presentation-only and keeps alternative themes and video geometry', async () => {
-  const css = (await read('kamera/operator-layout.css')).replace(/\/\*[\s\S]*?\*\//g, '');
+  const css = (await panelSection('operator-layout.css')).replace(/\/\*[\s\S]*?\*\//g, '');
   assert.match(css, /:not\(\.policeCommand\):not\(\.usMilitary\)/);
   // Every selector (outside @media headers) starts from the scoped html element.
   const flat = css.replace(/@media[^{]*\{/g, '');
@@ -40,7 +42,7 @@ test('stage 2 panel layout is presentation-only and keeps alternative themes and
 });
 
 test('stage 3 auth and PIN background ships with the panel and keeps the PIN keypad intact', async () => {
-  const [css, panel] = await Promise.all([read('kamera/operator-layout.css'), read('kamera/panel.html')]);
+  const [css, panel] = await Promise.all([panelSection('operator-layout.css'), read('kamera/panel.html')]);
   const { stat } = await import('node:fs/promises');
   const asset = await stat(new URL('../kamera/assets/auth-night.webp', import.meta.url));
   assert.ok(asset.size > 1000 && asset.size < 200000, 'background must be a small optimised image');

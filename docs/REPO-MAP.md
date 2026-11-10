@@ -6,8 +6,8 @@ Obowiązują pełne ścieżki od katalogu głównego. Ten dokument opisuje przez
 | --- | --- | --- |
 | Oficjalny publiczny HOME SECURITY | `kamera/index.html`, `kamera/o-systemie.html`, `kamera/pobierz.html`, `kamera/kontakt.html`, `kamera/pomoc.html`, `kamera/marketing*.css`, `kamera/marketing*.mjs` | teksty, układ publicznych podstron, stopka, menu, pobieranie |
 | Generator publicznej strony | `scripts/build-marketing.mjs`, `scripts/harden-public-pages.mjs`, `scripts/verify-live-marketing.mjs` | wspólne zmiany na wielu generowanych stronach |
-| Panel właściciela | `kamera/panel.html`, `kamera/app.js`, `kamera/style.css`, `kamera/premium-dark-pro.css` | nawigacja po zalogowaniu, kamery, sterowanie, integracja UI |
-| Telefon / PWA | `kamera/mobile.js`, `kamera/mobile-viewer.css`, `kamera/mobile-camera-frame.css`, `kamera/manifest.webmanifest`, `kamera/sw.js` | widok mobilny, krajobraz, cache, powiadomienie o aktualizacji |
+| Panel właściciela | `kamera/panel.html`, `kamera/app.js`, `kamera/panel.css` (jedyny arkusz panelu, [PANEL-CSS.md](PANEL-CSS.md)) | nawigacja po zalogowaniu, kamery, sterowanie, integracja UI |
+| Telefon / PWA | `kamera/mobile.js`, sekcje telefonu w `kamera/panel.css`, `kamera/manifest.webmanifest`, `kamera/sw.js` | widok mobilny, krajobraz, cache, powiadomienie o aktualizacji |
 | Uwierzytelnianie | `kamera/auth.js`, `kamera/lock.js`, `kamera/pin.js`, `kamera/access.js`, `kamera/account-security.mjs` | konto, lokalny PIN, ekran blokady |
 | Zdalne odblokowanie | `kamera/remote-unlock-host.mjs`, `kamera/remote-unlock-phone.mjs`, `kamera/remote-unlock-crypto.mjs`, `kamera/remote-unlock-protocol.mjs`, `kamera/remote-unlock-device-store.mjs` | parowanie, dowód PIN, zaufane urządzenia |
 | Nagrywanie i archiwum | `kamera/recording-*.mjs`, `kamera/recstore.js`, `kamera/recproto.js`, `kamera/dvr-ui.js`, `kamera/recording-storage.mjs` | fragmenty nagrań, odzyskiwanie i odtwarzanie |
@@ -26,7 +26,7 @@ Obowiązują pełne ścieżki od katalogu głównego. Ten dokument opisuje przez
 - `/app.js` ≠ `/kamera/app.js`; `/index.html` ≠ `/kamera/index.html` ≠ `/nextup/index.html`.
 - `/kamera/desktop-update.json` to manifest aktualizacji zainstalowanego Windows. `/kamera/version.json` dotyczy web/PWA. `/hosting/public-site/release.json` dotyczy osobnej witryny Vercel.
 - `/kamera/downloads/*.exe` oznacza instalatory. `/kamera/updates/*.zip` oznacza pakiety wymiany i rollbacku. Nie zmieniaj ich nazw po opublikowaniu.
-- `/kamera/marketing.css` steruje stroną publiczną; `/kamera/style.css` steruje panelem użytkownika. Łączenie ich bez audytu może zepsuć PIN lub kamerę.
+- `/kamera/marketing.css` steruje stroną publiczną; `/kamera/panel.css` steruje panelem użytkownika; `/kamera/style.css` już tylko dokumentami i `nagrania.html`. Łączenie ich bez audytu może zepsuć PIN lub kamerę.
 
 ## Jak zlecać zmiany agentowi
 

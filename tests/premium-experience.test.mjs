@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
 test('public introduction stays identical in the app and indexed landing page',async()=>{
@@ -42,7 +43,7 @@ test('registered owners retain direct panel access while visitors see brochure',
   assert.ok(root.includes('toPanel ? "./kamera/panel.html" : "./kamera/"'));
   assert.ok(root.includes('["auth","app","view","ui","desktop","bootRetry","theme","start","code","odbiorca","panel"]'));
   assert.ok(app.includes('auth-experience.mjs?v=2'));
-  assert.ok(app.includes('auth-experience.css?v=2'));
+  assert.ok(sw.includes('./'+panelStylesheet(app)),'account styles ship in the precached panel stylesheet');
   assert.ok(sw.includes('auth-experience.mjs?v=2'));
   const build=JSON.parse(version).version;
   assert.ok(app.includes('app.js?v='+build));

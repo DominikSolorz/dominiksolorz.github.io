@@ -29,5 +29,8 @@ Stan wstępny, bez usuwania reguł przed testami renderowania.
 
 ## Stan realizacji
 
-Wykonano: inspekcja punktów wejścia, mapowanie głównych warstw, wskazanie cache-first, zasady dla agentów.
-Nie wykonano: pełna analiza wszystkich selektorów, testy renderowania, usuwanie CSS, publikacja i test fizycznego urządzenia.
+Audyt (gałąź `chore/haem-css-ownership-audit`) został zrealizowany na gałęzi `chore/haem-panel-css-consolidation-2026-11-10`:
+- 19 arkuszy z `<template id="panelStyles">` scalono w `kamera/panel.css` w kolejności kaskady. Usunięto 1 430 dowodliwie martwych deklaracji i 285 pustych reguł. Wynik zweryfikowano porównaniem computed style w Chrome (szczegóły: [PANEL-CSS.md](PANEL-CSS.md)).
+- 17 dawnych plików panelu usunięto z repozytorium; `style.css` i `workspace-ui.css` zostały dla dokumentów i `nagrania.html`.
+- `kamera/sw.js`: CSS/JS najpierw z sieci, instalacja z pominięciem HTTP cache, usuwanie nieużywanych arkuszy z pamięci offline.
+- Arkusze marketingowe nadal ładują się w `panel.html` (strona startowa w tym samym dokumencie) i pozostają aktywne po wejściu do panelu. Ich ewentualne wyłączenie po zalogowaniu to osobna zmiana z testem wizualnym.

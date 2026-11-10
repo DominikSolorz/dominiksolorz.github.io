@@ -48,12 +48,12 @@ jobs:
           & './desktop-client/build-release.ps1' -Version '1.4.8'
           if ($LASTEXITCODE -ne 0) { throw 'Desktop release build failed' }
           $dir = 'desktop-client/publish-1.4.8'
-          foreach ($file in @('HomeSecurityDesktop.exe', 'Panel/index.html', 'Panel/interface-concept.css', 'Agent/1.4.8/HomeSecurityAgent.exe')) {
+          foreach ($file in @('HomeSecurityDesktop.exe', 'Panel/index.html', 'Panel/panel.css', 'Agent/1.4.8/HomeSecurityAgent.exe')) {
             if (-not (Test-Path (Join-Path $dir $file))) { throw "Missing desktop component: $file" }
           }
           $html = Get-Content -Raw (Join-Path $dir 'Panel/panel.html')
           if (-not $html.Contains('home-security-build" content="220"')) { throw 'Built panel does not contain UI220' }
-          if (-not $html.Contains('interface-concept.css?v=')) { throw 'Real owner theme is missing' }
+          if (-not $html.Contains('panel.css?v=')) { throw 'Real owner theme is missing' }
       - name: Compile real Windows installer (not stable auto-update)
         shell: pwsh
         run: |
