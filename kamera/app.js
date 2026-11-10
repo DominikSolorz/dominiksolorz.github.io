@@ -60,6 +60,10 @@ const ownerPanel = new URLSearchParams(location.search).get("panel");
 // Wyłącznie link z parametrem odbiorca pozostaje celowo tylko do podglądu.
 const OWNER_PANEL = !RECEIVER_ONLY && (ownerPanel === "owner" || ownerPanel === "wlasciciel" || !ownerPanel);
 const MOBILE_OWNER_APP = document.documentElement.classList.contains("mobileOwnerMode");
+// Rozmowa głosowa ma być dostępna na telefonie także wtedy, gdy użytkownik
+// wcześniej zapisał w Safari/Chrome ręczny układ „Komputer”. Układ zmienia
+// wygląd panelu, ale nie powinien ukrywać funkcji telefonu.
+const TALKBACK_AVAILABLE = MOBILE_OWNER_APP || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 // Jedynym gospodarzem sprzętu jest zainstalowany HOME SECURITY Desktop.
 // Każda strona otwierana przez telefon lub zwykłą przeglądarkę jest odbiornikiem
 // tego komputera: może oglądać obraz i DVR, ale nie uruchamia własnej kamery,
@@ -1797,7 +1801,7 @@ const viewer = (() => {
 
   async function toggleTalkback() {
     const button = $("talkbackBtn"), state = $("talkbackState");
-    if (!button || !MOBILE_OWNER_APP) return;
+    if (!button || !TALKBACK_AVAILABLE) return;
     if (talkEnabled) {
       talkEnabled = false;
       stopTalkback();
@@ -1906,7 +1910,7 @@ const viewer = (() => {
   }
 
   $("talkbackBtn")?.addEventListener("click", toggleTalkback);
-  if (MOBILE_OWNER_APP && $("talkbackBtn")) $("talkbackBtn").hidden = false;
+  if (TALKBACK_AVAILABLE && $("talkbackBtn")) $("talkbackBtn").hidden = false;
 
   // Przyciski trybu kamery na telefonie: podświetlony = bieżący tryb komputera.
   function applyMode(m, until = 0) {
@@ -2909,4 +2913,5 @@ if (RECEIVER_ONLY) {
     renderDiag({ cam: "", camLive: false, w: 0, h: 0, fps: 0, mic: "", micOn: false, recording: false, lastFile: "", quality: "", mode: "", viewers: 0, version: VERSION, camError: detail, light: 0, webrtc: webRtcDiagnostics.snapshot() }, [diagRow(false, "Panel nie nawiązał jeszcze połączenia z usługą transmisji.")]);
   }
 }
+
 
