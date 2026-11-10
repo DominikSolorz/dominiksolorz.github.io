@@ -58,3 +58,26 @@ html.mobileOwnerMode .mobileBottomNav button[aria-current="page"], html.mobileOw
 @media (prefers-reduced-motion: reduce) {
   html.desktopMode *, html.mobileOwnerMode * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+/* Dashboard v2: make the live workspace visibly different from the legacy panel. */
+html.desktopMode #layout { max-width: 1480px; margin: 0 auto; padding: 20px 24px 42px; }
+html.desktopMode .desktopSidebar { border-radius: 22px; padding: 16px 12px; }
+html.desktopMode .desktopSidebar .navLink { display: flex; align-items: center; min-height: 46px; padding: 0 14px; margin: 4px 0; color: var(--hs-v-muted); }
+html.desktopMode .desktopSidebar .navLink[aria-current="page"], html.desktopMode .desktopSidebar .navLink:hover { color: var(--hs-v-text); background: linear-gradient(90deg, rgba(78,141,255,.3), rgba(84,215,242,.08)); }
+html.desktopMode .sideCol { gap: 16px; }
+html.desktopMode .sideCol > .card { padding: 20px; }
+html.desktopMode #stage::after { content: "NA ŻYWO"; position: absolute; top: 16px; left: 16px; z-index: 2; padding: 7px 12px; border-radius: 999px; background: rgba(7, 29, 35, .88); color: var(--hs-v-green); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
+html.desktopMode .eventsCard summary { display: flex; align-items: center; justify-content: space-between; min-height: 48px; }
+html.desktopMode .eventsCard .events > li { border-color: var(--hs-v-line); background: rgba(9, 24, 43, .55); border-radius: 14px; margin: 8px 0; }
+html.desktopMode #ctrlBar { padding: 16px; border-radius: 18px; }
+html.desktopMode #ctrlBar .ctrlBtns { gap: 10px; }
+html.desktopMode #ctrlBar .ctrl { min-height: 54px; }
+
+html.mobileOwnerMode #layout { padding: 10px 12px 92px; }
+html.mobileOwnerMode .mobileAppHeader { border-bottom: 1px solid var(--hs-v-line); }
+html.mobileOwnerMode .mobileAppHeader .brand, html.mobileOwnerMode .mobileAppHeader .mobileAppHeaderTitle { color: var(--hs-v-text); }
+html.mobileOwnerMode .mobileFunctionPage { padding: 16px; }
+html.mobileOwnerMode .mobileFunctionPage .deviceLayoutCard { background: linear-gradient(145deg, rgba(17, 43, 70, .9), rgba(7, 20, 38, .9)); border: 1px solid var(--hs-v-line); border-radius: 18px; padding: 16px; }
+html.mobileOwnerMode .mobileFunctionPage button[data-ui-mode] { min-height: 58px; background: rgba(9, 26, 46, .82); color: var(--hs-v-text); }
+html.mobileOwnerMode .mobileFunctionPage button[data-ui-mode]:focus-visible, html.mobileOwnerMode .mobileFunctionPage button[data-ui-mode]:hover { background: linear-gradient(135deg, rgba(78,141,255,.42), rgba(84,215,242,.24)); }
+html.mobileOwnerMode .eventsCard .events > li { border-color: var(--hs-v-line); border-radius: 14px; background: rgba(9, 24, 43, .55); }
