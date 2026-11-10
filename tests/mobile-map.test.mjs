@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {nearestResults,searchViewbox,buildPlacesQuery,describeLocationError,parsePlaces,parseGeocode,placeSearchUrl,directionsUrl,formatDistance,validCoordinates} from '../kamera/mobile-map.mjs';
+import {buildNameQuery,mergePlaces,brandId,logoUrl,parseLogos,walkingMinutes,nearestResults,searchViewbox,buildPlacesQuery,describeLocationError,parsePlaces,parseGeocode,placeSearchUrl,directionsUrl,formatDistance,validCoordinates} from '../kamera/mobile-map.mjs';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
@@ -29,7 +29,7 @@ test('location is requested only after confirmation, tracked only while the map 
  assert.ok(urls.includes('OVERPASS_URL')&&urls.some(f=>f.includes('NOMINATIM_URL')));
  assert.ok(src.includes("credentials: 'omit'"));
  const hosts=[...src.replace(/\/\/ .*$/gm,'').matchAll(/https:\/\/([a-z.-]+)/g)].map(m=>m[1]);
- assert.deepEqual([...new Set(hosts)].sort(),['nominatim.openstreetmap.org','overpass-api.de','overpass.kumi.systems','tile.openstreetmap.org','www.google.com']);
+ assert.deepEqual([...new Set(hosts)].sort(),['commons.wikimedia.org','nominatim.openstreetmap.org','overpass-api.de','overpass.kumi.systems','tile.openstreetmap.org','www.google.com','www.wikidata.org']);
 });
 
 test('places query covers businesses and institutions inside the visible box',()=>{
@@ -71,9 +71,9 @@ test('navigation and photo links open Google Maps with the place only',()=>{
 test('Leaflet is served from the same origin and the panel mounts the map',async()=>{
  const [mobile,sw,panel]=await Promise.all(['kamera/mobile.js','kamera/sw.js','kamera/panel.html'].map(read));
  for(const f of ['leaflet.js','leaflet.css','LICENSE','images/marker-icon.png'])await readFile(new URL('../kamera/vendor/leaflet/'+f,import.meta.url));
- assert.ok(mobile.includes('./mobile-map.mjs?v=6')&&mobile.includes('mountLocationMap()'));
- assert.ok(sw.includes('./mobile-map.mjs?v=6'));
- assert.ok(panel.includes('mobile.js?v=43')&&sw.includes('./mobile.js?v=43'));
+ assert.ok(mobile.includes('./mobile-map.mjs?v=7')&&mobile.includes('mountLocationMap()'));
+ assert.ok(sw.includes('./mobile-map.mjs?v=7'));
+ assert.ok(panel.includes('mobile.js?v=44')&&sw.includes('./mobile.js?v=44'));
 });
 
 test('search prefers the surroundings and drops far-away name matches',()=>{
@@ -92,4 +92,26 @@ test('map list and close button stay visible on a full-screen phone map',async()
  assert.match(css,/\.mobileMapCanvas\{flex:1 1 auto/);
  assert.match(src,/ResizeObserver\(\(\) => map\?\.invalidateSize\(\)\)/);
  assert.match(src,/mine !== query/);
+});
+
+test('chain results show a brand logo from Wikimedia Commons and walking time, sending only the brand id',async()=>{
+ assert.equal(brandId('Q857182'),'Q857182');assert.equal(brandId('Q1; drop'),'');assert.equal(brandId(undefined),'');
+ assert.deepEqual(parseLogos({entities:{Q857182:{claims:{P154:[{mainsnak:{datavalue:{value:'2016 Logo Biedronki.jpg'}}}]}},Q2:{claims:{}}}}),{Q857182:'2016 Logo Biedronki.jpg'});
+ assert.equal(logoUrl('2016 Logo Biedronki.jpg'),'https://commons.wikimedia.org/wiki/Special:FilePath/2016_Logo_Biedronki.jpg?width=96');
+ assert.equal(walkingMinutes(400),5);assert.equal(walkingMinutes(10),1);
+ const g=parseGeocode([{lat:'52.2',lon:'21',name:'Biedronka',type:'supermarket',extratags:{'brand:wikidata':'Q857182'}}],{lat:52.2,lon:21});
+ assert.equal(g[0].brand,'Q857182');
+ const src=await read('kamera/mobile-map.mjs');
+ assert.match(src,/bounded: '1'/);assert.match(src,/extratags: '1'/);
+ assert.match(src,/min pieszo/);
+ assert.ok(!/WIKIDATA_URL[^\n]*(lat|lon|here)/.test(src),'logo lookup never carries the position');
+});
+
+test('chain name search looks nearby by name or brand and merges duplicates',()=>{
+ const q=buildNameQuery('Żabka"]; out;',{lat:52.2297,lng:21.0122});
+ assert.ok(q.includes('nwr["name"~"Żabka out",i](around:5000,52.229700,21.012200)'));
+ assert.ok(q.includes('nwr["brand"~'));assert.ok(!q.includes('"];'),'no query injection');
+ assert.equal(buildNameQuery('a',{lat:52,lng:21}),'');
+ const m=mergePlaces([{name:'Biedronka',lat:52.2,lon:21,address:'',brand:''}],[{name:'biedronka',lat:52.20001,lon:21,address:'Prosta 1',brand:'Q857182'},{name:'Biedronka',lat:52.21,lon:21}]);
+ assert.equal(m.length,2);assert.equal(m[0].brand,'Q857182');assert.equal(m[0].address,'Prosta 1');
 });
