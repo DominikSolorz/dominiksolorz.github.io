@@ -392,7 +392,10 @@ internal static class Program
         {
             var dataPath = Path.Combine(
                 DataRoot, "WebView");
-            var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: dataPath);
+            // Komputer-kamera zwykle stoi bez obsługi: głos z telefonu (rozmowa)
+            // musi zabrzmieć bez klikania w okno. Dotyczy tylko tego okna programu.
+            var environmentOptions = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required");
+            var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: dataPath, options: environmentOptions);
             await webView.EnsureCoreWebView2Async(environment);
             // Only the existing strict read-only protocol is exposed. Media and
             // secrets remain inaccessible to arbitrary page messages.

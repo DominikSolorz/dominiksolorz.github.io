@@ -28,6 +28,7 @@ public final class MainActivity extends ComponentActivity {
     private WebView web;
     private int fittedHomeWidth=-1;
     private AppUpdater updater;
+    private final MicrophoneAccess microphone = new MicrophoneAccess(this);
     private TextView status;
     private View home, error, loading, bottom;
     private boolean showingHome = true, pageFailed = false, background = false;
@@ -94,7 +95,8 @@ public final class MainActivity extends ComponentActivity {
             @Override public void onReceivedHttpError(WebView view,WebResourceRequest request,WebResourceResponse response) { if(request.isForMainFrame() && response.getStatusCode()>=400) showError(); }
         });
         web.setWebChromeClient(new WebChromeClient() {
-            @Override public void onPermissionRequest(PermissionRequest request) { request.deny(); }
+            @Override public void onPermissionRequest(PermissionRequest request) { microphone.handle(request); }
+            @Override public void onPermissionRequestCanceled(PermissionRequest request) { microphone.cancel(request); }
         });
         findViewById(R.id.openLive).setOnClickListener(v->openPanel("home",false));
         findViewById(R.id.openRecordings).setOnClickListener(v->openPanel("recordings",false));
