@@ -834,3 +834,11 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view=
   }
 
 }
+
+/* Rozmowa na telefonie: pełny opis przycisku i zawsze widoczny stan (nie chowa się z odsłuchem). */
+html.mobileOwnerMode body #app #audioHud #talkbackBtn:not([hidden]){order:10;flex:1 1 100%;width:auto!important;min-width:0!important;min-height:48px!important;padding:0 14px!important;font-size:14px!important;font-weight:700;white-space:normal;text-align:center}
+html.mobileOwnerMode body #app #audioHud #talkbackState:not(:empty){order:11;display:block!important;flex:1 1 100%;max-width:none!important;margin:2px 2px 0;color:#8be9df!important;font-size:12.5px!important;line-height:1.45;white-space:normal}
+/* Cofanie nagrania tylko przy połączeniu z komputerem (nagrania przychodzą z komputera). */
+html #stage:has(#placeholder:not([hidden])) #liveRewind{display:none!important}
+@media (max-width:430px){html #stage #liveRewind:not([hidden]){flex-wrap:nowrap}html #stage #liveRewind button{white-space:nowrap}}
+html.mobileOwnerMode body #app #audioHud #talkbackBtn[aria-pressed="true"]{border-color:#fb7185!important;background:linear-gradient(90deg,rgba(225,29,72,.42),rgba(190,24,93,.3))!important;color:#fff!important}
