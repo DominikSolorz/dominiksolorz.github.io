@@ -87,7 +87,7 @@ function spoolRecording(data,name,state) {
   storageSaveTail=saving.catch(()=>{});return saving;
 }
 const PUBLIC_PANEL_URL = "https://dominiksolorz.github.io/kamera/";
-const VERSION = "287"; // musi się zgadzać z version.json
+const VERSION = "288"; // musi się zgadzać z version.json
 const recClient = createRecClient(); // telefon: nagrania z komputera-kamery przez kanał danych WebRTC
 // Komputer-kamera: ta sama oś czasu, ale nagrania czytane prosto z własnej pamięci (bez kanału danych).
 const localRecClient = {
@@ -1838,8 +1838,11 @@ const viewer = (() => {
   // iPhone/iPad (WebKit): włączenie mikrofonu przełącza sesję audio i potrafi
   // zatrzymać lub wyciszyć odtwarzany obraz z dźwiękiem. Utrzymujemy odsłuch.
   function setPhoneAudioSession(type) { try { if (navigator.audioSession) navigator.audioSession.type = type; } catch { /* brak wsparcia */ } }
+  // Panel < 283 na komputerze zrywa połączenie na sygnał rozmowy, ale sam gra
+  // dźwięk z telefonu. Wtedy tylko podmieniamy ścieżkę — bez sygnału.
+  const legacyTalkHost = () => { const build = Number(ctrlState.hostVersion) || 0; return build > 0 && build < 283; };
   function resumeListening(wasMuted) {
-    video.muted = wasMuted;
+    video.muted = listeningAvailable ? (wasMuted && !listeningWanted) : video.muted;
     video.play().catch(() => {});
     paintListeningControls();
   }
@@ -1862,7 +1865,7 @@ const viewer = (() => {
       button.textContent = "🎙 Rozmawiaj z komputerem";
       button.setAttribute("aria-pressed", "false");
       if (state) state.textContent = "Mikrofon telefonu wyłączony";
-      if (chan.channel) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: false, live: true });
+      if (chan.channel && !(legacyTalkHost() && talkSender)) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: false, live: true });
       return;
     }
     button.disabled = true;
@@ -1877,17 +1880,17 @@ const viewer = (() => {
       const linked = pc?.connectionState === "connected";
       const hostBuild = Number(ctrlState.hostVersion) || 0;
       if (state) state.textContent = linked && hostBuild && hostBuild < 283
-        ? `Komputer ma starszy program (panel ${hostBuild}) — przy rozmowie obraz połączy się ponownie. Zaktualizuj program HOME SECURITY na komputerze (↻ Zaktualizuj), wtedy obraz i odsłuch nie będą się przerywać.`
+        ? `Mikrofon działa. Komputer ma starszy program (panel ${hostBuild}): głos powinien być słychać, ale komputer nie potwierdzi odtwarzania. Zaktualizuj program HOME SECURITY na komputerze (↻ Zaktualizuj).`
         : linked
         ? "Mikrofon telefonu działa · łączę z głośnikiem komputera…"
         : "Mikrofon gotowy, ale telefon nie jest połączony z komputerem z kamerą. Rozmowa zacznie się sama po połączeniu — sprawdź, czy program HOME SECURITY na komputerze jest włączony.";
       // Bez zrywania połączenia: mikrofon wchodzi w istniejącą ścieżkę głosu,
       // obraz i odsłuch z komputera grają dalej.
       if (talkSender && pc?.connectionState === "connected") await talkSender.replaceTrack(talkStream.getAudioTracks()[0] || null);
-      if (chan.channel) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: true, live: true });
+      if (chan.channel && !(legacyTalkHost() && talkSender)) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: true, live: true });
       clearTimeout(talkConfirmTimer);
       talkConfirmTimer = setTimeout(() => {
-        if (talkEnabled && state) state.textContent = pc?.connectionState === "connected"
+        if (talkEnabled && state && !legacyTalkHost()) state.textContent = pc?.connectionState === "connected"
           ? "Komputer nie potwierdził rozmowy. Zaktualizuj program HOME SECURITY na komputerze (↻ Zaktualizuj)."
           : "Brak połączenia z komputerem z kamerą — rozmowa czeka. Włącz program HOME SECURITY na komputerze i sprawdź internet.";
       }, 15000);
@@ -1968,7 +1971,7 @@ const viewer = (() => {
           send(chan.channel, { type: "zoom-get" });
           $("fullBtn").disabled = false;
           // Po odnowieniu połączenia komputer ma od razu znów grać rozmowę.
-          if (talkEnabled) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: true, live: true });
+          if (talkEnabled && !legacyTalkHost()) send(chan.channel, { type: "viewer-talkback", viewerId, enabled: true, live: true });
         } else if (st === "failed") { showLive(""); setStatus(TURN_SERVER ? "Nie udało się zestawić połączenia WebRTC. Sprawdź diagnostykę ICE." : "Nie udało się zestawić połączenia WebRTC. Brak serwera TURN — przez LTE/5G lub restrykcyjny NAT obraz może nie przejść."); }
         else if (st === "disconnected") { showLive(""); setStatus("Połączenie przerwane — wznawiam…"); }
       };
@@ -2447,7 +2450,7 @@ installAppBtn.addEventListener("click", async () => {
 if (!window.__HOME_SECURITY_BUNDLED_PANEL__) {
   // Osobny numer przy zmianie powłoki PWA wymusza pobranie nowego workera,
   // zamiast ponownego otwierania starego panelu z pamięci Chrome lub WebView2.
-  const SERVICE_WORKER_BUILD = "207";
+  const SERVICE_WORKER_BUILD = "208";
   let webUpdateState={status:'checking',message:'Sprawdzam aktualizacje…'};
   const paintWebUpdate=()=>{
     document.querySelectorAll('[data-web-update]').forEach(button=>{
@@ -2788,6 +2791,9 @@ $("stage").addEventListener("pointerup", e => {
 });
 $("stage").addEventListener("dblclick", e => { if (!e.target.closest("button, a, input, select")) toggleFullscreen(); });
 let listeningAvailable = false;
+// Czy właściciel chce słuchać. Ponowne połączenie (chwilowy brak ścieżki audio)
+// nie może wyłączać odsłuchu, który sam włączył.
+let listeningWanted = false;
 function setListeningAvailable(available) {
   listeningAvailable = Boolean(available);
   const button = $("soundBtn");
@@ -2803,6 +2809,11 @@ function setListeningAvailable(available) {
     $("listenState").textContent = "Brak dźwięku z kamery";
     $("audioHud").dataset.state = "unavailable";
     return;
+  }
+  if (listeningWanted && !sender.live && video.muted) {
+    video.muted = false;
+    if (!video.volume) video.volume = 1;
+    video.play().catch(() => { video.muted = true; paintListeningControls(); toastMsg("Stuknij 🔊, aby wznowić odsłuch po ponownym połączeniu."); });
   }
   paintListeningControls();
 }
@@ -2842,6 +2853,7 @@ $("soundBtn").addEventListener("click", async () => {
   }
   if (!listeningAvailable || sender.live) return;
   video.muted = !video.muted;
+  listeningWanted = !video.muted;
   if (!video.muted && !video.volume) video.volume = 1;
   // Odtwarzanie dźwięku wymaga świadomego kliknięcia użytkownika.
   if (!video.muted) await video.play().catch(() => {});
@@ -2853,6 +2865,7 @@ $("listenVolume").addEventListener("input", event => {
   const volume = Math.max(0, Math.min(100, Number(event.target.value) || 0)) / 100;
   video.volume = volume;
   if (volume > 0 && video.muted) video.muted = false;
+  listeningWanted = !video.muted;
   paintListeningControls();
 });
 paintListeningControls();
