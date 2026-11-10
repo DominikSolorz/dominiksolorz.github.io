@@ -1,6 +1,7 @@
 // Public-only static distribution. Private accounts, callbacks, PWA and cameras remain on GitHub Pages.
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve,join,extname,basename} from 'node:path';
+import {existsSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {build,transform} from 'esbuild';
 const repo=resolve(import.meta.dirname,'../..');
@@ -25,18 +26,24 @@ async function image(ref,base){
  let path=url.pathname.slice(1);
  path=({'kamera/assets/ds-logo.jpg':'kamera/assets/ds-logo-96.webp','kamera/assets/home-security-hero.png':'kamera/assets/home-security-hero.webp','kamera/assets/home-security-how-it-works.png':'kamera/assets/home-security-how-it-works.webp'})[path]||path;
  if(/^docs\/ui-193\/.+\.png$/.test(path))path=path.replace('.png','-960.webp');
- const file=resolve(path.endsWith('.webp')?variants:repo,path);
- if(!file.startsWith((path.endsWith('.webp')?variants:repo)+'/'))throw Error('Image outside source root');
+ // Generated WebP variants live in `variants`; WebP files committed to the repository are used as-is.
+ const sourceRoot=path.endsWith('.webp')&&existsSync(resolve(variants,path))?variants:repo;
+ const file=resolve(sourceRoot,path);
+ if(!file.startsWith(sourceRoot+'/'))throw Error('Image outside source root');
  return asset(await readFile(file),extname(file));
 }
 async function moduleAsset(names){
  const name=names.join('+');
  if(modules.has(name))return modules.get(name);
- if(names.some(entry=>!['marketing-motion.mjs','marketing-navigation.mjs','marketing-gallery.mjs','marketing-start.mjs','marketing-auto-update.mjs'].includes(entry)))throw Error('Unexpected public entry '+name);
+ if(names.some(entry=>!['marketing-motion.mjs','marketing-navigation.mjs','marketing-gallery.mjs','marketing-start.mjs','marketing-auto-update.mjs','android-install.mjs'].includes(entry)))throw Error('Unexpected public entry '+name);
  const result=await build({stdin:{contents:names.map(entry=>'import '+JSON.stringify(join(repo,'kamera',entry))+';').join('\n'),resolveDir:repo,sourcefile:'public-enhancements.mjs'},outfile:join(output,'build','public-enhancements.mjs'),write:false,bundle:true,format:'esm',platform:'browser',minify:true,keepNames:true,sourcemap:'external',legalComments:'inline',plugins:[{name:'public-module-urls',setup(b){
   b.onResolve({filter:/\?v=\d+$/},args=>({path:resolve(args.resolveDir,args.path.split('?')[0])}));
   b.onLoad({filter:/\.(?:mjs|js)$/},async args=>{
    let contents=await readFile(args.path,'utf8');
+   // The installable PWA and its service worker exist only on GitHub Pages; never register a worker on Vercel.
+   if(basename(args.path)==='android-install.mjs')contents=`const button=document.getElementById('android-install'),status=document.getElementById('android-install-status');
+if(button&&status){status.textContent='Wersję przeglądarkową instaluje się z oficjalnego adresu HOME SECURITY w GitHub Pages. Przycisk otworzy tę stronę.';
+button.addEventListener('click',()=>{location.href=${JSON.stringify(legacy+'/kamera/pobierz.html')};});}`;
    if(basename(args.path)==='marketing-downloads.mjs')contents=contents.replaceAll(',import.meta.url).href',','+JSON.stringify(legacy+'/kamera/')+').href');
    contents=contents.replaceAll('import.meta.url',JSON.stringify(origin+'/kamera/'+basename(args.path)));
    return {contents,loader:'js',resolveDir:resolve(args.path,'..')};
@@ -55,7 +62,7 @@ for(const name of names){
  html=html.replace(/<meta name="home-security-build" content="[^"]+">/g,'');
  html=html.replace('</head>','<meta name="home-security-build" content="'+version+'"></head>');
  if(/id="(?:authDialog|panelRuntime)"/.test(html))throw Error('Private markup in public distribution');
- const entries=[...html.matchAll(/<script\b[^>]*src="([^"]+)"[^>]*>[\s\S]*?<\/script>/g)].map(m=>basename(m[1].split('?')[0])).filter(n=>!['public-entry.js','support-entry.mjs'].includes(n));
+ const entries=[...html.matchAll(/<script\b[^>]*src="([^"]+)"[^>]*>[\s\S]*?<\/script>/g)].map(m=>basename(m[1].split('?')[0])).filter(n=>!['public-entry.js','support-entry.mjs','desktop-auth-return.js','mobile-app-splash.js'].includes(n)); // account return and launch splash are GitHub Pages only
  html=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,'').replace(/<meta[^>]+http-equiv="Content-Security-Policy"[^>]*>/g,'').replace(/<link[^>]+rel="manifest"[^>]*>/g,'');
  for(const m of [...html.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/g)]){
   const cssPath=resolve(repo,'.'+new URL(m[1],base).pathname);
