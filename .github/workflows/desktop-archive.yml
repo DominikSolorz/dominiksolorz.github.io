@@ -1,0 +1,91 @@
+name: ARCHIWUM | Releases | Kopia starych paczek Windows
+
+# Jednorazowa, addytywna kopia starych paczek Windows do GitHub Releases.
+# Źródło: niezmienny commit main SOURCE_SHA. Pliki pobierane pojedynczo z Git
+# (bez 17 GB checkoutu), sprawdzane sumą obiektu Git, wysyłane do wydania TAG,
+# a potem pobierane ponownie i porównywane SHA-256. Nic nie jest usuwane.
+# Ponowne uruchomienie pomija pliki, które już są w wydaniu.
+
+on:
+  push:
+    branches: [archive/desktop-binaries-2026-11-11]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-archive
+  cancel-in-progress: false
+
+env:
+  SOURCE_SHA: e07b63caae4879d413d3d71bda2fd0dfb81313b2
+  TAG: desktop-archive-2026-11-11
+  EXPECTED: '226'
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - name: Drzewo źródłowe bez treści plików
+        run: |
+          git init -q src
+          git -C src remote add origin "https://github.com/$GITHUB_REPOSITORY"
+          git -C src fetch -q --filter=blob:none --depth=1 origin "$SOURCE_SHA"
+          # Bez `-l`: odczyt rozmiarów zmusiłby git do pobrania treści wszystkich 17 GB.
+          # Pozostają w repozytorium: bieżąca wersja 1.4.108 i paczka awaryjna 1.4.7 (pages.yml).
+          git -C src ls-tree -r "$SOURCE_SHA" -- kamera/updates kamera/downloads \
+            | awk -F'\t' '{split($1,m," "); print m[3]"\t"$2}' \
+            | grep -v -E $'\t(kamera/updates/HomeSecurityDesktop-1\\.4\\.108-win-x64\\.zip|kamera/downloads/HOME-SECURITY-Desktop-Setup-1\\.4\\.108\\.exe|kamera/updates/HomeSecurityDesktop-1\\.4\\.7-win-x64\\.zip)$' \
+            > list.tsv
+          count=$(wc -l < list.tsv)
+          echo "Plików do archiwum: $count"
+          test "$count" = "$EXPECTED" || { echo "::error::Oczekiwano $EXPECTED plików, jest $count"; exit 1; }
+          test "$(cut -f2 list.tsv | xargs -n1 basename | sort | uniq -d | wc -l)" = 0 || { echo "::error::Powtórzone nazwy plików"; exit 1; }
+
+      - name: Wydanie archiwalne (prerelease, nie „latest”)
+        run: |
+          gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create "$TAG" -R "$GITHUB_REPOSITORY" \
+            --target "$SOURCE_SHA" --prerelease --latest=false \
+            --title "Archiwum paczek Windows (do 1.4.107) — 2026-11-11" \
+            --notes "Kopia 226 historycznych paczek z kamera/updates i kamera/downloads z commita $SOURCE_SHA. Sumy w SHA256SUMS.txt i MANIFEST.tsv. Pliki pozostają też w historii Git. To nie jest kanał aktualizacji."
+
+      - name: Wyślij pliki (każdy sprawdzony sumą obiektu Git)
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq .id)
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases/$id/assets?per_page=100" --jq '.[] | select(.state=="uploaded") | .name' > have.txt
+          : > SHA256SUMS.txt
+          printf 'path\tgit_blob\tsize\tsha256\n' > MANIFEST.tsv
+          while IFS=$'\t' read -r blob path; do
+            name=$(basename "$path")
+            git -C src cat-file blob "$blob" > "$name"
+            test "$(git hash-object "$name")" = "$blob" || { echo "::error::Niezgodny obiekt Git: $path"; exit 1; }
+            size=$(stat -c %s "$name")
+            sha=$(sha256sum "$name" | cut -d' ' -f1)
+            printf '%s  %s\n' "$sha" "$name" >> SHA256SUMS.txt
+            printf '%s\t%s\t%s\t%s\n' "$path" "$blob" "$size" "$sha" >> MANIFEST.tsv
+            if grep -qxF "$name" have.txt; then echo "jest już: $name"
+            else gh release upload "$TAG" "$name" -R "$GITHUB_REPOSITORY" --clobber; echo "wysłano: $name ($size B)"; fi
+            rm -f "$name"
+          done < list.tsv
+          gh release upload "$TAG" SHA256SUMS.txt MANIFEST.tsv -R "$GITHUB_REPOSITORY" --clobber
+
+      - name: Weryfikacja kompletności i SHA-256 (ponowne pobranie)
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq .id)
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases/$id/assets?per_page=100" --jq '.[] | "\(.name)\t\(.size)\t\(.state)"' > assets.tsv
+          bad=0; n=0
+          while IFS=$'\t' read -r path blob size want; do
+            [ "$path" = path ] && continue
+            name=$(basename "$path"); n=$((n+1))
+            grep -qxF "$name"$'\t'"$size"$'\tuploaded' assets.tsv || { echo "::error::Brak lub zły rozmiar w wydaniu: $name"; bad=1; continue; }
+            rm -rf dl && gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p "$name" -D dl
+            got=$(sha256sum "dl/$name" | cut -d' ' -f1); rm -rf dl
+            [ "$want" = "$got" ] || { echo "::error::SHA-256 różni się: $name"; bad=1; }
+          done < MANIFEST.tsv
+          echo "Sprawdzono plików: $n, plików w wydaniu (bez list): $(grep -vc -e '^SHA256SUMS.txt' -e '^MANIFEST.tsv' assets.tsv)"
+          [ "$n" = "$EXPECTED" ] || bad=1
+          [ "$bad" = 0 ] && echo "Archiwum kompletne: $EXPECTED plików, wszystkie sumy SHA-256 zgodne z plikami z Git."
+          exit "$bad"
