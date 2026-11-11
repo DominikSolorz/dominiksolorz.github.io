@@ -12,7 +12,7 @@ Android, iOS oraz PWA telefonu:
 
 ## WWW
 Publiczna strona, GitHub Pages i Vercel:
-`pages.yml`, `pagespeed-audit.yml`, `verify-home-vercel-public.yml`, `verify-pages-public-bundle.yml`, `verify-public-website-premium.yml`.
+`pages.yml`, `pagespeed-audit.yml`, `vercel-deploy.yml`, `verify-home-vercel-public.yml`, `verify-pages-public-bundle.yml`, `verify-public-website-premium.yml`.
 
 ## WSPÓLNE
 Funkcje współdzielone przez kilka powierzchni:
