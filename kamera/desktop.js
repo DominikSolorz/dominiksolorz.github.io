@@ -44,7 +44,7 @@ if (desktopRequested) {
   shell.className = "desktopSidebar";
   shell.setAttribute("aria-label", "Nawigacja HOME SECURITY Desktop");
   shell.innerHTML = `
-    <div class="desktopBrand"><img class="dsPanelLogo" src="assets/ds-shield.svg" width="88" height="110" alt="Logo DS"><span><b>HOME <em>SECURITY</em></b><small>System Monitoringu Domowego</small></span><button id="desktopCollapse" type="button" aria-label="Rozwiń menu">›</button></div>
+    <div class="desktopBrand"><img class="dsPanelLogo" src="assets/hs-logo.webp" width="54" height="54" alt="HOME SECURITY"><span><b>HOME <em>SECURITY</em></b><small>System Monitoringu Domowego</small></span><button id="desktopCollapse" type="button" aria-label="Rozwiń menu">›</button></div>
     <div class="desktopDevice"><span id="desktopLiveDot" class="desktopDot"></span><span><b id="desktopLiveState">Sprawdzam połączenie</b><small id="desktopLiveDetail">—</small></span></div>
     <nav class="desktopNav" aria-label="Moduły monitoringu">
       <button class="active" type="button" data-desktop-view="live"><i>▦</i><span><b>Pulpit</b><small>podgląd na żywo</small></span><kbd>1</kbd></button>

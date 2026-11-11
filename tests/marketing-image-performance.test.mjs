@@ -75,9 +75,9 @@ test('public branding retains optimized assets and locked screens use a compact 
  ]);
  const privateLogos=[...html.matchAll(/<img class="(?:dsBrandLogo|dsPanelLogo)"[^>]+>/g)];
  assert.equal(privateLogos.length,4);
- for(const logo of privateLogos)assert.ok(logo[0].includes('src="assets/ds-shield.svg"'));
- const shield=await read('kamera/assets/ds-shield.svg');
- assert.ok(shield.includes('<svg'));assert.ok(shield.length<4096);
+ for(const logo of privateLogos)assert.ok(logo[0].includes('src="assets/hs-logo.webp"'));
+ const {stat}=await import('node:fs/promises');
+ assert.ok((await stat(new URL('../kamera/assets/hs-logo.webp',import.meta.url))).size<20000,'compact panel logo');
  assert.ok(optimizer.includes("out:'kamera/assets/ds-logo-192.webp'"));
  assert.ok(workflow.includes('_site/kamera/assets/ds-logo-192.webp'));
 });

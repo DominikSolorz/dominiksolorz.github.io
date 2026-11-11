@@ -20,7 +20,7 @@ if (isMobileOwnerApp) {
   const app = byId("app");
   document.body.classList.add("mobileOwnerMode");
   document.querySelectorAll('#authDialog .authBrand img, #lock .pinLogo img').forEach(image => {
-    image.src = 'assets/mobile-app-mark.svg';
+    image.src = 'assets/hs-logo.webp';
     image.alt = 'HOME SECURITY';
   });
   const disposeCameraFrame=mountMobileCameraFrame(byId('stage'),byId('video'));
@@ -43,7 +43,7 @@ if (isMobileOwnerApp) {
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
-    <img class="mobileBrandLogo" src="assets/mobile-app-mark.svg" width="48" height="48" alt="DS"><div><span class="mobileBrandName">HOME <b>SECURITY</b></span><h1 id="mobilePageTitle">Pulpit</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
+    <img class="mobileBrandLogo" src="assets/hs-logo.webp" width="48" height="48" alt="HOME SECURITY"><div><span class="mobileBrandName">HOME <b>SECURITY</b></span><h1 id="mobilePageTitle">Pulpit</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
     <button id="hsPhoneBell" class="hsPhoneBell" type="button" aria-label="Zdarzenia">${ICONS.bell}</button>
     <button id="mobileMenuBtn" type="button" aria-label="Otwórz menu" aria-controls="mobileMenuPage" aria-expanded="false">•••</button>`;
   app?.insertBefore(mobileHeader, app.firstChild);
