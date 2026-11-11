@@ -5583,3 +5583,15 @@ html:not(.desktopMode) :is(.mobileTile,.cameraCard,.eventCard,.settingsCard){
 @media (prefers-reduced-motion:reduce){
  html:not(.desktopMode) *{transition-duration:.01ms!important;animation-duration:.01ms!important}
 }
+/* DVR mobile layout hotfix: archive can be moved outside #app by dvr-ui.js. */
+@media (max-width:430px){
+  html #stage #liveRewind:not([hidden]){flex-wrap:wrap!important;max-width:calc(100% - 16px)!important;justify-content:center;box-sizing:border-box}
+  html #stage #liveRewind button{white-space:normal!important;min-width:0!important;max-width:100%;overflow-wrap:anywhere;text-align:center;line-height:1.25}
+  html.mobileOwnerMode body :is(#dvrCard,#dvrListCard,.dvrCtrls,.dvrPrecisionControls){min-width:0;max-width:100%;box-sizing:border-box}
+  html.mobileOwnerMode body :is(#dvrCard,#dvrListCard) :is(.dvrGroup,.dvrPrecisionControls){min-width:0;max-width:100%;box-sizing:border-box}
+  html.mobileOwnerMode body :is(#dvrCard,#dvrListCard) .dvrCtrls .dvrGroup,
+  html.mobileOwnerMode body :is(#dvrCard,#dvrListCard) .dvrGroup:has(>.dvrBtn:nth-child(5)){display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+  html.mobileOwnerMode body :is(#dvrCard,#dvrListCard) :is(.dvrGroup,.dvrPrecisionControls) :is(button,.dvrBtn){min-width:0!important;max-width:100%;white-space:normal!important;overflow-wrap:anywhere;line-height:1.25;height:auto;min-height:40px;box-sizing:border-box;text-align:center}
+  html.mobileOwnerMode body :is(#dvrCard,#dvrListCard) .dvrPrecisionClock{grid-column:1/-1;display:flex!important;flex-wrap:wrap;gap:6px;min-width:0}
+  html.mobileOwnerMode body :is(#dvrCard,#dvrListCard) :is(input[type="range"],.dvrPrecisionClock input){min-width:0;max-width:100%;box-sizing:border-box}
+}
