@@ -62,7 +62,7 @@ for(const name of names){
  html=html.replace(/<meta name="home-security-build" content="[^"]+">/g,'');
  html=html.replace('</head>','<meta name="home-security-build" content="'+version+'"></head>');
  if(/id="(?:authDialog|panelRuntime)"/.test(html))throw Error('Private markup in public distribution');
- const entries=[...html.matchAll(/<script\b[^>]*src="([^"]+)"[^>]*>[\s\S]*?<\/script>/g)].map(m=>basename(m[1].split('?')[0])).filter(n=>!['public-entry.js','support-entry.mjs','desktop-auth-return.js','mobile-app-splash.js'].includes(n)); // account return and launch splash are GitHub Pages only
+ const entries=[...html.matchAll(/<script\b[^>]*src="([^"]+)"[^>]*>[\s\S]*?<\/script>/g)].map(m=>basename(m[1].split('?')[0])).filter(n=>!['public-entry.js','support-entry.mjs','desktop-auth-return.js'].includes(n)); // account return is GitHub Pages only
  html=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,'').replace(/<meta[^>]+http-equiv="Content-Security-Policy"[^>]*>/g,'').replace(/<link[^>]+rel="manifest"[^>]*>/g,'');
  for(const m of [...html.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/g)]){
   const cssPath=resolve(repo,'.'+new URL(m[1],base).pathname);

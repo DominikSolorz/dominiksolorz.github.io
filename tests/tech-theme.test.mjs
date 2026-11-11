@@ -10,17 +10,17 @@ test('Tech Ops public theme loads last on generated marketing and document pages
     read('kamera/index.html'), read('kamera/mozliwosci.html'), read('kamera/instrukcja.html'), read('kamera/panel.html'), read('kamera/sw.js')
   ]);
   for (const [name, html] of [['index', home], ['mozliwosci', mozliwosci]]) {
-    assert.ok(html.includes('href="tech-theme.css?v=5"'), name);
+    assert.ok(html.includes('href="tech-theme.css?v=6"'), name);
     assert.ok(html.indexOf('tech-theme.css') > html.indexOf('marketing.css'), name + ': theme must follow marketing.css');
   }
-  assert.ok(instrukcja.indexOf('tech-theme.css?v=5') > instrukcja.indexOf('legal-premium.css'));
-  assert.ok(panel.includes('href="tech-theme.css?v=5"'));
-  assert.ok(sw.includes('./tech-theme.css?v=5'));
+  assert.ok(instrukcja.indexOf('tech-theme.css?v=6') > instrukcja.indexOf('legal-premium.css'));
+  assert.ok(panel.includes('href="tech-theme.css?v=6"'));
+  assert.ok(sw.includes('./tech-theme.css?v=6'));
 });
 
 test('Tech Ops public theme is presentation-only and scoped to public pages', async () => {
   const css = await read('kamera/tech-theme.css');
-  assert.match(css, /--t-cyan:#22d3ee/);
+  assert.match(css, /--t-cyan:#ee2236/);
   assert.match(css, /prefers-reduced-motion:reduce/);
   assert.doesNotMatch(css, /#app\b/);
   assert.doesNotMatch(css, /display:\s*none|visibility:\s*hidden/i);

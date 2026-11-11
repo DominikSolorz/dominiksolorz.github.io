@@ -3,13 +3,13 @@
 #publicHome .mktConceptHead{margin-bottom:32px}
 #publicHome .mktConceptHead>p{max-width:440px;line-height:1.7}
 #publicHome .mktConceptGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(14px,2.1vw,26px)}
-#publicHome .mktConceptCard{min-width:0;margin:0;border:1px solid #49404e;border-radius:19px;overflow:hidden;background:linear-gradient(150deg,#24212c,#14161f);box-shadow:0 16px 45px #0003;transition:transform .22s ease}
+#publicHome .mktConceptCard{min-width:0;margin:0;border:1px solid #49404e;border-radius:19px;overflow:hidden;background:linear-gradient(150deg,#282626,#1c1a1a);box-shadow:0 16px 45px #0003;transition:transform .22s ease}
 #publicHome .mktConceptCard:hover,#publicHome .mktConceptCard:focus-within{transform:translateY(-3px);border-color:#c39c85;box-shadow:0 25px 60px #0006}
-#publicHome .mktConceptOpen{position:relative;display:block;aspect-ratio:3/2;overflow:hidden;isolation:isolate;background:#0d1118}
-#publicHome .mktConceptOpen:after{position:absolute;content:"";inset:auto 0 0 0;height:45%;background:linear-gradient(0deg,#090d15b0,transparent);pointer-events:none}
+#publicHome .mktConceptOpen{position:relative;display:block;aspect-ratio:3/2;overflow:hidden;isolation:isolate;background:#151414}
+#publicHome .mktConceptOpen:after{position:absolute;content:"";inset:auto 0 0 0;height:45%;background:linear-gradient(0deg,#111010b0,transparent);pointer-events:none}
 #publicHome .mktConceptOpen img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 20%;transition:transform .22s ease}
 #publicHome .mktConceptOpen:hover img,#publicHome .mktConceptOpen:focus-visible img{transform:scale(1.045);filter:brightness(1.08)}
-#publicHome .mktConceptZoom{display:flex;align-items:center;gap:10px;position:absolute;bottom:13px;right:16px;z-index:2;color:#fff;font-weight:750;font-size:12px;padding:9px 12px;border:1px solid #ffffff77;border-radius:999px;background:#10141bbd;backdrop-filter:blur(8px)}
+#publicHome .mktConceptZoom{display:flex;align-items:center;gap:10px;position:absolute;bottom:13px;right:16px;z-index:2;color:#fff;font-weight:750;font-size:12px;padding:9px 12px;border:1px solid #ffffff77;border-radius:999px;background:#181616bd;backdrop-filter:blur(8px)}
 #publicHome .mktConceptZoom span{color:#f4ce8b}
 #publicHome .mktConceptCard figcaption{display:grid;gap:5px;padding:21px clamp(18px,2.5vw,27px) 25px}
 #publicHome .mktConceptCard figcaption>span{font-size:12px;letter-spacing:.12em;font-weight:750;color:#f4ce8b}
@@ -21,8 +21,8 @@
 #publicHome .mktConceptNote p{margin:6px 0 0;font-size:13px;color:#d1cbd1;line-height:1.7}
 #publicHome .mktConceptActions{display:grid;gap:7px;min-width:230px}
 #publicHome .mktConceptActions a{font-size:12px}
-#publicHome .mktGalleryDialog{color:#f6f1f2;background:#11141d;border:1px solid #7b5363;border-radius:18px;box-shadow:0 35px 120px #000c;padding:0;width:min(1320px,calc(100vw - 30px));max-width:1320px;max-height:calc(100dvh - 28px);overflow:auto}
-#publicHome .mktGalleryDialog::backdrop{background:#030408db;backdrop-filter:blur(5px)}
+#publicHome .mktGalleryDialog{color:#f6f1f2;background:#191818;border:1px solid #7b5363;border-radius:18px;box-shadow:0 35px 120px #000c;padding:0;width:min(1320px,calc(100vw - 30px));max-width:1320px;max-height:calc(100dvh - 28px);overflow:auto}
+#publicHome .mktGalleryDialog::backdrop{background:#080808db;backdrop-filter:blur(5px)}
 #publicHome .mktGalleryDialogHead{display:flex;justify-content:space-between;align-items:center;gap:18px;border-bottom:1px solid #43404c;padding:16px clamp(17px,2.4vw,27px)}
 #publicHome .mktGalleryDialogHead span{font-size:12px;font-weight:750;letter-spacing:.13em;color:#f4ce8b}
 #publicHome .mktGalleryDialogHead h3{margin:5px 0 0;font-size:20px}
@@ -37,7 +37,7 @@
 @media(prefers-reduced-motion:reduce){#publicHome .mktConceptCard,#publicHome .mktConceptOpen img,#publicHome .mktGalleryClose{transition:none}#publicHome .mktConceptCard:hover,#publicHome .mktConceptOpen:hover img,#publicHome .mktConceptOpen:focus-visible img{transform:none!important}}
 
 /* Full-resolution reference gallery: keep each entire board visible. */
-#publicHome.mktDesignLibrary .mktConceptCard { background:#13181f; border-color:#2b333f; border-radius:14px; }
+#publicHome.mktDesignLibrary .mktConceptCard { background:#1b1a1a; border-color:#2b2828; border-radius:14px; }
 #publicHome.mktDesignLibrary .mktConceptOpen { aspect-ratio:auto; }
 #publicHome.mktDesignLibrary .mktConceptOpen::after { display:none; }
 #publicHome.mktDesignLibrary .mktConceptOpen img { width:100%; height:auto; object-fit:contain; transform:none; filter:none; }

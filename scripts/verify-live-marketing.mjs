@@ -39,7 +39,6 @@ const get=async(path,{method='GET'}={})=>{
 const checks=[
   ['o-systemie.html',['id="publicHome"','Wydanie rozwojowe','href="jak-dziala.html"']],
   ['przygotowanie.html',['id="przygotowanie"','data-mkt-setup','marketing-start.mjs?v=2']],
-  ['prezentacja.html',['id="galeria"','marketing-gallery.mjs?v=2']],
   ['jak-dziala.html',['id="w-praktyce"']],
   ['mozliwosci.html',['id="mozliwosci"']],
   ['wymagania.html',['id="specyfikacja"']],
@@ -54,20 +53,20 @@ const checks=[
   ['regulamin.html',['o-systemie.html','Regulamin']],
   ['rodo.html',['o-systemie.html','Informacja RODO']],
   ['panel.html',['name="home-security-build" content="'+expectedBuild+'"','id="authDialog"','id="publicHome"',currentPanelCSS]],
-  ['index.html',['http-equiv="Content-Security-Policy"','require-trusted-types-for','data-source="'+currentMarketingCSS+'"','marketing-navigation.mjs?v=1','name="robots" content="index,follow"','rel="canonical" href="https://dominiksolorz.github.io/kamera/"','data-public-entry','id="hsMobileSplash"','mobile-app-splash.js?v=3']],
+  ['index.html',['http-equiv="Content-Security-Policy"','require-trusted-types-for','data-source="'+currentMarketingCSS+'"','marketing-navigation.mjs?v=1','name="robots" content="index,follow"','rel="canonical" href="https://dominiksolorz.github.io/kamera/"','data-public-entry','assets/hs-logo.webp']],
   ['sitemap.xml',['/kamera/galeria.html','/kamera/</loc>']],
   ['../index.html',['./kamera/','location.replace']]
 ];
 const assets=[
- 'marketing-start.css?v=3','marketing-start.mjs?v=2',
- 'marketing-auto-update.css?v=2',currentUpdateModule,
- 'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=4','public-entry.js?v=8',
+ 'marketing-start.css?v=4','marketing-start.mjs?v=2',
+ 'marketing-auto-update.css?v=3',currentUpdateModule,
+ 'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=4','public-entry.js?v=9',
  'marketing-gallery.css?v=3','marketing-gallery.mjs?v=2',
  currentPanelCSS,
- 'marketing-motion.css?v=2',currentMarketingCSS,'marketing-navigation.css?v=1','marketing-navigation.mjs?v=1',
+ 'marketing-motion.css?v=3',currentMarketingCSS,'marketing-navigation.css?v=2','marketing-navigation.mjs?v=1',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
  'assets/home-security-hero-640.webp','assets/home-security-hero.webp','assets/home-security-how-it-works-640.webp','assets/ds-logo-96.webp','assets/ds-logo-192.webp','../docs/ui-193/01-pulpit-480.webp','../docs/ui-193/01-pulpit-640.webp','../docs/ui-193/01-pulpit-720.webp','../docs/ui-193/01-pulpit-960.webp',
- 'assets/home-security-hero.png','assets/home-security-loading.webp','assets/home-security-ad-02.webp','assets/home-security-ad-03.webp','mobile-app-splash.js?v=3','mobile-app-splash.css?v=3','downloads/HOME-SECURITY-Desktop-Setup-'+expectedDesktop.version+'.exe'
+ 'assets/home-security-hero.png','assets/hs-logo.webp','downloads/HOME-SECURITY-Desktop-Setup-'+expectedDesktop.version+'.exe'
 ];
 
 let tries=0;
@@ -98,7 +97,7 @@ for(const [path,tokens] of checks){
   console.log('OK document '+path);
 }
 // Reject the original cause of invisible releases: redirect to an outdated public mirror.
-const entryScript=await get('public-entry.js?v=8');
+const entryScript=await get('public-entry.js?v=9');
 assert.ok(!entryScript.includes('home-security-dominik-solorz.vercel.app'),'The public entry must not redirect to stale Vercel');
 assert.ok(entryScript.includes('panel.html')&&entryScript.includes('location.replace'), 'Private panel routing must remain in the deployed minified bridge');
 const publicHTML=await get('index.html');

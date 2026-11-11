@@ -6,23 +6,21 @@ import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 const root=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
 
-test('commercial WebP belongs to the public mobile intro, not the account/PIN panel',async()=>{
+test('no advertising screens: neither before sign-in nor in the account/PIN panel',async()=>{
  const [panel,home,sw]=await Promise.all(['kamera/panel.html','kamera/index.html','kamera/sw.js'].map(read));
- const img=await stat(new URL('kamera/assets/home-security-loading.webp',root));
- assert.ok(img.size>10000&&img.size<50000,'mobile advertisement remains lightweight');
  const cssLinks=panel.match(/<template id="panelStyles">([\s\S]*?)<\/template>/)?.[1];
  assert.ok(cssLinks,'private panel stylesheet template must exist');
  const names=[...cssLinks.matchAll(/href="([^"]+)"/g)].map(m=>m[1]);
  assert.deepEqual(names,[panelStylesheet(panel)],'one private panel stylesheet');
  assert.ok(!names.some(name=>name.includes('loading-campaign.css')),'do not show advertising after sign in');
  assert.ok(!sw.includes('./loading-campaign.css?v=1'),'do not precache obsolete private-page banner CSS');
- assert.ok(home.includes('id="hsMobileSplash"'),'public mobile introduction remains available');
- assert.ok(home.includes('30000'),'public mobile advertising lasts 30 seconds');
+ assert.ok(!home.includes('id="hsMobileSplash"')&&!home.includes('hsMobileLaunch'),'public homepage has no loading screen before sign-in');
+ assert.ok(!home.includes('id="mobileWelcome"'),'phones see the current homepage, not the old welcome screen');
  for(const id of ['boot','bootText','bootProgress','bootCountdown','bootStep','bootRetry','lock','app','authDialog','ctrlStart','ctrlStop','video'])
   assert.ok(panel.includes('id="'+id+'"'),'security element retained: '+id);
 });
 
-test('a mobile login skips second loading screen and does not delay the secure PIN gate',async()=>{
+test('a mobile login shows the short loading screen after sign-in, then the secure PIN gate',async()=>{
  const html=await read('kamera/panel.html');
  const bootStart=html.indexOf('<section id="boot"');
  const bootEnd=html.indexOf('<!-- Wejście PIN-em -->',bootStart);
@@ -49,12 +47,10 @@ test('a mobile login skips second loading screen and does not delay the secure P
  };
  vm.runInNewContext(js,ctx);
  await Promise.resolve();
- assert.equal(nodes.boot.hidden,true,'mobile boot must remain hidden after login');
- await ctx.window.__finishSecureBoot();
- assert.equal(nodes.boot.hidden,true,'mobile PIN transition must not show boot');
- assert.equal(frames.length,0,'no animation in private phone flow');
- assert.ok(!timers.includes(700)&&!timers.includes(220),
-  'no artificial post-login delay');
+ assert.equal(nodes.boot.hidden,false,'loading screen is shown after sign-in on the phone');
+ assert.equal(frames.length,1,'loading progress is animated');
+ assert.ok(timers.includes(7100),'loading screen has a hard safety limit');
+ assert.ok(!timers.some(ms=>ms>=30000),'no long advertising delay after sign-in');
  assert.equal(typeof ctx.window.__finishSecureBoot,'function');
  const app=await read('kamera/app.js');
  assert.match(app,/await window\.__finishSecureBoot\?\.\(\)/);

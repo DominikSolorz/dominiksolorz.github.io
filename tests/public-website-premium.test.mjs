@@ -33,7 +33,7 @@ test('public feature preview is explicitly illustrative and every call-to-action
   assert.match(source,/To nie jest rzeczywisty obraz ani aktywna transmisja/);
   assert.match(source,/HOME SECURITY jest projektem rozwojowym/);
   assert.match(source,/nie zastępuje certyfikowanego systemu alarmowego/);
-  for(const path of ['prezentacja.html','pobierz.html','przygotowanie.html','stan-projektu.html','panel.html?auth=login']){
+  for(const path of ['pobierz.html','przygotowanie.html','stan-projektu.html','panel.html?auth=login']){
     assert.ok(source.includes('href="'+path+'"'),path);
   }
   assert.doesNotMatch(source,/Kup teraz|Odtwórz film|fałszywa transmisja/i);
@@ -55,12 +55,12 @@ test('new site visual layer stays public-only, responsive and accessible',async(
   assert.equal((newCss.match(/\{/g)||[]).length,(newCss.match(/\}/g)||[]).length,'CSS curly braces match');
 });
 
-test('public marketing accents use the blue-purple-teal theme without recoloring the secure panel',async()=>{
+test('public marketing accents use the HOME SECURITY red-graphite theme without recoloring the secure panel',async()=>{
   const [css,panel]=await Promise.all([read('kamera/marketing.css'),read('kamera/panel.html')]);
   const theme=css.split('/* HOME SECURITY WWW Premium Dark Pro')[1];
-  for(const token of ['--m-blue:#6366f1','--m-purple:#7c3aed','--m-teal:#2dd4bf',
-    'linear-gradient(95deg,#c4b5fd 4%,#a5b4fc 54%,#5eead4 100%)',
-    'linear-gradient(115deg,var(--m-blue) 0%,var(--m-purple) 58%,#0f766e 100%)'])
+  for(const token of ['--m-blue:#ef4d5d','--m-purple:#ed3a4c','--m-teal:#e61b30',
+    'linear-gradient(95deg,#dbd7d7 4%,#d2cfcf 54%,#ec5160 100%)',
+    'linear-gradient(115deg,var(--m-blue) 0%,var(--m-purple) 58%,#2b2828 100%)'])
     assert.ok(theme.includes(token),'missing public accent '+token);
   assert.match(panel,/<template id="panelStyles">/);
   panelStylesheet(panel);
@@ -69,8 +69,8 @@ test('public marketing accents use the blue-purple-teal theme without recoloring
 
 test('public site retains the same dark system identity as Windows and Android/iPhone',async()=>{
   const css=await read('kamera/marketing.css');
-  assert.ok(css.includes('--m-bg:#0a0e1a'));
-  assert.ok(css.includes('--m-blue:#6366f1'));
+  assert.ok(css.includes('--m-bg:#141313'));
+  assert.ok(css.includes('--m-blue:#ef4d5d'));
   assert.ok(css.includes('color-scheme:dark'));
   assert.ok(!css.includes('@media(prefers-color-scheme:light)'),
     'light phone preference must not turn only the landing page white');

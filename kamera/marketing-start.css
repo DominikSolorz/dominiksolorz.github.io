@@ -4,19 +4,19 @@
 #publicHome .mktSetupHeading>div:first-child{max-width:780px}
 #publicHome .mktSetupHeading h2{margin-bottom:18px}
 #publicHome .mktSetupHeading p:last-child{font-size:15px;line-height:1.8;color:#cdd0d7;max-width:700px}
-#publicHome .mktSetupCounter{min-width:180px;max-width:220px;text-align:right;padding:20px;border:1px solid #665664;border-radius:16px;background:linear-gradient(140deg,#241d2a,#141822)}
+#publicHome .mktSetupCounter{min-width:180px;max-width:220px;text-align:right;padding:20px;border:1px solid #665664;border-radius:16px;background:linear-gradient(140deg,#241d2a,#1d1b1b)}
 #publicHome .mktSetupCounter>span{display:block;font-size:clamp(29px,3vw,42px);line-height:1.1;font-weight:800;letter-spacing:-.05em;color:#f5d69e;font-variant-numeric:tabular-nums}
 #publicHome .mktSetupCounter small{font-size:12px;color:#cfd0d9}
 #publicHome .mktSetupProgress{height:7px;margin-top:13px;border-radius:8px;background:#484351;overflow:hidden}
 #publicHome .mktSetupProgress>span{height:100%;width:100%;transform:scaleX(0);transform-origin:left;display:block;border-radius:8px;background:linear-gradient(90deg,#dd6a7b,#f4ce8b);transition:none}
 #publicHome .mktSetupList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-#publicHome .mktSetupItem{display:flex;gap:18px;align-items:start;position:relative;padding:clamp(19px,2.5vw,28px);min-height:133px;cursor:pointer;border-radius:17px;border:1px solid #4d4554;background:linear-gradient(135deg,#201d28,#151823);transition:transform .22s ease}
+#publicHome .mktSetupItem{display:flex;gap:18px;align-items:start;position:relative;padding:clamp(19px,2.5vw,28px);min-height:133px;cursor:pointer;border-radius:17px;border:1px solid #4d4554;background:linear-gradient(135deg,#242222,#1e1c1c);transition:transform .22s ease}
 #publicHome .mktSetupItem:hover{border-color:#c59e98}
 #publicHome .mktSetupItem:focus-within{outline:3px solid #f4ce8b;outline-offset:3px}
-#publicHome .mktSetupItem:has(input:checked){border-color:#b79b78;background:linear-gradient(135deg,#302534,#191c25)}
+#publicHome .mktSetupItem:has(input:checked){border-color:#b79b78;background:linear-gradient(135deg,#302534,#211f1f)}
 #publicHome .mktSetupItem>input{position:absolute;opacity:0;width:30px;height:30px;left:26px;top:25px;cursor:pointer}
-#publicHome .mktSetupCheck{display:grid;place-items:center;flex:none;width:33px;height:33px;border-radius:10px;border:1px solid #aa8794;color:#f8f4f7;background:#29232f;font-size:18px;font-weight:800;transition:none}
-#publicHome .mktSetupItem:has(input:checked) .mktSetupCheck{background:#f4ce8b;border-color:#f4ce8b;color:#16151d}
+#publicHome .mktSetupCheck{display:grid;place-items:center;flex:none;width:33px;height:33px;border-radius:10px;border:1px solid #aa8794;color:#f8f4f7;background:#2b2828;font-size:18px;font-weight:800;transition:none}
+#publicHome .mktSetupItem:has(input:checked) .mktSetupCheck{background:#f4ce8b;border-color:#f4ce8b;color:#1b1a1a}
 #publicHome .mktSetupItem>span:last-child{display:block;min-width:0}
 #publicHome .mktSetupItem strong{display:block;font-size:17px;color:#f8f4f7;line-height:1.35;margin:2px 0 8px}
 #publicHome .mktSetupItem small{display:block;font-size:13px;line-height:1.7;color:#c6c8d2}

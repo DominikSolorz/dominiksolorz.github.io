@@ -65,7 +65,7 @@ test('all public pages use one grouped navigation, deep footer and versioned ass
  for(const path of pages){
   const html=await read(path);
   const prefix=path.startsWith('kamera/blog/')?'../':'';
-  for(const asset of ['marketing-navigation.css?v=1','marketing-navigation.mjs?v=1']){
+  for(const asset of ['marketing-navigation.css?v=2','marketing-navigation.mjs?v=1']){
    assert.ok(html.includes(prefix+asset),path+' missing '+asset);
   }
   assert.equal((html.match(/class="mktMobileMenu"/g)||[]).length,1,path);
@@ -97,7 +97,7 @@ test('homepage puts only the essential five links in desktop header and deeper i
  assert.equal((footer.match(/<nav aria-label=/g)||[]).length,3);
  assert.ok(footer.includes('Informacja RODO'));
  assert.ok(footer.includes('Wydanie rozwojowe.'));
- for(const page of ['jak-dziala','mozliwosci','prezentacja','przygotowanie','wymagania','stan-projektu'])
+ for(const page of ['jak-dziala','mozliwosci','przygotowanie','wymagania','stan-projektu'])
   assert.ok(home.includes('href="'+page+'.html"'));
 });
 
@@ -108,7 +108,7 @@ test('mobile navigation is legible, keyboard-accessible and supports reduced mot
   assert.ok(css.includes(part),'missing CSS behavior '+part);
  assert.equal((css.match(/\{/g)||[]).length,(css.match(/\}/g)||[]).length);
  const [sw,app,manifest]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/version.json'].map(read));
- assert.ok(sw.includes('./marketing-navigation.css?v=1'));
+ assert.ok(sw.includes('./marketing-navigation.css?v=2'));
  assert.ok(sw.includes('./marketing-navigation.mjs?v=1'));
  const currentRelease=JSON.parse(manifest).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
