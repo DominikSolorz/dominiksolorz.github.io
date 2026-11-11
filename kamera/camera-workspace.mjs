@@ -7,7 +7,7 @@ export function mountCameraWorkspace({root,primaryTile,primaryVideo,ownerId,stor
   const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;};
   root.classList.add('cameraWorkspace');
   const tools=el('header','cameraWorkspaceToolbar');
-  const heading=el('div');heading.append(el('span','cameraEyebrow','STANOWISKO OPERATORA'),el('h2',null,'Twoje kamery'));
+  const heading=el('div');heading.append(el('span','cameraEyebrow','NA ŻYWO'),el('h2',null,'Podgląd kamer na żywo'));
   const counter=el('span','cameraCounter');heading.append(counter);
   const actions=el('div','cameraWorkspaceActions');
   const layout=document.createElement('select');layout.setAttribute('aria-label','Układ podglądów');

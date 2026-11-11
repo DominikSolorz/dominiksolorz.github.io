@@ -9,7 +9,7 @@ import { mountMobileCameraInfo } from './mobile-camera-status.mjs?v=1';
 import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { mountEventWorkspace, mountDiagnosticWorkspace } from "./workspace-panels.mjs?v=2";
 import { mountLocationMap } from "./mobile-map.mjs?v=7";
-import { ICONS, mountRecentEvents, mountLiveOverlay, systemStatus } from "./home-dashboard.mjs?v=1";
+import { ICONS, mountRecentEvents, mountLiveOverlay, systemStatus } from "./home-dashboard.mjs?v=2";
 import { mirrorLivePreview } from "./workspace-panels.mjs?v=4";
 // „Łączenie…” mówi więcej: z czym się łączymy (pomysł z rundy Replit).
 const clarifyConnectionText=()=>{const node=document.getElementById("placeholder");if(!node)return;const fix=()=>{if(node.textContent.trim()==="Łączenie…")node.textContent="Łączenie z komputerem z kamerą…";};const watch=new MutationObserver(fix);watch.observe(node,{childList:true,characterData:true,subtree:true});fix();window.addEventListener("pagehide",()=>watch.disconnect(),{once:true});};

@@ -7,10 +7,10 @@ import { createRouter } from "./core/router.mjs";
 import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { systemStore } from "./core/store.mjs";
 import { operatorStatus } from "./core/operator-status.mjs?v=1";
-import { mountCameraWorkspace } from './camera-workspace.mjs?v=2';
-import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview } from "./workspace-panels.mjs?v=4";
+import { mountCameraWorkspace } from './camera-workspace.mjs?v=3';
+import { mountEventWorkspace, mountDiagnosticWorkspace, mirrorLivePreview, diagnosticCards } from "./workspace-panels.mjs?v=4";
 import { mountLocationMap } from "./mobile-map.mjs?v=7";
-import { ICONS, mountRecentEvents, mountLiveOverlay, systemStatus } from "./home-dashboard.mjs?v=1";
+import { ICONS, mountRecentEvents, mountLiveOverlay, systemStatus } from "./home-dashboard.mjs?v=2";
 // „Łączenie…” mówi więcej: z czym się łączymy (pomysł z rundy Replit).
 const clarifyConnectionText=()=>{const node=document.getElementById("placeholder");if(!node)return;const fix=()=>{if(node.textContent.trim()==="Łączenie…")node.textContent="Łączenie z komputerem z kamerą…";};const watch=new MutationObserver(fix);watch.observe(node,{childList:true,characterData:true,subtree:true});fix();window.addEventListener("pagehide",()=>watch.disconnect(),{once:true});};
 
@@ -112,6 +112,7 @@ if (desktopRequested) {
   context.setAttribute("aria-label", "Kontekst pulpitu");
   context.innerHTML = `
     <div><p>Pulpit <span>/</span> Na żywo</p><h1>Monitoring domu</h1><small class="hsSubtitle">Podgląd na żywo, zdarzenia i ustawienia systemu</small></div>
+    <div class="hsHeadCards"><div class="hsClockCard" aria-live="off">${ICONS.calendar}<span><small id="hsDate">—</small><b id="hsTime">--:--:--</b></span></div><button type="button" class="hsRecCard" id="hsRecCard" role="switch" aria-checked="false"><span class="hsRecIcon">${ICONS.shield}</span><span><small>Nagrywanie</small><b id="hsRecCardText">Sprawdzam…</b></span><i class="hsSwitch" aria-hidden="true"></i></button></div>
     <div class="hsHeadActions"><button type="button" class="hsStatusPill" id="hsStatusPill" data-tone="off"><span class="hsShield">${ICONS.shield}</span><b id="hsStatusPillText">Brak transmisji</b></button><button type="button" class="hsRoundBtn" id="hsHeadTheme" aria-label="Przełącz motyw jasny lub ciemny" title="Motyw jasny / ciemny"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2M12 19v2M5 5l1.4 1.4M17.6 17.6 19 19M3 12h2M19 12h2M5 19l1.4-1.4M17.6 6.4 19 5"/><circle cx="12" cy="12" r="4"/></svg></button><button type="button" class="hsRoundBtn" id="hsHeadEvents" aria-label="Zdarzenia">${ICONS.bell}</button><button type="button" class="hsRoundBtn" id="hsHeadSettings" aria-label="Ustawienia">${ICONS.gear}</button></div>
     <div class="desktopContextActions">
       <span id="desktopCameraCount" class="desktopCameraCount">Kamery: sprawdzam…</span>
@@ -143,23 +144,25 @@ if (desktopRequested) {
     </section>
     <section class="desktopTimelineDock" aria-label="Oś czasu nagrań bieżącej kamery"></section>
     <section class="desktopControlDock" aria-label="Sterowanie transmisją i nagrywaniem"><div class="desktopControlLocked" hidden><span>🔒</span><div><b>Sterowanie właściciela</b><small>Start, Stop i Restart są dostępne wyłącznie na komputerze-kamerze lub po zalogowaniu PIN-em właściciela.</small></div></div></section>
-    <aside class="hsCamerasPanel" aria-label="Twoje kamery"><header class="hsCardHead"><h2>Twoje kamery <span id="hsCamCount">(1)</span></h2></header><div class="hsCamGrid"><button type="button" class="hsCamTile active" id="hsMainCamTile"><video muted playsinline autoplay aria-hidden="true"></video><span class="hsCamEmpty">Brak obrazu</span><span class="hsCamLabel">${ICONS.record}<b>Kamera główna</b><i class="hsDot"></i></span></button></div></aside>
-    <section class="hsDashRow" aria-label="Zdarzenia, akcje i ustawienia">
-      <article class="hsCard hsEventsCard"></article>
-      <div class="hsDashMid">
-        <article class="hsCard hsQuickCard"><header class="hsCardHead"><h2>Szybkie akcje</h2></header><div class="hsQuickGrid">
-          <button type="button" class="hsQuick" id="hsQuickRecord">${ICONS.record}<b>Nagrywaj</b></button>
-          <button type="button" class="hsQuick" id="hsQuickSnap">${ICONS.camera}<b>Zdjęcie</b></button>
-          <button type="button" class="hsQuick" id="hsQuickArchive">${ICONS.list}<b>Nagrania</b></button>
-        </div></article>
-        <article class="hsCard hsStatusCard"><header class="hsCardHead"><h2>Status systemu</h2></header><button type="button" class="hsStatusRow" id="hsStatusRow" data-tone="off"><span class="hsShield">${ICONS.shield}</span><span><b id="hsStatusTitle">Brak transmisji</b><small id="hsStatusDetail">Sprawdzam…</small></span>${ICONS.chevron}</button></article>
-      </div>
-      <article class="hsCard hsSettingsCard"><header class="hsCardHead"><h2>${ICONS.gear} Ustawienia</h2><button type="button" class="hsLink" data-hs-settings="picture">Zobacz wszystkie →</button></header>
-        <button type="button" class="hsSetRow" data-hs-view="events">${ICONS.bell}<span><b>Powiadomienia</b><small>Ruch i dźwięk z kamery</small></span><em id="hsSetEvents">—</em></button>
-        <button type="button" class="hsSetRow" data-hs-settings="recording">${ICONS.record}<span><b>Nagrywanie</b><small id="hsSetRecordingDetail">Zapis i harmonogram</small></span><em id="hsSetRecording">—</em></button>
-        <button type="button" class="hsSetRow" data-hs-settings="detection">${ICONS.motion}<span><b>Czułość wykrywania ruchu</b><small>Detekcja ruchu i dźwięku</small></span>${ICONS.chevron}</button>
-      </article>
+    <section class="hsStats" aria-label="Najważniejsze wskaźniki">
+      <article class="hsStat" data-stat="cams"><span class="hsStatIcon">${ICONS.record}</span><span><small>Kamery</small><b id="hsStatCams">1</b><em id="hsStatCamsNote">Sprawdzam…</em></span></article>
+      <article class="hsStat" data-stat="rec"><span class="hsStatIcon">${ICONS.camera}</span><span><small>Nagrywanie</small><b id="hsStatRec">—</b><em id="hsStatRecNote">Sprawdzam…</em></span></article>
+      <article class="hsStat" data-stat="events"><span class="hsStatIcon">${ICONS.bell}</span><span><small>Zdarzenia</small><b id="hsStatEvents">0</b><em id="hsStatEventsNote">ostatnie 24 h</em></span></article>
+      <article class="hsStat" data-stat="system"><span class="hsStatIcon">${ICONS.signal}</span><span><small>System</small><b id="hsStatSystem">—</b><em id="hsStatSystemNote">Sprawdzam…</em></span></article>
+      <article class="hsStat" data-stat="storage"><span class="hsStatIcon">${ICONS.storage}</span><span><small>Miejsce zapisu</small><b id="hsStatStorage">—</b><em id="hsStatStorageNote">Sprawdzam…</em></span></article>
     </section>
+    <aside class="hsSideCol" aria-label="Sterowanie, stan i zdarzenia">
+      <article class="hsCard hsQuickCard"><header class="hsCardHead"><h2>${ICONS.bolt} Szybkie sterowanie</h2></header><div class="hsQuickGrid">
+        <button type="button" class="hsQuick" id="hsQuickRecord">${ICONS.record}<b>Nagrywaj</b></button>
+        <button type="button" class="hsQuick" id="hsQuickSnap">${ICONS.camera}<b>Zdjęcie</b></button>
+        <button type="button" class="hsQuick" id="hsQuickArchive">${ICONS.list}<b>Nagrania</b></button>
+        <button type="button" class="hsQuick" data-hs-view="controls">${ICONS.gear}<b>Sterowanie</b></button>
+      </div></article>
+      <article class="hsCard hsStatusCard"><header class="hsCardHead"><h2>${ICONS.shield} Status systemu</h2><button type="button" class="hsLink" data-hs-view="diagnostics">Szczegóły →</button></header>
+        <button type="button" class="hsStatusRow" id="hsStatusRow" data-tone="off" hidden><span><b id="hsStatusTitle">Brak transmisji</b><small id="hsStatusDetail">Sprawdzam…</small></span></button>
+        <ul class="hsStatusList" id="hsStatusList"></ul></article>
+      <article class="hsCard hsEventsCard"></article>
+    </aside>
     <details class="desktopEventsDrawer" aria-label="Ostatnie zdarzenia" hidden><summary><span>Ostatnie zdarzenia</span><small>ruch i dźwięk</small><b id="desktopEventCount">—</b></summary></details>`;
   if (context.parentElement) context.insertAdjacentElement("afterend", overview);
   const homeGuide = document.createElement("section");
@@ -173,12 +176,10 @@ if (desktopRequested) {
   clarifyConnectionText();
   // Projekt „Monitoring domu”: przyciski na obrazie, miniatura kamery, karty pod obrazem.
   mountLiveOverlay(liveStage, { video: $("video"), onMore: () => setActive("settings") });
-  mirrorLivePreview($("video"), overview.querySelector("#hsMainCamTile video"), overview.querySelector("#hsMainCamTile .hsCamEmpty"));
   mountRecentEvents(overview.querySelector(".hsEventsCard"), { limit: 4, onAll: () => setActive("events") });
-  const camGrid = overview.querySelector(".hsCamGrid");
-  const addTile = document.createElement("button"); addTile.type = "button"; addTile.className = "hsCamTile hsCamAdd"; addTile.innerHTML = "<b>＋</b><span>Dodaj kamerę</span>";
-  addTile.addEventListener("click", () => $("desktopAddCamera")?.click()); camGrid.append(addTile);
-  overview.querySelector("#hsMainCamTile").addEventListener("click", () => $("stage")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+  $("hsRecCard").addEventListener("click", () => $("hsQuickRecord").click());
+  const paintClock = () => { const now = new Date(); $("hsDate").textContent = now.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", year: "numeric" }); $("hsTime").textContent = now.toLocaleTimeString("pl-PL"); };
+  paintClock(); setInterval(paintClock, 1000);
   $("hsQuickRecord").addEventListener("click", () => { const recording = systemStore.read("recording", 45000).status === "recording"; ($(recording ? "ctrlStop" : "ctrlStart"))?.click(); });
   $("hsQuickSnap").addEventListener("click", () => overview.querySelector(".hsSnap")?.click());
   $("hsQuickArchive").addEventListener("click", () => setActive("archive"));
@@ -202,14 +203,26 @@ if (desktopRequested) {
     $("hsSideStatusTitle").textContent = status.title; $("hsSideStatusDetail").textContent = status.detail;
     const recording = systemStore.read("recording", 45000);
     const on = recording.status === "recording";
-    $("hsQuickRecord").classList.toggle("on", on); $("hsQuickRecord").querySelector("b").textContent = on ? "Zatrzymaj zapis" : "Nagrywaj";
-    $("hsSetRecording").textContent = recording.freshness === "fresh" ? (on ? "Włączone" : "Wyłączone") : "—";
-    $("hsSetRecording").dataset.on = String(on);
+    const fresh = recording.freshness === "fresh";
+    $("hsQuickRecord").classList.toggle("on", on); $("hsQuickRecord").querySelector("b").textContent = on ? "Zatrzymaj" : "Nagrywaj";
+    $("hsRecCard").setAttribute("aria-checked", String(on)); $("hsRecCard").dataset.on = String(on);
+    $("hsRecCardText").textContent = fresh ? (on ? "Aktywne" : "Zatrzymane") : "Brak danych";
     const events = systemStore.read("cameraEvents", 86400000).items || [];
-    $("hsSetEvents").textContent = events.length ? `${events.length}` : "0";
-    const extra = cameraWorkspace ? cameraWorkspace.catalog.list().length : 0;
-    $("hsCamCount").textContent = `(${extra + 1})`;
-    overview.querySelector("#hsMainCamTile .hsDot")?.classList.toggle("on", Boolean(live));
+    const cams = (cameraWorkspace ? cameraWorkspace.catalog.list().length : 0) + 1;
+    const storage = systemStore.read("storage", 90000);
+    const tone = (id, value) => { const card = overview.querySelector(`[data-stat="${id}"]`); if (card) card.dataset.tone = value; };
+    $("hsStatCams").textContent = String(cams); $("hsStatCamsNote").textContent = live ? "Obraz na żywo" : "Brak obrazu"; tone("cams", live ? "ok" : "warn");
+    $("hsStatRec").textContent = fresh ? (on ? "Aktywne" : "Zatrzymane") : "—"; $("hsStatRecNote").textContent = recording.lastFile ? `Ostatni plik: ${recording.lastFile}` : "Brak pliku"; tone("rec", on ? "ok" : recording.status === "error" ? "bad" : "warn");
+    $("hsStatEvents").textContent = String(events.length); tone("events", events.length ? "alert" : "ok");
+    $("hsStatSystem").textContent = live ? "Online" : "Offline"; $("hsStatSystemNote").textContent = status.title; tone("system", live ? "ok" : "warn");
+    $("hsStatStorage").textContent = storage.name || storage.folderName || "—"; $("hsStatStorageNote").textContent = ({ready:"Zapis potwierdzony",permission_required:"Wymaga zgody",error:"Błąd dostępu",unselected:"Nie wybrano folderu"})[storage.status] || "Nie wybrano folderu"; tone("storage", storage.status === "ready" ? "ok" : storage.status === "error" ? "bad" : "warn");
+    const good = ["recording","track_live","ready","healthy","connected","live","ok"], bad = ["error","failed","auth_required","degraded"];
+    const list = $("hsStatusList"); list.replaceChildren();
+    for (const card of diagnosticCards(systemStore.snapshot()).slice(0, 5)) {
+      const row = document.createElement("li"); const state = good.includes(card.state) ? "ok" : bad.includes(card.state) ? "bad" : card.state === "unknown" || card.state === "stale" ? "none" : "warn";
+      row.dataset.tone = state; const name = document.createElement("span"); name.textContent = card.name; const value = document.createElement("b");
+      value.textContent = { ok: "Aktywne", bad: "Błąd", warn: "Oczekuje", none: "Brak danych" }[state]; value.title = card.detail; row.append(name, value); list.append(row);
+    }
   };
   systemStore.subscribe(paintDashboard); setInterval(paintDashboard, 10000);
   new MutationObserver(paintDashboard).observe($("topStatus"), { attributes: true, attributeFilter: ["class"], childList: true });
@@ -488,7 +501,7 @@ if (desktopRequested) {
     if (view === "live") $("dvrCard").hidden = false;
     if (view === "archive" && $("dvrCard")?.parentElement !== main) main?.prepend($("dvrCard"));
     const labels = {
-      live: ["Pulpit", "Monitoring domu", "Obraz na żywo, ostatnie zdarzenia i szybkie akcje."],
+      live: ["Pulpit", "Monitoring domu", "Twój system monitoringu i ochrony domu."],
       controls: ["Kamery", "Kamery i sterowanie", "Wybór kamery, tryb pracy, start i zatrzymanie zapisu."],
       events: ["Zdarzenia", "Zdarzenia", "Wykrycia ruchu i dźwięku. Transmisja i zapis działają dalej."],
       archive: ["Archiwum", "Nagrania DVR", "Odtwarzanie zapisanych nagrań i miejsce zapisu."],
@@ -499,7 +512,8 @@ if (desktopRequested) {
     const crumb = context.querySelector("p");
     const heading = context.querySelector("h1");
     if (crumb) crumb.innerHTML = `${label[0]} <span>/</span> HOME SECURITY`;
-    if (heading) heading.textContent = label[1];
+    if (heading) { if (view === "live") heading.innerHTML = "Witaj w <em>HOME SECURITY</em>"; else heading.textContent = label[1]; }
+    context.dataset.view = view;
     const subtitle = context.querySelector(".hsSubtitle");
     if (subtitle) subtitle.textContent = label[2];
     // Po opuszczeniu ustawień przywracamy komplet pól dla innych trybów

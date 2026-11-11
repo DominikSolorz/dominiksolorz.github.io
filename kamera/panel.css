@@ -4338,7 +4338,9 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button i 
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button:hover:not(.active){background:rgba(236,68,79,0.07)!important;color:var(--hl3,#fff)!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button.active{background:linear-gradient(135deg,#e5182b,#a50d1c)!important;border-color:#ff4d5e!important;color:#fff!important;box-shadow:inset 3px 0 0 #ff4d5e,0 12px 28px -12px rgba(229,24,43,.85)!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopCapabilities{display:none!important}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus{margin:auto 14px 18px;display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;border:1px solid var(--hl649,rgba(52,211,153,.35));background:linear-gradient(135deg,var(--hl650,rgba(16,80,60,.45)),var(--hl651,rgba(17,16,16,0.6)));color:var(--hl652,#eafff6);text-align:left;cursor:pointer}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus{margin:auto 14px 18px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;min-height:210px;gap:10px;padding:16px;border-radius:12px;border:1px solid var(--hl649,rgba(52,211,153,.35));background:linear-gradient(135deg,var(--hl650,rgba(16,80,60,.45)),var(--hl651,rgba(17,16,16,0.6)));color:var(--hl652,#eafff6);cursor:pointer;position:relative;overflow:hidden;padding-top:128px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus::before{content:"";position:absolute;inset:0 0 auto 0;height:150px;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.55)),url(assets/site-hero-dom.webp) 16% 40%/cover no-repeat}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus>*{position:relative}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus b{display:block;font:700 15px/1.25 var(--hs-font)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus small{display:block;color:var(--hl653,#a6d9c5);margin-top:2px}
 /* Tarcza statusu — kolory wg prawdziwego stanu */
@@ -4366,14 +4368,16 @@ html.desktopMode body #app .hsRoundBtn{display:grid;place-items:center;width:50p
 html.desktopMode body #app .hsRoundBtn svg{width:24px;height:24px}
 html.desktopMode body #app .hsRoundBtn:hover{border-color:var(--hl602,rgba(234,38,51,0.5));color:var(--hl3,#fff)}
 /* ---------- Układ pulpitu ---------- */
-html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview:not([hidden]){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(300px,32%)!important;grid-template-areas:"live cams" "row row";gap:18px!important;align-items:stretch}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview:not([hidden]){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(320px,30%)!important;grid-template-areas:"stats stats" "live side" "timeline side" "control side";gap:18px!important;align-items:start}
 html.desktopMode body #app .desktopOverview>.desktopLiveScene{grid-area:live;min-width:0}
-html.desktopMode body #app .desktopOverview>.hsCamerasPanel{grid-area:cams;min-width:0}
-html.desktopMode body #app .desktopOverview>.hsDashRow{grid-area:row;min-width:0}
+html.desktopMode body #app .desktopOverview>.hsSideCol{grid-area:side;min-width:0;display:grid;gap:18px;align-content:start}
+html.desktopMode body #app .desktopOverview>.hsStats{grid-area:stats;min-width:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+html.desktopMode body #app .desktopOverview>.desktopTimelineDock{grid-area:timeline;min-width:0}
+html.desktopMode body #app .desktopOverview>.desktopControlDock{grid-area:control;min-width:0}
 html.desktopMode body #app .desktopOverview>:is(.desktopTimelineDock,.desktopControlDock,.desktopEventsDrawer)[hidden]{display:none!important}
 html.desktopMode body #app .desktopSummary[hidden],html.desktopMode body #app .desktopHomeGuide{display:none!important}
 /* Karty wspólne */
-html.desktopMode body #app :is(.hsCard,.hsCamerasPanel){background:linear-gradient(160deg,var(--hs-panel2),var(--hs-panel));border:1px solid var(--hs-line);border-radius:var(--hs-radius);padding:18px;box-shadow:0 18px 40px -30px var(--hl594,rgba(0,0,0,.9));color:var(--hs-text);min-width:0}
+html.desktopMode body #app .hsCard{background:linear-gradient(160deg,var(--hs-panel2),var(--hs-panel));border:1px solid var(--hs-line);border-radius:var(--hs-radius);padding:18px;box-shadow:0 18px 40px -30px var(--hl594,rgba(0,0,0,.9));color:var(--hs-text);min-width:0}
 html.desktopMode body #app .hsCardHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px}
 html.desktopMode body #app .hsCardHead h2{display:flex;align-items:center;gap:10px;margin:0;font:700 19px/1.2 var(--hs-font);color:var(--hl3,#fff)}
 html.desktopMode body #app .hsCardHead h2 svg{width:22px;height:22px;color:var(--hl20,#e6e5e5)}
@@ -4403,23 +4407,6 @@ html.desktopMode body #stage #audioHud{z-index:8;left:14px!important;bottom:14px
 html.desktopMode body #stage:has(#audioHud:not([hidden])) .hsLiveBar .hsSound{display:none}
 html.desktopMode body #stage #liveRewind:not([hidden]){left:50%!important;bottom:16px!important;transform:translateX(-50%);z-index:8}
 html.desktopMode body #stage .monitorClock{top:62px!important}
-/* Twoje kamery */
-html.desktopMode body #app .hsCamGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-html.desktopMode body #app .hsCamTile{position:relative;aspect-ratio:16/10;border-radius:8px;overflow:hidden;border:1px solid var(--hs-line2);background:#0a0a0a;cursor:pointer;padding:0;color:#fff}
-html.desktopMode body #app .hsCamTile.active{border:2px solid var(--hs-cyan);box-shadow:0 0 0 3px rgba(234,38,51,0.18)}
-html.desktopMode body #app .hsCamTile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-html.desktopMode body #app .hsCamTile video[hidden]{display:none}
-html.desktopMode body #app .hsCamEmpty{position:absolute;inset:0;display:grid;place-items:center;color:var(--hs-muted);font-size:13px}
-html.desktopMode body #app .hsCamEmpty[hidden]{display:none}
-html.desktopMode body #app .hsCamLabel{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;padding:22px 12px 10px;background:linear-gradient(180deg,transparent,var(--hl669,rgba(8,8,8,0.9)));font:600 14px var(--hs-font)}
-html.desktopMode body #app .hsCamLabel svg{width:18px;height:18px}
-html.desktopMode body #app .hsDot{margin-left:auto;width:9px;height:9px;border-radius:50%;background:#7b7474}
-html.desktopMode body #app .hsDot.on{background:var(--hs-green);box-shadow:0 0 0 3px rgba(52,211,153,.2)}
-html.desktopMode body #app .hsCamAdd{display:grid;place-content:center;gap:6px;background:var(--hl670,rgba(27,26,26,0.6));border-style:dashed;color:var(--hs-muted);font:600 14px var(--hs-font)}
-html.desktopMode body #app .hsCamAdd b{font-size:28px;color:var(--hs-cyan2)}
-/* Rząd kart pod obrazem */
-html.desktopMode body #app .hsDashRow{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1.05fr);gap:18px}
-html.desktopMode body #app .hsDashMid{display:grid;gap:18px;align-content:start;min-width:0}
 html.desktopMode body #app .hsEventList{list-style:none;margin:0;padding:0 0 0 18px;display:grid;gap:4px;position:relative}
 html.desktopMode body #app .hsEventList::before{content:"";position:absolute;left:5px;top:14px;bottom:14px;width:2px;background:linear-gradient(180deg,var(--hs-cyan),rgba(177,173,173,0.2))}
 html.desktopMode body #app .hsEventRow{position:relative;display:grid;grid-template-columns:44px 40px minmax(0,1fr) 84px;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--hs-line)}
@@ -4437,7 +4424,7 @@ html.desktopMode body #app .hsEventThumb img{width:100%;height:100%;object-fit:c
 html.desktopMode body #app .hsPlay{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--hl671,rgba(8,8,8,0.75));color:var(--hl3,#fff)}
 html.desktopMode body #app .hsPlay svg{width:13px;height:13px}
 html.desktopMode body #app .hsEventEmpty{list-style:none;padding:22px 12px;border:1px dashed var(--hs-line2);border-radius:8px;color:var(--hs-muted);text-align:center}
-html.desktopMode body #app .hsQuickGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+html.desktopMode body #app .hsQuickGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 html.desktopMode body #app .hsQuick{display:grid;justify-items:center;gap:8px;padding:16px 8px;border-radius:8px;border:1px solid var(--hs-line2);background:var(--hl672,rgba(27,26,26,0.75));color:var(--hl205,#f0f0f0);cursor:pointer;font:600 14px var(--hs-font)}
 html.desktopMode body #app .hsQuick svg{width:28px;height:28px}
 html.desktopMode body #app .hsQuick:hover{border-color:var(--hl602,rgba(234,38,51,0.5))}
@@ -4449,22 +4436,61 @@ html.desktopMode body #app .hsStatusRow>span:not(.hsShield){flex:1;min-width:0}
 html.desktopMode body #app .hsStatusRow b{display:block;font:700 15.5px/1.25 var(--hs-font)}
 html.desktopMode body #app .hsStatusRow small{display:block;color:var(--hs-muted);font-size:13px;margin-top:2px}
 html.desktopMode body #app .hsStatusRow>svg{width:20px;height:20px;color:var(--hs-muted)}
-html.desktopMode body #app .hsSetRow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:14px;width:100%;padding:13px 4px;border:0;border-bottom:1px solid var(--hs-line);background:none;color:var(--hl3,#fff);text-align:left;cursor:pointer}
-html.desktopMode body #app .hsSetRow:last-child{border-bottom:0}
-html.desktopMode body #app .hsSetRow>svg{width:24px;height:24px;color:var(--hl20,#e6e5e5)}
-html.desktopMode body #app .hsSetRow b{display:block;font:600 14.5px/1.25 var(--hs-font)}
-html.desktopMode body #app .hsSetRow small{display:block;color:var(--hs-muted);font-size:12.5px;margin-top:2px}
-html.desktopMode body #app .hsSetRow em{font-style:normal;min-width:44px;padding:5px 10px;border-radius:999px;background:rgba(177,173,173,0.14);color:var(--hl112,#eae8e8);font:700 12.5px var(--hs-font);text-align:center}
-html.desktopMode body #app .hsSetRow em[data-on="true"]{background:linear-gradient(90deg,#ea2633,#ec444f);color:#fff}
-html.desktopMode body #app .hsSetRow>svg:last-child{width:18px;height:18px;color:var(--hs-muted)}
-@media (max-width:1280px){html.desktopMode body #app .hsDashRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}html.desktopMode body #app .hsSettingsCard{grid-column:1/-1}}
-@media (max-width:1100px){html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"live" "cams" "row"}html.desktopMode body #app .hsCamGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width:860px){html.desktopMode body #app .hsDashRow{grid-template-columns:minmax(0,1fr)}html.desktopMode body #app .hsHeadActions .hsStatusPill b{display:none}}
+/* Wskaźniki, zegar, nagrywanie i stan systemu (wzór właściciela) */
+html.desktopMode body #app .hsStat{display:flex;align-items:center;gap:14px;min-width:0;padding:16px;border-radius:14px;border:1px solid var(--hs-line);background:linear-gradient(160deg,var(--hs-panel2),var(--hs-panel));box-shadow:0 18px 40px -30px rgba(0,0,0,.6)}
+html.desktopMode body #app .hsStat[data-stat="cams"][data-tone="ok"]{border-color:rgba(229,24,43,.55);box-shadow:0 0 0 1px rgba(229,24,43,.25),0 18px 40px -26px rgba(229,24,43,.6)}
+html.desktopMode body #app .hsStatIcon{display:grid;place-items:center;flex:none;width:52px;height:52px;border-radius:14px;background:rgba(229,24,43,.14);color:#ef3340}
+html.desktopMode body #app .hsStatIcon svg{width:28px;height:28px}
+html.desktopMode body #app .hsStat[data-stat="system"] .hsStatIcon{background:rgba(52,211,153,.14);color:var(--hs-green)}
+html.desktopMode body #app .hsStat>span:last-child{display:grid;min-width:0}
+html.desktopMode body #app .hsStat small{font:600 13px var(--hs-font);color:var(--hs-muted)}
+html.desktopMode body #app .hsStat b{font:800 24px/1.15 var(--hs-font);color:var(--hs-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.desktopMode body #app .hsStat em{display:flex;align-items:center;gap:6px;font:600 12.5px var(--hs-font);font-style:normal;color:var(--hs-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.desktopMode body #app .hsStat em::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--hs-muted)}
+html.desktopMode body #app .hsStat[data-tone="ok"] em{color:var(--hs-green)}
+html.desktopMode body #app .hsStat[data-tone="ok"] em::before{background:var(--hs-green)}
+html.desktopMode body #app .hsStat[data-tone="warn"] em::before{background:var(--hs-amber)}
+html.desktopMode body #app .hsStat:is([data-tone="bad"],[data-tone="alert"]) em{color:#ef3340}
+html.desktopMode body #app .hsStat:is([data-tone="bad"],[data-tone="alert"]) em::before{background:#ef3340}
+html.desktopMode body #app .desktopContext h1 em{font-style:normal;color:#ef3340}
+html.desktopMode body #app .hsHeadCards{display:flex;align-items:stretch;gap:12px;margin-left:auto}
+html.desktopMode body #app .desktopContext:not([data-view="live"]) .hsHeadCards{display:none}
+html.desktopMode body #app .desktopContext[data-view="live"] .hsStatusPill{display:none}
+html.desktopMode body #app :is(.hsClockCard,.hsRecCard){display:flex;align-items:center;gap:14px;min-height:62px;padding:8px 18px;border-radius:14px;border:1px solid var(--hs-line);background:linear-gradient(160deg,var(--hs-panel2),var(--hs-panel));color:var(--hs-text)}
+html.desktopMode body #app .hsClockCard svg{width:30px;height:30px}
+html.desktopMode body #app :is(.hsClockCard span,.hsRecCard>span:nth-child(2)){display:grid;text-align:left}
+html.desktopMode body #app :is(.hsClockCard small,.hsRecCard small){font:600 13px var(--hs-font);color:var(--hs-muted)}
+html.desktopMode body #app .hsClockCard small::first-letter{text-transform:uppercase}
+html.desktopMode body #app .hsClockCard b{font:800 26px/1.1 var(--hs-font);font-variant-numeric:tabular-nums}
+html.desktopMode body #app .hsRecCard{cursor:pointer;font:inherit}
+html.desktopMode body #app .hsRecCard b{font:800 18px/1.2 var(--hs-font);color:var(--hs-amber)}
+html.desktopMode body #app .hsRecCard[data-on="true"] b{color:#ef3340}
+html.desktopMode body #app .hsRecIcon{display:grid;place-items:center;color:#ef3340}
+html.desktopMode body #app .hsRecIcon svg{width:30px;height:30px}
+html.desktopMode body #app .hsSwitch{position:relative;width:54px;height:30px;border-radius:999px;background:var(--hs-line2);margin-left:8px;transition:background .2s}
+html.desktopMode body #app .hsSwitch::after{content:"";position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .2s}
+html.desktopMode body #app .hsRecCard[data-on="true"] .hsSwitch{background:linear-gradient(135deg,#e5182b,#a50d1c)}
+html.desktopMode body #app .hsRecCard[data-on="true"] .hsSwitch::after{transform:translateX(24px)}
+html.desktopMode body #app .hsStatusList{list-style:none;margin:0;padding:0;display:grid}
+html.desktopMode body #app .hsStatusList li{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--hs-line);font:600 14.5px var(--hs-font);color:var(--hs-text)}
+html.desktopMode body #app .hsStatusList li:last-child{border-bottom:0}
+html.desktopMode body #app .hsStatusList li::before{content:"";flex:none;width:20px;height:20px;border-radius:50%;background:var(--hs-muted) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12.5 4 4 8-9'/%3E%3C/svg%3E") center/13px no-repeat}
+html.desktopMode body #app .hsStatusList li[data-tone="ok"]::before{background-color:#22c55e}
+html.desktopMode body #app .hsStatusList li[data-tone="warn"]::before{background-color:var(--hs-amber)}
+html.desktopMode body #app .hsStatusList li[data-tone="bad"]::before{background-color:#ef3340}
+html.desktopMode body #app .hsStatusList li span{flex:1;min-width:0}
+html.desktopMode body #app .hsStatusList li b{font:700 13.5px var(--hs-font);color:var(--hs-muted)}
+html.desktopMode body #app .hsStatusList li[data-tone="ok"] b{color:#22c55e}
+html.desktopMode body #app .hsStatusList li[data-tone="warn"] b{color:var(--hs-amber)}
+html.desktopMode body #app .hsStatusList li[data-tone="bad"] b{color:#ef3340}
+html.desktopMode body #app .hsQuickCard .hsQuick{min-height:84px}
+html.desktopMode body #app .hsQuickGrid>.hsQuick:first-child{background:linear-gradient(135deg,#e5182b,#a50d1c);border-color:#ff4d5e;color:#fff}
+@media (max-width:1180px){html.desktopMode body #app .desktopOverview>.hsStats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:1360px){html.desktopMode body #app .hsStat{gap:10px;padding:12px}html.desktopMode body #app .hsStatIcon{width:42px;height:42px}html.desktopMode body #app .hsStat b{font-size:20px}html.desktopMode body #app .desktopContext h1{font-size:26px!important;white-space:nowrap}html.desktopMode body #app .hsClockCard small{display:none}html.desktopMode body #app :is(.hsClockCard,.hsRecCard){padding:8px 14px;gap:10px}html.desktopMode body #app .hsClockCard b{font-size:22px}}
+@media (max-width:1100px){html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview:not([hidden]){grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"stats" "live" "timeline" "control" "side"}}
+@media (max-width:860px){html.desktopMode body #app .desktopOverview>.hsStats{grid-template-columns:repeat(2,minmax(0,1fr))}html.desktopMode body #app .hsHeadActions .hsStatusPill b{display:none}}
 /* poprawki po zrzutach */
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand b{font-size:15px!important;max-width:120px!important;white-space:normal!important;word-break:keep-all;overflow-wrap:normal}
-html.desktopMode body #app .hsCamTile{display:block!important;min-height:0!important;width:100%}
-html.desktopMode body #app .hsCamGrid{align-content:start}
-html.desktopMode body #app .hsCamLabel{justify-content:flex-start;text-align:left}
 html.desktopMode body #app .hsEventList:has(.hsEventEmpty){padding-left:0}
 html.desktopMode body #app .hsEventList:has(.hsEventEmpty)::before{display:none}
 html.desktopMode body #app .hsEventEmpty{margin-left:0}
