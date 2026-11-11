@@ -18,6 +18,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/verify-live-marketing.mjs
+            /tests/verify-live-marketing-retry.test.mjs
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
