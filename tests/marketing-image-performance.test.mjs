@@ -4,16 +4,15 @@ import {readFile,stat} from 'node:fs/promises';
 
 const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
-test('public hero shows the owner-approved illustration with priority and fixed size',async()=>{
+test('public hero shows the house photo with priority and fixed size',async()=>{
  const [source,index,brochure]=await Promise.all([
   read('design/marketing/home.html'),read('kamera/panel.html'),read('kamera/o-systemie.html')]);
- const hero=source.match(/<img src="assets\/hs-hero-art\.webp"[^>]+>/)?.[0];
- assert.ok(hero,'homepage shows the hero illustration');
- assert.ok(hero.includes('width="693" height="472"'));
+ const hero=source.match(/<img src="assets\/site-hero-dom\.webp"[^>]+>/)?.[0];
+ assert.ok(hero,'homepage shows the house photo');
+ assert.ok(hero.includes('width="1540" height="610"'));
  assert.ok(hero.includes('fetchpriority="high"'));
- assert.ok(source.includes('Wizualizacja. To nie jest rzeczywisty obraz'),'illustration is labelled');
- for(const name of ['hs-hero-art.webp','hs-app-phone.webp'])
-  assert.ok((await stat(new URL('../kamera/assets/'+name,import.meta.url))).size<60000,name+' stays light');
+ assert.ok(source.includes('To nie jest rzeczywisty obraz'),'photo is labelled');
+ assert.ok((await stat(new URL('../kamera/assets/site-hero-dom.webp',import.meta.url))).size<110000,'hero photo stays light');
  const explanation=await read('design/marketing/jak-dziala.html');
  assert.ok(explanation.includes('assets/home-security-how-it-works-640.webp 640w'));
  assert.ok(explanation.includes('loading="lazy" decoding="async"'));
@@ -64,7 +63,7 @@ test('marketing updates retain SW version consistency and original image links',
  assert.ok(sw.includes('./app.js?v='+build));
  assert.ok(index.includes('home-security-build" content="'+build+'"'));
  assert.ok(index.includes('app.js?v='+build));
- assert.ok(source.includes('src="assets/hs-hero-art.webp"'));
+ assert.ok(source.includes('src="assets/site-hero-dom.webp"'));
 });
 
 test('public branding retains optimized assets and locked screens use a compact vector shield',async()=>{

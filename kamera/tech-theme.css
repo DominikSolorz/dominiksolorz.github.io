@@ -402,7 +402,7 @@ body.marketingPage,body.legalPage{background-color:var(--t-bg)!important}
 #publicHome.mktSite :is(.hsHeroActions,.hsHeroAccount) .mktButton{gap:10px!important;font-size:16px!important;min-height:52px;border-radius:12px!important}
 #publicHome.mktSite :is(.hsHeroActions,.hsHeroAccount) .mktButton .hsIco{width:20px;height:20px}
 #publicHome.mktSite .hsHeroVisual{position:relative;margin:0 -2vw 0 0;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
-#publicHome.mktSite .hsHeroVisual img{display:block;width:100%;height:auto;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 100%),linear-gradient(0deg,transparent 0,#000 12%);mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 100%);filter:drop-shadow(0 0 40px rgba(255,24,48,.18))}
+#publicHome.mktSite .hsHeroVisual img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;object-position:62% 50%;border-radius:0 0 0 60px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 100%),linear-gradient(0deg,transparent 0,#000 12%);mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 100%);filter:drop-shadow(0 0 40px rgba(255,24,48,.18))}
 #publicHome.mktSite .hsHeroVisual figcaption{margin-top:6px;text-align:right;padding-right:24px;font-size:11px;color:#8d8787}
 
 /* Pasek funkcji */
@@ -424,8 +424,9 @@ body.marketingPage,body.legalPage{background-color:var(--t-bg)!important}
 
 /* Pobierz aplikację */
 #publicHome.mktSite .hsAppBand{display:grid;grid-template-columns:150px minmax(0,1.75fr) minmax(0,.95fr) minmax(0,.85fr);gap:20px;align-items:center;margin-block:10px 26px;padding:22px;border:1px solid var(--hs-line);border-radius:18px;background:var(--hs-card)}
-#publicHome.mktSite .hsAppPhone{display:grid;justify-items:center;margin:-34px 0 -34px -6px}
-#publicHome.mktSite .hsAppPhone img{width:150px;height:auto;filter:drop-shadow(0 0 22px rgba(255,24,48,.4))}
+#publicHome.mktSite .hsAppPhone{display:grid;justify-items:center;gap:10px;padding:26px 10px;border-radius:26px;border:2px solid #4a4343;background:radial-gradient(circle at 50% 35%,rgba(255,31,53,.32),#0c0c0d 72%);box-shadow:0 0 34px -10px var(--hs-glow);transform:rotate(-8deg)}
+#publicHome.mktSite .hsAppPhone img{width:70px;height:70px;filter:drop-shadow(0 0 10px rgba(255,24,48,.55))}
+#publicHome.mktSite .hsAppPhone b{font-size:15px;text-align:center;line-height:1.1}
 #publicHome.mktSite .hsAppCopy h2{margin:0 0 6px;font-size:clamp(22px,2.4vw,30px)}
 #publicHome.mktSite .hsAppCopy p{margin:0 0 14px;color:#cfcaca!important}
 #publicHome.mktSite .hsStores{display:flex;flex-wrap:wrap;gap:8px}
