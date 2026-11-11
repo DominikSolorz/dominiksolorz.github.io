@@ -126,6 +126,8 @@ if (desktopRequested) {
   const main = $("app");
   const layout = main?.querySelector(".layout");
   if (main && layout) main.insertBefore(context, layout);
+  const topActions = context.querySelector(".hsHeadActions"), topbarNav = header?.querySelector(".nav");
+  if (topActions && header) header.insertBefore(topActions, topbarNav || null);
 
   // Pulpit jest jednym stanowiskiem operatora, nie stroną z powielonymi
   // kartami. Pokazuje tylko prawdziwy obraz jednej kamery oraz pełną oś DVR.
@@ -162,6 +164,7 @@ if (desktopRequested) {
         <button type="button" class="hsStatusRow" id="hsStatusRow" data-tone="off" hidden><span><b id="hsStatusTitle">Brak transmisji</b><small id="hsStatusDetail">Sprawdzam…</small></span></button>
         <ul class="hsStatusList" id="hsStatusList"></ul></article>
       <article class="hsCard hsEventsCard"></article>
+      <article class="hsCard hsActivityCard"><header class="hsCardHead"><h2>${ICONS.signal} Aktywność (24 h)</h2><small id="hsActivityTotal">0 zdarzeń</small></header><svg class="hsActivityChart" id="hsActivityChart" viewBox="0 0 240 80" preserveAspectRatio="none" aria-hidden="true"></svg><div class="hsActivityAxis"><span>−24 h</span><span>−12 h</span><span>teraz</span></div></article>
     </aside>
     <details class="desktopEventsDrawer" aria-label="Ostatnie zdarzenia" hidden><summary><span>Ostatnie zdarzenia</span><small>ruch i dźwięk</small><b id="desktopEventCount">—</b></summary></details>`;
   if (context.parentElement) context.insertAdjacentElement("afterend", overview);
@@ -213,6 +216,11 @@ if (desktopRequested) {
     const tone = (id, value) => { const card = overview.querySelector(`[data-stat="${id}"]`); if (card) card.dataset.tone = value; };
     $("hsStatCams").textContent = String(cams); $("hsStatCamsNote").textContent = live ? "Obraz na żywo" : "Brak obrazu"; tone("cams", live ? "ok" : "warn");
     $("hsStatRec").textContent = fresh ? (on ? "Aktywne" : "Zatrzymane") : "—"; $("hsStatRecNote").textContent = recording.lastFile ? `Ostatni plik: ${recording.lastFile}` : "Brak pliku"; tone("rec", on ? "ok" : recording.status === "error" ? "bad" : "warn");
+    const buckets = Array(24).fill(0), nowMs = Date.now();
+    for (const e of events) { const h = Math.floor((nowMs - e.at) / 3600000); if (h >= 0 && h < 24) buckets[23 - h]++; }
+    const peak = Math.max(1, ...buckets), pts = buckets.map((v, i) => `${(i * 240 / 23).toFixed(1)},${(74 - v / peak * 64).toFixed(1)}`).join(" ");
+    $("hsActivityChart").innerHTML = `<polygon points="0,80 ${pts} 240,80" class="hsActArea"/><polyline points="${pts}" class="hsActLine" vector-effect="non-scaling-stroke"/>`;
+    $("hsActivityTotal").textContent = `${events.length} ${events.length === 1 ? "zdarzenie" : "zdarzeń"}`;
     $("hsStatEvents").textContent = String(events.length); tone("events", events.length ? "alert" : "ok");
     $("hsStatSystem").textContent = live ? "Online" : "Offline"; $("hsStatSystemNote").textContent = status.title; tone("system", live ? "ok" : "warn");
     $("hsStatStorage").textContent = storage.name || storage.folderName || "—"; $("hsStatStorageNote").textContent = ({ready:"Zapis potwierdzony",permission_required:"Wymaga zgody",error:"Błąd dostępu",unselected:"Nie wybrano folderu"})[storage.status] || "Nie wybrano folderu"; tone("storage", storage.status === "ready" ? "ok" : storage.status === "error" ? "bad" : "warn");

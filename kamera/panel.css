@@ -2293,7 +2293,7 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) .mobileRecordingStorag
 .cameraWorkspaceGrid{display:grid;grid-template-columns:repeat(var(--camera-columns,1),minmax(0,1fr));gap:12px;padding:14px;align-items:stretch;min-width:0}
 .cameraWorkspaceGrid>[hidden]{display:none!important}
 .cameraWorkspaceGrid .desktopCameraLive{height:auto!important;min-height:310px;aspect-ratio:16/10;border:1px solid #383535!important;border-radius:8px!important;background:#080707!important;box-shadow:none!important}
-.cameraWorkspaceGrid .desktopCameraLive #stage{height:100%!important;min-height:250px!important;border:0!important;border-radius:0!important}
+.cameraWorkspaceGrid .desktopCameraLive #stage{height:100%!important;min-height:min(440px,52vh)!important;border:0!important;border-radius:0!important}
 .cameraWorkspaceGrid>.desktopCameraLive{width:100%!important;max-width:100%!important;min-width:0!important;min-height:0!important;aspect-ratio:auto!important;display:flex!important;flex-direction:column;align-self:stretch}
 .cameraWorkspaceGrid>.desktopCameraLive>.desktopTileMeta{position:static!important;display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:11px 13px!important;min-height:52px;box-sizing:border-box;background:#181717!important;flex-shrink:0;text-shadow:none}
 .cameraWorkspaceGrid>.desktopCameraLive>.stage{position:relative!important;inset:auto!important;flex:1;min-width:0!important;min-height:210px!important;max-width:100%!important;height:auto!important;aspect-ratio:auto!important;background:#060707!important}
@@ -3626,13 +3626,13 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar{
   left:var(--desktop-sidebar)!important;height:64px!important;padding:0 24px!important;gap:14px!important;-webkit-backdrop-filter:blur(14px);
 }
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopTopStatus{
-  order:1;margin:0 16px 0 18px!important;height:44px;padding:0 16px 0 10px!important;border:1px solid var(--pl-line2)!important;border-radius:12px!important;
+  order:3;margin:0 14px 0 18px!important;height:44px;padding:0 16px 0 10px!important;border:1px solid var(--pl-line2)!important;border-radius:12px!important;
   background:var(--pl-panel)!important;color:var(--pl-text)!important;font:700 13.5px var(--hs-font)!important;letter-spacing:0!important;gap:10px!important;
 }
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopTopStatus i{width:26px!important;height:26px!important;border-radius:50%!important;background:#f5b546 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 5 6v6c0 4 3 7 7 8 4-1 7-4 7-8V6Z'/%3E%3C/svg%3E") center/15px no-repeat!important;box-shadow:none!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopTopStatus.live i{background-color:#22c55e!important;box-shadow:0 0 0 4px rgba(34,197,94,.18)!important}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .nav{order:2}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child::before{content:"";display:inline-block;width:20px;height:20px;margin-right:8px;vertical-align:-4px;background:currentColor;-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3.2'/%3E%3Cpath d='M6.5 18.5c1.3-2.4 3.2-3.5 5.5-3.5s4.2 1.1 5.5 3.5'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3.2'/%3E%3Cpath d='M6.5 18.5c1.3-2.4 3.2-3.5 5.5-3.5s4.2 1.1 5.5 3.5'/%3E%3C/svg%3E");-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .nav{order:5}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child::before{content:"";display:inline-block;width:30px;height:30px;margin-right:8px;vertical-align:-10px;background:currentColor;-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3.2'/%3E%3Cpath d='M6.5 18.5c1.3-2.4 3.2-3.5 5.5-3.5s4.2 1.1 5.5 3.5'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3.2'/%3E%3Cpath d='M6.5 18.5c1.3-2.4 3.2-3.5 5.5-3.5s4.2 1.1 5.5 3.5'/%3E%3C/svg%3E");-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSearch{
   margin-left:auto!important;width:min(380px,32vw)!important;height:40px!important;padding:0 12px!important;gap:10px!important;
   border:1px solid var(--pl-line2)!important;border-radius:var(--pl-radius-sm)!important;background:var(--pl-panel)!important;
@@ -3967,7 +3967,7 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body{background:radial-gra
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar .desktopBrand b{letter-spacing:.08em}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar .desktopBrand small{color:var(--v2-muted)!important;letter-spacing:.12em}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar [data-desktop-view]{position:relative;border-radius:8px!important;transition:background .15s,border-color .15s}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar [data-desktop-view]>i{display:grid!important;place-items:center;width:36px;height:36px;border-radius:8px;background:rgba(237,77,87,0.08);border:1px solid var(--v2-line);color:var(--hl14,#ee4f59)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar [data-desktop-view]>i{display:grid!important;place-items:center;width:30px;height:30px;border-radius:0;background:transparent;border:0;color:currentColor}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar [data-desktop-view].active{background:linear-gradient(135deg,#e5182b,#a50d1c)!important;border-color:#ff4d5e!important;color:#fff!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar [data-desktop-view].active>i{background:var(--hl624,rgba(255,255,255,.16));border-color:var(--hl625,rgba(255,255,255,.35));color:var(--hl3,#fff)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar [data-desktop-view].active::before{content:"";position:absolute;left:-12px;top:10px;bottom:10px;width:3px;border-radius:3px;background:var(--v2-cyan);box-shadow:0 0 12px var(--v2-cyan)}
@@ -4356,6 +4356,22 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopCapabilities{
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus{margin:auto 14px 18px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;min-height:210px;gap:10px;padding:16px;border-radius:12px;border:1px solid var(--hl649,rgba(52,211,153,.35));background:linear-gradient(135deg,var(--hl650,rgba(16,80,60,.45)),var(--hl651,rgba(17,16,16,0.6)));color:var(--hl652,#eafff6);cursor:pointer;position:relative;overflow:hidden;padding-top:128px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus::before{content:"";position:absolute;inset:0 0 auto 0;height:150px;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.55)),url(assets/site-hero-dom.webp) 16% 40%/cover no-repeat}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus>*{position:relative}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus::before{filter:hue-rotate(155deg) saturate(1.6) brightness(.9)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav .profileNavEntry{display:none!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button{font-size:16px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsHeadActions{order:4;margin-left:0;gap:10px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsHeadActions .hsStatusPill{display:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsRoundBtn{width:44px;height:44px;border-radius:12px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .nav{padding-left:14px;border-left:1px solid var(--hs-line)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child{min-height:44px;padding:0 14px 0 10px!important;border-radius:12px!important}
+html.desktopMode body #app .cameraWorkspaceToolbar .cameraEyebrow,html.desktopMode body #app .cameraWorkspaceToolbar .cameraCounter,html.desktopMode body #app .cameraWorkspaceFooter .cameraRecordingScope{display:none!important}
+html.desktopMode body #app .cameraWorkspaceToolbar h2{display:flex;align-items:center;gap:12px;font:800 21px/1.2 var(--hs-font)!important}
+html.desktopMode body #app .cameraWorkspaceToolbar h2::before{content:"";width:30px;height:24px;flex:none;background:#ef3340;-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Crect x='1.5' y='3' width='14' height='14' rx='2.5'/%3E%3Cpath d='m15.5 8 7-4v12l-7-4z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Crect x='1.5' y='3' width='14' height='14' rx='2.5'/%3E%3Cpath d='m15.5 8 7-4v12l-7-4z'/%3E%3C/svg%3E");-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain}
+html.desktopMode body #app .hsActivityCard .hsCardHead small{font:600 13px var(--hs-font);color:var(--hs-muted)}
+html.desktopMode body #app .hsActivityChart{display:block;width:100%;height:96px;border-bottom:1px solid var(--hs-line);background:repeating-linear-gradient(0deg,transparent 0 23px,var(--hs-line) 23px 24px)}
+html.desktopMode body #app .hsActivityChart .hsActArea{fill:rgba(229,24,43,.22)}
+html.desktopMode body #app .hsActivityChart .hsActLine{fill:none;stroke:#ef3340;stroke-width:2.2;stroke-linejoin:round}
+html.desktopMode body #app .hsActivityAxis{display:flex;justify-content:space-between;margin-top:6px;font:600 11.5px var(--hs-font);color:var(--hs-muted)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus b{display:block;font:700 15px/1.25 var(--hs-font)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus small{display:block;color:var(--hl653,#a6d9c5);margin-top:2px}
 /* Tarcza statusu — kolory wg prawdziwego stanu */
@@ -4374,14 +4390,14 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext>
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext h1{font:800 30px/1.15 var(--hs-font)!important;letter-spacing:-.02em;color:var(--hl3,#fff)!important;margin:0!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext .hsSubtitle{display:block;margin-top:6px;font-size:15px;color:var(--hs-muted)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions{display:none!important}
-html.desktopMode body #app .hsHeadActions{display:flex;align-items:center;gap:12px;margin-left:auto}
-html.desktopMode body #app .hsStatusPill{display:inline-flex;align-items:center;gap:10px;min-height:50px;padding:0 18px 0 10px;border-radius:8px;border:1px solid var(--hl660,rgba(52,211,153,.45));background:linear-gradient(135deg,var(--hl661,rgba(16,80,60,.55)),var(--hl662,rgba(8,36,30,.7)));color:var(--hl652,#eafff6);font:700 16px var(--hs-font);cursor:pointer}
-html.desktopMode body #app .hsStatusPill .hsShield{width:32px;height:32px;border-radius:8px;background:transparent}
-html.desktopMode body #app .hsStatusPill[data-tone="off"]{border-color:rgba(251,191,36,.4);background:linear-gradient(135deg,var(--hl663,rgba(80,60,16,.4)),var(--hl664,rgba(30,24,8,.6)));color:var(--hl665,#fff3d6)}
-html.desktopMode body #app .hsStatusPill[data-tone="live"]{border-color:var(--hl666,rgba(236,68,79,0.45));background:linear-gradient(135deg,var(--hl667,rgba(43,41,41,0.55)),var(--hl668,rgba(21,20,20,0.7)));color:var(--hl125,#f4f3f3)}
-html.desktopMode body #app .hsRoundBtn{display:grid;place-items:center;width:50px;height:50px;border-radius:8px;border:1px solid var(--hs-line2);background:var(--hs-panel);color:var(--hl112,#eae8e8);cursor:pointer}
-html.desktopMode body #app .hsRoundBtn svg{width:24px;height:24px}
-html.desktopMode body #app .hsRoundBtn:hover{border-color:var(--hl602,rgba(234,38,51,0.5));color:var(--hl3,#fff)}
+html.desktopMode body .hsHeadActions{display:flex;align-items:center;gap:12px;margin-left:auto}
+html.desktopMode body .hsStatusPill{display:inline-flex;align-items:center;gap:10px;min-height:50px;padding:0 18px 0 10px;border-radius:8px;border:1px solid var(--hl660,rgba(52,211,153,.45));background:linear-gradient(135deg,var(--hl661,rgba(16,80,60,.55)),var(--hl662,rgba(8,36,30,.7)));color:var(--hl652,#eafff6);font:700 16px var(--hs-font);cursor:pointer}
+html.desktopMode body .hsStatusPill .hsShield{width:32px;height:32px;border-radius:8px;background:transparent}
+html.desktopMode body .hsStatusPill[data-tone="off"]{border-color:rgba(251,191,36,.4);background:linear-gradient(135deg,var(--hl663,rgba(80,60,16,.4)),var(--hl664,rgba(30,24,8,.6)));color:var(--hl665,#fff3d6)}
+html.desktopMode body .hsStatusPill[data-tone="live"]{border-color:var(--hl666,rgba(236,68,79,0.45));background:linear-gradient(135deg,var(--hl667,rgba(43,41,41,0.55)),var(--hl668,rgba(21,20,20,0.7)));color:var(--hl125,#f4f3f3)}
+html.desktopMode body .hsRoundBtn{display:grid;place-items:center;width:50px;height:50px;border-radius:8px;border:1px solid var(--hs-line2);background:var(--hs-panel);color:var(--hl112,#eae8e8);cursor:pointer}
+html.desktopMode body .hsRoundBtn svg{width:24px;height:24px}
+html.desktopMode body .hsRoundBtn:hover{border-color:var(--hl602,rgba(234,38,51,0.5));color:var(--hl3,#fff)}
 /* ---------- Układ pulpitu ---------- */
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview:not([hidden]){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(320px,30%)!important;grid-template-areas:"stats stats" "live side" "timeline side" "control side";gap:18px!important;align-items:start}
 html.desktopMode body #app .desktopOverview>.desktopLiveScene{grid-area:live;min-width:0}
@@ -4503,7 +4519,7 @@ html.desktopMode body #app .hsQuickGrid>.hsQuick:first-child{background:linear-g
 @media (max-width:1180px){html.desktopMode body #app .desktopOverview>.hsStats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:1360px){html.desktopMode body #app .hsStat{gap:10px;padding:12px}html.desktopMode body #app .hsStatIcon{width:42px;height:42px}html.desktopMode body #app .hsStat b{font-size:20px}html.desktopMode body #app .desktopContext h1{font-size:26px!important;white-space:nowrap}html.desktopMode body #app .hsClockCard small{display:none}html.desktopMode body #app :is(.hsClockCard,.hsRecCard){padding:8px 14px;gap:10px}html.desktopMode body #app .hsClockCard b{font-size:22px}}
 @media (max-width:1100px){html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview:not([hidden]){grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"stats" "live" "timeline" "control" "side"}}
-@media (max-width:860px){html.desktopMode body #app .desktopOverview>.hsStats{grid-template-columns:repeat(2,minmax(0,1fr))}html.desktopMode body #app .hsHeadActions .hsStatusPill b{display:none}}
+@media (max-width:860px){html.desktopMode body #app .desktopOverview>.hsStats{grid-template-columns:repeat(2,minmax(0,1fr))}html.desktopMode body .hsHeadActions .hsStatusPill b{display:none}}
 /* poprawki po zrzutach */
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand b{font-size:17px!important;max-width:none!important;white-space:nowrap!important;word-break:keep-all;overflow-wrap:normal}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand b em{font-style:normal;color:#ef3340}
