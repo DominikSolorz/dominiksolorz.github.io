@@ -25,3 +25,12 @@ Jeśli użytkownik poda alias typu `HS-PANEL`, `HS-TELEFON` lub `HS-AKTUALIZATOR
 
 ## Zakończenie zadania
 Podaj repo, pełne ścieżki plików, gałąź, PR, uruchomione testy, numer rzeczywiście opublikowanego wydania oraz kanał (GitHub Pages / Windows / Vercel / PWA). Jeśli nie ma testu na fizycznym komputerze, napisz o tym otwarcie. Nie deklaruj gotowej publikacji na podstawie samego commita.
+
+## Utrzymanie porządku w plikach (obowiązek agenta)
+
+1. Przed edycją ustal **repozytorium, gałąź, pełną ścieżkę i obszar funkcjonalny**. Zacznij od [drzewa projektu](docs/DRZEWO-PROJEKTU.md), [mapy kodu](docs/REPO-MAP.md) i README właściwego katalogu.
+2. Nowe pliki nazywaj zgodnie z ich funkcją, np. `camera-recording-status.mjs` zamiast `new-script2.js`, zachowując wymagania języka i narzędzi. Jedna nazwa = jedna rozpoznawalna odpowiedzialność.
+3. Po dodaniu nowego pliku lub katalogu zaktualizuj jego README i właściwy indeks plików. Zmienione ścieżki aktualizuj również w dokumentacji, testach, workflow i importach.
+4. Nie przemianowuj dla estetyki opublikowanych EXE/ZIP, adresów WWW, manifestów, nazw plików projektu Android/iOS, migracji SQL ani workflow bez audytu zależności. Odnotuj powód i plan zgodności.
+5. Oddzielaj pliki źródłowe, testy, dokumentację i wynikowe paczki. Nie kopiuj kodu produkcyjnego do „nowego porządnego folderu” bez wyłączenia starego źródła prawdy.
+6. W PR opisz każde przeniesienie jako `stara ścieżka → nowa ścieżka`, testy, ryzyka dla użytkowników i sposób wycofania.
