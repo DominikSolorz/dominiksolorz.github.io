@@ -4,15 +4,15 @@ import {readFile,stat} from 'node:fs/promises';
 
 const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
-test('public hero shows real, light panel screenshots with priority and fixed size',async()=>{
+test('public hero shows the owner-approved illustration with priority and fixed size',async()=>{
  const [source,index,brochure]=await Promise.all([
   read('design/marketing/home.html'),read('kamera/panel.html'),read('kamera/o-systemie.html')]);
- const hero=source.match(/<img src="assets\/hs-preview-desktop\.webp"[^>]+>/)?.[0];
- assert.ok(hero,'homepage shows the real desktop panel');
- assert.ok(hero.includes('width="960" height="600"'));
+ const hero=source.match(/<img src="assets\/hs-hero-art\.webp"[^>]+>/)?.[0];
+ assert.ok(hero,'homepage shows the hero illustration');
+ assert.ok(hero.includes('width="693" height="472"'));
  assert.ok(hero.includes('fetchpriority="high"'));
- assert.ok(source.includes('src="assets/hs-preview-phone.webp"'));
- for(const name of ['hs-preview-desktop.webp','hs-preview-phone.webp'])
+ assert.ok(source.includes('Wizualizacja. To nie jest rzeczywisty obraz'),'illustration is labelled');
+ for(const name of ['hs-hero-art.webp','hs-app-phone.webp'])
   assert.ok((await stat(new URL('../kamera/assets/'+name,import.meta.url))).size<60000,name+' stays light');
  const explanation=await read('design/marketing/jak-dziala.html');
  assert.ok(explanation.includes('assets/home-security-how-it-works-640.webp 640w'));
@@ -64,7 +64,7 @@ test('marketing updates retain SW version consistency and original image links',
  assert.ok(sw.includes('./app.js?v='+build));
  assert.ok(index.includes('home-security-build" content="'+build+'"'));
  assert.ok(index.includes('app.js?v='+build));
- assert.ok(source.includes('src="assets/hs-preview-desktop.webp"'));
+ assert.ok(source.includes('src="assets/hs-hero-art.webp"'));
 });
 
 test('public branding retains optimized assets and locked screens use a compact vector shield',async()=>{

@@ -96,7 +96,7 @@ test('homepage header shows the eight main links, account buttons and a mobile m
  const footer=home.match(/<footer class="mktFooter">([\s\S]*?)<\/footer>/)?.[1];
  assert.ok(footer);
  assert.equal((footer.match(/<nav aria-label=/g)||[]).length,3);
- assert.ok(footer.includes('Informacja RODO'));
+ assert.ok(footer.includes('href="rodo.html">RODO'));
  assert.ok(footer.includes('Wydanie rozwojowe.'));
  for(const page of ['jak-dziala','mozliwosci','prezentacja','wymagania','stan-projektu'])
   assert.ok(home.includes('href="'+page+'.html"'));
