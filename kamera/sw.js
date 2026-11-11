@@ -8,7 +8,7 @@ SHELL.push("./dokumenty.html", "./instrukcja.html", "./zasady-korzystania.html",
 SHELL.push("./assets/hs-logo.webp");
 // Trzy lekkie banery otwarcia mobilnego oraz ich kod: dostepne rowniez w PWA.
 // Publiczne arkusze strony startowej także są częścią pamięci offline.
-SHELL.push("./marketing.css?v=19", "./marketing-motion.css?v=3", "./marketing-motion.mjs?v=3", "./marketing-navigation.css?v=2", "./marketing-navigation.mjs?v=1", "./marketing-gallery.css?v=5", "./marketing-gallery.mjs?v=2", "./marketing-start.css?v=4", "./marketing-start.mjs?v=2", "./marketing-auto-update.css?v=3", "./marketing-auto-update.mjs?v=6", "./marketing-contact.js?v=9", "./tech-theme.css?v=6");
+SHELL.push("./marketing.css?v=19", "./marketing-motion.css?v=3", "./marketing-motion.mjs?v=3", "./marketing-navigation.css?v=3", "./marketing-navigation.mjs?v=2", "./marketing-gallery.css?v=5", "./marketing-gallery.mjs?v=2", "./marketing-start.css?v=4", "./marketing-start.mjs?v=2", "./marketing-auto-update.css?v=3", "./marketing-auto-update.mjs?v=6", "./marketing-contact.js?v=9", "./tech-theme.css?v=7");
 // Wygląd i kod pobierane z sieci z pominięciem pamięci HTTP przeglądarki,
 // żeby nowy service worker nie zapisał do pamięci offline starej kopii pliku.
 const FRESH_ASSET = /\.(?:css|m?js|webmanifest)$/;

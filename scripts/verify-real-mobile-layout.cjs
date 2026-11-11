@@ -47,7 +47,7 @@ const artifacts=process.env.HS_MOBILE_PROOF;
    }else{
     const siteMenu=page.locator('.mktMobileMenu summary');
     if(await siteMenu.isVisible())await siteMenu.click();
-    await page.locator('a.mktLogin:visible').first().click();
+    await page.locator('a[href="panel.html?auth=login"]:visible').first().click();
    }
    await page.locator('#loginForm input[name=email]').fill(user.email);
    await page.locator('#loginForm input[name=password]').fill('fixture-password');

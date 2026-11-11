@@ -25,7 +25,7 @@ test('every marketing navigation and asset link resolves to an existing local fi
  for(const page of pages){
   const html=await read(page);
   for(const match of html.matchAll(/(?:href|src)="([^"]+)"/g)){
-   const href=match[1];if(/^(?:https?:|mailto:|#)/.test(href))continue;
+   const href=match[1];if(/^(?:https?:|mailto:|tel:|#)/.test(href))continue;
    const url=new URL(href,new URL(page,base));url.search='';url.hash='';
    if(url.pathname.endsWith('/'))url.pathname+='index.html';
    assert.ok((await stat(url)).isFile(),page+' → '+href);
