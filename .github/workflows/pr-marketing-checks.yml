@@ -1,0 +1,27 @@
+name: HOME SECURITY | PR checks
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/verify-live-marketing.mjs'
+      - '.github/workflows/pr-marketing-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-marketing-script:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate post-deploy check syntax
+        run: node --check scripts/verify-live-marketing.mjs
+      - name: Verify retry behavior and strict HTTP errors
+        run: node --test tests/verify-live-marketing-retry.test.mjs
