@@ -4,7 +4,7 @@ Ten katalog jest punktem wejścia do wszystkiego, co użytkownik obsługuje tele
 
 ## PWA / strona działająca w przeglądarce telefonu
 - `kamera/mobile.js` — zachowanie mobilne.
-- `kamera/mobile-viewer.css`, `kamera/mobile-camera-frame.css` — wygląd telefonu i kamery.
+- `kamera/panel.css` — wygląd telefonu i ramki kamery (sekcje telefonu w jedynym arkuszu panelu; opis sekcji w [docs/PANEL-CSS.md](../docs/PANEL-CSS.md)).
 - `kamera/sw.js` — cache i aktualizacje PWA.
 - `kamera/manifest.webmanifest` — instalowalna PWA.
 - `kamera/remote-unlock-phone.mjs` — odblokowanie komputera telefonem.

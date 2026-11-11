@@ -29,7 +29,7 @@ internal sealed class BundleTestWindow : Form
                     const string html = """
                     <!doctype html><meta charset="utf-8"><title>Bundle probe</title><script>
                     (async()=>{try{
-                      const files=['index.html','app.js','workspace-ui.css','interface-theme.css','core/client-layout.js','vendor/supabase.js','assets/ds-logo.jpg','o-systemie.html','support.css','support-entry.mjs','support-view.mjs','pomoc.html','marketing-contact.js','recording-actions.mjs','native-drive-ui.mjs','dvr-ui.js','diskstore.js'];
+                      const files=['index.html','app.js','workspace-ui.css','panel.css','core/client-layout.js','vendor/supabase.js','assets/ds-logo.jpg','o-systemie.html','support.css','support-entry.mjs','support-view.mjs','pomoc.html','marketing-contact.js','recording-actions.mjs','native-drive-ui.mjs','dvr-ui.js','diskstore.js'];
                       const checks=[];
                       for(const name of files){const r=await fetch(name);const b=await r.arrayBuffer();checks.push({name,status:r.status,bytes:b.byteLength});}
                       const missing=await fetch('__missing_bundle_file__.js');

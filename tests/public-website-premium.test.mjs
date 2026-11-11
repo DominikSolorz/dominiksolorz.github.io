@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 const root=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
 
@@ -62,7 +63,7 @@ test('public marketing accents use the blue-purple-teal theme without recoloring
     'linear-gradient(115deg,var(--m-blue) 0%,var(--m-purple) 58%,#0f766e 100%)'])
     assert.ok(theme.includes(token),'missing public accent '+token);
   assert.match(panel,/<template id="panelStyles">/);
-  assert.match(panel,/premium-dark-pro\.css\?v=1/);
+  panelStylesheet(panel);
   assert.match(panel,/id="app" hidden/);
 });
 

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 
 const root=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
@@ -37,9 +38,9 @@ test('AI CTA opens real support assistant, not a fake success or access to camer
 
 test('account modal has a separate UI layer with usable password toggles',async()=>{
   const [html,auth,styles]=await Promise.all([
-    read('kamera/panel.html'),read('kamera/auth-experience.mjs'),read('kamera/auth-experience.css')]);
+    read('kamera/panel.html'),read('kamera/auth-experience.mjs'),panelSection('auth-experience.css')]);
   assert.ok(html.includes('auth-experience.mjs?v=2'));
-  assert.ok(html.includes('auth-experience.css?v=2'));
+  panelStylesheet(html); // account modal styles are a section of the single panel stylesheet
   assert.ok(html.includes('name="terms" type="checkbox" required'));
   assert.ok(html.includes('href="rodo.html"'));
   assert.ok(auth.includes("input.type=visible?'text':'password'"));

@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {mountMobileCameraFrame} from '../kamera/mobile-camera-frame.mjs';
+import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 const [viewerCss,frameCss,panelHtml,serviceWorker,appJs,mobileJs]=await Promise.all([
- readFile(new URL('../kamera/mobile-viewer.css',import.meta.url),'utf8'),
- readFile(new URL('../kamera/mobile-camera-frame.css',import.meta.url),'utf8'),
+ panelSection('mobile-viewer.css'),
+ panelSection('mobile-camera-frame.css'),
  readFile(new URL('../kamera/panel.html',import.meta.url),'utf8'),
  readFile(new URL('../kamera/sw.js',import.meta.url),'utf8'),
  readFile(new URL('../kamera/app.js',import.meta.url),'utf8'),
@@ -28,8 +29,7 @@ test('short landscape enlarges the camera preview and preserves 48px navigation 
 });
 test('mobile layout switch remains a 48px touch target and refreshed CSS is precached',()=>{
  assert.match(viewerCss,/mobileAppHeader #deviceLayoutBtn\{min-width:48px!important;min-height:48px!important\}/);
- assert.match(panelHtml,/mobile-viewer\.css\?v=5/);
- assert.match(panelHtml,/mobile-camera-frame\.css\?v=6/);
+ const sheet=panelStylesheet(panelHtml);
  assert.match(panelHtml,/mobile\.js\?v=46/);
  const version=appJs.match(/const VERSION = "(\d+)"/)?.[1];
  assert.ok(version);
@@ -37,8 +37,7 @@ test('mobile layout switch remains a 48px touch target and refreshed CSS is prec
  const rev=appJs.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
  assert.ok(rev);
  assert.match(serviceWorker,new RegExp(`kamera-domowa-shell-v${rev}`));
- assert.ok(serviceWorker.includes('./mobile-viewer.css?v=5'));
- assert.ok(serviceWorker.includes('./mobile-camera-frame.css?v=6'));
+ assert.ok(serviceWorker.includes('./'+sheet));
  assert.ok(serviceWorker.includes('./mobile.js?v=46'));
  assert.ok(serviceWorker.includes('./app.js?v='+version));
 });

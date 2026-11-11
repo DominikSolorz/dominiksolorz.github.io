@@ -6,7 +6,7 @@ on:
   pull_request:
     paths:
       - 'kamera/marketing.css'
-      - 'kamera/premium-dark-pro.css'
+      - 'kamera/panel.css'
       - 'kamera/remote-unlock-crypto.mjs'
       - 'tests/remote-unlock-crypto.test.mjs'
       - 'tests/unified-ui.test.mjs'

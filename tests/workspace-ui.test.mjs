@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 const read = name => readFile(new URL('../kamera/'+name,import.meta.url),'utf8');
 test('workspace stylesheet loads after legacy styles and is cached',async()=>{
- const [html,sw,css]=await Promise.all(['panel.html','sw.js','workspace-ui.css'].map(read));
- const workspace=html.match(/workspace-ui.css\?v=\d+/)[0];
- assert.ok(html.indexOf(workspace)>html.indexOf('style.css?v='));
- assert.ok(sw.includes(workspace));assert.ok(css.includes(':focus-visible'));
+ const [html,sw]=await Promise.all(['panel.html','sw.js'].map(read));
+ const css=await panelSection('workspace-ui.css');
+ assert.ok(sw.includes('./'+panelStylesheet(html)));assert.ok(css.includes(':focus-visible'));
  assert.ok(css.includes('@media(max-width:600px)'));
 });
 test('events navigation reuses actual card rather than copying event data',async()=>{

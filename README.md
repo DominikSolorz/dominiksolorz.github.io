@@ -25,7 +25,8 @@ Automaty GitHub mają ten sam podział w [.github/workflows/README.md](.github/w
 | --- | --- |
 | Stronę główną, ofertę, menu publiczne | `kamera/index.html`, `kamera/marketing.css`, `scripts/build-marketing.mjs` |
 | Panel po zalogowaniu, uprawnienia i nagrania | `kamera/panel.html`, `kamera/app.js`, `kamera/auth.js` |
-| Widok na telefonie / PWA | `kamera/mobile.js`, `kamera/mobile-viewer.css`, `kamera/sw.js` |
+| Wygląd panelu (komputer, telefon/PWA, Windows) | `kamera/panel.css` — jedyny arkusz panelu; zasady w [docs/PANEL-CSS.md](docs/PANEL-CSS.md) |
+| Widok na telefonie / PWA | `kamera/mobile.js`, `kamera/panel.css`, `kamera/sw.js` |
 | Ekran PIN | `kamera/lock.js`, `kamera/access.js`, `kamera/account-security.mjs` |
 | Odblokowanie Windows z telefonu | `kamera/remote-unlock-host.mjs`, `kamera/remote-unlock-phone.mjs`, `kamera/remote-unlock-protocol.mjs` |
 | Windows: instalator, aktualizacje, uruchamianie | `desktop-client/Program.cs`, `desktop-client/installer/`, `.github/workflows/desktop-scheduled-release.yml` |
@@ -36,7 +37,7 @@ Automaty GitHub mają ten sam podział w [.github/workflows/README.md](.github/w
 
 **Krótkie nazwy zadań dla agentów:** [AGENT-SHORTCUTS.md](AGENT-SHORTCUTS.md).
 
-**Pełna mapa:** [docs/REPO-MAP.md](docs/REPO-MAP.md). **Wersje, adresy i proces publikacji:** [docs/RELEASE-MAP.md](docs/RELEASE-MAP.md). **Zasady dla Codexa i innych agentów:** [AGENTS.md](AGENTS.md).
+**Pełna mapa:** [docs/REPO-MAP.md](docs/REPO-MAP.md). **Arkusz CSS panelu:** [docs/PANEL-CSS.md](docs/PANEL-CSS.md). **Wersje, adresy i proces publikacji:** [docs/RELEASE-MAP.md](docs/RELEASE-MAP.md). **Zasady dla Codexa i innych agentów:** [AGENTS.md](AGENTS.md).
 
 ## Ważne
 

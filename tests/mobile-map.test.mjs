@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {buildNameQuery,mergePlaces,brandId,logoUrl,parseLogos,walkingMinutes,nearestResults,searchViewbox,buildPlacesQuery,describeLocationError,parsePlaces,parseGeocode,placeSearchUrl,directionsUrl,formatDistance,validCoordinates} from '../kamera/mobile-map.mjs';
+import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
@@ -87,7 +88,7 @@ test('search prefers the surroundings and drops far-away name matches',()=>{
 });
 
 test('map list and close button stay visible on a full-screen phone map',async()=>{
- const css=await read('kamera/mobile-app-look.css'), src=await read('kamera/mobile-map.mjs');
+ const css=await panelSection('mobile-app-look.css'), src=await read('kamera/mobile-map.mjs');
  assert.match(css,/\.mobileMapDialog\[open\]:has\(\.mobileMapCanvas:not\(\[hidden\]\)\)\{display:flex;flex-direction:column/);
  assert.match(css,/\.mobileMapCanvas\{flex:1 1 auto/);
  assert.match(src,/ResizeObserver\(\(\) => map\?\.invalidateSize\(\)\)/);
@@ -117,7 +118,7 @@ test('chain name search looks nearby by name or brand and merges duplicates',()=
 });
 
 test('Windows panel opens the same consent-first map; WebView2 grants location only to the official site',async()=>{
- const [desktop,program,css]=await Promise.all([read('kamera/desktop.js'),read('desktop-client/Program.cs'),read('kamera/operator-layout.css')]);
+ const [desktop,program,css]=await Promise.all([read('kamera/desktop.js'),read('desktop-client/Program.cs'),panelSection('operator-layout.css')]);
  assert.match(desktop,/import \{ mountLocationMap \} from "\.\/mobile-map\.mjs\?v=7"/);
  assert.equal((desktop.match(/mountLocationMap\(\)/g)||[]).length,1,'map mounted once');
  assert.match(program,/string\.Equals\(permissionUri\.Host, PublicHost[\s\S]{0,200}CoreWebView2PermissionKind\.Geolocation/);
