@@ -10,12 +10,12 @@ test('public site remains dark regardless of Android/iOS light preference',async
   assert.doesNotMatch(css,/@media\s*\(prefers-color-scheme:\s*light\)/,'system light theme must not switch only marketing to white');
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/,'retain reduced motion support');
 });
-test('Windows and mobile PIN screen share the same authenticated dark palette',async()=>{
+test('Windows and mobile PIN screen share the same authenticated palette',async()=>{
   const css=await panelSection('premium-dark-pro.css');
   assert.match(css,/HOME SECURITY unified PIN screen/);
   assert.match(css,/html\.desktopMode:not\(\.policeCommand\):not\(\.usMilitary\) #lock/);
   assert.match(css,/html\.mobileOwnerMode:not\(\.policeCommand\):not\(\.usMilitary\) #lock/);
-  assert.match(css,/background:linear-gradient\(155deg,#25272b,#1c1e21 80%\)/,'graphite PIN screen shared by Windows and phone');
+  assert.match(css,/background:linear-gradient\(155deg,#fbfcfd,#fcfcfd 80%\)/,'light PIN screen shared by Windows and phone');
   assert.match(css,/outline:3px solid #649cf7/);
   assert.match(css,/object-fit: contain/,'video presentation stays uncropped');
 });
