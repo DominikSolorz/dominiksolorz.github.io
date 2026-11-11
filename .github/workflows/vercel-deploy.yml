@@ -1,0 +1,167 @@
+name: WWW | Vercel | Wdrożenie publicznej strony
+
+# Vercel nie pobiera już repozytorium (17 GB z paczkami Windows): vercel.json ma
+# git.deploymentEnabled=false, a ten workflow buduje witrynę z rzadkiego pobrania
+# (bez kamera/updates i kamera/downloads) i wysyła gotowy wynik (vercel deploy --prebuilt).
+#  - PR: podgląd, gdy PR zmienia pliki publicznej strony (scripts/vercel-deploy-plan.mjs).
+#  - main: produkcja po udanej publikacji GitHub Pages (także po wydaniu Windows,
+#    którego commit nie uruchamia workflowów push).
+# Brak filtra `paths`: zadanie zawsze kończy się wynikiem, więc kontrola nigdy nie wisi
+# w stanie „Pending”. Brak zmian strony = sukces z opisem „pominięte”.
+
+on:
+  pull_request:
+  workflow_run:
+    workflows: ['WWW | GitHub Pages | Publikacja strony i panelu']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'preview albo production'
+        type: choice
+        options: [preview, production]
+        default: preview
+      force:
+        description: 'Wdróż nawet bez zmian publicznej strony'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  statuses: write
+
+concurrency:
+  group: vercel-${{ github.event.pull_request.number && format('pr-{0}', github.event.pull_request.number) || 'production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  VERCEL_ORG_ID: team_kT49qiILazrAlrlVWAIRHOBX
+  VERCEL_PROJECT_ID: prj_NHKxg4qYVeT9lzNeOwkjrsCBPb0H
+  VERCEL_CLI: vercel@65.14.0
+
+jobs:
+  vercel:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Ustal cel wdrożenia
+        id: ctx
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_REF: ${{ github.head_ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RUN_HEAD: ${{ github.event.workflow_run.head_sha }}
+          INPUT_TARGET: ${{ inputs.target }}
+          INPUT_FORCE: ${{ inputs.force }}
+        run: |
+          case "$EVENT" in
+            pull_request) echo "target=preview" >>"$GITHUB_OUTPUT"; echo "head=$PR_HEAD" >>"$GITHUB_OUTPUT"
+                          echo "base=$PR_BASE" >>"$GITHUB_OUTPUT"; echo "ref=$PR_REF" >>"$GITHUB_OUTPUT"; echo "pr=$PR_NUMBER" >>"$GITHUB_OUTPUT" ;;
+            workflow_run) echo "target=production" >>"$GITHUB_OUTPUT"; echo "head=$RUN_HEAD" >>"$GITHUB_OUTPUT"; echo "ref=main" >>"$GITHUB_OUTPUT" ;;
+            *)            echo "target=$INPUT_TARGET" >>"$GITHUB_OUTPUT"; echo "head=$GITHUB_SHA" >>"$GITHUB_OUTPUT"; echo "ref=$GITHUB_REF_NAME" >>"$GITHUB_OUTPUT"
+                          [ "$INPUT_FORCE" = true ] && echo "force=true" >>"$GITHUB_OUTPUT" ;;
+          esac
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ctx.outputs.head }}
+          fetch-depth: 0
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/kamera/updates/**
+            !/kamera/downloads/**
+
+      - name: Sprawdź token Vercel
+        id: token
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          TARGET: ${{ steps.ctx.outputs.target }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ]; then echo "present=true" >>"$GITHUB_OUTPUT"; exit 0; fi
+          if [ "$TARGET" = production ]; then
+            echo "::error::Brak sekretu VERCEL_TOKEN — produkcja Vercel NIE została zaktualizowana."; exit 1
+          fi
+          echo "::notice::Brak sekretu VERCEL_TOKEN (np. PR z forka) — podgląd Vercel pominięty."
+          echo "present=false" >>"$GITHUB_OUTPUT"
+
+      - name: Ustal commit bazowy
+        id: base
+        if: steps.token.outputs.present == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          TARGET: ${{ steps.ctx.outputs.target }}
+          PR_BASE: ${{ steps.ctx.outputs.base }}
+          HEAD_SHA: ${{ steps.ctx.outputs.head }}
+        run: |
+          if [ "$TARGET" = production ]; then
+            # Commit obecnej produkcji Vercel (z metadanych wdrożenia).
+            base=$(curl -fsS "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID" -H "Authorization: Bearer $VERCEL_TOKEN" \
+              | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const p=JSON.parse(s);process.stdout.write(p.targets?.production?.meta?.githubCommitSha||"")})' || true)
+          else
+            base=$(git merge-base "$PR_BASE" "$HEAD_SHA" 2>/dev/null || echo "$PR_BASE")
+          fi
+          echo "Commit bazowy: ${base:-brak}"
+          echo "sha=$base" >>"$GITHUB_OUTPUT"
+
+      - name: Czy zmieniła się publiczna strona
+        id: plan
+        if: steps.token.outputs.present == 'true'
+        env:
+          DEPLOY_BASE_SHA: ${{ steps.base.outputs.sha }}
+          DEPLOY_HEAD_SHA: ${{ steps.ctx.outputs.head }}
+          FORCE: ${{ steps.ctx.outputs.force }}
+        run: |
+          if [ "$FORCE" = true ]; then echo "deploy=true" >>"$GITHUB_OUTPUT"; echo "reason=wymuszone ręcznie" >>"$GITHUB_OUTPUT"; exit 0; fi
+          node scripts/vercel-deploy-plan.mjs
+
+      - uses: actions/setup-node@v4
+        if: steps.plan.outputs.deploy == 'true'
+        with:
+          node-version: '24'
+
+      - name: Zbuduj i wdroż (vercel deploy --prebuilt)
+        id: deploy
+        if: steps.plan.outputs.deploy == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          TARGET: ${{ steps.ctx.outputs.target }}
+          HEAD_SHA: ${{ steps.ctx.outputs.head }}
+          REF: ${{ steps.ctx.outputs.ref }}
+          PR: ${{ steps.ctx.outputs.pr }}
+        run: |
+          set -euo pipefail
+          npm install --global --no-fund --no-audit "$VERCEL_CLI"
+          prod=(); [ "$TARGET" = production ] && prod=(--prod)
+          vercel pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
+          vercel build "${prod[@]}" --token="$VERCEL_TOKEN"
+          meta=(--meta githubCommitSha="$HEAD_SHA" --meta githubCommitRef="$REF" --meta source=github-actions)
+          [ -n "$PR" ] && meta+=(--meta githubPrId="$PR")
+          url=$(vercel deploy --prebuilt "${prod[@]}" "${meta[@]}" --token="$VERCEL_TOKEN")
+          echo "Wdrożono: $url"
+          echo "url=$url" >>"$GITHUB_OUTPUT"
+
+      - name: Status „Vercel” na commicie
+        if: always() && steps.token.outputs.present == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ steps.ctx.outputs.head }}
+          TARGET: ${{ steps.ctx.outputs.target }}
+          DEPLOY: ${{ steps.plan.outputs.deploy }}
+          REASON: ${{ steps.plan.outputs.reason }}
+          URL: ${{ steps.deploy.outputs.url }}
+          OUTCOME: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "$OUTCOME" != success ]; then state=failure; desc="Wdrożenie $TARGET nie powiodło się"; link=$RUN_URL
+          elif [ "$DEPLOY" = true ]; then state=success; desc="Wdrożono ($TARGET)"; link=$URL
+          else state=success; desc="Pominięte: ${REASON:-brak zmian publicznej strony}"; link=$RUN_URL; fi
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" -f state="$state" -f context="Vercel" \
+            -f description="${desc:0:139}" -f target_url="$link" >/dev/null
+          echo "Status Vercel: $state — $desc"
