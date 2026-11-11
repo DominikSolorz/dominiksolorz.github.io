@@ -38,17 +38,15 @@ const artifacts=process.env.HS_MOBILE_PROOF;
    if(width===390)await page.clock.install();
    const entry='https://dominiksolorz.github.io/kamera/?hs_release=273'+(width>=1000?'&layout=manual&ui=phone':'&layout=auto');
    await page.goto(entry,{waitUntil:'networkidle'});
-   if(width===390){
-    await page.clock.runFor(10000);
-    assert.equal(await page.locator('.hsMobileSplashImage').nth(1).getAttribute('aria-hidden'),'false');
-    await page.clock.runFor(10000);
-    assert.equal(await page.locator('.hsMobileSplashImage').nth(2).getAttribute('aria-hidden'),'false');
-    await page.clock.runFor(10500);
-    assert.equal(await page.locator('#hsMobileSplash').isVisible(),false);
-   }else await page.locator('#hsMobileSplash button').click();
-   assert.equal(await page.locator('#mobileWelcome').isVisible(),true);
+   // The real public homepage is shown at once: no timed splash and no welcome screen (11.11.2026).
+   if(width===390)await page.clock.runFor(1000);
+   assert.equal(await page.locator('#hsMobileSplash').isVisible(),false,'no advertising before the homepage');
+   assert.equal(await page.locator('#mobileWelcome').isVisible(),false,'homepage is shown directly');
+   assert.equal(await page.locator('h1:visible').first().isVisible(),true,'homepage heading is visible');
    await shot('01-real-home');
-   await page.locator('#mobileWelcome .mobileWelcomeLogin').click();
+   // A desktop browser with a manually forced phone layout keeps that choice for the sign-in route.
+   if(width>=1000)await page.goto('https://dominiksolorz.github.io/kamera/panel.html?auth=login&layout=manual&ui=phone',{waitUntil:'networkidle'});
+   else await page.locator('a[href*="auth=login"]:visible').first().click();
    await page.locator('#loginForm input[name=email]').fill(user.email);
    await page.locator('#loginForm input[name=password]').fill('fixture-password');
    await shot('02-real-login');
