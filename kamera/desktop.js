@@ -118,9 +118,9 @@ if (desktopRequested) {
   context.className = "desktopContext";
   context.setAttribute("aria-label", "Kontekst pulpitu");
   context.innerHTML = `
-    <div><p>Pulpit <span>/</span> Na żywo</p><h1>Monitoring domu</h1><small class="hsSubtitle">Podgląd na żywo, zdarzenia i ustawienia systemu</small></div>
+    <span class="hsPageIcon" aria-hidden="true"></span><div><p>Pulpit <span>/</span> Na żywo</p><h1>Monitoring domu</h1><small class="hsSubtitle">Podgląd na żywo, zdarzenia i ustawienia systemu</small></div>
     <div class="hsHeadCards"><div class="hsClockCard" aria-live="off">${ICONS.calendar}<span><small id="hsDate">—</small><b id="hsTime">--:--:--</b></span></div><button type="button" class="hsRecCard" id="hsRecCard" role="switch" aria-checked="false"><span class="hsRecIcon">${ICONS.shield}</span><span><small>Tryb ochrony</small><b id="hsRecCardText">Sprawdzam…</b></span><i class="hsSwitch" aria-hidden="true"></i></button></div>
-    <div class="hsHeadActions"><button type="button" class="hsStatusPill" id="hsStatusPill" data-tone="off"><span class="hsShield">${ICONS.shield}</span><b id="hsStatusPillText">Brak transmisji</b></button><button type="button" class="hsRoundBtn" id="hsHeadTheme" aria-label="Przełącz motyw jasny lub ciemny" title="Motyw jasny / ciemny"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2M12 19v2M5 5l1.4 1.4M17.6 17.6 19 19M3 12h2M19 12h2M5 19l1.4-1.4M17.6 6.4 19 5"/><circle cx="12" cy="12" r="4"/></svg></button><button type="button" class="hsRoundBtn" id="hsHeadEvents" aria-label="Zdarzenia">${ICONS.bell}</button><button type="button" class="hsRoundBtn" id="hsHeadSettings" aria-label="Ustawienia">${ICONS.gear}</button></div>
+    <div class="hsHeadActions"><button type="button" class="hsStatusPill" id="hsStatusPill" data-tone="off"><span class="hsShield">${ICONS.shield}</span><b id="hsStatusPillText">Brak transmisji</b></button><button type="button" class="hsRoundBtn" id="hsHeadTheme" aria-label="Przełącz motyw jasny lub ciemny" title="Motyw jasny / ciemny"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2M12 19v2M5 5l1.4 1.4M17.6 17.6 19 19M3 12h2M19 12h2M5 19l1.4-1.4M17.6 6.4 19 5"/><circle cx="12" cy="12" r="4"/></svg></button><button type="button" class="hsRoundBtn" id="hsHeadEvents" aria-label="Zdarzenia">${ICONS.bell}<em class="hsBellBadge" id="hsBellBadge" hidden>0</em></button><button type="button" class="hsRoundBtn" id="hsHeadSettings" aria-label="Ustawienia">${ICONS.gear}</button><a class="hsRoundBtn" id="hsHeadHelp" href="pomoc.html" target="_blank" rel="noopener" aria-label="Pomoc" title="Pomoc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.6"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></a></div>
     <div class="desktopContextActions">
       <span id="desktopCameraCount" class="desktopCameraCount">Kamery: sprawdzam…</span>
       <div class="desktopLayouts" role="group" aria-label="Układ kamer">
@@ -133,6 +133,25 @@ if (desktopRequested) {
   const main = $("app");
   const layout = main?.querySelector(".layout");
   if (main && layout) main.insertBefore(context, layout);
+  const scenes = document.createElement("section");
+  scenes.className = "hsScenes"; scenes.setAttribute("aria-label", "Tryby pracy kamery");
+  const sceneIcon = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+  scenes.innerHTML = `<h2>${sceneIcon('<path d="M13 2 4 14h7l-1 8 9-12h-7Z"/>')}<span>Tryby pracy</span></h2>` + [
+    ["record", "Na żywo + zapis", '<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>'],
+    ["rec-only", "Tylko zapis", '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5h8v2M3 12h18"/>'],
+    ["once", "Zapis jednorazowy", '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/>'],
+    ["preview", "Sam podgląd", '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 5v4M16 5v4"/>'],
+    ["off", "Wyłącz kamerę", '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>']
+  ].map(([mode, label, icon]) => `<button type="button" data-scene="${mode}">${sceneIcon(icon)}<span>${label}</span></button>`).join("") + `<button type="button" class="hsScenesEdit" data-scene-edit>${sceneIcon('<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>')}<span>Edytuj tryby</span></button>`;
+  context.insertAdjacentElement("afterend", scenes);
+  const syncScenes = () => scenes.querySelectorAll("[data-scene]").forEach(b => { const on = !!document.querySelector(`#modeCard [data-mode="${b.dataset.scene}"].on`); b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
+  scenes.addEventListener("click", event => {
+    const b = event.target.closest("[data-scene],[data-scene-edit]"); if (!b) return;
+    if (b.dataset.scene) document.querySelector(`#modeCard [data-mode="${b.dataset.scene}"]`)?.click(); else setActive("controls");
+    setTimeout(syncScenes, 50);
+  });
+  if ($("modeCard")) new MutationObserver(syncScenes).observe($("modeCard"), { subtree: true, attributes: true, attributeFilter: ["class"] });
+  syncScenes();
   const topActions = context.querySelector(".hsHeadActions"), topbarNav = header?.querySelector(".nav");
   if (topActions && header) header.insertBefore(topActions, topbarNav || null);
 
@@ -239,6 +258,7 @@ if (desktopRequested) {
     $("hsStatSystem").textContent = live ? "Online" : "Offline"; $("hsStatSystemNote").textContent = status.title; tone("system", live ? "ok" : "warn");
     $("hsStatRecNote").textContent = on ? "Nagrywanie aktywne" : (Number.isFinite(storage.saved) ? "zapisane pliki" : "Brak danych");
     $("hsNavEvents").textContent = String(events.length); $("hsNavEvents").hidden = !events.length;
+    $("hsBellBadge").textContent = String(events.length); $("hsBellBadge").hidden = !events.length;
     const capture = systemStore.read("capture", 45000), snap = systemStore.snapshot();
     const peer = Object.entries(snap.components).filter(([id]) => id.startsWith("webrtc:")).map(([, c]) => c).find(c => c.status === "connected");
     if (peer && Number.isFinite(peer.bytesReceived)) { const t = Date.now(); if (lastNet && t > lastNet.t) netMbps = Math.max(0, (peer.bytesReceived - lastNet.b) * 8 / ((t - lastNet.t) / 1000) / 1e6); lastNet = { b: peer.bytesReceived, t }; } else { lastNet = null; netMbps = null; }
@@ -559,6 +579,9 @@ if (desktopRequested) {
     if (crumb) crumb.innerHTML = `${label[0]} <span>/</span> HOME SECURITY`;
     if (heading) { if (view === "live") heading.innerHTML = "Witaj w <em>HOME SECURITY</em>"; else heading.textContent = label[1]; }
     context.dataset.view = view;
+    const pageIcon = context.querySelector(".hsPageIcon"); if (pageIcon) pageIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${navPaths[view] || navPaths.live}</svg>`;
+    scenes.hidden = !["live", "controls"].includes(view);
+    context.after(scenes);
     const subtitle = context.querySelector(".hsSubtitle");
     if (subtitle) subtitle.textContent = label[2];
     // Po opuszczeniu ustawień przywracamy komplet pól dla innych trybów
@@ -601,6 +624,8 @@ if (desktopRequested) {
     else if (go === "map") document.querySelector(".mobileMapOpen")?.click();
   }));
   document.addEventListener("hs-recordings-closed", () => setActive("live"));
+  const labelAccount = () => { const b = document.querySelector(".topbar .accountActions>button:first-child"); if (!b || b.dataset.hsLabeled) return !!b; b.dataset.hsLabeled = "1"; b.setAttribute("aria-label", "Mój profil — konto główne"); b.innerHTML = "<span><b>Administrator</b><small>Konto główne</small></span>"; return true; };
+  if (!labelAccount()) { const t = setInterval(() => { if (labelAccount()) clearInterval(t); }, 500); setTimeout(() => clearInterval(t), 30000); }
   shell.querySelectorAll("[data-desktop-view]").forEach(button => { button.title = button.querySelector("b").textContent; });
 
   const sync = () => {

@@ -3591,9 +3591,8 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar{
   padding:0 12px 12px!important;gap:6px;
 }
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand{
-  flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:12px!important;
-  height:auto!important;min-height:76px!important;margin:0 0 6px!important;
-  background:transparent!important;border:0!important;border-radius:0!important;
+  flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;
+  height:auto!important;min-height:76px!important;
 }
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand img{max-height:42px;margin:0!important;flex:none}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand>span{
@@ -4029,9 +4028,6 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body #app{
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar{
   box-shadow:12px 0 36px -32px rgba(232,27,40,0.75);
 }
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand{
-  border-bottom-color:var(--hs3-edge)!important;
-}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button.active>i{
   color:var(--hl3,#fff)!important;
 }
@@ -4340,10 +4336,9 @@ html.desktopMode:not(.policeCommand):not(.usMilitary){
 html.desktopMode:not(.policeCommand):not(.usMilitary):not(.publicLanding) body{background:radial-gradient(60% 45% at 100% 0%,rgba(229,24,43,.32),transparent 70%),radial-gradient(40% 60% at 0% 100%,rgba(229,24,43,.26),transparent 70%),radial-gradient(90% 60% at 60% -10%,var(--hl648,rgba(98,93,93,0.18)),transparent 70%),var(--hs-bg)!important;font-family:var(--hs-font)!important}
 /* ---------- Menu boczne ---------- */
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar{background:linear-gradient(180deg,var(--hl21,#131212),var(--hl546,#100f0f))!important;border-right:1px solid var(--hs-line)!important;display:flex;flex-direction:column}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand{padding:22px 18px 18px!important;border-bottom:0!important}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand img{width:46px!important;height:auto!important;filter:drop-shadow(0 6px 16px rgba(234,38,51,0.35))}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand img{width:38px!important;height:auto!important;filter:drop-shadow(0 6px 16px rgba(234,38,51,0.35))}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand b{font:800 19px/1.1 var(--hs-font)!important;letter-spacing:.02em;color:var(--hl3,#fff)!important}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand small{display:block;margin-top:3px;font:500 10.5px/1.2 var(--hs-font);white-space:nowrap;letter-spacing:0;text-transform:none;color:var(--hs-muted)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand small{display:block;margin-top:3px;font:500 9.5px/1.2 var(--hs-font);white-space:nowrap;letter-spacing:0;text-transform:none;color:var(--hs-muted)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopDevice{display:none!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav{gap:6px!important;padding:10px 14px!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button{min-height:44px!important;padding:0 16px!important;border-radius:8px!important;border:1px solid transparent!important;background:transparent!important;color:var(--hl20,#e6e5e5)!important;gap:14px!important}
@@ -4363,6 +4358,34 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav .hsNavBad
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav .hsNavSep{height:1px;margin:10px 6px;border:0;background:var(--hs-line2)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav .hsNavLink i svg{width:22px;height:22px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar>.mobileMapCard{display:none!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand{margin:10px 6px 14px 0!important;padding:12px 10px 12px 12px!important;gap:9px!important;background:linear-gradient(110deg,rgba(229,24,43,.14),rgba(229,24,43,0) 70%)!important;border:2px solid #e5182b!important;border-left:0!important;border-radius:0 18px 18px 0!important;box-shadow:0 0 22px rgba(229,24,43,.45),inset 0 0 18px rgba(229,24,43,.12)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand::after{display:none}
+html.desktopMode body #app .desktopContext{position:relative;overflow:hidden;align-items:center!important;gap:20px!important}
+html.desktopMode body #app .hsPageIcon{display:grid;place-items:center;flex:none;width:74px;height:74px;color:#ef3340;filter:drop-shadow(0 0 10px rgba(239,51,64,.7))}
+html.desktopMode body #app .hsPageIcon svg{width:64px;height:64px}
+html.desktopMode body #app .desktopContext[data-view="live"] .hsPageIcon{display:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext:not([data-view="live"]){justify-content:flex-start!important;min-height:150px;border-radius:18px!important;border:1px solid var(--hs-line)!important;padding:20px 24px!important;background:linear-gradient(90deg,var(--hs-bg) 38%,rgba(12,11,11,.35) 70%,rgba(12,11,11,0)),url(assets/site-hero-dom.webp) right 30%/62% auto no-repeat,var(--hs-bg)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext:not([data-view="live"])::after{content:"";display:block!important;position:absolute;inset:0 0 0 34%;background:linear-gradient(90deg,rgba(200,10,25,0),rgba(200,10,25,.9) 35%);mix-blend-mode:hue;pointer-events:none}
+html.desktopMode body #app .desktopContext:not([data-view="live"]) h1{font-size:40px!important}
+html.desktopMode body #app .desktopContext:not([data-view="live"]) .hsHeadCards{display:none}
+html.desktopMode body #app .hsScenes{display:flex;align-items:center;gap:12px;margin:0 0 18px;padding:12px;border-radius:18px;border:1px solid var(--hs-line);background:linear-gradient(160deg,var(--hs-panel2),var(--hs-panel));overflow-x:auto}
+html.desktopMode body #app .hsScenes[hidden]{display:none}
+html.desktopMode body #app .hsScenes h2{display:flex;align-items:center;gap:10px;margin:0 8px 0 6px;font:800 20px var(--hs-font);white-space:nowrap}
+html.desktopMode body #app .hsScenes h2 svg{width:30px;height:30px;color:#ef3340;filter:drop-shadow(0 0 8px rgba(239,51,64,.6))}
+html.desktopMode body #app .hsScenes button{display:flex;align-items:center;gap:10px;flex:none;min-height:56px;padding:0 20px;border-radius:14px;border:1px solid var(--hs-line2);background:linear-gradient(180deg,var(--hs-panel2),var(--hs-panel));color:var(--hs-text);font:600 15.5px var(--hs-font);cursor:pointer}
+html.desktopMode body #app .hsScenes button svg{width:26px;height:26px}
+html.desktopMode body #app .hsScenes button.on{background:linear-gradient(135deg,#e5182b,#a50d1c);border-color:#ff4d5e;color:#fff;box-shadow:0 0 20px rgba(229,24,43,.55)}
+html.desktopMode body #app .hsScenes .hsScenesEdit{margin-left:auto;min-height:46px;font-size:14px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsRoundBtn{position:relative;border:0!important;background:transparent!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsRoundBtn svg{width:28px;height:28px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsBellBadge{position:absolute;top:2px;right:2px;display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#e5182b;color:#fff;font:800 11.5px var(--hs-font);font-style:normal;box-shadow:0 0 10px rgba(229,24,43,.7)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsBellBadge[hidden]{display:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsHeadActions{padding:0 14px;border-left:1px solid var(--hs-line2)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child{display:inline-flex!important;align-items:center;gap:4px;height:52px!important;border:0!important;background:transparent!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child>span{display:grid;text-align:left}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child b{font:700 15px/1.2 var(--hs-font)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child small{font:500 12.5px/1.2 var(--hs-font);color:var(--hs-muted)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child::after{content:"";width:9px;height:9px;margin-left:10px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-3px) rotate(45deg)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button{font-size:16px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsHeadActions{order:4;margin-left:0;gap:10px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsHeadActions .hsStatusPill{display:none}
@@ -4411,7 +4434,7 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus[data-to
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .desktopSearch{max-width:360px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext{background:transparent!important;border:0!important;border-bottom:1px solid var(--hs-line)!important;border-radius:0!important;box-shadow:none!important;min-height:0!important;padding:6px 2px 20px!important;margin-bottom:18px!important;display:flex;align-items:center;justify-content:space-between;gap:16px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext::before,html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext::after{display:none!important}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext>div:first-child>p{display:none!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext>div>p{display:none!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext h1{font:800 30px/1.15 var(--hs-font)!important;letter-spacing:-.02em;color:var(--hl3,#fff)!important;margin:0!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext .hsSubtitle{display:block;margin-top:6px;font-size:15px;color:var(--hs-muted)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextActions{display:none!important}
@@ -4511,7 +4534,6 @@ html.desktopMode body #app .hsStat:is([data-tone="bad"],[data-tone="alert"]) em{
 html.desktopMode body #app .hsStat:is([data-tone="bad"],[data-tone="alert"]) em::before{background:#ef3340}
 html.desktopMode body #app .desktopContext h1 em{font-style:normal;color:#ef3340}
 html.desktopMode body #app .hsHeadCards{display:flex;align-items:stretch;gap:12px;margin-left:auto}
-html.desktopMode body #app .desktopContext:not([data-view="live"]) .hsHeadCards{display:none}
 html.desktopMode body #app .desktopContext[data-view="live"] .hsStatusPill{display:none}
 html.desktopMode body #app :is(.hsClockCard,.hsRecCard){display:flex;align-items:center;gap:14px;min-height:62px;padding:8px 18px;border-radius:14px;border:1px solid var(--hs-line);background:linear-gradient(160deg,var(--hs-panel2),var(--hs-panel));color:var(--hs-text)}
 html.desktopMode body #app .hsClockCard svg{width:30px;height:30px}
@@ -4547,7 +4569,7 @@ html.desktopMode body #app .hsQuickGrid>.hsQuick:first-child{background:linear-g
 @media (max-width:1100px){html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview:not([hidden]){grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"stats" "live" "side" "bottom" "timeline" "control"}html.desktopMode body #app .hsBottomRow{grid-template-columns:minmax(0,1fr)!important}}
 @media (max-width:860px){html.desktopMode body #app .desktopOverview>.hsStats{grid-template-columns:repeat(2,minmax(0,1fr))}html.desktopMode body .hsHeadActions .hsStatusPill b{display:none}}
 /* poprawki po zrzutach */
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand b{font-size:17px!important;max-width:none!important;white-space:nowrap!important;word-break:keep-all;overflow-wrap:normal}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand b{font-size:15.5px!important;max-width:none!important;white-space:nowrap!important;word-break:keep-all;overflow-wrap:normal}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand b em{font-style:normal;color:#ef3340}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand{position:relative}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand::after{content:"";position:absolute;left:-14px;right:-30px;bottom:0;height:3px;background:linear-gradient(90deg,transparent,#e5182b 30%,#ff4d5e);box-shadow:0 0 18px rgba(229,24,43,.8);pointer-events:none}
