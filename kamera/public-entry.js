@@ -9,11 +9,8 @@
     params.get('app') === 'android' || /^cam-[a-f0-9]{32}$/.test(params.get('odbiorca') || '') ||
     location.hash === '#nadaj' || fragment.has('access_token') || fragment.has('error') ||
     fragment.get('type') === 'recovery';
-  let pendingEntry = false;
-  try { pendingEntry = !!sessionStorage.getItem('hs-device-entry-v1'); } catch { /* private mode */ }
   const native = window.__HOME_SECURITY_DESKTOP__ === true || !!window.chrome?.webview;
-  const installed = window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
-  // Domyslne wejscie z ikony aplikacji otwiera strone glowna z 30-sekundowa reklama.
+  // Public home stays public even with saved device state or installed PWA.
   // Autoryzacja, odbiorcy i linki do nagran nadal wymagaja panel.html.
   if (params.get("app") === "mobile-home" && !privateLink && !native) return;
   if (!privateLink && !native) {
