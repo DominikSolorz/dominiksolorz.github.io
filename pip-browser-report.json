@@ -1,0 +1,14 @@
+{
+  "synthetic": true,
+  "phoneTested": false,
+  "entered": {
+    "active": true,
+    "errors": [],
+    "trackLive": true
+  },
+  "exited": {
+    "active": false,
+    "trackLive": true
+  },
+  "ok": true
+}

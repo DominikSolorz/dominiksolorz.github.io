@@ -3756,8 +3756,7 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileSetti
 html:not(.policeCommand):not(.usMilitary) body :is(.bootScreen,.lockScreen){
   background:radial-gradient(ellipse 760px 480px at 50% 0%,rgba(236,66,77,0.16),transparent 70%),var(--pl-bg)!important;
 }
-html:not(.policeCommand):not(.usMilitary) body :is(.bootCard,.pinCard),
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{
+html:not(.policeCommand):not(.usMilitary) body :is(.bootCard,.pinCard){
   background:linear-gradient(180deg,var(--pl-panel2),var(--pl-panel))!important;
   border:1px solid var(--pl-line2)!important;border-radius:12px!important;
   box-shadow:0 40px 90px -40px rgba(236,66,77,0.35),0 30px 60px -30px var(--hl53,#000)!important;color:var(--pl-text)!important;
@@ -3771,16 +3770,13 @@ html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button:active
 html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinLogo{background:rgba(236,66,77,0.08)!important;border:1px solid var(--pl-line2)!important;border-radius:12px!important;box-shadow:0 0 34px -8px rgba(236,66,77,0.5)!important}
 html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinMsg{font-family:var(--pl-sans)!important}
 html:not(.policeCommand):not(.usMilitary) body #bootProgress{background:linear-gradient(90deg,var(--pl-cyan),var(--pl-blue))!important;box-shadow:none!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{
-  background:linear-gradient(135deg,#ec424d,#e81725)!important;border:1px solid var(--pl-blue2)!important;color:#fff!important;border-radius:var(--pl-radius-sm)!important;
-  font-family:var(--pl-sans)!important;letter-spacing:normal!important;text-transform:none!important;font-weight:600!important;box-shadow:0 12px 28px -14px rgba(236,66,77,0.9)!important;
-}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary:hover{background:var(--pl-blue2)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authTextBtn{color:var(--pl-blue2)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authEyebrow{color:var(--pl-blue2)!important;font-family:var(--pl-sans)!important;letter-spacing:.08em!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog :is(.authClose,.hsPassToggle){border-radius:var(--pl-radius-sm)!important;background:var(--pl-raised)!important;border-color:var(--pl-line2)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton{border-radius:var(--pl-radius-sm)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand b{color:var(--pl-cyan)!important}
+
+
+
+
+
+
+
 /* ================= Szybkie menu ================= */
 html:not(.policeCommand):not(.usMilitary) body #quickMenu{background:var(--pl-bg2)!important;border-color:var(--pl-line2)!important}
 html:not(.policeCommand):not(.usMilitary) body #quickMenu button{border-radius:var(--pl-radius-sm)!important;background:var(--pl-panel)!important;border-color:var(--pl-line)!important}
@@ -3812,60 +3808,55 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextA
    Zdjęcie domu nocą w tle, karta z marką, pola z ikonami, niebieski przycisk.
    Tylko wygląd — pola, kolejność kroków i obsługa konta bez zmian.
    ===================================================================== */
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBackdrop{
-  background:
-    radial-gradient(ellipse 900px 600px at 50% 40%,var(--hl608,rgba(10,10,10,0.15)),var(--hl609,rgba(10,10,10,0.75)) 78%),
-    linear-gradient(180deg,var(--hl610,rgba(10,10,10,0.25)),var(--hl611,rgba(10,10,10,0.8))),
-    url("assets/auth-night.webp") center/cover no-repeat,var(--hl85,#0a0a0a)!important;
-  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
-}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{
-  width:min(440px,calc(100vw - 24px))!important;padding:30px 30px 26px!important;
-  background:linear-gradient(180deg,var(--hl612,rgba(22,21,21,0.92)),var(--hl613,rgba(17,16,16,0.94)))!important;
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-  border:1px solid var(--hl38,rgba(238,79,89,0.28))!important;border-radius:12px!important;
-  box-shadow:0 0 0 1px rgba(236,66,77,0.08),0 40px 90px -30px rgba(236,66,77,0.45),0 30px 60px -20px var(--hl53,#000)!important;
-}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{
-  display:grid!important;grid-template-columns:auto auto;justify-content:center;align-items:center;column-gap:12px;row-gap:2px;
-  padding:0 0 18px!important;margin:0 0 18px!important;border-bottom:1px solid var(--pl-line)!important;text-align:left;
-}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand img{grid-row:1 / span 2;width:46px!important;height:46px!important;margin:0!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p{margin:0!important;font-size:20px!important;font-weight:800!important;letter-spacing:.01em!important;color:var(--hl603,#f9f9f9)!important;line-height:1.1}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p b{color:var(--pl-blue2)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand::after{content:"Monitoring · Ochrona · Kontrola";font-size:11.5px;color:var(--pl-muted);letter-spacing:.02em}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm h2{font-size:22px!important;margin:4px 0 4px!important;text-align:center}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm>p:not(.authEyebrow){text-align:center;font-size:13px!important;color:var(--pl-muted)!important;margin:0 0 14px!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authEyebrow{text-align:center;font-size:11px!important;margin:0!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label:not(.authCheck){display:block;font-size:12.5px!important;color:var(--pl-muted)!important;font-weight:500;margin:0 0 12px!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label:not(.authCheck) input:not([type="checkbox"]):not([type="radio"]){
-  display:block;width:100%;height:46px!important;margin-top:6px!important;padding:0 14px 0 42px!important;font-size:14px!important;
-  background-color:var(--hl614,rgba(10,10,10,0.7))!important;background-repeat:no-repeat!important;background-position:14px 50%!important;background-size:18px 18px!important;
-}
-/* Ikony pól (dekoracja, bez wpływu na wartości). */
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label>input[type="email"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.5' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E")!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label :is(input[type="password"],input[name="password"],input[name="password_repeat"]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='10.5' width='14' height='10' rx='2'/%3E%3Cpath d='M8 10.5V7.5a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E")!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label :is(input[name="first_name"],input[name="last_name"]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.5' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E")!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label :is(input[name="address_line"],input[name="postal_code"]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z'/%3E%3C/svg%3E")!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label>input[type="tel"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='7' y='2.5' width='10' height='19' rx='2'/%3E%3Cpath d='M11 18h2'/%3E%3C/svg%3E")!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .hsPassToggle{
-  height:32px!important;padding:0 10px!important;font-size:12px!important;color:var(--pl-muted)!important;
-  background:transparent!important;border:1px solid var(--pl-line2)!important;border-radius:8px!important;
-}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .hsPassToggle:hover{color:var(--hl3,#fff)!important;border-color:var(--pl-blue)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{width:100%;height:48px!important;font-size:15px!important;margin-top:6px!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authTextBtn{display:block;width:100%;text-align:center;font-size:13px!important;margin-top:12px!important;background:transparent!important;border:0!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider{color:var(--pl-muted)!important;font-size:12.5px!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider::before,
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider::after{background:var(--pl-line2)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton{
-  height:46px!important;background:var(--hl614,rgba(10,10,10,0.7))!important;color:var(--pl-text)!important;border:1px solid var(--pl-line2)!important;font-weight:600!important;
-}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton:hover{border-color:var(--pl-blue)!important;background:var(--pl-hover)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck{display:flex!important;gap:10px;align-items:flex-start;font-size:12.5px!important;color:var(--pl-muted)!important;margin:4px 0 10px!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck a{color:var(--pl-blue2)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authGrid{gap:12px!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authClose{width:36px!important;height:36px!important}
+/* =====================================================================
+   Ekrany konta według projektu właściciela (11.11.2026): logowanie,
+   rejestracja, odzyskiwanie hasła, potwierdzenie e-maila. Tylko wygląd;
+   pola, nazwy i kolejność kroków obsługuje bez zmian auth.js.
+   ===================================================================== */
+html:not(.policeCommand):not(.usMilitary) body #authDialog{padding:0;overflow:auto;align-items:start}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBackdrop{background:radial-gradient(ellipse 120% 40% at 50% 112%,rgba(255,24,48,.38),transparent 62%),radial-gradient(ellipse 60% 40% at 90% 0%,rgba(255,24,48,.14),transparent 70%),#070707!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{display:flex;flex-direction:column;gap:14px;width:min(460px,100%);max-height:100dvh;padding:34px 30px 30px!important;background:transparent!important;border:0!important;box-shadow:none!important;text-align:center}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard>*{order:2;flex-shrink:0}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{order:0;display:grid;justify-items:center;gap:4px;margin:0 0 6px;padding:0;border:0}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand img{width:96px;height:96px;filter:drop-shadow(0 0 10px rgba(255,24,48,.6)) drop-shadow(0 0 26px rgba(255,24,48,.25))}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p{margin:6px 0 0;font-size:28px;font-weight:800;letter-spacing:.4px;color:#f5f6f8!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p b{color:#ff2947!important;text-shadow:0 0 16px rgba(255,41,71,.45)}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand small{font-size:14px;color:#d5d1d1}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authMessage{order:1}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleEntry{order:3;margin:0}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForgot{order:4}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authSwitch{order:5}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm{gap:12px;text-align:left}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm :is(h1,h2){margin:0;text-align:center;font-size:32px;font-weight:800;letter-spacing:-.02em}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authLead{margin:0 0 8px;text-align:center;font-size:16px;color:#d5d1d1!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField{position:relative;display:flex;align-items:center;gap:12px;min-height:54px;padding:0 14px;border:1px solid #3d3838;border-radius:12px;background:rgba(14,13,13,.92)}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField:focus-within{border-color:#ff2947;box-shadow:0 0 0 3px rgba(255,41,71,.18)}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField input:focus-visible{outline:0!important;box-shadow:none!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField .authIco{width:22px;height:22px;flex:none;color:#e6e2e2}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]){outline:0!important;flex:1;min-width:0;min-height:52px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;font-size:16px;color:#f5f4f4!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField input::placeholder{color:#c9c4c4;opacity:1}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField .hsPassWrap{flex:1;display:flex;align-items:center}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField .hsPassWrap input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]){padding-right:44px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField .hsPassToggle{right:-4px;width:40px;height:40px;min-height:0;padding:0;border:0!important;background:transparent!important;color:#e6e2e2!important;font-size:0}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField .hsPassToggle svg{width:22px;height:22px}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{display:flex;align-items:center;justify-content:center;gap:12px;min-height:56px;margin-top:6px;border:0!important;border-radius:14px!important;background:linear-gradient(180deg,#ff2a40,#d10f23)!important;color:#fff!important;font:700 19px/1 inherit;font-family:inherit!important;letter-spacing:0;text-transform:none;box-shadow:0 10px 30px -8px rgba(255,24,48,.7),inset 0 1px 0 rgba(255,255,255,.18)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary .authIco{width:24px;height:24px}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authTextBtn{min-height:40px;border:0!important;background:transparent!important;box-shadow:none!important;justify-self:center;align-self:center;color:#e6e2e2!important;font-size:15px;font-weight:500}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authTextBtn b,html:not(.policeCommand):not(.usMilitary) body #authDialog .authForgot{color:#ff2947!important;text-decoration:underline;text-underline-offset:4px;font-weight:600}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck{display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:center;font-size:14px;color:#e6e2e2!important;text-align:left}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck input{width:22px;height:22px;min-height:0;margin:0;accent-color:#e8172d}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck a{color:#ff2947!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authInfo{display:flex;gap:12px;align-items:flex-start;margin:6px 0 0;padding:14px;border:1px solid #3d3838;border-radius:12px;background:rgba(14,13,13,.9);font-size:14px;text-align:left}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authInfo .authIco{width:26px;height:26px;flex:none;color:#e6e2e2}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authStepIcon{justify-self:center;display:grid;place-items:center;width:84px;height:84px;color:#ff2947;filter:drop-shadow(0 0 14px rgba(255,41,71,.5))}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authStepIcon .authIco{width:72px;height:72px;stroke-width:1.4}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider{font-size:14px;color:#d5d1d1}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton{min-height:52px;border-radius:12px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleEntry p{text-align:center}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authClose{top:16px;right:16px;border-radius:10px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authNotice{border-radius:12px;text-align:left}
+html body #authDialog .srOnly{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media(min-width:761px){html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{max-height:94dvh;padding:38px 36px 32px!important;border:1px solid #2c2828!important;border-radius:22px!important;background:rgba(10,10,10,.92)!important;box-shadow:0 0 80px -30px rgba(255,24,48,.5),0 30px 80px -30px #000!important}}
 /* PIN: zdjęcie w tle, pola cyfr jako kwadraty, niebieskie zatwierdzenie. */
 html:not(.policeCommand):not(.usMilitary) body .lockScreen{
   background:
@@ -4274,34 +4265,15 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(input,select
     transition:none;
   }
 }
-html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authCard,
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .lockScreen{
   max-height:calc(100dvh - 28px);
   overflow-y:auto;
   overscroll-behavior:contain;
   scrollbar-color:rgba(238,79,89,0.48) rgba(16,16,16,0.6);
 }
-html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{
-  border:1px solid rgba(238,79,89,0.7)!important;
-  background:linear-gradient(125deg,#e81725,#ea2d39)!important;
-  color:#fff!important;
-  box-shadow:0 12px 28px -18px rgba(236,65,76,0.84)!important;
-}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label a{
-  color:var(--hl14,#ee4f59)!important;
-  text-underline-offset:3px;
-}
+
+
 @media (max-height:820px){
-  html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{
-    padding:20px 24px!important;
-  }
-  html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{
-    margin-bottom:12px!important;
-    padding-bottom:12px!important;
-  }
-  html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label:not(.authCheck){
-    margin-bottom:9px!important;
-  }
 }
 /* HOME SECURITY unified operator controls */
 html.desktopMode:not(.policeCommand):not(.usMilitary) :is(button,a[role="button"],.button,.action,.toolButton,.navItem):focus-visible{
@@ -4636,24 +4608,20 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav 
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button.active b{color:var(--ma-cyan)!important;text-shadow:none!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button.active::after{display:none!important}
 /* Real account forms fill the phone instead of retaining a desktop photo/modal. */
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog{padding:0!important;align-items:start!important;overflow:auto!important;background:var(--ma-bg)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBackdrop{display:none!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{
-  width:100%!important;max-width:var(--ma-width)!important;min-height:100dvh!important;max-height:none!important;overflow:visible!important;
-  padding:max(36px,env(safe-area-inset-top)) 24px 28px!important;border:0!important;
-  background:radial-gradient(120% 60% at 50% 0,var(--hl680,#242222) 0,var(--ma-bg) 60%)!important;
-}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{display:flex!important;flex-direction:column!important;justify-content:center!important;gap:12px!important;margin-bottom:36px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand img{width:62px!important;height:62px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p{font-size:23px!important;font-weight:800!important;color:var(--ma-text)!important;text-align:center}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand b{color:var(--ma-cyan)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm{gap:18px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authEyebrow{display:none!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog :is(.authForm h2,.authForm>p){text-align:center!important;color:var(--ma-text)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm h2{font-size:27px!important;font-weight:800!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm input:not([type="checkbox"]){border:1px solid var(--ma-line)!important;background:var(--ma-card)!important;border-radius:8px!important;min-height:52px!important;color:var(--ma-text)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{border:0!important;border-radius:999px!important;min-height:54px!important;font-size:16px!important;font-weight:800!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog :is(.authTextBtn,.authClose){color:var(--ma-cyan)!important}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* PIN verification itself is unchanged; keep the original keyboard and handlers. */
 .mobilePinHint{display:none}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock{min-height:100dvh!important;padding:28px 16px!important;background:var(--ma-bg)!important}
@@ -4669,8 +4637,8 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock .pinDots i.
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock .mobilePinHint{display:block;color:var(--ma-muted);font-size:12px;line-height:1.5}
 @media (orientation:landscape) and (max-height:500px){html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock .keypad button{min-height:44px!important}}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsRemoteEntry{grid-column:1 / -1!important;justify-self:end!important;width:auto!important;min-height:38px!important;padding:8px 14px!important;font-size:12px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{border:0!important;padding-bottom:0!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand::after{content:none!important}
+
+
 /* Settings has one entry point: the right navigation item disappears here. */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] .mobileBottomNav{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] .mobileBottomNav [data-mobile-view="settings"],
@@ -5134,7 +5102,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #dvrCard inp
   accent-color:var(--hs3-cyan);
   touch-action:pan-x;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authCard,
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock .lockScreen{
   max-height:calc(100dvh - 20px);
   overflow-y:auto;
@@ -5143,28 +5110,13 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock .lockScreen
   border-radius:12px!important;
   box-shadow:0 28px 72px -38px rgba(232,23,37,0.62),inset 0 1px 0 rgba(255,255,255,.07)!important;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm :is(input,select,button){
-  min-height:48px;
-  border-radius:8px;
-}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{
-  border:1px solid rgba(238,79,89,0.72);
-  background:linear-gradient(125deg,#e81927,#eb323f)!important;
-  color:#fff!important;
-  box-shadow:0 12px 28px -18px rgba(236,65,76,0.8);
-}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label a{
-  color:var(--hl14,#ee4f59)!important;
-  text-underline-offset:3px;
-}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .hsPassToggle{
-  border-color:var(--hs3-edge);
-  background:var(--hl158,#252323);
-  color:var(--hl722,#ebe9e9);
-}
+
+
+
+
 @media (max-width:430px) and (max-height:740px){
   html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{min-height:58px}
-  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{padding:18px 18px 22px!important}
+
 
 }
 @media (orientation:landscape) and (max-height:500px){

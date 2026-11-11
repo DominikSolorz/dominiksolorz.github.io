@@ -41,9 +41,9 @@ test('registered owners retain direct panel access while visitors see brochure',
   ].map(read));
   assert.ok(root.includes('toPanel ? "./kamera/panel.html" : "./kamera/"'));
   assert.ok(root.includes('["auth","app","view","ui","desktop","bootRetry","theme","start","code","odbiorca","panel"]'));
-  assert.ok(app.includes('auth-experience.mjs?v=2'));
+  assert.ok(app.includes('auth-experience.mjs?v=3'));
   assert.ok(sw.includes('./'+panelStylesheet(app)),'account styles ship in the precached panel stylesheet');
-  assert.ok(sw.includes('auth-experience.mjs?v=2'));
+  assert.ok(sw.includes('auth-experience.mjs?v=3'));
   const build=JSON.parse(version).version;
   assert.ok(app.includes('app.js?v='+build));
   assert.ok(sw.includes('app.js?v='+build));

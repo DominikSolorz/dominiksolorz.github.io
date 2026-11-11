@@ -1,0 +1,24 @@
+{
+  "physicalCamera": false,
+  "userFolder": false,
+  "results": [
+    {
+      "scenario": "normal",
+      "started": true,
+      "bytes": 12018,
+      "width": 320,
+      "height": 180,
+      "sourceStillLive": true,
+      "elapsedMs": 2401
+    },
+    {
+      "scenario": "metadata-timeout",
+      "started": true,
+      "bytes": 11218,
+      "width": 320,
+      "height": 180,
+      "sourceStillLive": true,
+      "elapsedMs": 7320
+    }
+  ]
+}

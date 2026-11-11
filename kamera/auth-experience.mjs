@@ -11,13 +11,16 @@ if(dialog){
     wrap.append(input);
     const toggle=document.createElement('button');
     toggle.type='button';toggle.className='hsPassToggle';
-    toggle.textContent='Pokaż';
+    // Eye icon (shape built with DOM; no HTML strings).
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.8');
+    for(const [tag,attrs] of [['path',{d:'M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z'}],['circle',{cx:'12',cy:'12',r:'3'}]]){const el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);svg.append(el);}
+    toggle.append(svg);
     toggle.setAttribute('aria-label','Pokaż hasło');
     toggle.setAttribute('aria-pressed','false');
     toggle.addEventListener('click',()=>{
       const visible=input.type==='password';
       input.type=visible?'text':'password';
-      toggle.textContent=visible?'Ukryj':'Pokaż';
       toggle.setAttribute('aria-label',visible?'Ukryj hasło':'Pokaż hasło');
       toggle.setAttribute('aria-pressed',String(visible));
       input.focus({preventScroll:true});
@@ -31,7 +34,7 @@ if(dialog){
     const hint=document.createElement('p');
     hint.className='hsPasswordHint';hint.id='hsPasswordHint';hint.setAttribute('aria-live','polite');
     hint.textContent='Użyj co najmniej 10 znaków. Dłuższe, unikalne hasło jest bezpieczniejsze.';
-    repeated.closest('label')?.parentNode.after(hint);
+    repeated.closest('label')?.after(hint);
     const update=()=>{
       const value=password.value;
       if(!value){hint.textContent='Użyj co najmniej 10 znaków. Dłuższe, unikalne hasło jest bezpieczniejsze.';hint.dataset.state='idle';return;}
