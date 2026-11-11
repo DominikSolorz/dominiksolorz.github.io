@@ -17,14 +17,24 @@ const currentPanelCSS=panelSource.match(/<template id="panelStyles">[\s\S]*?href
 assert.ok(currentUpdateModule&&currentSW&&currentMarketingCSS&&currentPanelCSS,'Cannot derive current updater, PWA and stylesheet revisions');
 
 
-const timeoutMs=18000;
+const timeoutMs=30000;
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const get=async(path,{method='GET'}={})=>{
   const url=new URL(path,root);
   url.searchParams.set('release_check',process.env.GITHUB_SHA?.slice(0,12)||expectedBuild);
-  const response=await fetch(url,{method,redirect:'follow',signal:AbortSignal.timeout(timeoutMs),headers:{'cache-control':'no-cache'}});
-  assert.equal(response.status,200,method+' '+path+' returned HTTP '+response.status);
-  return method==='HEAD'?response:response.text();
+  for(let attempt=1;attempt<=3;attempt++){
+    try{
+      const response=await fetch(url,{method,redirect:'follow',signal:AbortSignal.timeout(timeoutMs),headers:{'cache-control':'no-cache'}});
+      assert.equal(response.status,200,method+' '+path+' returned HTTP '+response.status);
+      return method==='HEAD'?response:await response.text();
+    }catch(error){
+      // Retry transient network failures only; never hide HTTP or content validation errors.
+      const networkError=error?.name==='TimeoutError'||error?.name==='AbortError'||error instanceof TypeError;
+      if(!networkError||attempt===3)throw error;
+      console.warn('Temporary network failure for '+method+' '+path+' (attempt '+attempt+'/3): '+error.message);
+      await pause(1000*attempt);
+    }
+  }
 };
 const checks=[
   ['o-systemie.html',['id="publicHome"','Wydanie rozwojowe','href="jak-dziala.html"']],
