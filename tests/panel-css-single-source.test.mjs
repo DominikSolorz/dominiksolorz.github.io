@@ -12,7 +12,7 @@ const KNOWN_STYLESHEETS = new Set([
   'style.css', 'workspace-ui.css', 'legal-premium.css', // legal documents and nagrania.html
   'marketing.css', 'marketing-motion.css', 'marketing-navigation.css', 'marketing-gallery.css',
   'marketing-start.css', 'marketing-auto-update.css', 'marketing-campaign.css', 'tech-theme.css',
-  'mobile-home.css', 'mobile-app-splash.css', 'loading-campaign.css', 'support.css', // public pages
+  'support.css', // public pages
 ]);
 
 test('the private panel loads exactly one stylesheet and the service worker precaches it', async () => {

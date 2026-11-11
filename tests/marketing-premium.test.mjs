@@ -14,14 +14,13 @@ test('public entry directs visitors to marketing while explicit auth links keep 
 });
 
 test('conversion buttons lead to registration or a real prefilled contact form',async()=>{
-  const html=(await Promise.all(['home','prezentacja','stan-projektu','pytania'].map(name=>read('design/marketing/'+name+'.html')))).join('\n');
-  assert.ok(html.includes('id="zobacz-panel"'));
+  const html=(await Promise.all(['home','stan-projektu','pytania'].map(name=>read('design/marketing/'+name+'.html')))).join('\n');
   assert.ok(html.includes('id="wybierz-start"'));
   assert.ok(html.includes('id="asystent"'));
   assert.ok(html.includes('href="panel.html?auth=register"'));
   assert.ok(html.includes('href="kontakt.html?temat=produkt"'));
   assert.ok(!html.includes('Kup teraz'));
-  assert.ok(html.includes('nie transmisja z kamery'));
+  assert.ok(html.includes('aktywna transmisja'));
   const contact=await read('kamera/marketing-contact.js');
   assert.ok(contact.includes("chosenTopic==='produkt'"));
   assert.ok(contact.includes("receipt.status!=='sent'"));

@@ -35,20 +35,20 @@ const artifacts=process.env.HS_MOBILE_PROOF;
    });
    await page.routeWebSocket('**/realtime/**',socket=>socket.close());
    const shot=async name=>{if(artifacts&&width===390)await page.screenshot({path:path.join(artifacts,name+'.png'),fullPage:true});};
-   if(width===390)await page.clock.install();
    const entry='https://dominiksolorz.github.io/kamera/?hs_release=273'+(width>=1000?'&layout=manual&ui=phone':'&layout=auto');
    await page.goto(entry,{waitUntil:'networkidle'});
-   if(width===390){
-    await page.clock.runFor(10000);
-    assert.equal(await page.locator('.hsMobileSplashImage').nth(1).getAttribute('aria-hidden'),'false');
-    await page.clock.runFor(10000);
-    assert.equal(await page.locator('.hsMobileSplashImage').nth(2).getAttribute('aria-hidden'),'false');
-    await page.clock.runFor(10500);
-    assert.equal(await page.locator('#hsMobileSplash').isVisible(),false);
-   }else await page.locator('#hsMobileSplash button').click();
-   assert.equal(await page.locator('#mobileWelcome').isVisible(),true);
+   // The public homepage is shown first: no launch advertisement and no old welcome screen.
+   assert.equal(await page.locator('#hsMobileSplash, #mobileWelcome').count(),0,'no pre-login loading or welcome screen');
+   assert.equal(await page.locator('#publicHome').isVisible(),true,'public homepage visible immediately');
    await shot('01-real-home');
-   await page.locator('#mobileWelcome .mobileWelcomeLogin').click();
+   if(width>=1000){
+    // A wide screen forced into the phone layout keeps that choice for sign-in.
+    await page.goto('https://dominiksolorz.github.io/kamera/panel.html?auth=login&layout=manual&ui=phone',{waitUntil:'networkidle'});
+   }else{
+    const siteMenu=page.locator('.mktMobileMenu summary');
+    if(await siteMenu.isVisible())await siteMenu.click();
+    await page.locator('a.mktLogin:visible').first().click();
+   }
    await page.locator('#loginForm input[name=email]').fill(user.email);
    await page.locator('#loginForm input[name=password]').fill('fixture-password');
    await shot('02-real-login');

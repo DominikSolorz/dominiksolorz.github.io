@@ -33,12 +33,12 @@ test('the setup checklist actually responds to four user choices without trackin
 
 test('public topic pages preserve honest sales and concept disclosures',async()=>{
  const home=await read('design/marketing/home.html');
- const details=(await Promise.all(['przygotowanie','stan-projektu','pytania','prezentacja'].map(n=>read('kamera/'+n+'.html')))).join('\n');
- for(const part of ['id="przygotowanie"','Ile kosztuje HOME SECURITY?','nie jest zakupem','publicznego cennika','Wydanie rozwojowe','nie są rzeczywiste zrzuty ekranu']){
+ const details=(await Promise.all(['przygotowanie','stan-projektu','pytania'].map(n=>read('kamera/'+n+'.html')))).join('\n');
+ for(const part of ['id="przygotowanie"','Ile kosztuje HOME SECURITY?','nie jest zakupem','publicznego cennika','Wydanie rozwojowe']){
   assert.ok((home+details).includes(part),'missing explicit disclosure: '+part);
  }
  assert.equal((details.match(/data-mkt-setup/g)||[]).length,4);
- assert.ok(details.includes('marketing-start.css?v=3'));
+ assert.ok(details.includes('marketing-start.css?v=4'));
  assert.ok(details.includes('marketing-start.mjs?v=2'));
  assert.ok(!home.includes('Kup teraz'));
  assert.ok(!home.includes('Zapłać teraz'));
@@ -54,7 +54,7 @@ test('marketing guided checklist is responsive and safely cached with the new re
  assert.ok(css.includes('@media(max-width:670px)'));
  assert.ok(css.includes('@media(prefers-reduced-motion:reduce)'));
  assert.ok(css.includes('mktSetupItem:focus-within'));
- assert.ok(sw.includes('./marketing-start.css?v=3'));
+ assert.ok(sw.includes('./marketing-start.css?v=4'));
  assert.ok(sw.includes('./marketing-start.mjs?v=2'));
  const release=JSON.parse(version).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];

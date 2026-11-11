@@ -20,10 +20,8 @@ test('public LCP hero uses responsive WebP candidates with original fallback and
  assert.ok(brochure.includes(source.trimEnd()));
 });
 
-test('gallery uses the eight requested full-resolution URLs while presentation retains lightweight previews',async()=>{
- const [home,gallery,full]=await Promise.all([
-  read('design/marketing/prezentacja.html'),read('design/marketing/gallery.html'),read('kamera/galeria.html')]);
- assert.equal((home.match(/-960\.webp 960w/g)||[]).length,4);
+test('gallery uses the eight requested full-resolution URLs',async()=>{
+ const [gallery,full]=await Promise.all([read('design/marketing/gallery.html'),read('kamera/galeria.html')]);
  const {galleryBoards}=await import('../kamera/gallery-catalog.mjs');
  assert.equal(galleryBoards.length,8);
  for(const board of galleryBoards){
@@ -33,7 +31,7 @@ test('gallery uses the eight requested full-resolution URLs while presentation r
  }
  assert.equal((gallery.match(/<figure /g)||[]).length,8);
  assert.ok(full.includes(gallery.trimEnd()));
- for(const x of [home,gallery]){
+ for(const x of [gallery]){
   for(const [,url] of x.matchAll(/href="(\.\.\/docs\/ui-193\/[^"]+\.png)" data-mkt-image-view/g)){
    assert.ok((await stat(new URL('../kamera/'+url,import.meta.url))).size>100_000);
   }

@@ -5,8 +5,8 @@ import {panelStylesheet,panelSection} from './helpers/panel-css.mjs';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 test('public site remains dark regardless of Android/iOS light preference',async()=>{
   const css=await read('kamera/marketing.css');
-  assert.match(css,/--m-bg:#0a0e1a/);
-  assert.match(css,/--m-blue:#6366f1/);
+  assert.match(css,/--m-bg:#141313/);
+  assert.match(css,/--m-blue:#ef4d5d/);
   assert.doesNotMatch(css,/@media\s*\(prefers-color-scheme:\s*light\)/,'system light theme must not switch only marketing to white');
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/,'retain reduced motion support');
 });

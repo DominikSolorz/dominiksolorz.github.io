@@ -4,7 +4,7 @@
   --mkt-gold:#f4ce8b;
 }
 .mktHeader{transition:background-color .26s ease,box-shadow .26s ease,border-color .26s ease}
-.mktHeader.mktIsScrolled{background:rgba(9,11,17,.975);box-shadow:0 14px 34px rgba(0,0,0,.3);border-bottom-color:rgba(244,206,139,.27)}
+.mktHeader.mktIsScrolled{background:rgba(15,14,14,.975);box-shadow:0 14px 34px rgba(0,0,0,.3);border-bottom-color:rgba(244,206,139,.27)}
 .mktHeader:after{content:"";pointer-events:none;position:absolute;left:0;right:0;bottom:-1px;height:2px;z-index:1;background:linear-gradient(90deg,#f4ce8b,#f05a73);transform:scaleX(var(--mkt-scroll-progress,0));transform-origin:left center;will-change:transform}
 .mktHeader nav a{position:relative;transition:color .2s ease}
 .mktHeader nav a:after{content:"";position:absolute;left:2px;right:2px;bottom:2px;height:2px;border-radius:2px;background:var(--mkt-gold);transform:scaleX(0);transform-origin:left;transition:transform .3s var(--mkt-ease);pointer-events:none}
@@ -84,7 +84,7 @@
 }
 .marketingPage .mktContactForm :is(input:not([type="checkbox"]),select,textarea):hover{border-color:#736578}
 .marketingPage .mktContactForm :is(input:not([type="checkbox"]),select,textarea):focus-visible{
-  outline:3px solid rgba(244,206,139,.3);outline-offset:1px;border-color:#f4ce8b;background:#171923;
+  outline:3px solid rgba(244,206,139,.3);outline-offset:1px;border-color:#f4ce8b;background:#1f1d1d;
   box-shadow:0 0 0 3px rgba(244,206,139,.08)
 }
 .marketingPage .mktContactForm :is(input,textarea):user-invalid{border-color:#dc7182}

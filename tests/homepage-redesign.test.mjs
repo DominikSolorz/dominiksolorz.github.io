@@ -5,14 +5,15 @@ import {readFile} from 'node:fs/promises';
 const read=async path=>(await readFile(new URL('../'+path,import.meta.url),'utf8')).replaceAll('\r\n','\n');
 
 test('public topic pages explain real use cases and privacy responsibilities without fictitious footage',async()=>{
- const names=['jak-dziala','mozliwosci','przygotowanie','wymagania','stan-projektu','prezentacja','pytania'];
+ const names=['jak-dziala','mozliwosci','przygotowanie','wymagania','stan-projektu','pytania'];
  const home=(await Promise.all(['design/marketing/home.html',...names.map(n=>'design/marketing/'+n+'.html')].map(read))).join('\n');
  const brochure=(await Promise.all(names.map(n=>read('kamera/'+n+'.html')))).join('\n');
  for(const html of [home,brochure]){
-  for(const id of ['zobacz-panel','w-praktyce','zastosowania','prywatnosc','jak-dziala','specyfikacja','stan-projektu','wybierz-start','faq','asystent'])
+  for(const id of ['w-praktyce','zastosowania','prywatnosc','jak-dziala','specyfikacja','stan-projektu','wybierz-start','faq','asystent'])
    assert.ok(html.includes('id="'+id+'"'),id);
-  for(const text of ['miniatury są schematami','SCHEMAT','folderu','Wydanie rozwojowe','nadajnika','nie transmisja z kamery'])
+  for(const text of ['miniatury są schematami','SCHEMAT','folderu','Wydanie rozwojowe','nadajnika'])
    assert.ok(html.includes(text),text);
+  assert.ok(html.includes('nie jest rzeczywisty obraz')||html.includes('schematami'),'previews are labelled as illustrations');
   assert.ok(!html.includes('Kup teraz'),'website has no checkout');
   assert.ok(!html.includes('Odtwórz film'),'no fake video links');
  }
@@ -26,7 +27,7 @@ test('new homepage conversion actions point to actual account and contact paths'
  const home=await read('design/marketing/home.html');
  assert.ok(home.includes('href="panel.html?auth=register"'));
  assert.ok(home.includes('href="kontakt.html?temat=produkt"'));
- assert.ok(home.includes('href="prezentacja.html"'));
+ assert.ok(!home.includes('href="prezentacja.html"'),'outdated presentation page was removed');
  assert.ok((await read('design/marketing/pytania.html')).includes('data-hs-open-support'));
  assert.ok(home.includes('polityka-prywatnosci.html'));
  assert.ok(home.includes('rodo.html'));

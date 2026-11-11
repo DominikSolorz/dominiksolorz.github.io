@@ -14,7 +14,7 @@
   // Autoryzacja, odbiorcy i linki do nagran nadal wymagaja panel.html.
   if (params.get("app") === "mobile-home" && !privateLink && !native) return;
   if (!privateLink && !native) {
-    const topics={"mozliwosci":"mozliwosci.html","jak-dziala":"jak-dziala.html","specyfikacja":"wymagania.html","stan-projektu":"stan-projektu.html","przygotowanie":"przygotowanie.html","zobacz-panel":"prezentacja.html","galeria":"galeria.html","faq":"pytania.html","asystent":"pytania.html","w-praktyce":"jak-dziala.html","zastosowania":"mozliwosci.html","prywatnosc":"jak-dziala.html"};
+    const topics={"mozliwosci":"mozliwosci.html","jak-dziala":"jak-dziala.html","specyfikacja":"wymagania.html","stan-projektu":"stan-projektu.html","przygotowanie":"przygotowanie.html","zobacz-panel":"mozliwosci.html","galeria":"galeria.html","faq":"pytania.html","asystent":"pytania.html","w-praktyce":"jak-dziala.html","zastosowania":"mozliwosci.html","prywatnosc":"jak-dziala.html"};
     const topic=topics[location.hash.slice(1)];
     if(topic){const destination=new URL(topic,location.href);destination.search=location.search;location.replace(destination.href);return;}
     // Full public content is already in this HTML. Never redirect to a stale mirror.

@@ -11,8 +11,7 @@ test('public introduction stays identical in the app and indexed landing page',a
   const slot=/<(?:section|div)(?: role="group")? id="publicHome"[\s\S]*?<\/(?:section|div)>(?=\s*<section id="authDialog")/;
   assert.equal(index.match(slot)?.[0],home.trimEnd());
   assert.ok(brochure.includes(home.trimEnd()));
-  for(const [id,file] of Object.entries({'zobacz-panel':'prezentacja',mozliwosci:'mozliwosci','wybierz-start':'stan-projektu',asystent:'pytania',faq:'pytania'})){assert.ok(!home.includes('id="'+id+'"'),id);assert.ok((await read('kamera/'+file+'.html')).includes('id="'+id+'"'),file);}
-  assert.ok((await read('kamera/prezentacja.html')).includes('WIZUALIZACJA INTERFEJSU'));
+  for(const [id,file] of Object.entries({mozliwosci:'mozliwosci','wybierz-start':'stan-projektu',asystent:'pytania',faq:'pytania'})){assert.ok(!home.includes('id="'+id+'"'),id);assert.ok((await read('kamera/'+file+'.html')).includes('id="'+id+'"'),file);}
 });
 
 test('honest sign-up, offer and assistant actions have actual destinations',async()=>{

@@ -26,9 +26,10 @@ test('legacy auth, receiver and OAuth returns preserve their full query and frag
  // Untrusted return destinations are never used for navigation.
  assert.equal(new URL(redirect('/kamera/?auth=login&redirect=https://example.org')).origin,'https://dominiksolorz.github.io');
 });
-test('native, installed and pending entry launches retain the private panel',()=>{
- for(const options of [{native:true},{installed:true},{pending:true}])
-  assert.equal(redirect('/kamera/?ui=phone',options),'https://dominiksolorz.github.io/kamera/panel.html?ui=phone');
+test('only the Windows program opens the private panel from the homepage address',()=>{
+ assert.equal(redirect('/kamera/?ui=phone',{native:true}),'https://dominiksolorz.github.io/kamera/panel.html?ui=phone');
+ // Installed PWA and an unfinished sign-in show the public homepage first (logo returns home).
+ for(const options of [{installed:true},{pending:true}])assert.equal(redirect('/kamera/?ui=phone',options),undefined);
 });
 test('homepage HTML is indexable without JavaScript and contains no private account or camera runtime',async()=>{
  const html=await read('kamera/index.html');
@@ -42,7 +43,7 @@ test('homepage HTML is indexable without JavaScript and contains no private acco
 test('sitemap contains only unique indexable canonical pages, never panel, query aliases or drafts',async()=>{
  const sitemap=await read('kamera/sitemap.xml');
  const urls=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match=>match[1]);
- assert.equal(urls.length,17);assert.equal(new Set(urls).size,urls.length);
+ assert.equal(urls.length,16);assert.equal(new Set(urls).size,urls.length);
  for(const href of urls){
   const url=new URL(href);assert.equal(url.origin,'https://dominiksolorz.github.io');assert.equal(url.search,'');
   const path=url.pathname.endsWith('/')?url.pathname+'index.html':url.pathname;

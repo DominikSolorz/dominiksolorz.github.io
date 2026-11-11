@@ -9,7 +9,7 @@ Header, phone disclosure and footer must use page URLs rather than homepage sect
 - `wymagania.html`: hardware, network, storage and Windows download.
 - `przygotowanie.html`: configuration checklist.
 - `stan-projektu.html`: availability and development limitations.
-- `prezentacja.html`: illustrative panel preview, clearly labelled as concepts.
+- `prezentacja.html` was removed (2026-11-11): its outdated screenshots did not match the current panel.
 - `galeria.html`: full collection of UI concepts.
 - `pobierz.html`: installation choices; Windows version comes from the release manifest.
 - `blog/index.html` and article URLs: guides and first launch.

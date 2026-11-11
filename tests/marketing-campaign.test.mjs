@@ -27,8 +27,8 @@ test('campaign stylesheet is loaded only by public landing pages and scoped away
     read('scripts/build-marketing.mjs'),read('kamera/panel.html'),
     read('kamera/index.html'),read('kamera/o-systemie.html'),read('kamera/marketing-campaign.css')
   ]);
-  for(const page of [panel,index,brochure])assert.ok(page.includes('marketing-campaign.css?v=1'));
-  assert.ok(build.includes('marketing-campaign.css?v=1'));
+  for(const page of [panel,index,brochure])assert.ok(page.includes('marketing-campaign.css?v=2'));
+  assert.ok(build.includes('marketing-campaign.css?v=2'));
   assert.match(css,/#publicHome\.mktSite \.hsCampaign/);
   assert.doesNotMatch(css,/#app\b|#stage\b/);
   assert.match(css,/@media\(max-width:560px\)/);
