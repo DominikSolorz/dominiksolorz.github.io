@@ -43,7 +43,7 @@ if (desktopRequested) {
   shell.className = "desktopSidebar";
   shell.setAttribute("aria-label", "Nawigacja HOME SECURITY Desktop");
   shell.innerHTML = `
-    <div class="desktopBrand"><img class="dsPanelLogo" src="assets/ds-shield.svg" width="88" height="110" alt="Logo DS"><span><b>HOME SECURITY</b><small>MONITORING · OCHRONA · KONTROLA</small></span><button id="desktopCollapse" type="button" aria-label="Rozwiń menu">›</button></div>
+    <div class="desktopBrand"><img class="dsPanelLogo" src="assets/ds-shield.svg" width="88" height="110" alt="Logo DS"><span><b>HOME <em>SECURITY</em></b><small>System Monitoringu Domowego</small></span><button id="desktopCollapse" type="button" aria-label="Rozwiń menu">›</button></div>
     <div class="desktopDevice"><span id="desktopLiveDot" class="desktopDot"></span><span><b id="desktopLiveState">Sprawdzam połączenie</b><small id="desktopLiveDetail">—</small></span></div>
     <nav class="desktopNav" aria-label="Moduły monitoringu">
       <button class="active" type="button" data-desktop-view="live"><i>▦</i><span><b>Pulpit</b><small>podgląd na żywo</small></span><kbd>1</kbd></button>
@@ -317,14 +317,14 @@ if (desktopRequested) {
       <div><h2>Ustawienia kamery</h2><p>Dostosuj obraz, dźwięk, nagrywanie i dostęp do wybranej kamery.</p></div>
     </header>
     <nav class="desktopSettingsTabs" aria-label="Kategorie ustawień kamery">
-      <button type="button" data-settings-group="picture">▣ <span>Obraz</span></button>
-      <button type="button" data-settings-group="sound">⌁ <span>Dźwięk</span></button>
-      <button type="button" data-settings-group="quality">HD <span>Jakość</span></button>
-      <button type="button" data-settings-group="recording">◉ <span>Nagrywanie</span></button>
-      <button type="button" data-settings-group="detection">◌ <span>Detekcja</span></button>
-      <button type="button" data-settings-group="devices">▤ <span>Urządzenia</span></button>
-      <button type="button" data-settings-group="access">▢ <span>Dostęp</span></button>
-      <button type="button" data-settings-group="application">▦ <span>Aplikacja</span></button>
+      <button type="button" data-settings-group="picture">${ICONS.camera}<span><b>Obraz</b><small>Kontrast, kolory, ostrość</small></span></button>
+      <button type="button" data-settings-group="sound">${ICONS.sound}<span><b>Dźwięk</b><small>Mikrofon i odsłuch</small></span></button>
+      <button type="button" data-settings-group="quality">${ICONS.record}<span><b>Jakość</b><small>Rozdzielczość nagrań</small></span></button>
+      <button type="button" data-settings-group="recording">${ICONS.list}<span><b>Nagrywanie</b><small>Zapis i harmonogram</small></span></button>
+      <button type="button" data-settings-group="detection">${ICONS.motion}<span><b>Detekcja</b><small>Ruch i dźwięk</small></span></button>
+      <button type="button" data-settings-group="devices">${ICONS.gear}<span><b>Urządzenia</b><small>Kamery i mikrofony</small></span></button>
+      <button type="button" data-settings-group="access">${ICONS.shield}<span><b>Dostęp</b><small>PIN i link odbiorcy</small></span></button>
+      <button type="button" data-settings-group="application">${ICONS.home}<span><b>Aplikacja</b><small>Autostart i wygląd</small></span></button>
     </nav>
     <div class="desktopSettingsGrid">
       <section class="desktopSettingsControls" aria-label="Parametry wybranej kategorii"></section>
@@ -501,11 +501,11 @@ if (desktopRequested) {
     if (view === "live") $("dvrCard").hidden = false;
     if (view === "archive" && $("dvrCard")?.parentElement !== main) main?.prepend($("dvrCard"));
     const labels = {
-      live: ["Pulpit", "Monitoring domu", "Twój system monitoringu i ochrony domu."],
+      live: ["Pulpit", "Monitoring domu", "Twój inteligentny system monitoringu i ochrony domu."],
       controls: ["Kamery", "Kamery i sterowanie", "Wybór kamery, tryb pracy, start i zatrzymanie zapisu."],
       events: ["Zdarzenia", "Zdarzenia", "Wykrycia ruchu i dźwięku. Transmisja i zapis działają dalej."],
       archive: ["Archiwum", "Nagrania DVR", "Odtwarzanie zapisanych nagrań i miejsce zapisu."],
-      settings: ["Ustawienia", "Ustawienia kamery", "Obraz, dźwięk, nagrywanie, wykrywanie i dostęp."],
+      settings: ["Ustawienia", "Ustawienia", "Konfiguracja kamery, nagrań, wykrywania i dostępu."],
       diagnostics: ["Diagnostyka", "Stan systemu", "Stan kamery, zapisu, połączenia i dziennik zdarzeń."]
     };
     const label = labels[view] || labels.live;
