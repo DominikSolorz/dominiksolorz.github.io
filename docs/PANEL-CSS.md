@@ -5,7 +5,7 @@
 | Co | Plik | Uwagi |
 | --- | --- | --- |
 | Prywatny panel po zalogowaniu, PIN, kamera, nagrania, ustawienia, telefon/PWA i program Windows | `kamera/panel.css` | **Jedyny** arkusz panelu. Ładowany przez `<template id="panelStyles">` w `kamera/panel.html` (wstrzykuje go `kamera/panel-entry.mjs`). Windows pakuje cały `kamera/` (`desktop-client/HomeSecurityDesktop.csproj`), więc używa tego samego pliku. |
-| Publiczna strona startowa w `panel.html` i podstrony | `kamera/marketing*.css`, `kamera/tech-theme.css`, `kamera/mobile-home.css`, `kamera/mobile-app-splash.css` | Osobny system strony publicznej; generator `scripts/build-marketing.mjs`. Nie dokładaj tu stylów panelu. |
+| Publiczna strona startowa w `panel.html` i podstrony | `kamera/marketing*.css`, `kamera/tech-theme.css` | Osobny system strony publicznej; generator `scripts/build-marketing.mjs`. Nie dokładaj tu stylów panelu. |
 | Dokumenty prawne i `nagrania.html` | `kamera/style.css`, `kamera/workspace-ui.css`, `kamera/legal-premium.css` | `style.css` i `workspace-ui.css` zostały, bo korzystają z nich dokumenty (`scripts/build-documents.mjs`) i `nagrania.html`. Panel ich **nie** ładuje — ich treść jest w sekcjach 01–02 `panel.css`. |
 
 `kamera/panel.css` jest podzielony na 19 sekcji w kolejności kaskady. Każdy nagłówek ma opis i nazwę dawnego pliku, np. `SEKCJA 17: Układ operatora na komputerze (dawniej operator-layout.css)`:
