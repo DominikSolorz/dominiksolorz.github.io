@@ -11,6 +11,10 @@ const workerSource=await readFile(new URL('../kamera/sw.js',import.meta.url),'ut
 const currentUpdateModule=publicSource.match(/marketing-auto-update\.mjs\?v=\d+/)?.[0];
 const currentSW=workerSource.match(/kamera-domowa-shell-v(\d+)/)?.[1];
 const currentMarketingCSS=publicSource.match(/marketing\.css\?v=\d+/)?.[0];
+const homeSource=await readFile(new URL('../kamera/index.html',import.meta.url),'utf8');
+const currentEntry=homeSource.match(/public-entry\.js\?v=\d+/)?.[0];
+const currentSplashCSS=homeSource.match(/mobile-app-splash\.css\?v=\d+/)?.[0];
+assert.ok(currentEntry&&currentSplashCSS,'Cannot derive public entry and splash stylesheet revisions');
 // The single private-panel stylesheet: the live panel.html must reference this exact revision.
 const panelSource=await readFile(new URL('../kamera/panel.html',import.meta.url),'utf8');
 const currentPanelCSS=panelSource.match(/<template id="panelStyles">[\s\S]*?href="(panel\.css\?v=\d+)"/)?.[1];
@@ -61,13 +65,13 @@ const checks=[
 const assets=[
  'marketing-start.css?v=3','marketing-start.mjs?v=2',
  'marketing-auto-update.css?v=2',currentUpdateModule,
- 'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=4','public-entry.js?v=8',
+ 'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=4',currentEntry,
  'marketing-gallery.css?v=3','marketing-gallery.mjs?v=2',
  currentPanelCSS,
  'marketing-motion.css?v=2',currentMarketingCSS,'marketing-navigation.css?v=1','marketing-navigation.mjs?v=1',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
  'assets/home-security-hero-640.webp','assets/home-security-hero.webp','assets/home-security-how-it-works-640.webp','assets/ds-logo-96.webp','assets/ds-logo-192.webp','../docs/ui-193/01-pulpit-480.webp','../docs/ui-193/01-pulpit-640.webp','../docs/ui-193/01-pulpit-720.webp','../docs/ui-193/01-pulpit-960.webp',
- 'assets/home-security-hero.png','assets/home-security-loading.webp','assets/home-security-ad-02.webp','assets/home-security-ad-03.webp','mobile-app-splash.js?v=3','mobile-app-splash.css?v=3','downloads/HOME-SECURITY-Desktop-Setup-'+expectedDesktop.version+'.exe'
+ 'assets/home-security-hero.png','assets/home-security-loading.webp','assets/home-security-ad-02.webp','assets/home-security-ad-03.webp','mobile-app-splash.js?v=3',currentSplashCSS,'downloads/HOME-SECURITY-Desktop-Setup-'+expectedDesktop.version+'.exe'
 ];
 
 let tries=0;
@@ -98,7 +102,7 @@ for(const [path,tokens] of checks){
   console.log('OK document '+path);
 }
 // Reject the original cause of invisible releases: redirect to an outdated public mirror.
-const entryScript=await get('public-entry.js?v=8');
+const entryScript=await get(currentEntry);
 assert.ok(!entryScript.includes('home-security-dominik-solorz.vercel.app'),'The public entry must not redirect to stale Vercel');
 assert.ok(entryScript.includes('panel.html')&&entryScript.includes('location.replace'), 'Private panel routing must remain in the deployed minified bridge');
 const publicHTML=await get('index.html');

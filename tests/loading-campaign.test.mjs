@@ -17,7 +17,7 @@ test('commercial WebP belongs to the public mobile intro, not the account/PIN pa
  assert.ok(!names.some(name=>name.includes('loading-campaign.css')),'do not show advertising after sign in');
  assert.ok(!sw.includes('./loading-campaign.css?v=1'),'do not precache obsolete private-page banner CSS');
  assert.ok(home.includes('id="hsMobileSplash"'),'public mobile introduction remains available');
- assert.ok(home.includes('30000'),'public mobile advertising lasts 30 seconds');
+ assert.ok(!home.includes('hsMobileLaunch")'),'no timed advertising before the homepage on phones');
  for(const id of ['boot','bootText','bootProgress','bootCountdown','bootStep','bootRetry','lock','app','authDialog','ctrlStart','ctrlStop','video'])
   assert.ok(panel.includes('id="'+id+'"'),'security element retained: '+id);
 });
