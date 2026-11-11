@@ -889,7 +889,7 @@ body.archiveOpen{overflow:hidden}
   .desktopMode .desktopNav{padding-top:8px}.desktopMode .desktopNav button{grid-template-columns:27px minmax(0,1fr);gap:10px}.desktopMode .desktopNav i{color:var(--hl20,#e6e5e5)}.desktopMode .desktopNav b{font-size:13px;font-weight:650}.desktopMode .desktopNav small,.desktopMode .desktopNav kbd{display:none}
   .desktopMode .desktopSidebarFoot{padding:18px}.desktopMode .desktopSidebarFoot span{display:none}.desktopMode .desktopSidebarFoot a{color:var(--hl14,#ee4f59);font-size:11px}
   .desktopMode main{margin-left:var(--desktop-sidebar);padding:66px 14px 24px;background:radial-gradient(1000px 560px at 40% -20%,var(--hl195,rgba(106,100,100,0.15)),transparent 66%),var(--hl119,#111010)}.desktopMode .desktopContext{display:none}
-  .desktopMode .desktopOverview{max-width:1450px;margin:0 auto}.desktopMode .desktopCameraTile{border:1px solid #393535;border-radius:7px;background:#0b0a0a;box-shadow:0 12px 34px rgba(0,0,0,.28)}
+  .desktopMode .desktopOverview{max-width:none;margin:0 auto}.desktopMode .desktopCameraTile{border:1px solid #393535;border-radius:7px;background:#0b0a0a;box-shadow:0 12px 34px rgba(0,0,0,.28)}
   .desktopMode .desktopCameraLive>.stage::before{inset:0;border:0;background:linear-gradient(180deg,rgba(9,9,9,0.34),transparent 26%,transparent 74%,rgba(9,9,9,0.48))}.desktopMode .desktopCameraLive .monitorClock{top:13px;right:14px;padding:0;background:transparent;text-shadow:0 2px 6px #000}.desktopMode .desktopCameraLive .monitorClock .evidenceLabel{display:none}.desktopMode .desktopCameraLive .monitorClock strong{font-size:14px}
   .desktopMode .desktopTileMeta{z-index:30;top:12px;left:13px;display:grid;grid-template-columns:auto 1fr;grid-template-areas:"title source" "live live";gap:5px 10px;pointer-events:none;text-shadow:0 2px 7px var(--hl53,#000)}.desktopMode .desktopTileMeta strong{grid-area:title}.desktopMode .desktopCameraSource{grid-area:source;color:var(--hl20,#e6e5e5);font-size:11px}.desktopMode .desktopLivePill{grid-area:live;justify-self:start;padding:5px 9px;border-radius:4px;background:#df3646;border-color:#ff6e78;font-size:10px;box-shadow:0 4px 10px rgba(120,5,18,.4)}
   .desktopMode .desktopCameraLive .zoomHud,.desktopMode .desktopCameraLive .zoomBar{right:14px;bottom:12px}.desktopMode .desktopCameraLive .audioHud{right:170px;bottom:13px;border-radius:5px}.desktopMode .desktopCameraLive .audioListenBtn{border-radius:5px}.desktopMode .desktopCameraLive .audioVolume{border-radius:5px}
@@ -2293,7 +2293,7 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) .mobileRecordingStorag
 .cameraWorkspaceGrid{display:grid;grid-template-columns:repeat(var(--camera-columns,1),minmax(0,1fr));gap:12px;padding:14px;align-items:stretch;min-width:0}
 .cameraWorkspaceGrid>[hidden]{display:none!important}
 .cameraWorkspaceGrid .desktopCameraLive{height:auto!important;min-height:310px;aspect-ratio:16/10;border:1px solid #383535!important;border-radius:8px!important;background:#080707!important;box-shadow:none!important}
-.cameraWorkspaceGrid .desktopCameraLive #stage{height:100%!important;min-height:min(440px,52vh)!important;border:0!important;border-radius:0!important}
+.cameraWorkspaceGrid .desktopCameraLive #stage{height:100%!important;min-height:min(330px,36vh)!important;border:0!important;border-radius:0!important}
 .cameraWorkspaceGrid>.desktopCameraLive{width:100%!important;max-width:100%!important;min-width:0!important;min-height:0!important;aspect-ratio:auto!important;display:flex!important;flex-direction:column;align-self:stretch}
 .cameraWorkspaceGrid>.desktopCameraLive>.desktopTileMeta{position:static!important;display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:11px 13px!important;min-height:52px;box-sizing:border-box;background:#181717!important;flex-shrink:0;text-shadow:none}
 .cameraWorkspaceGrid>.desktopCameraLive>.stage{position:relative!important;inset:auto!important;flex:1;min-width:0!important;min-height:210px!important;max-width:100%!important;height:auto!important;aspect-ratio:auto!important;background:#060707!important}
@@ -4346,18 +4346,23 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand b{font:
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand small{display:block;margin-top:3px;font:500 10.5px/1.2 var(--hs-font);white-space:nowrap;letter-spacing:0;text-transform:none;color:var(--hs-muted)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopDevice{display:none!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav{gap:6px!important;padding:10px 14px!important}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button{min-height:50px!important;padding:0 16px!important;border-radius:8px!important;border:1px solid transparent!important;background:transparent!important;color:var(--hl20,#e6e5e5)!important;gap:14px!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button{min-height:44px!important;padding:0 16px!important;border-radius:8px!important;border:1px solid transparent!important;background:transparent!important;color:var(--hl20,#e6e5e5)!important;gap:14px!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button b{font:600 15.5px/1.2 var(--hs-font)!important;color:inherit!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button small,html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button kbd{display:none!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button i svg{width:22px;height:22px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button:hover:not(.active){background:rgba(236,68,79,0.07)!important;color:var(--hl3,#fff)!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button.active{background:linear-gradient(135deg,#e5182b,#a50d1c)!important;border-color:#ff4d5e!important;color:#fff!important;box-shadow:inset 3px 0 0 #ff4d5e,0 12px 28px -12px rgba(229,24,43,.85)!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopCapabilities{display:none!important}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus{margin:auto 14px 18px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;min-height:210px;gap:10px;padding:16px;border-radius:12px;border:1px solid var(--hl649,rgba(52,211,153,.35));background:linear-gradient(135deg,var(--hl650,rgba(16,80,60,.45)),var(--hl651,rgba(17,16,16,0.6)));color:var(--hl652,#eafff6);cursor:pointer;position:relative;overflow:hidden;padding-top:128px}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus::before{content:"";position:absolute;inset:0 0 auto 0;height:150px;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.55)),url(assets/site-hero-dom.webp) 16% 40%/cover no-repeat}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus{margin:auto 14px 18px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;min-height:150px;gap:6px;padding:12px;border-radius:12px;border:1px solid var(--hl649,rgba(52,211,153,.35));background:linear-gradient(135deg,var(--hl650,rgba(16,80,60,.45)),var(--hl651,rgba(17,16,16,0.6)));color:var(--hl652,#eafff6);cursor:pointer;position:relative;overflow:hidden;padding-top:104px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus::before{content:"";position:absolute;inset:0 0 auto 0;height:118px;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.55)),url(assets/site-hero-dom.webp) 16% 40%/cover no-repeat}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus>*{position:relative}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus::before{filter:hue-rotate(155deg) saturate(1.6) brightness(.9)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav .profileNavEntry{display:none!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav .hsNavBadge{display:grid;place-items:center;min-width:24px;height:24px;margin-left:auto;padding:0 7px;border-radius:999px;background:#e5182b;color:#fff;font:800 12.5px var(--hs-font);font-style:normal;box-shadow:0 0 12px rgba(229,24,43,.6)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav .hsNavBadge[hidden]{display:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav .hsNavSep{height:1px;margin:10px 6px;border:0;background:var(--hs-line2)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav .hsNavLink i svg{width:22px;height:22px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSidebar>.mobileMapCard{display:none!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button{font-size:16px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsHeadActions{order:4;margin-left:0;gap:10px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsHeadActions .hsStatusPill{display:none}
@@ -4372,6 +4377,26 @@ html.desktopMode body #app .hsActivityChart{display:block;width:100%;height:96px
 html.desktopMode body #app .hsActivityChart .hsActArea{fill:rgba(229,24,43,.22)}
 html.desktopMode body #app .hsActivityChart .hsActLine{fill:none;stroke:#ef3340;stroke-width:2.2;stroke-linejoin:round}
 html.desktopMode body #app .hsActivityAxis{display:flex;justify-content:space-between;margin-top:6px;font:600 11.5px var(--hs-font);color:var(--hs-muted)}
+html.desktopMode body #app .hsBottomRow>.hsCard{min-width:0}
+html.desktopMode body #app .hsBottomRow .hsQuickGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+html.desktopMode body #app .hsBottomRow .hsQuick{min-height:84px;padding:12px 4px}
+html.desktopMode body #app .hsBottomRow .hsQuick b{font-size:12.5px;white-space:nowrap}
+html.desktopMode body #app .hsStat[data-stat="storage"] b{font-size:19px}
+html.desktopMode body #app .hsCardHead h2{white-space:nowrap}
+html.desktopMode body #app .hsCardHead .hsLink{white-space:nowrap}
+html.desktopMode body #app .hsBars{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:16px}
+html.desktopMode body #app .hsBars li{display:grid;grid-template-columns:86px minmax(0,1fr) 78px;align-items:center;gap:12px;font:600 14px var(--hs-font);color:var(--hs-text)}
+html.desktopMode body #app .hsBars li>i{position:relative;height:8px;border-radius:999px;background:var(--hs-line2);overflow:hidden}
+html.desktopMode body #app .hsBars li>i>i{position:absolute;inset:0 auto 0 0;width:0;border-radius:999px;background:linear-gradient(90deg,#a50d1c,#ef3340);box-shadow:0 0 12px rgba(239,51,64,.55);transition:width .4s}
+html.desktopMode body #app .hsBars li b{text-align:right;font:700 13.5px var(--hs-font);color:var(--hs-text)}
+html.desktopMode body #app .hsStatBar{display:block;height:6px;margin:6px 0 2px;border-radius:999px;background:var(--hs-line2);overflow:hidden}
+html.desktopMode body #app .hsStatBar>i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#a50d1c,#ef3340)}
+html.desktopMode body #app .hsSideCol>.hsEventsCard{min-height:0}
+html.desktopMode body #app .cameraWorkspaceActions select{display:none!important}
+html.desktopMode body #app .hsGridBtns{display:flex;gap:8px}
+html.desktopMode body #app .hsGridBtns button{display:grid;place-items:center;width:44px;height:40px;border-radius:10px;border:1px solid var(--hs-line2);background:var(--hs-panel);color:var(--hs-text);cursor:pointer}
+html.desktopMode body #app .hsGridBtns button[aria-pressed="true"]{background:linear-gradient(135deg,#e5182b,#a50d1c);border-color:#ff4d5e;color:#fff}
+html.desktopMode body #app .hsGridBtns svg{width:20px;height:20px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus b{display:block;font:700 15px/1.25 var(--hs-font)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsSideStatus small{display:block;color:var(--hl653,#a6d9c5);margin-top:2px}
 /* Tarcza statusu — kolory wg prawdziwego stanu */
@@ -4399,9 +4424,10 @@ html.desktopMode body .hsRoundBtn{display:grid;place-items:center;width:50px;hei
 html.desktopMode body .hsRoundBtn svg{width:24px;height:24px}
 html.desktopMode body .hsRoundBtn:hover{border-color:var(--hl602,rgba(234,38,51,0.5));color:var(--hl3,#fff)}
 /* ---------- Układ pulpitu ---------- */
-html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview:not([hidden]){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(320px,30%)!important;grid-template-areas:"stats stats" "live side" "timeline side" "control side";gap:18px!important;align-items:start}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview:not([hidden]){display:grid!important;grid-template-columns:minmax(0,1fr) minmax(320px,30%)!important;grid-template-areas:"stats stats" "live side" "bottom bottom" "timeline timeline" "control control";gap:18px!important;align-items:stretch}
 html.desktopMode body #app .desktopOverview>.desktopLiveScene{grid-area:live;min-width:0}
-html.desktopMode body #app .desktopOverview>.hsSideCol{grid-area:side;min-width:0;display:grid;gap:18px;align-content:start}
+html.desktopMode body #app .desktopOverview>.hsSideCol{grid-area:side;min-width:0;display:grid;gap:18px;align-content:stretch;grid-template-rows:auto 1fr}
+html.desktopMode body #app .desktopOverview>.hsBottomRow{grid-area:bottom;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.1fr);gap:18px}
 html.desktopMode body #app .desktopOverview>.hsStats{grid-area:stats;min-width:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
 html.desktopMode body #app .desktopOverview>.desktopTimelineDock{grid-area:timeline;min-width:0}
 html.desktopMode body #app .desktopOverview>.desktopControlDock{grid-area:control;min-width:0}
@@ -4518,7 +4544,7 @@ html.desktopMode body #app .hsQuickCard .hsQuick{min-height:84px}
 html.desktopMode body #app .hsQuickGrid>.hsQuick:first-child{background:linear-gradient(135deg,#e5182b,#a50d1c);border-color:#ff4d5e;color:#fff}
 @media (max-width:1180px){html.desktopMode body #app .desktopOverview>.hsStats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:1360px){html.desktopMode body #app .hsStat{gap:10px;padding:12px}html.desktopMode body #app .hsStatIcon{width:42px;height:42px}html.desktopMode body #app .hsStat b{font-size:20px}html.desktopMode body #app .desktopContext h1{font-size:26px!important;white-space:nowrap}html.desktopMode body #app .hsClockCard small{display:none}html.desktopMode body #app :is(.hsClockCard,.hsRecCard){padding:8px 14px;gap:10px}html.desktopMode body #app .hsClockCard b{font-size:22px}}
-@media (max-width:1100px){html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview:not([hidden]){grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"stats" "live" "timeline" "control" "side"}}
+@media (max-width:1100px){html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopOverview:not([hidden]){grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"stats" "live" "side" "bottom" "timeline" "control"}html.desktopMode body #app .hsBottomRow{grid-template-columns:minmax(0,1fr)!important}}
 @media (max-width:860px){html.desktopMode body #app .desktopOverview>.hsStats{grid-template-columns:repeat(2,minmax(0,1fr))}html.desktopMode body .hsHeadActions .hsStatusPill b{display:none}}
 /* poprawki po zrzutach */
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopBrand b{font-size:17px!important;max-width:none!important;white-space:nowrap!important;word-break:keep-all;overflow-wrap:normal}
