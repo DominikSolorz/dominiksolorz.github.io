@@ -6,6 +6,7 @@ Stan orientacyjny z 7.11.2026: instalator Windows `1.4.58`, web/PWA `272`. Numer
 | --- | --- | --- | --- |
 | HOME SECURITY na Windows | `kamera/desktop-update.json` i `desktop-client/Program.cs` | `.github/workflows/desktop-scheduled-release.yml`, `scripts/desktop-release.mjs` | `kamera/pobierz.html`, `kamera/downloads/HOME-SECURITY-Desktop-Setup-<wersja>.exe` |
 | ZIP natywnej aktualizacji / rollback | `kamera/desktop-update.json` (`packageUrl`, `sha256`) | wyżej wskazany pipeline | `kamera/updates/HomeSecurityDesktop-<wersja>-win-x64.zip` |
+| Archiwum starszych paczek Windows (do 1.4.107) | wydanie GitHub `desktop-archive-2026-11-11` (`SHA256SUMS.txt`, `MANIFEST.tsv`) | jednorazowa kopia z `main` `e07b63c` | https://github.com/DominikSolorz/dominiksolorz.github.io/releases/tag/desktop-archive-2026-11-11 |
 | Prywatny panel + PWA na telefon | `kamera/version.json`; odpowiadające odniesienia w `kamera/panel.html`, `kamera/sw.js`, `kamera/app.js` | `.github/workflows/pages.yml` | https://dominiksolorz.github.io/kamera/panel.html |
 | Publiczne podstrony w GitHub Pages | `kamera/index.html`, generator `scripts/build-marketing.mjs` | `.github/workflows/pages.yml` | https://dominiksolorz.github.io/kamera/ |
 | Osobna kopia publicznej witryny Vercel | `hosting/public-site/release.json` | `hosting/public-site/vercel-build.mjs`, `vercel.json` | https://home-security-dominik-solorz.vercel.app |
@@ -15,7 +16,7 @@ Stan orientacyjny z 7.11.2026: instalator Windows `1.4.58`, web/PWA `272`. Numer
 1. `main` zawiera kod i wersje zatwierdzone w repozytorium. Nie każdy commit jest instalatorem użytkownika.
 2. Automatyczne tworzenie natywnego wydania i sprawdzanie dostępności przez zainstalowany program to dwie osobne rzeczy. Workflow może być uruchamiany cyklicznie, lecz Windows sprawdza manifest przy starcie, co 10 minut i po aktywacji okna.
 3. Użytkownik wybiera „Zaktualizuj”. Pakiet jest pobierany i sprawdzany (SHA-256), nagranie bezpiecznie domykane, instalator uruchamiany; program wznawia pracę po aktualizacji. Starszy program może wymagać jednorazowego ręcznego restartu po pierwszym przejściu.
-4. Nie kasuj nieużywanych na pierwszy rzut oka plików archiwalnych ZIP/EXE. Mogą być potrzebne do powrotu do poprzedniej wersji.
+4. W gałęzi zostają tylko: bieżący instalator i ZIP z `kamera/desktop-update.json` oraz paczka awaryjna `HomeSecurityDesktop-1.4.7-win-x64.zip` (kopiowana przez `pages.yml`). Starsze ZIP/EXE są w wydaniu `desktop-archive-2026-11-11` i w historii Git — nie usuwaj tego wydania.
 5. PWA i instalator mają różne numery. Aktualizacja plików PWA **nie dowodzi**, że na komputerze zainstalowano najnowszą wersję EXE.
 6. Vercel służy tylko publicznej prezentacji. Nie jest automatycznie takim samym wdrożeniem jak GitHub Pages; prywatne konta i kamery nie są kopiowane na Vercel.
 7. Po każdym wdrożeniu sprawdź faktyczny adres, wersję oraz testy CI; nie utożsamiaj stanu `merged` z `READY` ani instalacją fizyczną.

@@ -17,7 +17,7 @@ Jeśli użytkownik poda alias typu `HS-PANEL`, `HS-TELEFON` lub `HS-AKTUALIZATOR
 
 ## Ochrona działającego projektu
 - Nie zmieniaj nazw plików, katalogów, URL i głównej gałęzi tylko dla estetyki. Najpierw wyszukaj wszystkie importy, odnośniki, manifesty, service worker, instalator, testy i publikacje. Zaproponuj migrację ze zgodnością wsteczną.
-- Nie kasuj starych instalatorów ani pakietów ZIP: mogą być używane do aktualizacji lub rollbacku. Nie usuwaj branchy i historii bez potwierdzenia.
+- Nie kasuj bieżącego instalatora i paczki ZIP wskazanych w `kamera/desktop-update.json` ani paczki awaryjnej `kamera/updates/HomeSecurityDesktop-1.4.7-win-x64.zip` (wymaga jej `.github/workflows/pages.yml`). Starsze paczki (do 1.4.107) są zarchiwizowane w wydaniu GitHub `desktop-archive-2026-11-11` (sumy w `SHA256SUMS.txt`, ścieżki w `MANIFEST.tsv`) i w historii Git. Nie usuwaj wydań, branchy ani historii bez potwierdzenia.
 - Nie zmieniaj ręcznie wersji instalatora lub sum SHA-256. Jedyny zweryfikowany manifest wydania Windows to `kamera/desktop-update.json`, aktualizowany przez release workflow. Wersja PWA: `kamera/version.json`, wersja publicznej kopii: `hosting/public-site/release.json`.
 - Brak automatycznego wdrożenia z samego commita. Oddzielaj zmianę w kodzie, zaliczone testy, opublikowaną wersję, oraz instalację na fizycznym urządzeniu.
 - Wymagaj kontroli zapisów nagrań przed restartem Windows. Nigdy nie obchodź blokady PIN, RLS i zgody użytkownika na aktualizacje.
