@@ -236,7 +236,7 @@ if (desktopRequested) {
   const eventsScreen = document.createElement("section");
   eventsScreen.className = "desktopEventsScreen"; eventsScreen.hidden = true;
   eventsScreen.setAttribute("aria-label", "Zdarzenia");
-  eventsScreen.innerHTML = '<h2>Zdarzenia</h2><p>Rzeczywiste wykrycia ruchu i dźwięku z kamery. Zmiana widoku nie zatrzymuje transmisji ani zapisu.</p>';
+  eventsScreen.innerHTML = '';
   context.insertAdjacentElement("afterend", eventsScreen);
   mountEventWorkspace(eventsScreen);
   const diagnosticsScreen = document.createElement("section");
@@ -483,18 +483,20 @@ if (desktopRequested) {
     if (view === "live") $("dvrCard").hidden = false;
     if (view === "archive" && $("dvrCard")?.parentElement !== main) main?.prepend($("dvrCard"));
     const labels = {
-      live: ["Pulpit", "Monitoring domu"],
-      controls: ["Kamery", "Kamery i sterowanie"],
-      events: ["Zdarzenia", "Zdarzenia"],
-      archive: ["Archiwum", "Nagrania DVR"],
-      settings: ["Ustawienia", "Ustawienia kamery"],
-      diagnostics: ["Diagnostyka", "Stan systemu"]
+      live: ["Pulpit", "Monitoring domu", "Obraz na żywo, ostatnie zdarzenia i szybkie akcje."],
+      controls: ["Kamery", "Kamery i sterowanie", "Wybór kamery, tryb pracy, start i zatrzymanie zapisu."],
+      events: ["Zdarzenia", "Zdarzenia", "Wykrycia ruchu i dźwięku. Transmisja i zapis działają dalej."],
+      archive: ["Archiwum", "Nagrania DVR", "Odtwarzanie zapisanych nagrań i miejsce zapisu."],
+      settings: ["Ustawienia", "Ustawienia kamery", "Obraz, dźwięk, nagrywanie, wykrywanie i dostęp."],
+      diagnostics: ["Diagnostyka", "Stan systemu", "Stan kamery, zapisu, połączenia i dziennik zdarzeń."]
     };
     const label = labels[view] || labels.live;
     const crumb = context.querySelector("p");
     const heading = context.querySelector("h1");
     if (crumb) crumb.innerHTML = `${label[0]} <span>/</span> HOME SECURITY`;
     if (heading) heading.textContent = label[1];
+    const subtitle = context.querySelector(".hsSubtitle");
+    if (subtitle) subtitle.textContent = label[2];
     // Po opuszczeniu ustawień przywracamy komplet pól dla innych trybów
     // interfejsu; wybrana kategoria jest widoczna tylko w module Ustawienia.
     if (view === "settings") setSettingsGroup(activeSettingsGroup);
