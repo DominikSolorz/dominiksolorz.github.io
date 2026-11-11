@@ -32,7 +32,7 @@ if (desktopRequested) {
   const header = document.querySelector(".topbar");
   const desktopTopStatus = document.createElement("div");
   desktopTopStatus.className = "desktopTopStatus";
-  desktopTopStatus.innerHTML = '<i></i><span id="desktopTopStatusText">Sprawdzam system…</span>';
+  desktopTopStatus.innerHTML = '<i></i><span><b id="desktopTopStatusText">Sprawdzam system…</b><small id="desktopTopStatusDetail">—</small></span>';
   header?.prepend(desktopTopStatus);
   const search = document.createElement("label");
   search.className = "desktopSearch";
@@ -237,6 +237,7 @@ if (desktopRequested) {
     for (const id of ["hsStatusPill", "hsStatusRow", "hsSideStatus"]) if ($(id)) $(id).dataset.tone = status.tone;
     $("hsStatusPillText").textContent = status.pill; $("hsStatusTitle").textContent = status.title; $("hsStatusDetail").textContent = status.detail;
     $("hsSideStatusTitle").textContent = status.title; $("hsSideStatusDetail").textContent = status.detail;
+    if ($("desktopTopStatusDetail")) $("desktopTopStatusDetail").textContent = status.detail;
     const recording = systemStore.read("recording", 45000);
     const on = recording.status === "recording";
     const fresh = recording.freshness === "fresh";
@@ -618,14 +619,30 @@ if (desktopRequested) {
   shell.querySelectorAll("[data-hs-go]").forEach(button => button.addEventListener("click", () => {
     const go = button.dataset.hsGo;
     if (go === "ctrl") { setActive("controls"); setTimeout(() => $("ctrlBar")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); }
-    else if (go === "account") document.querySelector(".topbar .accountActions>button")?.click();
+    else if (go === "account") document.querySelector(".topbar .accountActions>button:not(#lockBtn):not(.hsAccount)")?.click();
     else if (go === "schedule") { setActive("settings"); setTimeout(() => settingsScreen.querySelector('[data-settings-group="recording"]')?.click(), 0); }
     else if (go === "updates") setActive("diagnostics");
     else if (go === "map") document.querySelector(".mobileMapOpen")?.click();
   }));
   document.addEventListener("hs-recordings-closed", () => setActive("live"));
-  const labelAccount = () => { const b = document.querySelector(".topbar .accountActions>button:first-child"); if (!b || b.dataset.hsLabeled) return !!b; b.dataset.hsLabeled = "1"; b.setAttribute("aria-label", "Mój profil — konto główne"); b.innerHTML = "<span><b>Administrator</b><small>Konto główne</small></span>"; return true; };
-  if (!labelAccount()) { const t = setInterval(() => { if (labelAccount()) clearInterval(t); }, 500); setTimeout(() => clearInterval(t), 30000); }
+  // Konto jak na wzorze: awatar, „Administrator · Konto główne”, strzałka i menu (Mój profil, Wyloguj).
+  const accountMenu = () => {
+    const actions = document.querySelector(".topbar .accountActions"), profile = actions?.querySelector("button:not(#lockBtn)"), logout = $("lockBtn");
+    if (!actions || !profile) return false;
+    if (actions.querySelector(".hsAccount")) return true;
+    profile.hidden = true; 
+    const trigger = document.createElement("button"); trigger.type = "button"; trigger.className = "hsAccount"; trigger.setAttribute("aria-haspopup", "menu"); trigger.setAttribute("aria-expanded", "false");
+    trigger.innerHTML = '<span class="hsAvatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8.5" r="4.5"/><path d="M3.5 21c1.4-4.6 4.6-7 8.5-7s7.1 2.4 8.5 7Z"/></svg></span><span><b>Administrator</b><small>Konto główne</small></span><i class="hsChevron" aria-hidden="true"></i>';
+    const menu = document.createElement("div"); menu.className = "hsAccountMenu"; menu.setAttribute("role", "menu"); menu.hidden = true;
+    menu.innerHTML = '<button type="button" role="menuitem" data-act="profile">Mój profil</button><button type="button" role="menuitem" data-act="logout">Wyloguj</button>';
+    const close = () => { menu.hidden = true; trigger.setAttribute("aria-expanded", "false"); };
+    trigger.addEventListener("click", event => { event.stopPropagation(); menu.hidden = !menu.hidden; trigger.setAttribute("aria-expanded", String(!menu.hidden)); });
+    menu.addEventListener("click", event => { const act = event.target.closest("[data-act]")?.dataset.act; close(); if (act === "profile") profile.click(); if (act === "logout") logout?.click(); });
+    document.addEventListener("click", event => { if (!menu.hidden && !menu.contains(event.target)) close(); });
+    document.addEventListener("keydown", event => { if (event.key === "Escape") close(); });
+    actions.append(trigger, menu); return true;
+  };
+  if (!accountMenu()) { const t = setInterval(() => { if (accountMenu()) clearInterval(t); }, 500); setTimeout(() => clearInterval(t), 30000); }
   shell.querySelectorAll("[data-desktop-view]").forEach(button => { button.title = button.querySelector("b").textContent; });
 
   const sync = () => {

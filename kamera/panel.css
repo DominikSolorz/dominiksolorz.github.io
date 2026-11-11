@@ -3625,13 +3625,12 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar{
   left:var(--desktop-sidebar)!important;height:64px!important;padding:0 24px!important;gap:14px!important;-webkit-backdrop-filter:blur(14px);
 }
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopTopStatus{
-  order:3;margin:0 14px 0 18px!important;height:44px;padding:0 16px 0 10px!important;border:1px solid var(--pl-line2)!important;border-radius:12px!important;
-  background:var(--pl-panel)!important;color:var(--pl-text)!important;font:700 13.5px var(--hs-font)!important;letter-spacing:0!important;gap:10px!important;
+  order:3;margin:0 14px 0 18px!important;height:56px;padding:0 16px 0 4px!important;border:0!important;border-radius:0!important;
+  background:transparent!important;color:var(--pl-text)!important;font:700 13.5px var(--hs-font)!important;letter-spacing:0!important;gap:10px!important;
 }
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopTopStatus i{width:26px!important;height:26px!important;border-radius:50%!important;background:#f5b546 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 5 6v6c0 4 3 7 7 8 4-1 7-4 7-8V6Z'/%3E%3C/svg%3E") center/15px no-repeat!important;box-shadow:none!important}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopTopStatus.live i{background-color:#22c55e!important;box-shadow:0 0 0 4px rgba(34,197,94,.18)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopTopStatus i{width:42px!important;height:42px!important;border-radius:50%!important;background:#f5b546 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 5 6v6c0 4 3 7 7 8 4-1 7-4 7-8V6Z'/%3E%3C/svg%3E") center/22px no-repeat!important;box-shadow:0 0 0 6px rgba(245,181,70,.16)!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopTopStatus.live i{background-color:#22c55e!important;box-shadow:0 0 0 6px rgba(34,197,94,.18)!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .nav{order:5}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child::before{content:"";display:inline-block;width:30px;height:30px;margin-right:8px;vertical-align:-10px;background:currentColor;-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3.2'/%3E%3Cpath d='M6.5 18.5c1.3-2.4 3.2-3.5 5.5-3.5s4.2 1.1 5.5 3.5'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='10' r='3.2'/%3E%3Cpath d='M6.5 18.5c1.3-2.4 3.2-3.5 5.5-3.5s4.2 1.1 5.5 3.5'/%3E%3C/svg%3E");-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopSearch{
   margin-left:auto!important;width:min(380px,32vw)!important;height:40px!important;padding:0 12px!important;gap:10px!important;
   border:1px solid var(--pl-line2)!important;border-radius:var(--pl-radius-sm)!important;background:var(--pl-panel)!important;
@@ -4377,21 +4376,32 @@ html.desktopMode body #app .hsScenes button svg{width:26px;height:26px}
 html.desktopMode body #app .hsScenes button.on{background:linear-gradient(135deg,#e5182b,#a50d1c);border-color:#ff4d5e;color:#fff;box-shadow:0 0 20px rgba(229,24,43,.55)}
 html.desktopMode body #app .hsScenes .hsScenesEdit{margin-left:auto;min-height:46px;font-size:14px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsRoundBtn{position:relative;border:0!important;background:transparent!important}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsRoundBtn svg{width:28px;height:28px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsRoundBtn svg{width:30px;height:30px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsBellBadge{position:absolute;top:2px;right:2px;display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#e5182b;color:#fff;font:800 11.5px var(--hs-font);font-style:normal;box-shadow:0 0 10px rgba(229,24,43,.7)}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsBellBadge[hidden]{display:none}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsHeadActions{padding:0 14px;border-left:1px solid var(--hs-line2)}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child{display:inline-flex!important;align-items:center;gap:4px;height:52px!important;border:0!important;background:transparent!important}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child>span{display:grid;text-align:left}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child b{font:700 15px/1.2 var(--hs-font)}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child small{font:500 12.5px/1.2 var(--hs-font);color:var(--hs-muted)}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child::after{content:"";width:9px;height:9px;margin-left:10px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-3px) rotate(45deg)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions:has(.hsAccount)>#lockBtn{display:none!important}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions{position:relative;display:flex;align-items:center}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsAccount{display:flex;align-items:center;gap:14px;height:56px;padding:0 6px;border:0;background:transparent;color:var(--hs-text);font:inherit;cursor:pointer}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsAvatar{display:grid;place-items:end center;width:46px;height:46px;border-radius:50%;overflow:hidden;background:linear-gradient(160deg,#5b5f68,#2a2c31);color:#d9dbe0;box-shadow:0 0 0 2px var(--hs-line2)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsAvatar svg{width:38px;height:38px}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsAccount>span:nth-child(2){display:grid;text-align:left}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsAccount b{font:700 16px/1.2 var(--hs-font)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsAccount small{font:500 13px/1.25 var(--hs-font);color:var(--hs-muted)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsChevron{width:10px;height:10px;margin:0 6px 4px 8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsAccountMenu{position:absolute;top:calc(100% + 8px);right:0;z-index:90;display:grid;min-width:200px;padding:6px;border-radius:14px;border:1px solid var(--hs-line2);background:var(--hs-panel2);box-shadow:0 24px 50px rgba(0,0,0,.5)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsAccountMenu[hidden]{display:none}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsAccountMenu button{min-height:44px;padding:0 14px;border:0;border-radius:10px;background:transparent;color:var(--hs-text);font:600 14.5px var(--hs-font);text-align:left;cursor:pointer}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsAccountMenu button:hover{background:rgba(229,24,43,.14)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsAccountMenu [data-act="logout"]{color:#ef3340}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .desktopTopStatus span{display:grid;text-align:left;line-height:1.2}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .desktopTopStatus small{font:500 12px var(--hs-font);color:var(--hs-muted)}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .desktopTopStatus b{font:800 15.5px var(--hs-font);color:#f5b546}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .desktopTopStatus.live b{color:#22c55e}
+html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsHeadActions{padding:0 18px;border-left:1px solid var(--hs-line2);border-right:1px solid var(--hs-line2);margin-right:14px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .desktopNav button{font-size:16px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsHeadActions{order:4;margin-left:0;gap:10px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsHeadActions .hsStatusPill{display:none}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsRoundBtn{width:44px;height:44px;border-radius:12px}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .nav{padding-left:14px;border-left:1px solid var(--hs-line)}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .accountActions>button:first-child{min-height:44px;padding:0 14px 0 10px!important;border-radius:12px!important}
 html.desktopMode body #app .cameraWorkspaceToolbar .cameraEyebrow,html.desktopMode body #app .cameraWorkspaceToolbar .cameraCounter,html.desktopMode body #app .cameraWorkspaceFooter .cameraRecordingScope{display:none!important}
 html.desktopMode body #app .cameraWorkspaceToolbar h2{display:flex;align-items:center;gap:12px;font:800 21px/1.2 var(--hs-font)!important}
 html.desktopMode body #app .cameraWorkspaceToolbar h2::before{content:"";width:30px;height:24px;flex:none;background:#ef3340;-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Crect x='1.5' y='3' width='14' height='14' rx='2.5'/%3E%3Cpath d='m15.5 8 7-4v12l-7-4z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Crect x='1.5' y='3' width='14' height='14' rx='2.5'/%3E%3Cpath d='m15.5 8 7-4v12l-7-4z'/%3E%3C/svg%3E");-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain}
