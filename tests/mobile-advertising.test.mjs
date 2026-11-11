@@ -6,35 +6,19 @@ import {readFile,stat} from 'node:fs/promises';
 const root=new URL('../',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
 
-function launch(html,{agent='Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 Chrome/130.0 Mobile Safari/537.36',search='',hash='',touch=5,width=390}={}){
- const src=html.match(/<link rel="stylesheet" href="mobile-app-splash\.css\?v=3"><script>([\s\S]*?)<\/script><script defer src="mobile-app-splash\.js\?v=3"><\/script>/)?.[1];
- assert.ok(src,'mobile splash head must be included by the public page');
- const classes=new Set(),delays=[];
- const context={URLSearchParams,location:{search,hash},navigator:{userAgent:agent,maxTouchPoints:touch},
-  document:{documentElement:{classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)}}},
-  performance:{now:()=>1000},window:{},matchMedia:()=>({matches:width<=900}),
-  setTimeout:(_,ms)=>{delays.push(ms);return delays.length;}};
- vm.runInNewContext(src,context);
- return {classes,delays};
-}
-
-test('phone Chrome shows 30-second advertising on EVERY homepage refresh, never desktop or account route',async()=>{
- const [homepage,alias]=await Promise.all(['kamera/index.html','kamera/o-systemie.html'].map(read));
+// The phone homepage shows the real public page immediately. The timed 30-second splash and the
+// welcome screen were removed (owner decision 11.11.2026): their markup stays in the HTML but no
+// inline script adds hsMobileLaunch / hsMobileWelcome, so both remain hidden.
+test('phone Chrome opens the real homepage immediately: no timed splash before the page or login',async()=>{
+ const [homepage,alias,builder]=await Promise.all(['kamera/index.html','kamera/o-systemie.html','scripts/build-marketing.mjs'].map(read));
  for(const page of [homepage,alias]){
-  for(let i=0;i<2;i++){
-   const x=launch(page);
-   assert.ok(x.classes.has('hsMobileLaunch'),'Android phone must show splash on each page navigation');
-   assert.deepEqual(x.delays,[30000],'full presentation lasts 30 seconds');
-  }
-  const ios=launch(page,{agent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'});
-  assert.ok(ios.classes.has('hsMobileLaunch'));
-  const desktop=launch(page,{agent:'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36',touch:0,width:1440});
-  assert.equal(desktop.classes.size,0,'desktop Chrome must not get a splash');
-  for(const search of ['?auth=login','?auth=register','?auth=forgot','?panel=owner','?code=abcdef','?odbiorca=cam-'+'a'.repeat(32)])
-   assert.equal(launch(page,{search}).classes.size,0,'no advertising before secure callback '+search);
-  assert.ok(page.includes('id="hsMobileSplash"'));
-  assert.equal((page.match(/class="hsMobileSplashImage/g)||[]).length,3);
+  const head=page.slice(0,page.indexOf('</head>'));
+  assert.doesNotMatch(head,/classList\.add\("hsMobileLaunch"\)|classList\.add\("hsMobileWelcome"\)/,'no splash or welcome class is set on load');
+  assert.doesNotMatch(head,/setTimeout\([^)]*30000/,'no 30-second wait before the homepage');
+  assert.match(head,/mobile-app-splash\.css\?v=4/);
+  assert.ok(page.includes('href="panel.html?auth=login'),'login stays one click away');
  }
+ assert.doesNotMatch(builder,/classList\.add\("hsMobileLaunch"\)/,'generator must not bring the splash back');
 });
 
 test('three distinct images cycle at 0, 10 and 20 seconds; allow early skip and disappear after 30 seconds',async()=>{
@@ -74,7 +58,7 @@ test('PWA route, assets, and worker cache remain consistent without changing cam
  assert.match(bridge,/params\.get\("app"\) === "mobile-home"/);
  assert.match(sw,/kamera-domowa-shell-v289/);
  assert.match(app,/SERVICE_WORKER_BUILD = "289"/);
- for(const asset of ['mobile-app-splash.css?v=3','mobile-app-splash.js?v=3',
+ for(const asset of ['mobile-app-splash.css?v=4','mobile-app-splash.js?v=3',
    'home-security-loading.webp','home-security-ad-02.webp','home-security-ad-03.webp'])
    assert.ok(sw.includes(asset),'PWA precache missing '+asset);
  assert.ok(css.includes('aspect-ratio:16/9'));

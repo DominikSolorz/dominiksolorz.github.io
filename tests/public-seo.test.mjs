@@ -26,9 +26,15 @@ test('legacy auth, receiver and OAuth returns preserve their full query and frag
  // Untrusted return destinations are never used for navigation.
  assert.equal(new URL(redirect('/kamera/?auth=login&redirect=https://example.org')).origin,'https://dominiksolorz.github.io');
 });
-test('native, installed and pending entry launches retain the private panel',()=>{
- for(const options of [{native:true},{installed:true},{pending:true}])
-  assert.equal(redirect('/kamera/?ui=phone',options),'https://dominiksolorz.github.io/kamera/panel.html?ui=phone');
+test('Windows app opens the private panel; installed PWA and saved device state keep the public homepage',()=>{
+ assert.equal(redirect('/kamera/?ui=phone',{native:true}),'https://dominiksolorz.github.io/kamera/panel.html?ui=phone');
+ // The homepage must not bounce to login because of a saved device ticket or an installed PWA;
+ // sign-in, PIN and camera stay one click away via panel.html?auth=login.
+ for(const options of [{installed:true},{pending:true},{installed:true,pending:true}])
+  assert.equal(redirect('/kamera/?ui=phone',options),undefined,JSON.stringify(options));
+ assert.equal(redirect('/kamera/?app=mobile-home',{installed:true}),undefined,'PWA start_url shows the homepage');
+ // Private links still open the panel from an installed PWA.
+ assert.equal(redirect('/kamera/?auth=login',{installed:true}),'https://dominiksolorz.github.io/kamera/panel.html?auth=login');
 });
 test('homepage HTML is indexable without JavaScript and contains no private account or camera runtime',async()=>{
  const html=await read('kamera/index.html');
