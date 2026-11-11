@@ -21,7 +21,11 @@ export const ICONS = Object.freeze({
   play: svg('<path d="M8 5v14l11-7Z" fill="currentColor"/>'),
   chevron: svg('<path d="m9 6 6 6-6 6"/>'),
   home: svg('<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>'),
-  list: svg('<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/>')
+  list: svg('<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/>'),
+  calendar: svg('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M7 14h2M11 14h2M15 14h2M7 17h2M11 17h2"/>'),
+  signal: svg('<path d="M5 20v-4M10 20v-8M15 20v-12M20 20V4"/>'),
+  storage: svg('<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>'),
+  bolt: svg('<path d="M13 2 4 14h7l-1 8 9-12h-7Z"/>')
 });
 
 /** Komunikat w istniejącym dymku aplikacji (#toast). */

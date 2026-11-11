@@ -74,7 +74,7 @@ test('Leaflet is served from the same origin and the panel mounts the map',async
  for(const f of ['leaflet.js','leaflet.css','LICENSE','images/marker-icon.png'])await readFile(new URL('../kamera/vendor/leaflet/'+f,import.meta.url));
  assert.ok(mobile.includes('./mobile-map.mjs?v=7')&&mobile.includes('mountLocationMap()'));
  assert.ok(sw.includes('./mobile-map.mjs?v=7'));
- assert.ok(panel.includes('mobile.js?v=46')&&sw.includes('./mobile.js?v=46'));
+ assert.ok(panel.includes('mobile.js?v=49')&&sw.includes('./mobile.js?v=49'));
 });
 
 test('search prefers the surroundings and drops far-away name matches',()=>{

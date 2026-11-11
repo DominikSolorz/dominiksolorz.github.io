@@ -9,7 +9,7 @@ import { mountMobileCameraInfo } from './mobile-camera-status.mjs?v=1';
 import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { mountEventWorkspace, mountDiagnosticWorkspace } from "./workspace-panels.mjs?v=2";
 import { mountLocationMap } from "./mobile-map.mjs?v=7";
-import { ICONS, mountRecentEvents, mountLiveOverlay, systemStatus } from "./home-dashboard.mjs?v=1";
+import { ICONS, mountRecentEvents, mountLiveOverlay, systemStatus } from "./home-dashboard.mjs?v=2";
 import { mirrorLivePreview } from "./workspace-panels.mjs?v=4";
 // „Łączenie…” mówi więcej: z czym się łączymy (pomysł z rundy Replit).
 const clarifyConnectionText=()=>{const node=document.getElementById("placeholder");if(!node)return;const fix=()=>{if(node.textContent.trim()==="Łączenie…")node.textContent="Łączenie z komputerem z kamerą…";};const watch=new MutationObserver(fix);watch.observe(node,{childList:true,characterData:true,subtree:true});fix();window.addEventListener("pagehide",()=>watch.disconnect(),{once:true});};
@@ -20,7 +20,7 @@ if (isMobileOwnerApp) {
   const app = byId("app");
   document.body.classList.add("mobileOwnerMode");
   document.querySelectorAll('#authDialog .authBrand img, #lock .pinLogo img').forEach(image => {
-    image.src = 'assets/mobile-app-mark.svg';
+    image.src = 'assets/hs-logo.webp';
     image.alt = 'HOME SECURITY';
   });
   const disposeCameraFrame=mountMobileCameraFrame(byId('stage'),byId('video'));
@@ -43,7 +43,7 @@ if (isMobileOwnerApp) {
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
-    <img class="mobileBrandLogo" src="assets/mobile-app-mark.svg" width="48" height="48" alt="DS"><div><span class="mobileBrandName">HOME <b>SECURITY</b></span><h1 id="mobilePageTitle">Pulpit</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
+    <img class="mobileBrandLogo" src="assets/hs-logo.webp" width="48" height="48" alt="HOME SECURITY"><div><span class="mobileBrandName">HOME <b>SECURITY</b></span><h1 id="mobilePageTitle">Pulpit</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
     <button id="hsPhoneBell" class="hsPhoneBell" type="button" aria-label="Zdarzenia">${ICONS.bell}</button>
     <button id="mobileMenuBtn" type="button" aria-label="Otwórz menu" aria-controls="mobileMenuPage" aria-expanded="false">•••</button>`;
   app?.insertBefore(mobileHeader, app.firstChild);
@@ -96,9 +96,24 @@ if (isMobileOwnerApp) {
         <button type="button" data-ui-mode="phone"><b>▯</b><strong>Telefon</strong><small>duży obraz, osobne ekrany, obsługa dotykiem</small></button>
         <button type="button" data-ui-mode="computer"><b>▣</b><strong>Komputer</strong><small>panel boczny, pełny pulpit i więcej informacji</small></button>
       </div>
+    </div>
+    <div class="deviceLayoutCard" aria-labelledby="deviceThemeTitle">
+      <p>MOTYW</p><h2 id="deviceThemeTitle">Ciemny czy jasny?</h2>
+      <span>Zmienia tylko kolory panelu na tym urządzeniu.</span>
+      <div>
+        <button type="button" data-theme-mode="dark"><b>☾</b><strong>Ciemny</strong><small>czarny z czerwonymi akcentami — wygodny nocą</small></button>
+        <button type="button" data-theme-mode="light"><b>☀</b><strong>Jasny</strong><small>biały z czerwonymi akcentami — czytelny w dzień</small></button>
+      </div>
     </div>`;
   document.querySelector(".mainCol")?.append(deviceSheet);
   deviceSheet.addEventListener("click", event => {
+    const themeButton = event.target.closest("[data-theme-mode]");
+    if (themeButton) {
+      const light = themeButton.dataset.themeMode === "light";
+      document.documentElement.classList.toggle("hsLight", light);
+      try { localStorage.setItem("hs-theme-v1", light ? "light" : "dark"); } catch (_) { /* tryb prywatny */ }
+      return;
+    }
     const button = event.target.closest("[data-ui-mode]");
     if (!button) return;
     const automatic = button.dataset.uiMode === "auto";

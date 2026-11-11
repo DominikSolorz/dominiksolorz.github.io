@@ -30,7 +30,7 @@ test('short landscape enlarges the camera preview and preserves 48px navigation 
 test('mobile layout switch remains a 48px touch target and refreshed CSS is precached',()=>{
  assert.match(viewerCss,/mobileAppHeader #deviceLayoutBtn\{min-width:48px!important;min-height:48px!important\}/);
  const sheet=panelStylesheet(panelHtml);
- assert.match(panelHtml,/mobile\.js\?v=46/);
+ assert.match(panelHtml,/mobile\.js\?v=49/);
  const version=appJs.match(/const VERSION = "(\d+)"/)?.[1];
  assert.ok(version);
  assert.match(panelHtml,new RegExp('app\\.js\\?v='+version));
@@ -38,7 +38,7 @@ test('mobile layout switch remains a 48px touch target and refreshed CSS is prec
  assert.ok(rev);
  assert.match(serviceWorker,new RegExp(`kamera-domowa-shell-v${rev}`));
  assert.ok(serviceWorker.includes('./'+sheet));
- assert.ok(serviceWorker.includes('./mobile.js?v=46'));
+ assert.ok(serviceWorker.includes('./mobile.js?v=49'));
  assert.ok(serviceWorker.includes('./app.js?v='+version));
 });
 test('device layout button hides decorative square but keeps accessible layout selection',()=>{
