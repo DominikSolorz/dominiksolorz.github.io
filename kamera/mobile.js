@@ -96,9 +96,24 @@ if (isMobileOwnerApp) {
         <button type="button" data-ui-mode="phone"><b>▯</b><strong>Telefon</strong><small>duży obraz, osobne ekrany, obsługa dotykiem</small></button>
         <button type="button" data-ui-mode="computer"><b>▣</b><strong>Komputer</strong><small>panel boczny, pełny pulpit i więcej informacji</small></button>
       </div>
+    </div>
+    <div class="deviceLayoutCard" aria-labelledby="deviceThemeTitle">
+      <p>MOTYW</p><h2 id="deviceThemeTitle">Ciemny czy jasny?</h2>
+      <span>Zmienia tylko kolory panelu na tym urządzeniu.</span>
+      <div>
+        <button type="button" data-theme-mode="dark"><b>☾</b><strong>Ciemny</strong><small>czarny z czerwonymi akcentami — wygodny nocą</small></button>
+        <button type="button" data-theme-mode="light"><b>☀</b><strong>Jasny</strong><small>biały z czerwonymi akcentami — czytelny w dzień</small></button>
+      </div>
     </div>`;
   document.querySelector(".mainCol")?.append(deviceSheet);
   deviceSheet.addEventListener("click", event => {
+    const themeButton = event.target.closest("[data-theme-mode]");
+    if (themeButton) {
+      const light = themeButton.dataset.themeMode === "light";
+      document.documentElement.classList.toggle("hsLight", light);
+      try { localStorage.setItem("hs-theme-v1", light ? "light" : "dark"); } catch (_) { /* tryb prywatny */ }
+      return;
+    }
     const button = event.target.closest("[data-ui-mode]");
     if (!button) return;
     const automatic = button.dataset.uiMode === "auto";

@@ -15,8 +15,8 @@ test('Windows and mobile PIN screen share the same authenticated palette',async(
   assert.match(css,/HOME SECURITY unified PIN screen/);
   assert.match(css,/html\.desktopMode:not\(\.policeCommand\):not\(\.usMilitary\) #lock/);
   assert.match(css,/html\.mobileOwnerMode:not\(\.policeCommand\):not\(\.usMilitary\) #lock/);
-  assert.match(css,/background:linear-gradient\(155deg,#fbfcfd,#fcfcfd 80%\)/,'light PIN screen shared by Windows and phone');
-  assert.match(css,/outline:3px solid #649cf7/);
+  assert.match(css,/background:linear-gradient\(155deg,var\(--hl\d+,#222020\),var\(--hl\d+,#1a1818\) 80%\)/,'dark PIN screen (light via html.hsLight) shared by Windows and phone');
+  assert.match(css,/outline:3px solid #ee4f59/);
   assert.match(css,/object-fit: contain/,'video presentation stays uncropped');
 });
 test('branding CSS does not modify PIN verification, device ownership or auth DOM',async()=>{

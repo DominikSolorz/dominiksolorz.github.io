@@ -112,7 +112,7 @@ if (desktopRequested) {
   context.setAttribute("aria-label", "Kontekst pulpitu");
   context.innerHTML = `
     <div><p>Pulpit <span>/</span> Na żywo</p><h1>Monitoring domu</h1><small class="hsSubtitle">Podgląd na żywo, zdarzenia i ustawienia systemu</small></div>
-    <div class="hsHeadActions"><button type="button" class="hsStatusPill" id="hsStatusPill" data-tone="off"><span class="hsShield">${ICONS.shield}</span><b id="hsStatusPillText">Brak transmisji</b></button><button type="button" class="hsRoundBtn" id="hsHeadEvents" aria-label="Zdarzenia">${ICONS.bell}</button><button type="button" class="hsRoundBtn" id="hsHeadSettings" aria-label="Ustawienia">${ICONS.gear}</button></div>
+    <div class="hsHeadActions"><button type="button" class="hsStatusPill" id="hsStatusPill" data-tone="off"><span class="hsShield">${ICONS.shield}</span><b id="hsStatusPillText">Brak transmisji</b></button><button type="button" class="hsRoundBtn" id="hsHeadTheme" aria-label="Przełącz motyw jasny lub ciemny" title="Motyw jasny / ciemny"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2M12 19v2M5 5l1.4 1.4M17.6 17.6 19 19M3 12h2M19 12h2M5 19l1.4-1.4M17.6 6.4 19 5"/><circle cx="12" cy="12" r="4"/></svg></button><button type="button" class="hsRoundBtn" id="hsHeadEvents" aria-label="Zdarzenia">${ICONS.bell}</button><button type="button" class="hsRoundBtn" id="hsHeadSettings" aria-label="Ustawienia">${ICONS.gear}</button></div>
     <div class="desktopContextActions">
       <span id="desktopCameraCount" class="desktopCameraCount">Kamery: sprawdzam…</span>
       <div class="desktopLayouts" role="group" aria-label="Układ kamer">
@@ -187,6 +187,11 @@ if (desktopRequested) {
   $("hsStatusPill").addEventListener("click", () => setActive("controls"));
   $("hsHeadEvents").addEventListener("click", () => setActive("events"));
   $("hsHeadSettings").addEventListener("click", () => setActive("settings"));
+  $("hsHeadTheme").addEventListener("click", () => {
+    const light = !document.documentElement.classList.contains("hsLight");
+    document.documentElement.classList.toggle("hsLight", light);
+    try { localStorage.setItem("hs-theme-v1", light ? "light" : "dark"); } catch (_) { /* tryb prywatny */ }
+  });
   overview.querySelectorAll("[data-hs-view]").forEach(b => b.addEventListener("click", () => setActive(b.dataset.hsView)));
   overview.querySelectorAll("[data-hs-settings]").forEach(b => b.addEventListener("click", () => { setActive("settings"); setTimeout(() => settingsScreen.querySelector(`[data-settings-group="${b.dataset.hsSettings}"]`)?.click(), 0); }));
   const paintDashboard = () => {
