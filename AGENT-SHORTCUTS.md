@@ -7,12 +7,12 @@ Te nazwy są **aliasami dla agentów**, a NIE nazwami plików w repozytorium. Ni
 | `HS-STRONA` | `scripts/build-marketing.mjs`, `kamera/index.html`, `kamera/marketing.css` |
 | `HS-STRONA-MENU` | `kamera/marketing-navigation.mjs`, `kamera/marketing-navigation.css`, `scripts/build-marketing.mjs` |
 | `HS-PANEL` | `kamera/panel.html`, `kamera/app.js` |
-| `HS-PANEL-STYL` | `kamera/style.css`, `kamera/premium-dark-pro.css`, `kamera/workspace-ui.css` |
+| `HS-PANEL-STYL` | `kamera/panel.css` (jedyny arkusz panelu: komputer, telefon/PWA i Windows) — zasady w [docs/PANEL-CSS.md](docs/PANEL-CSS.md). `kamera/style.css` i `kamera/workspace-ui.css` tylko dla dokumentów i `kamera/nagrania.html` |
 | `HS-PIN` | `kamera/lock.js`, `kamera/auth.js`, `kamera/account-security.mjs` |
 | `HS-WINDOWS` | `desktop-client/Program.cs`, `desktop-client/BundledPanel.cs`, `desktop-client/HomeSecurityDesktop.csproj` |
 | `HS-AKTUALIZATOR` | `desktop-client/Program.cs`, `scripts/desktop-release.mjs`, `.github/workflows/desktop-scheduled-release.yml` |
 | `HS-INSTALATOR` | `desktop-client/installer/`, `desktop-client/build-release.ps1`, `kamera/desktop-update.json` |
-| `HS-TELEFON` | `kamera/mobile.js`, `kamera/mobile-viewer.css`, `kamera/sw.js` |
+| `HS-TELEFON` | `kamera/mobile.js`, `kamera/panel.css` (sekcje telefonu — [docs/PANEL-CSS.md](docs/PANEL-CSS.md)), `kamera/sw.js` |
 | `HS-TELEFON-PIN` | `kamera/remote-unlock-phone.mjs`, `kamera/remote-unlock-host.mjs`, `kamera/remote-unlock-protocol.mjs` |
 | `HS-KAMERY` | `kamera/app.js`, `kamera/camera-workspace.mjs`, `agent/` |
 | `HS-NAGRANIA` | `kamera/recording-*.mjs`, `kamera/dvr-ui.js`, `agent/RecordingStorage.cs` |
