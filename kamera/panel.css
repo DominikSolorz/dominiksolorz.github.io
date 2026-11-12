@@ -4654,7 +4654,7 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppea
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppearance .deviceLayoutCard>div{display:grid;gap:12px}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppearance :is(strong,small){display:block;white-space:normal;overflow-wrap:anywhere}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="cloud"] #mobileRecordingStorage{margin:0 16px!important;width:calc(100% - 32px)!important;box-sizing:border-box!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:is([data-mobile-view="menu"],[data-mobile-view="appearance"],[data-mobile-view="updates"],[data-mobile-view="playback"],[data-mobile-view="cloud"]) #mobilePageTitle{display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:is([data-mobile-view="menu"]) #mobilePageTitle{display:none!important}
 /* Mapa lokalizacji (kamera/mobile-map.mjs) */
 .mobileMapCard{margin-top:10px}
 .mobileMapOpen{display:grid;grid-template-columns:42px minmax(0,1fr) 18px;align-items:center;gap:12px;width:100%;box-sizing:border-box;padding:14px;text-align:left;border:1px solid var(--hl685,rgba(158,152,152,0.28));border-radius:12px;background:var(--hl677,rgba(38,35,35,0.55));color:var(--hl41,#f5f4f4)}
@@ -4807,15 +4807,17 @@ html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .ctrl{min-height:52
 html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar .ctrl small{white-space:normal}
 html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar #ctrlRestart:not(:disabled){border-color:rgba(251,191,36,.55)!important;background:linear-gradient(180deg,rgba(251,191,36,.16),rgba(251,191,36,.06))!important;color:var(--hl116,#fde68a)!important}
 html:not(.policeCommand):not(.usMilitary) body #app #ctrlBar #ctrlRestart:not(:disabled):hover{border-color:rgba(251,191,36,.85)!important;background:rgba(251,191,36,.22)!important}
-/* Mapa: po zgodzie na lokalizację zajmuje cały ekran telefonu. Układ kolumnowy: mapa
-   wypełnia wolne miejsce, a lista wyników i przycisk Zamknij zawsze są widoczne. */
-@media (max-width:600px){
-  .mobileMapDialog[open]:has(.mobileMapCanvas:not([hidden])){display:flex;flex-direction:column;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0;overflow:hidden;padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom))}
-  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) > *{flex:none}
-  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapText{font-size:13px;margin-bottom:8px}
-  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapCanvas{flex:1 1 auto;height:auto;min-height:200px}
-  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapResults{max-height:34dvh;margin-bottom:8px}
-  .mobileMapDialog:has(.mobileMapCanvas:not([hidden])) .mobileMapActions{padding-top:4px}
+/* Mapa na telefonie i tablecie: od razu na cały ekran, z przyciskiem „‹ Wstecz” w nagłówku. */
+.mobileMapHead{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.mobileMapHead h2{margin:0!important}
+.mobileMapBack{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 14px 0 10px;border:1px solid var(--hl687,rgba(158,152,152,0.4));border-radius:999px;background:var(--hl244,#1d1b1b);color:inherit;font:inherit;font-weight:700;cursor:pointer}
+.mobileMapBack span{font-size:24px;line-height:1}
+@media (max-width:1024px){
+  html.mobileOwnerMode .mobileMapDialog[open]{display:flex;flex-direction:column;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0;overflow:hidden;padding:calc(10px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom))}
+  html.mobileOwnerMode .mobileMapDialog[open]>*{flex:none}
+  html.mobileOwnerMode .mobileMapDialog[open] .mobileMapCanvas{flex:1 1 auto;height:auto;min-height:200px}
+  html.mobileOwnerMode .mobileMapDialog[open] .mobileMapResults{max-height:34dvh;margin-bottom:8px}
+  html.mobileOwnerMode .mobileMapDialog[open] .mobileMapActions{margin-top:auto;padding-top:6px}
 }
 .mobileMapRow .mobileMapFollow[aria-pressed="true"]{background:linear-gradient(90deg,#eb323f,#e81725);border-color:transparent;color:#fff}
 .mobileMapResults li{background:var(--hl704,rgba(38,35,35,0.45))}
@@ -5520,3 +5522,16 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view=
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app #layout.layout{width:100%!important;max-width:1180px!important;margin-inline:auto!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app .mainCol>#stage{grid-column:1!important;grid-row:1/-1!important;width:100%!important;max-width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;align-self:start!important;aspect-ratio:4/3}
 }
+/* Chmura na telefonie i tablecie: wybór miejsca zapisu przyciskami (lista i „Zastosuj” ukryte, działają w tle). */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #recordingStorageChoice>label:has([data-storage-mode]),html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #recordingStorageChoice>[data-storage-apply]{display:none!important}
+.hsStoragePick{display:none}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsStoragePick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsStoragePick button{display:grid;gap:3px;align-content:center;min-height:64px;padding:8px 6px;border:1px solid var(--ma-line,#3a3535);border-radius:12px;background:var(--ma-card,#1a1818);color:var(--mp-text,#f5f4f4);font:inherit;text-align:center;cursor:pointer}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsStoragePick strong{font-size:13.5px;line-height:1.2}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsStoragePick small{font-size:11px;line-height:1.25;color:#a9a4a4}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsStoragePick button[aria-pressed="true"]{border-color:transparent;background:linear-gradient(180deg,#f0263b,#b80d1f);box-shadow:0 6px 18px -8px rgba(240,38,59,.7)}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsStoragePick button[aria-pressed="true"] small{color:#ffe4e6}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsStoragePick button:disabled{opacity:.55;cursor:not-allowed}
+/* Podstrony ze strzałką „wstecz”: tytuł jest w nagłówku, więc duży nagłówek na stronie jest tylko dla czytników ekranu. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:not([data-mobile-view="menu"]) #app .mobileFunctionHeading h2{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsStoragePick strong{overflow-wrap:normal;word-break:normal;hyphens:none}

@@ -205,7 +205,7 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
   dialog.className = 'mobileMapDialog';
   dialog.setAttribute('aria-labelledby', 'mobileMapTitle');
   dialog.innerHTML = `
-    <h2 id="mobileMapTitle">Mapa</h2>
+    <div class="mobileMapHead"><button type="button" class="mobileMapBack" aria-label="Wstecz — zamknij mapę"><span aria-hidden="true">‹</span> Wstecz</button><h2 id="mobileMapTitle">Mapa</h2></div>
     <p class="mobileMapText" role="status"></p>
     <div class="mobileMapTools" hidden>
       <form class="mobileMapSearch" role="search">
@@ -574,6 +574,8 @@ export function mountLocationMap({ geolocation = globalThis.navigator?.geolocati
     });
   });
   cancel.addEventListener('click', () => { teardown(); if (dialog.open) dialog.close(); });
+  // „Wstecz” w nagłówku mapy: to samo co Anuluj/Zamknij — wraca do poprzedniego ekranu.
+  $('.mobileMapBack').addEventListener('click', () => cancel.click());
   dialog.addEventListener('close', teardown);
   section.querySelector('.mobileMapOpen').addEventListener('click', () => {
     showAsk();

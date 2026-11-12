@@ -72,9 +72,9 @@ test('navigation and photo links open Google Maps with the place only',()=>{
 test('Leaflet is served from the same origin and the panel mounts the map',async()=>{
  const [mobile,sw,panel]=await Promise.all(['kamera/mobile.js','kamera/sw.js','kamera/panel.html'].map(read));
  for(const f of ['leaflet.js','leaflet.css','LICENSE','images/marker-icon.png'])await readFile(new URL('../kamera/vendor/leaflet/'+f,import.meta.url));
- assert.ok(mobile.includes('./mobile-map.mjs?v=7')&&mobile.includes('mountLocationMap()'));
- assert.ok(sw.includes('./mobile-map.mjs?v=7'));
- assert.ok(panel.includes('mobile.js?v=51')&&sw.includes('./mobile.js?v=51'));
+ assert.ok(mobile.includes('./mobile-map.mjs?v=8')&&mobile.includes('mountLocationMap()'));
+ assert.ok(sw.includes('./mobile-map.mjs?v=8'));
+ assert.ok(panel.includes('mobile.js?v=52')&&sw.includes('./mobile.js?v=52'));
 });
 
 test('search prefers the surroundings and drops far-away name matches',()=>{
@@ -89,7 +89,8 @@ test('search prefers the surroundings and drops far-away name matches',()=>{
 
 test('map list and close button stay visible on a full-screen phone map',async()=>{
  const css=await panelSection('mobile-app-look.css'), src=await read('kamera/mobile-map.mjs');
- assert.match(css,/\.mobileMapDialog\[open\]:has\(\.mobileMapCanvas:not\(\[hidden\]\)\)\{display:flex;flex-direction:column/);
+ assert.match(css,/\.mobileMapDialog\[open\]\{display:flex;flex-direction:column/);
+ assert.match(src,/mobileMapBack/);
  assert.match(css,/\.mobileMapCanvas\{flex:1 1 auto/);
  assert.match(src,/ResizeObserver\(\(\) => map\?\.invalidateSize\(\)\)/);
  assert.match(src,/mine !== query/);
@@ -119,7 +120,7 @@ test('chain name search looks nearby by name or brand and merges duplicates',()=
 
 test('Windows panel opens the same consent-first map; WebView2 grants location only to the official site',async()=>{
  const [desktop,program,css]=await Promise.all([read('kamera/desktop.js'),read('desktop-client/Program.cs'),panelSection('operator-layout.css')]);
- assert.match(desktop,/import \{ mountLocationMap \} from "\.\/mobile-map\.mjs\?v=7"/);
+ assert.match(desktop,/import \{ mountLocationMap \} from "\.\/mobile-map\.mjs\?v=8"/);
  assert.equal((desktop.match(/mountLocationMap\(\)/g)||[]).length,1,'map mounted once');
  assert.match(program,/string\.Equals\(permissionUri\.Host, PublicHost[\s\S]{0,200}CoreWebView2PermissionKind\.Geolocation/);
  assert.match(css,/\.desktopSidebar \.mobileMapOpen\{/);
