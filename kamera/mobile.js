@@ -225,6 +225,21 @@ if (isMobileOwnerApp) {
   tabBar.innerHTML = [["home","Pulpit",ICONS.home],["camera","Kamery",ICONS.record],["recordings","Nagrania",ICONS.play],["alerts","Zdarzenia",ICONS.bell],["menu","Więcej",gridIcon]]
     .map(([v,l,i]) => `<button type="button" data-hs-tab="${v}">${i}<span>${l}</span></button>`).join("");
   if (!isNativeShell) { app?.append(tabBar); document.body.classList.add("hsHasTabBar"); }
+  // Tablet (od 768 px): boczne menu zamiast dolnego paska — specyfikacja APK, ekrany 117–185.
+  // Każda pozycja otwiera jeden istniejący ekran. Harmonogramu nie ma, bo ustawia się go tylko w programie Windows.
+  const SIDE_PIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>', SIDE_CLOUD='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.1 9.3 4.4 4.4 0 0 0 7 18Z"/></svg>', SIDE_USER='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="3.6"/><path d="M5.5 19.5c1.3-3.3 3.8-4.8 6.5-4.8s5.2 1.5 6.5 4.8"/></svg>';
+  const sideNav = document.createElement("nav");
+  sideNav.className = "hsSideNav"; sideNav.setAttribute("aria-label", "Menu boczne");
+  sideNav.innerHTML = [
+    ['data-hs-side="home"','Pulpit',ICONS.home],['data-hs-side="camera"','Kamery',ICONS.record],['data-hs-side="recordings"','Nagrania',ICONS.play],
+    ['data-hs-side="alerts"','Zdarzenia',ICONS.bell],['data-open-mobile-map','Mapa',SIDE_PIN],
+    ['data-hs-side="cloud"','Chmura',SIDE_CLOUD],['data-hs-side="settings"','Ustawienia',ICONS.gear],['data-open-mobile-profile','Profil',SIDE_USER]
+  ].map(([attr,label,icon]) => `<button type="button" ${attr}>${icon}<span>${label}</span></button>`).join("")
+    + '<a href="https://dominiksolorz.github.io/kamera/pomoc.html" target="_blank" rel="noopener"><span>Pomoc ↗</span></a><a href="https://dominiksolorz.github.io/kamera/o-systemie.html" target="_blank" rel="noopener"><span>Strona WWW ↗</span></a>';
+  if (!isNativeShell) app?.append(sideNav);
+  sideNav.addEventListener("click", event => {
+    const b = event.target.closest("[data-hs-side]"); if (b) return setView(b.dataset.hsSide);
+  });
   tabBar.addEventListener("click", event => {
     const b = event.target.closest("[data-hs-tab]"); if (!b) return;
     setView(b.dataset.hsTab);
@@ -328,6 +343,7 @@ if (isMobileOwnerApp) {
     const visible = new Set(views[view] || views.home);
     document.body.dataset.mobileView = view;
     document.querySelectorAll(".hsTabBar [data-hs-tab]").forEach(b => b.classList.toggle("active", b.dataset.hsTab === view));
+    document.querySelectorAll(".hsSideNav [data-hs-side]").forEach(b => b.classList.toggle("active", b.dataset.hsSide === view));
     document.body.dataset.mobileSettings = view === "settings" ? "root" : "";
     backHome.hidden = view === 'home' || view === 'menu';
     byId('mobileMenuBtn').hidden = !(view === 'home' || view === 'menu');
