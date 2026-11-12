@@ -5561,3 +5561,17 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHe
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsPhoneAvatar{width:32px;height:32px}
 }
 @media(max-width:380px){html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandSub{display:none!important}}
+/* Tablet (od 768 px): boczne menu z lewej zamiast dolnego paska — każda pozycja otwiera jeden ekran (specyfikacja APK). */
+.hsSideNav{display:none}
+@media(min-width:768px) and (min-height:600px) and (pointer:coarse){
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar{display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsSideNav{position:fixed;z-index:35;left:0;top:0;bottom:0;display:flex;flex-direction:column;gap:6px;width:200px;padding:max(14px,env(safe-area-inset-top)) 10px max(14px,env(safe-area-inset-bottom));overflow-y:auto;background:#0d0e12;border-right:1px solid #34363d}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsSideNav :is(button,a){display:flex;align-items:center;gap:12px;min-height:46px;padding:0 12px;border:1px solid transparent;border-radius:12px;background:#17191f;color:#a5a8b2;font:inherit;font-size:15px;font-weight:600;text-align:left;text-decoration:none;cursor:pointer}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsSideNav svg{flex:none;width:22px;height:22px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsSideNav :is(button,a):hover{color:#f4f5f7;border-color:#34363d}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsSideNav button.active{color:#fff;border-color:#ef202d;background:linear-gradient(180deg,#3a0d12,#240a0d)}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsSideNav a{margin-top:auto;background:transparent;font-size:14px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsSideNav a+a{margin-top:0}
+body.hsHasTabBar.mobileOwnerMode #app{padding-left:212px!important}
+body.hsHasTabBar.mobileOwnerMode #app .mainCol{padding-bottom:calc(24px + env(safe-area-inset-bottom))!important}
+}
