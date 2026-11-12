@@ -1,0 +1,34 @@
+{
+  "publicLayouts": [
+    {
+      "width": 360,
+      "count": 8,
+      "overflow": false,
+      "cropped": false,
+      "fullUrls": true
+    },
+    {
+      "width": 768,
+      "count": 8,
+      "overflow": false,
+      "cropped": false,
+      "fullUrls": true
+    },
+    {
+      "width": 1440,
+      "count": 8,
+      "overflow": false,
+      "cropped": false,
+      "fullUrls": true
+    }
+  ],
+  "programModal": {
+    "closed": true,
+    "primaryRetained": true,
+    "trackLive": true,
+    "focusRestored": true
+  },
+  "escapeCloses": true,
+  "errors": [],
+  "physicalCamera": false
+}

@@ -358,3 +358,159 @@ body.marketingPage,body.legalPage{background-color:var(--t-bg)!important}
 @media (prefers-reduced-motion:reduce){
   :is(#publicHome.mktSite,.marketingPage,.legalPage) *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}
 }
+
+/* ---------- Układ strony publicznej według projektów właściciela (11.11.2026) ----------
+   Nagłówek z menu, sekcja ze zdjęciem domu, pasek funkcji, „Dlaczego”, pobieranie,
+   stopka z kontaktem i dolny pasek na telefonie. Tylko wygląd; linki prowadzą do
+   istniejących stron. */
+:is(#publicHome.mktSite,.marketingPage){--hs-red:#e8172d;--hs-red2:#ff2947;--hs-glow:rgba(255,31,53,.45);--hs-card:rgba(22,21,21,.86);--hs-line:#2e2a2a}
+:is(#publicHome.mktSite,.marketingPage) .hsIco{width:22px;height:22px;flex:none}
+:is(#publicHome.mktSite,.marketingPage) .mktHeader{display:flex!important;align-items:center;gap:18px;flex-wrap:nowrap}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand{display:flex;align-items:center;gap:11px;margin-right:auto;text-decoration:none}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand img{width:46px;height:46px;border-radius:12px;box-shadow:none;filter:drop-shadow(0 0 5px rgba(255,24,59,.55)) drop-shadow(0 0 12px rgba(255,24,59,.2))}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand span{display:block;white-space:nowrap;line-height:1.05;font-size:19px;font-weight:800;letter-spacing:.5px;color:#f5f6f8}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand b{color:var(--hs-red2)!important;text-shadow:0 0 14px rgba(255,41,71,.45)}
+:is(#publicHome.mktSite,.marketingPage) .mktBrand small{display:block;margin-top:4px;font-size:11px!important;letter-spacing:.3px!important;text-transform:none;color:#a09a9a!important}
+:is(#publicHome.mktSite,.marketingPage) .mktTopNav{display:flex;gap:2px!important;align-items:center}
+:is(#publicHome.mktSite,.marketingPage) .mktTopNav a{padding:9px 11px!important;font-size:14px!important;border-radius:999px;white-space:nowrap}
+:is(#publicHome.mktSite,.marketingPage) .mktTopNav a[aria-current="page"]{background:linear-gradient(180deg,#f0263b,#c80f22)!important;color:#fff!important;box-shadow:0 6px 20px -6px var(--hs-glow)!important}
+:is(#publicHome.mktSite,.marketingPage) .mktAccountLinks{display:flex;gap:8px;align-items:center}
+:is(#publicHome.mktSite,.marketingPage) .mktAccountLinks a{display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:0 16px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
+:is(#publicHome.mktSite,.marketingPage) .mktLoginLink{color:#f5f4f4;border:1px solid #4a4444;background:rgba(18,17,17,.7)}
+:is(#publicHome.mktSite,.marketingPage) .mktLoginLink .hsIco{width:18px;height:18px}
+:is(#publicHome.mktSite,.marketingPage) .mktRegister{color:#fff;background:linear-gradient(180deg,#f0263b,#c80f22);box-shadow:0 8px 22px -8px var(--hs-glow)}
+:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu>nav{background:#121111!important;border-color:#3a3434!important}
+:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu>nav a{display:flex!important;align-items:center;gap:13px}
+:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu>nav a[aria-current="page"]{background:linear-gradient(180deg,#f0263b,#b80d1f)!important;color:#fff!important;border-radius:10px}
+:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu>nav .mktMenuGroup+.mktMenuGroup{border-top:1px solid var(--hs-line)}
+:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu>nav .mktMenuAccount a.mktLogin{background:linear-gradient(180deg,#f0263b,#c80f22);border-color:transparent;color:#fff;justify-content:center}
+:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu>nav .mktMenuAccount a.mktMenuRegister{background:transparent;border:1px solid #6b6464;justify-content:center}
+@media(max-width:760px){
+ :is(#publicHome.mktSite,.marketingPage) .mktBrand img{width:40px;height:40px}
+ :is(#publicHome.mktSite,.marketingPage) .mktBrand span{font-size:16px}
+}
+
+/* Sekcja główna: zdjęcie domu nocą, prawdziwy panel na laptopie i telefonie */
+#publicHome.mktSite .hsHero{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(12px,2vw,28px);align-items:center;padding-block:clamp(26px,4vw,54px) clamp(18px,3vw,34px)}
+#publicHome.mktSite .hsHero::before{content:"";position:absolute;z-index:-1;inset:0 calc(50% - 50vw);background:radial-gradient(ellipse 50% 70% at 95% 25%,rgba(255,24,48,.28),transparent 70%),linear-gradient(180deg,#0d0c0d,#0b0b0c)}
+#publicHome.mktSite .hsHero h1{margin:0;max-width:560px;font-size:clamp(30px,3.4vw,48px);line-height:1.06;letter-spacing:-.025em;color:#f6f6f6}
+#publicHome.mktSite .hsHero h1 em{display:block;font-style:normal;color:var(--hs-red2)!important;-webkit-text-fill-color:var(--hs-red2)!important;text-shadow:0 0 30px rgba(255,41,71,.35)}
+#publicHome.mktSite .hsHero .mktLead{max-width:520px;margin:16px 0 18px;font-size:clamp(16px,1.5vw,19px);color:#dcd8d8!important}
+#publicHome.mktSite .hsChecks{display:grid;gap:9px;margin:0 0 24px;padding:0;list-style:none}
+#publicHome.mktSite .hsChecks li{display:flex;align-items:center;gap:11px;color:#e6e2e2;font-size:16px}
+#publicHome.mktSite .hsChecks .hsIco{color:var(--hs-red2);width:20px;height:20px}
+#publicHome.mktSite :is(.hsHeroActions,.hsHeroAccount) .mktButton{gap:10px!important;font-size:16px!important;min-height:52px;border-radius:12px!important}
+#publicHome.mktSite :is(.hsHeroActions,.hsHeroAccount) .mktButton .hsIco{width:20px;height:20px}
+#publicHome.mktSite .hsHeroVisual{position:relative;margin:0 -2vw 0 0;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
+#publicHome.mktSite .hsHeroVisual img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;object-position:62% 50%;border-radius:0 0 0 60px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 100%),linear-gradient(0deg,transparent 0,#000 12%);mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 100%);filter:drop-shadow(0 0 40px rgba(255,24,48,.18))}
+#publicHome.mktSite .hsHeroVisual figcaption{margin-top:6px;text-align:right;padding-right:24px;font-size:11px;color:#8d8787}
+
+/* Pasek funkcji */
+#publicHome.mktSite .hsFeatureStrip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));margin-block:28px 10px;padding:0;border:1px solid var(--hs-line);border-radius:16px;background:var(--hs-card);box-shadow:0 0 50px -30px var(--hs-glow)}
+#publicHome.mktSite .hsFeatureStrip a{display:grid;justify-items:center;gap:10px;padding:22px 10px;color:#eeeaea;text-decoration:none;text-align:center;font-size:15px}
+#publicHome.mktSite .hsFeatureStrip a+a{border-left:1px solid var(--hs-line)}
+#publicHome.mktSite .hsFeatureStrip .hsIco{width:36px;height:36px;color:var(--hs-red2);filter:drop-shadow(0 0 8px rgba(255,41,71,.45))}
+#publicHome.mktSite .hsFeatureStrip a:hover{background:rgba(255,31,53,.07)}
+
+/* Dlaczego HOME SECURITY */
+#publicHome.mktSite .hsWhy{padding-block:clamp(28px,4vw,48px)}
+#publicHome.mktSite .hsWhy h2{text-align:center;margin:0 0 24px;font-size:clamp(26px,3vw,36px)}
+#publicHome.mktSite .hsWhy h2 em,#publicHome.mktSite .hsAppPhone em{font-style:normal;color:var(--hs-red2)!important;-webkit-text-fill-color:var(--hs-red2)!important}
+#publicHome.mktSite .hsWhyGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+#publicHome.mktSite .hsWhyGrid article{padding:24px 20px;text-align:center;border:1px solid var(--hs-line);border-radius:16px;background:linear-gradient(180deg,rgba(30,28,28,.9),rgba(16,15,15,.9))}
+#publicHome.mktSite .hsWhyGrid .hsIco{width:44px;height:44px;color:var(--hs-red2);filter:drop-shadow(0 0 10px rgba(255,41,71,.45))}
+#publicHome.mktSite .hsWhyGrid h3{margin:12px 0 8px;font-size:19px}
+#publicHome.mktSite .hsWhyGrid p{margin:0;font-size:14px;color:#bdb8b8!important}
+
+/* Pobierz aplikację */
+#publicHome.mktSite .hsAppBand{display:grid;grid-template-columns:150px minmax(0,1.75fr) minmax(0,.95fr) minmax(0,.85fr);gap:20px;align-items:center;margin-block:10px 26px;padding:22px;border:1px solid var(--hs-line);border-radius:18px;background:var(--hs-card)}
+#publicHome.mktSite .hsAppPhone{display:grid;justify-items:center;gap:10px;padding:26px 10px;border-radius:26px;border:2px solid #4a4343;background:radial-gradient(circle at 50% 35%,rgba(255,31,53,.32),#0c0c0d 72%);box-shadow:0 0 34px -10px var(--hs-glow);transform:rotate(-8deg)}
+#publicHome.mktSite .hsAppPhone img{width:70px;height:70px;filter:drop-shadow(0 0 10px rgba(255,24,48,.55))}
+#publicHome.mktSite .hsAppPhone b{font-size:15px;text-align:center;line-height:1.1}
+#publicHome.mktSite .hsAppCopy h2{margin:0 0 6px;font-size:clamp(22px,2.4vw,30px)}
+#publicHome.mktSite .hsAppCopy p{margin:0 0 14px;color:#cfcaca!important}
+#publicHome.mktSite .hsStores{display:flex;flex-wrap:wrap;gap:8px}
+#publicHome.mktSite .hsStores a{display:inline-flex;align-items:center;gap:8px;min-height:50px;padding:6px 12px;border-radius:11px;border:1px solid #d9d6d6;background:#0b0b0c;color:#fff;text-decoration:none;font-weight:700;font-size:16px}
+#publicHome.mktSite .hsStores a span{display:grid;line-height:1.1}
+#publicHome.mktSite .hsStores small{font-size:10px;font-weight:500;color:#cfcaca}
+#publicHome.mktSite .hsSpeed{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;padding:16px;border:1px solid var(--hs-line);border-radius:14px;background:rgba(14,13,13,.8)}
+#publicHome.mktSite .hsSpeed>.hsIco{width:34px;height:34px;color:var(--hs-red2)}
+#publicHome.mktSite .hsSpeed b{display:block;font-size:17px}
+#publicHome.mktSite .hsSpeed small{color:#bdb8b8}
+#publicHome.mktSite .hsGauge{grid-column:1/-1;position:relative;width:150px;margin:4px auto 0}
+#publicHome.mktSite .hsGauge svg{display:block;width:100%;height:auto;fill:none;stroke-width:9;stroke-linecap:round}
+#publicHome.mktSite .hsGaugeTrack{stroke:#2a2626}
+#publicHome.mktSite .hsGaugeValue{stroke:var(--hs-red2);stroke-dasharray:158;stroke-dashoffset:158;filter:drop-shadow(0 0 6px rgba(255,41,71,.6));transition:stroke-dashoffset 1s ease}
+#publicHome.mktSite .hsGauge strong{position:absolute;left:0;right:0;bottom:2px;text-align:center;font-size:24px}
+#publicHome.mktSite .hsAppChecks{display:grid;gap:10px;margin:0;padding:16px;list-style:none;border:1px solid var(--hs-line);border-radius:14px}
+#publicHome.mktSite .hsAppChecks li{display:flex;align-items:center;gap:10px;font-size:14px}
+#publicHome.mktSite .hsAppChecks .hsIco{color:var(--hs-red2);width:20px;height:20px}
+#publicHome.mktSite .hsHonest{margin-block:0 26px;font-size:13px;color:#9d9898!important}
+#publicHome.mktSite .hsHonest a{color:#ff6b7c}
+
+/* Stopka z kontaktem i dolny pasek informacji */
+:is(#publicHome.mktSite,.marketingPage) .mktFooter{display:block!important;padding:0!important;margin-top:20px;background:linear-gradient(180deg,rgba(14,13,13,.9),#080808)}
+:is(#publicHome.mktSite,.marketingPage) .mktFooterInner{display:grid;grid-template-columns:minmax(220px,1.4fr) repeat(3,minmax(0,1fr)) minmax(240px,1.4fr);gap:24px;padding-block:34px 22px}
+:is(#publicHome.mktSite,.marketingPage) .mktFooter nav,:is(#publicHome.mktSite,.marketingPage) .mktFooterContact{display:grid;align-content:start;gap:8px}
+:is(#publicHome.mktSite,.marketingPage) .mktFooter nav a{min-height:0!important;padding:2px 0!important;font-size:14px}
+:is(#publicHome.mktSite,.marketingPage) .mktFooterContact b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+:is(#publicHome.mktSite,.marketingPage) .mktFooterContact :is(a,span){display:flex;align-items:center;gap:9px;color:#cfcaca;font-size:14px;text-decoration:none;overflow-wrap:anywhere}
+:is(#publicHome.mktSite,.marketingPage) .mktFooterContact .hsIco{width:18px;height:18px;color:var(--hs-red2)}
+:is(#publicHome.mktSite,.marketingPage) .mktFooterBrand p{margin:12px 0 0;color:#a9a4a4;font-size:14px}
+:is(#publicHome.mktSite,.marketingPage) .mktFooterBar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 24px;padding-block:14px 22px;border-top:1px solid var(--hs-line)}
+:is(#publicHome.mktSite,.marketingPage) .mktFooterBar .mktCopyright{border:0!important;padding:0!important;margin:0!important}
+:is(#publicHome.mktSite,.marketingPage) .mktFooterMeta{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0;color:#a9a4a4;font-size:13px}
+:is(#publicHome.mktSite,.marketingPage) .mktFooterMeta b{color:#fff}
+:is(#publicHome.mktSite,.marketingPage) [data-hs-online="online"]{color:#35d07f!important}
+
+/* Dolny pasek nawigacji na telefonie */
+@media(max-width:760px){
+ :is(#publicHome.mktSite,.marketingPage) .mktTabBar{position:fixed;z-index:60;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);padding:6px 6px max(6px,env(safe-area-inset-bottom));background:rgba(10,10,11,.96);border-top:1px solid var(--hs-line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+ :is(#publicHome.mktSite,.marketingPage) .mktTabBar a{display:grid;justify-items:center;gap:3px;padding:6px 2px;border-radius:12px;color:#bdb8b8;font-size:11px;text-decoration:none}
+ :is(#publicHome.mktSite,.marketingPage) .mktTabBar a[aria-current="page"]{color:#fff;background:linear-gradient(180deg,#f0263b,#b80d1f);box-shadow:0 6px 18px -6px var(--hs-glow)}
+ :is(#publicHome.mktSite,.marketingPage) .mktTabBar .hsIco{width:22px;height:22px}
+ body.marketingPage,#publicHome.mktSite{padding-bottom:72px}
+ #publicHome.mktSite .hsHero{grid-template-columns:1fr;padding-top:26px}
+ #publicHome.mktSite .hsHeroVisual{order:-1;margin:0 -18px}
+ #publicHome.mktSite .hsHeroVisual img{-webkit-mask-image:linear-gradient(0deg,transparent 0,#000 22%);mask-image:linear-gradient(0deg,transparent 0,#000 22%)}
+ #publicHome.mktSite .hsFeatureStrip{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #publicHome.mktSite .hsFeatureStrip a:nth-child(4){border-left:0}
+ #publicHome.mktSite .hsFeatureStrip a:nth-child(n+4){border-top:1px solid var(--hs-line)}
+ #publicHome.mktSite .hsFeatureStrip a{font-size:13px;padding:16px 6px}
+ #publicHome.mktSite .hsWhyGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ #publicHome.mktSite .hsWhyGrid article{padding:18px 12px}
+ #publicHome.mktSite .hsAppBand{grid-template-columns:1fr}
+ :is(#publicHome.mktSite,.marketingPage) .mktFooterInner{grid-template-columns:repeat(2,minmax(0,1fr))}
+ :is(#publicHome.mktSite,.marketingPage) .mktFooterBrand,:is(#publicHome.mktSite,.marketingPage) .mktFooterContact{grid-column:1/-1}
+}
+@media(min-width:761px) and (max-width:1100px){
+ #publicHome.mktSite .hsWhyGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #publicHome.mktSite .hsAppBand{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+ :is(#publicHome.mktSite,.marketingPage) .mktFooterInner{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* Prezentacja aplikacji: prawdziwe ekrany panelu i kroki uruchomienia */
+.marketingPage .hsDemoHead{max-width:760px;margin-bottom:22px}
+.marketingPage .hsDemoHead h2 em{font-style:normal;color:var(--hs-red2)!important;-webkit-text-fill-color:var(--hs-red2)!important}
+.marketingPage .hsDemoSlides{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:0;padding:0;list-style:none}
+.marketingPage .hsDemoSlides li{position:relative;padding:16px;border:1px solid var(--hs-line);border-radius:18px;background:linear-gradient(180deg,rgba(30,28,28,.92),rgba(12,12,12,.92));text-align:center}
+.marketingPage .hsDemoPhone{margin:0 auto 14px;width:min(100%,190px);padding:5px;border-radius:24px;border:2px solid #4a4343;background:#0c0c0d;box-shadow:0 0 40px -14px var(--hs-glow)}
+.marketingPage .hsDemoPhone img{display:block;width:100%;height:auto;border-radius:18px}
+.marketingPage .hsDemoNum{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--hs-red);color:#fff;font-weight:800}
+.marketingPage .hsDemoSlides h3{margin:10px 0 6px;font-size:18px}
+.marketingPage .hsDemoSlides p{margin:0;font-size:14px}
+.marketingPage .hsDemoSub{margin:34px 0 14px;font-size:24px}
+.marketingPage .hsDemoPcs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.marketingPage .hsDemoPcs figure{margin:0;padding:8px;border:1px solid var(--hs-line);border-radius:14px;background:#0f0f10}
+.marketingPage .hsDemoPcs img{display:block;width:100%;height:auto;border-radius:8px}
+.marketingPage .hsDemoPcs figcaption{padding:8px 4px 2px;color:#cfcaca;font-size:14px}
+.marketingPage .hsSteps{margin-block:34px;padding:22px;border:1px solid var(--hs-line);border-radius:18px;background:var(--hs-card)}
+.marketingPage .hsSteps h2{margin:0 0 16px;font-size:22px}
+.marketingPage .hsSteps ol{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:0;padding:0;list-style:none}
+.marketingPage .hsSteps a{display:grid;justify-items:center;gap:8px;height:100%;padding:16px 10px;border:1px solid #3a3535;border-radius:14px;color:#eeeaea;text-align:center;text-decoration:none;font-size:14px}
+.marketingPage .hsSteps a:hover{border-color:var(--hs-red2)}
+.marketingPage .hsSteps b{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;border:2px solid var(--hs-red2);color:#fff;font-size:17px}
+.marketingPage .hsStepsDone{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px;padding:14px 16px;border:1px solid rgba(255,61,81,.5);border-radius:14px}
+.marketingPage .hsStepsDone b{color:var(--hs-red2);font-size:20px}
+@media(max-width:900px){.marketingPage .hsDemoSlides{grid-template-columns:repeat(2,minmax(0,1fr))}.marketingPage .hsSteps ol{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:520px){.marketingPage .hsDemoPcs{grid-template-columns:1fr}.marketingPage .hsSteps ol{grid-template-columns:repeat(2,minmax(0,1fr))}}

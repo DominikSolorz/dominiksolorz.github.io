@@ -56,3 +56,17 @@
 @media(prefers-reduced-motion:reduce){
  .mktMenuBars,.mktMenuBars i{animation:none!important;transition:none!important}
 }
+
+/* Which navigation is shown at which width (homepage design 11.11.2026).
+   Desktop: eight links and account buttons. Narrow: menu drawer. Phone: bottom tab bar. */
+:is(#publicHome.mktSite,.marketingPage) .mktTabBar{display:none!important}
+#publicHome.mktSite .hsHeroAccount{display:none!important}
+@media(min-width:1180px){:is(#publicHome.mktSite,.marketingPage) .mktMobileMenu{display:none!important}}
+@media(max-width:1179px){:is(#publicHome.mktSite,.marketingPage) .mktTopNav{display:none!important}}
+@media(max-width:1100px){#publicHome.mktSite .hsAppPhone{display:none!important}}
+@media(max-width:760px){
+ :is(#publicHome.mktSite,.marketingPage) .mktTabBar{display:grid!important}
+ :is(#publicHome.mktSite,.marketingPage) .mktAccountLinks{display:none!important}
+ #publicHome.mktSite .hsHeroAccount{display:flex!important}
+ #publicHome.mktSite .hsHeroActions .mktButtonQuiet{display:none!important}
+}

@@ -8,7 +8,7 @@ const read=path=>readFile(new URL(path,root),'utf8');
 test('website redesign is applied to the public source, generated pages and embedded landing without replacing the camera app',async()=>{
   const [home,panel,index,brochure]=await Promise.all(['design/marketing/home.html','kamera/panel.html','kamera/index.html','kamera/o-systemie.html'].map(read));
   const source=home.trimEnd();
-  const markers=['id="mktPublicFeaturesTitle"','class="mktPublicPreview"','id="mktPublicJourneyTitle"','id="mktPublicFinalTitle"'];
+  const markers=['id="hsHeroTitle"','class="hsFeatureStrip mktContainer"','id="hsWhyTitle"','id="hsAppTitle"'];
   for(const marker of markers) assert.ok(source.includes(marker),'source template is missing '+marker);
   // The release builder adjusts generated HTML. Template equivalence is tested
   // separately by scripts/build-marketing.mjs --check before release processing.

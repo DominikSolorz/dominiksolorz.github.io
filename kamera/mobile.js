@@ -10,6 +10,7 @@ import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { mountEventWorkspace, mountDiagnosticWorkspace } from "./workspace-panels.mjs?v=2";
 import { mountLocationMap } from "./mobile-map.mjs?v=7";
 import { ICONS, mountRecentEvents, mountLiveOverlay, systemStatus } from "./home-dashboard.mjs?v=2";
+import { systemStore } from "./core/store.mjs";
 import { mirrorLivePreview } from "./workspace-panels.mjs?v=4";
 // „Łączenie…” mówi więcej: z czym się łączymy (pomysł z rundy Replit).
 const clarifyConnectionText=()=>{const node=document.getElementById("placeholder");if(!node)return;const fix=()=>{if(node.textContent.trim()==="Łączenie…")node.textContent="Łączenie z komputerem z kamerą…";};const watch=new MutationObserver(fix);watch.observe(node,{childList:true,characterData:true,subtree:true});fix();window.addEventListener("pagehide",()=>watch.disconnect(),{once:true});};
@@ -43,9 +44,9 @@ if (isMobileOwnerApp) {
   const mobileHeader = document.createElement("section");
   mobileHeader.className = "mobileAppHeader";
   mobileHeader.innerHTML = `
-    <img class="mobileBrandLogo" src="assets/hs-logo.webp" width="48" height="48" alt="HOME SECURITY"><div><span class="mobileBrandName">HOME <b>SECURITY</b></span><h1 id="mobilePageTitle">Pulpit</h1><p><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div>
-    <button id="hsPhoneBell" class="hsPhoneBell" type="button" aria-label="Zdarzenia">${ICONS.bell}</button>
-    <button id="mobileMenuBtn" type="button" aria-label="Otwórz menu" aria-controls="mobileMenuPage" aria-expanded="false">•••</button>`;
+    <button id="mobileMenuBtn" type="button" aria-label="Otwórz menu" aria-controls="mobileMenuPage" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <div class="mobileBrandBlock"><img class="mobileBrandLogo" src="assets/hs-logo.webp" width="48" height="48" alt="HOME SECURITY"><div><span class="mobileBrandName">HOME <b>SECURITY</b></span><small class="mobileBrandSub">System Monitoringu Domowego</small><h1 id="mobilePageTitle">Pulpit</h1><p class="mobileOnlineLine"><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div></div>
+    <button id="hsPhoneBell" class="hsPhoneBell" type="button" aria-label="Zdarzenia">${ICONS.bell}<span id="hsPhoneBellBadge" class="hsPhoneBadge" hidden>0</span></button>`;
   app?.insertBefore(mobileHeader, app.firstChild);
   const makePage = (id, title, intro, content) => {
     const page = document.createElement('section');
@@ -57,6 +58,7 @@ if (isMobileOwnerApp) {
   const menuPage = makePage('mobileMenuPage','Menu','Wybierz funkcję. Każda otwiera osobny ekran.',`
     <div class="mobileFunctionLinks">
       <button type="button" data-open-mobile-view="home">Pulpit <span>›</span></button>
+      <button type="button" data-open-mobile-profile>Mój profil <span>›</span></button>
       <button type="button" data-open-mobile-view="camera">Kamery <span>›</span></button>
       <button type="button" data-open-mobile-view="recordings">Nagrania <span>›</span></button>
       <button type="button" data-open-mobile-view="cloud">Chmura i miejsce zapisu <span>›</span></button>
@@ -80,8 +82,11 @@ if (isMobileOwnerApp) {
   updatesPage.querySelector('[data-web-update]').addEventListener('click',()=>document.dispatchEvent(new Event('hs-check-web-update')));
   document.dispatchEvent(new Event('hs-web-update-ui-ready'));
   const backHome=document.createElement('button');
-  backHome.type='button';backHome.id='mobileBackHome';backHome.textContent='← Wróć do pulpitu';backHome.hidden=true;
-  document.querySelector('.mainCol')?.prepend(backHome);
+  backHome.type='button';backHome.id='mobileBackHome';backHome.hidden=true;
+  backHome.setAttribute('aria-label','Wróć do pulpitu');
+  backHome.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg><span class="hsSrOnly">Wróć do pulpitu</span>';
+  // Projekt: na podstronach nagłówek ma strzałkę „wstecz” i tytuł ekranu zamiast menu i logo.
+  mobileHeader.prepend(backHome);
 
   const deviceSheet = document.createElement("section");
   deviceSheet.id = "mobileAppearancePage";
@@ -151,54 +156,61 @@ if (isMobileOwnerApp) {
   const backSettings = document.createElement("button");
   backSettings.type = "button";
   backSettings.className = "mobileSettingsBack";
-  backSettings.textContent = "← Kategorie ustawień";
+  backSettings.setAttribute("aria-label", "Kategorie ustawień");
+  backSettings.innerHTML = backHome.innerHTML.replace("Wróć do pulpitu", "Kategorie ustawień");
   const mediaTabs = document.createElement("div");
   mediaTabs.className = "mobileMediaTabs";
   mediaTabs.innerHTML = '<button type="button" data-setting-section="image">Obraz</button><button type="button" data-setting-section="sound">Dźwięk</button>';
   document.querySelector(".mainCol")?.prepend(mediaTabs);
-  document.querySelector(".mainCol")?.prepend(backSettings);
-  backSettings.addEventListener("click", () => { document.body.dataset.mobileSettings = "root"; });
+  mobileHeader.prepend(backSettings);
+  backSettings.addEventListener("click", () => { document.body.dataset.mobileSettings = "root"; byId("mobilePageTitle").textContent = "Ustawienia"; });
 
   const overview = document.createElement("section");
   overview.id = "mobileOverview";
   overview.className = "mobileOverview mobileHidden";
   overview.innerHTML = `
-    <section class="mobileOverviewCard hsPhoneHero" aria-labelledby="mobileOverviewTitle">
-      <div><h2 id="mobileOverviewTitle">Mój dom</h2><p>Monitoring i ochrona</p></div>
-      <button type="button" class="hsPhonePill" id="hsPhonePill" data-hs-go="settings"><span class="hsShield">${ICONS.shield}</span><b id="hsPhonePillText">Sprawdzam…</b></button>
+    <section class="hsGuard" aria-label="Stan ochrony">
+      <span class="hsGuardShield">${ICONS.shield}</span>
+      <div class="hsGuardText"><h2 id="mobileOverviewTitle">System chroniony</h2><p><i class="hsDot" id="hsGuardDot"></i><span id="hsGuardState">Sprawdzam…</span></p><small id="hsGuardDetail">Oczekuję na stan komputera z kamerą.</small></div>
+      <button type="button" class="hsSwitch" id="hsGuardSwitch" role="switch" aria-checked="false" aria-label="Nagrywanie na komputerze z kamerą"><i></i></button>
     </section>
-    <section class="hsPhoneLive" aria-label="Podgląd na żywo">
-      <button type="button" class="hsPhoneLiveTile" id="hsPhoneLiveTile" data-hs-go="camera" aria-label="Otwórz podgląd na żywo">
-        <video muted playsinline autoplay hidden></video>
-        <span class="hsPhoneLiveEmpty"><span class="hsPlay">${ICONS.play}</span><b>Otwórz podgląd na żywo</b><small>Obraz włącza się dopiero po dotknięciu</small></span>
-        <span class="hsChip">Kamera główna</span>
-      </button>
+    <section class="mobileOverviewActions hsTiles" aria-label="Skróty panelu">
+      <button type="button" data-open-mobile-view="camera"><b>${iconMarkup('camera')}</b><span><strong>Kamery</strong><small id="hsTileCams">—</small></span></button>
+      <button type="button" data-open-mobile-view="recordings"><b>${iconMarkup('archive')}</b><span><strong>Nagrania</strong><small id="hsTileRec">—</small></span></button>
+      <button type="button" data-open-mobile-view="alerts"><b>${iconMarkup('alerts')}<em id="hsTileEventsBadge" class="hsPhoneBadge" hidden>0</em></b><span><strong>Zdarzenia</strong><small id="hsTileEvents">—</small></span></button>
+      <button type="button" data-open-mobile-view="cloud"><b>${iconMarkup('cloud')}</b><span><strong>Chmura</strong><small>Miejsce zapisu</small></span></button>
+      <button type="button" data-open-mobile-view="settings"><b>${iconMarkup('settings')}</b><span><strong>Ustawienia</strong><small>System</small></span></button>
     </section>
-    <section class="hsPhoneCams" aria-labelledby="hsPhoneCamsTitle">
-      <header class="hsCardHead"><h2 id="hsPhoneCamsTitle">Kamery <span>(1)</span></h2></header>
-      <div class="hsPhoneCamStrip"><button type="button" class="hsCamTile active" data-hs-go="camera"><span class="hsCamThumb">${ICONS.camera}</span><span class="hsCamLabel">Kamera główna <i class="hsDot" id="hsPhoneCamDot"></i></span></button></div>
+    <section class="hsPhoneLive" aria-labelledby="hsPhoneLiveTitle">
+      <header class="hsCardHead"><h2 id="hsPhoneLiveTitle"><span class="hsHeadIco">${ICONS.record}</span>Podgląd kamer na żywo</h2><button type="button" class="hsLink" data-hs-go="camera">Wszystkie ›</button></header>
+      <div class="hsPhoneCamGrid">
+        <button type="button" class="hsPhoneLiveTile" id="hsPhoneLiveTile" data-hs-go="camera" aria-label="Otwórz podgląd na żywo">
+          <video muted playsinline autoplay hidden></video>
+          <span class="hsPhoneLiveEmpty"><span class="hsPlay">${ICONS.play}</span><b>Otwórz podgląd</b><small>Obraz nie włącza się sam po zalogowaniu</small></span>
+          <span class="hsChip"><i class="hsDot" id="hsPhoneCamDot"></i>Kamera główna</span><span class="hsLiveBadge" id="hsPhoneLiveBadge" hidden>• NA ŻYWO</span><span class="hsFullIco">${ICONS.full}</span>
+        </button>
+      </div>
+    </section>
+    <section class="hsPhoneStats" aria-label="Stan urządzenia">
+      <div class="hsPhoneStat"><span class="hsStatIco">${ICONS.storage}</span><div><b>Pamięć</b><strong id="hsPhoneStorage">—</strong><span class="hsBar"><i id="hsPhoneStorageBar"></i></span></div><em id="hsPhoneStoragePct"></em></div>
+      <button type="button" class="hsPhoneStat" data-hs-go="settings"><span class="hsStatIco">${ICONS.signal}</span><div><b>Połączenie</b><strong><i class="hsDot" id="hsPhoneNetDot"></i><span id="hsPhoneNet">—</span></strong></div><span class="hsChevron">${ICONS.chevron}</span></button>
+    </section>
+    <section class="hsPhoneModes" aria-label="Tryby pracy">
+      <button type="button" data-hs-mode="record">${ICONS.record}<span>Na żywo + zapis</span></button>
+      <button type="button" data-hs-mode="rec-only">${ICONS.storage}<span>Tylko zapis</span></button>
+      <button type="button" data-hs-mode="preview">${ICONS.camera}<span>Sam podgląd</span></button>
+      <button type="button" data-hs-mode="off">${ICONS.bolt}<span>Wyłącz kamerę</span></button>
     </section>
     <section class="hsPhoneEvents" id="hsPhoneEvents"></section>
-    <h2 class="hsPhoneShortcutsTitle">Na skróty</h2>
-    <section class="mobileOverviewActions" aria-label="Skróty panelu">
-      <button type="button" data-open-mobile-view="camera"><b>${iconMarkup('camera')}</b><span><strong>Kamery</strong></span></button>
-      <button type="button" data-open-mobile-view="recordings"><b>${iconMarkup('archive')}</b><span><strong>Nagrania</strong></span></button>
-      <button type="button" data-open-mobile-view="alerts"><b>${iconMarkup('alerts')}</b><span><strong>Zdarzenia</strong></span></button>
-      <button type="button" data-open-mobile-view="settings"><b>${iconMarkup('settings')}</b><span><strong>Ustawienia</strong></span></button>
-      <button type="button" data-open-mobile-view="cloud"><b>${iconMarkup('cloud')}</b><span><strong>Chmura</strong></span></button>
-      <button type="button" data-open-mobile-profile><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-8 16-8 16 0"/></svg></b><span><strong>Profil</strong></span></button>
-    </section>
-    <p class="mobileOverviewStatus" id="mobileOverviewStatus" role="status">Podgląd kamery nie został uruchomiony.</p>
-    <p class="mobileOverviewHint">Obraz nie włącza się sam po zalogowaniu. Otwórz go świadomie w zakładce Kamery.</p>`;
+    <p class="mobileOverviewStatus" id="mobileOverviewStatus" role="status">Podgląd kamery nie został uruchomiony.</p>`;
   const mapCard = mountLocationMap();
-  const actions = overview.querySelector(".mobileOverviewActions");
   const mapTile = document.createElement("button");
   mapTile.type = "button";
   mapTile.className = "mobileMapTile";
   mapTile.innerHTML = '<b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg></b><span><strong>Mapa</strong></span>';
   mapTile.addEventListener("click", () => mapCard.querySelector(".mobileMapOpen").click());
-  actions?.append(mapTile);
-  actions?.after(mapCard);
+  mapCard.classList.add("hsPhoneMapCard");
+  overview.append(mapCard);
   document.querySelector(".mainCol")?.prepend(overview);
   // Projekt „Mój dom”: prawdziwe zdarzenia, stan transmisji, dolny pasek zakładek.
   mountRecentEvents(overview.querySelector("#hsPhoneEvents"), { limit: 3, onAll: () => setView("alerts") });
@@ -207,18 +219,59 @@ if (isMobileOwnerApp) {
   const isNativeShell = /HomeSecurityNative/i.test(navigator.userAgent);
   const tabBar = document.createElement("nav");
   tabBar.className = "hsTabBar"; tabBar.setAttribute("aria-label", "Główne sekcje");
-  tabBar.innerHTML = [["home","Pulpit",ICONS.home],["camera","Kamery",ICONS.record],["alerts","Zdarzenia",ICONS.bell],["settings","Ustawienia",ICONS.gear]]
+  const pinIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+  const gridIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>';
+  tabBar.innerHTML = [["home","Pulpit",ICONS.home],["camera","Kamery",ICONS.record],["recordings","Nagrania",ICONS.play],["map","Mapa",pinIcon],["menu","Więcej",gridIcon]]
     .map(([v,l,i]) => `<button type="button" data-hs-tab="${v}">${i}<span>${l}</span></button>`).join("");
   if (!isNativeShell) { app?.append(tabBar); document.body.classList.add("hsHasTabBar"); }
-  tabBar.addEventListener("click", event => { const b = event.target.closest("[data-hs-tab]"); if (b) setView(b.dataset.hsTab); });
+  tabBar.addEventListener("click", event => {
+    const b = event.target.closest("[data-hs-tab]"); if (!b) return;
+    if (b.dataset.hsTab === "map") { setView("home"); setTimeout(() => mapCard.querySelector(".mobileMapOpen")?.click(), 0); return; }
+    setView(b.dataset.hsTab);
+  });
+  // Tryby pracy: te same przyciski co w ustawieniach komputera (#modeCard).
+  overview.addEventListener("click", event => { const b = event.target.closest("[data-hs-mode]"); if (b) document.querySelector(`#modeCard [data-mode="${b.dataset.hsMode}"]`)?.click(); });
+  overview.querySelector("#hsGuardSwitch").addEventListener("click", () => {
+    const recording = systemStore.read("recording", 45000).status === "recording";
+    byId(recording ? "ctrlStop" : "ctrlStart")?.click();
+  });
+  let storageUse = null;
+  const readStorage = () => navigator.storage?.estimate?.().then(e => { if (e?.quota) { storageUse = { usage: e.usage || 0, quota: e.quota }; paintPhone(); } }).catch(() => {});
+  readStorage(); setInterval(readStorage, 60000);
+  systemStore.subscribe(() => paintPhone());
   overview.addEventListener("click", event => { const b = event.target.closest("[data-hs-go]"); if (b) setView(b.dataset.hsGo); });
   document.addEventListener("hs-open-recordings-at", () => { if (router.current !== "recordings") setView("recordings"); });
+  const size = bytes => bytes >= 1e12 ? `${(bytes / 1e12).toFixed(1)} TB` : bytes >= 1e9 ? `${Math.round(bytes / 1e9)} GB` : `${Math.max(1, Math.round(bytes / 1e6))} MB`;
+  const setText = (id, text) => { const n = byId(id); if (n) n.textContent = text; };
   const paintPhone = () => {
-    const st = systemStatus({ live: Boolean(byId("topStatus")?.classList.contains("live")) });
-    const pill = byId("hsPhonePill"); if (pill) pill.dataset.tone = st.tone;
-    const txt = byId("hsPhonePillText"); if (txt) txt.textContent = st.pill;
-    byId("hsPhoneCamDot")?.classList.toggle("on", st.tone !== "off");
+    const live = Boolean(byId("topStatus")?.classList.contains("live"));
+    const st = systemStatus({ live });
+    const recording = systemStore.read("recording", 45000);
+    const on = recording.status === "recording", fresh = recording.freshness === "fresh";
+    const guard = overview.querySelector(".hsGuard"); if (guard) guard.dataset.tone = on ? "ok" : st.tone;
+    setText("mobileOverviewTitle", on ? "System chroniony" : "Ochrona wyłączona");
+    setText("hsGuardState", fresh ? (on ? "Aktywny" : "Nagrywanie wyłączone") : "Brak danych z komputera");
+    setText("hsGuardDetail", st.detail);
+    const sw = byId("hsGuardSwitch"); if (sw) { sw.setAttribute("aria-checked", String(on)); sw.dataset.on = String(on); }
+    const events = systemStore.read("cameraEvents", 86400000).items || [];
+    const storage = systemStore.read("storage", 90000);
+    setText("hsTileCams", live ? "1 online" : "1 offline");
+    setText("hsTileRec", Number.isFinite(storage.saved) ? storage.saved.toLocaleString("pl-PL") : "Archiwum");
+    setText("hsTileEvents", events.length ? "Nowe" : "Brak");
+    for (const id of ["hsTileEventsBadge", "hsPhoneBellBadge"]) { const n = byId(id); if (n) { n.textContent = String(events.length); n.hidden = !events.length; } }
+    byId("hsPhoneCamDot")?.classList.toggle("on", live);
+    const badge = byId("hsPhoneLiveBadge"); if (badge) badge.hidden = !live;
+    setText("hsPhoneNet", navigator.onLine ? (live ? "Online" : "Brak obrazu") : "Brak internetu");
+    byId("hsPhoneNetDot")?.classList.toggle("on", navigator.onLine && live);
+    if (storageUse) {
+      const pct = Math.min(100, Math.round(storageUse.usage / storageUse.quota * 100));
+      setText("hsPhoneStorage", `${size(storageUse.usage)} / ${size(storageUse.quota)}`); setText("hsPhoneStoragePct", `${pct}%`);
+      const bar = byId("hsPhoneStorageBar"); if (bar) bar.style.width = `${Math.max(2, pct)}%`;
+    } else setText("hsPhoneStorage", "Pamięć aplikacji");
+    overview.querySelectorAll("[data-hs-mode]").forEach(b => { const active = !!document.querySelector(`#modeCard [data-mode="${b.dataset.hsMode}"].on`); b.classList.toggle("on", active); b.setAttribute("aria-pressed", String(active)); });
   };
+  window.addEventListener("online", () => paintPhone()); window.addEventListener("offline", () => paintPhone());
+  const modeCard = byId("modeCard"); if (modeCard) new MutationObserver(() => paintPhone()).observe(modeCard, { subtree: true, attributes: true, attributeFilter: ["class"] });
 
   const views = {
     home: ["mobileOverview"],
@@ -256,7 +309,8 @@ if (isMobileOwnerApp) {
     document.body.dataset.mobileView = view;
     document.querySelectorAll(".hsTabBar [data-hs-tab]").forEach(b => b.classList.toggle("active", b.dataset.hsTab === view));
     document.body.dataset.mobileSettings = view === "settings" ? "root" : "";
-    backHome.hidden = view === 'home';
+    backHome.hidden = view === 'home' || view === 'menu';
+    byId('mobileMenuBtn').hidden = !(view === 'home' || view === 'menu');
     byId('mobileMenuBtn').setAttribute('aria-expanded',String(view==='menu'));
     byId('mobileMenuBtn').setAttribute('aria-label',view==='menu'?'Zamknij menu':'Otwórz menu');
     settingsHome.classList.toggle("mobileHidden", view !== "settings");
@@ -289,7 +343,7 @@ if (isMobileOwnerApp) {
     const button=event.target.closest('[data-open-mobile-view]');
     if(button)setView(button.dataset.openMobileView);
   });
-  overview.addEventListener("click", event => {
+  app.addEventListener("click", event => {
     if (event.target.closest('[data-open-mobile-profile]')) {
       accountOptions.querySelector('.accountActions > button')?.click();
     }
@@ -306,6 +360,7 @@ if (isMobileOwnerApp) {
     document.body.dataset.mobileSettings = button.dataset.settingSection;
     const title=({controls:'Sterowanie i zapis na komputerze',image:'Ustawienia obrazu',sound:'Ustawienia dźwięku',recording:'Ustawienia nagrywania',system:'Ustawienia systemu i diagnostyki'})[button.dataset.settingSection] || 'Ustawienia';
     const card=byId('setCard');
+    byId('mobilePageTitle').textContent=title;
     if(card){card.setAttribute('aria-label',title);const heading=card.querySelector('h2');if(heading)heading.textContent=title;}
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

@@ -24,14 +24,16 @@ test('homepage is an introduction and topic content has independent indexable UR
 test('header and footer navigate to pages instead of old homepage sections',async()=>{
  for(const file of ['index.html','pobierz.html','kontakt.html','galeria.html','pomoc.html','blog/index.html',...topics.map(p=>p.slug+'.html')]){
   const page=await read('kamera/'+file);
-  const footer=page.match(/<footer class="mktFooter mktContainer">[\s\S]*?<\/footer>/)?.[0];
+  const footer=page.match(/<footer class="mktFooter">[\s\S]*?<\/footer>/)?.[0];
   assert.ok(footer,file+' must include the shared footer');
   assert.equal((footer.match(/<nav aria-label=/g)||[]).length,3,file+' must include all three footer navigation groups');
-  for(const label of ['Poznaj produkt','Rozpocznij korzystanie','Pomoc i dokumenty'])
+  assert.ok(footer.includes('aria-label="Kontakt"'),file+' footer shows contact details');
+  for(const label of ['Nawigacja','Pomoc','Dokumenty'])
    assert.ok(footer.includes('aria-label="'+label+'"'),file+' missing footer group '+label);
   const navigation=[page.match(/<header class="mktHeader">[\s\S]*?<\/header>/)?.[0],footer].join('');
   assert.ok(navigation.includes('href='),file);
   for(const [,href] of navigation.matchAll(/href="([^"]+)"/g)){
+   if(/^(?:mailto|tel):/.test(href))continue;
    const url=new URL(href,'https://dominiksolorz.github.io/kamera/'+file);
    assert.equal(url.hash,'',file+' must link to a page: '+href);
    url.search='';

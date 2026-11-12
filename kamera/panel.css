@@ -2746,19 +2746,7 @@ body.mobileOwnerMode #mobileCameraInfo.expanded :is(.mobileCameraDetail,.mobileC
 body.mobileOwnerMode .mobileBottomNav{box-sizing:border-box;padding:5px max(8px,env(safe-area-inset-right)) max(5px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important;gap:6px!important}
 body.mobileOwnerMode .mobileBottomNav button{min-height:48px!important;font-size:11px!important;padding:4px!important}
 body.mobileOwnerMode .mobileBottomNav{grid-template-columns:repeat(5,minmax(0,1fr))!important}
-body.mobileOwnerMode .mobileOverview{display:grid;gap:14px}
-body.mobileOwnerMode .mobileOverviewCard{padding:20px;border:1px solid var(--hl555,#783448);border-radius:12px;background:linear-gradient(145deg,var(--hl556,#24151d),var(--hl368,#101010));box-shadow:0 12px 30px var(--hl418,#0005)}
-body.mobileOwnerMode .mobileOverviewEyebrow{margin:0;color:var(--hl557,#ff8ca0);font-size:11px;font-weight:800;letter-spacing:.13em}
-body.mobileOwnerMode .mobileOverviewCard h2{margin:7px 0 10px;color:var(--hl3,#fff);font-size:24px;line-height:1.15}
-body.mobileOwnerMode .mobileOverviewStatus{margin:0;color:var(--hl558,#ffe1a3);font-weight:700}
-body.mobileOwnerMode .mobileOverviewCard>p:not(.mobileOverviewEyebrow):not(.mobileOverviewStatus){color:var(--hl559,#c3b4bb);font-size:13px;line-height:1.55}
 body.mobileOwnerMode .mobileOverviewPrimary{width:100%;min-height:52px;padding:12px;border:0;border-radius:8px;background:#ed4568;color:#fff;font:inherit;font-weight:800}
-body.mobileOwnerMode .mobileOverviewActions{display:grid;gap:9px}
-body.mobileOwnerMode .mobileOverviewActions button{display:grid;grid-template-columns:42px minmax(0,1fr) 18px;align-items:center;gap:11px;width:100%;min-height:68px;padding:10px 12px;border:1px solid var(--hl313,#432b33);border-radius:8px;background:var(--hl319,#171115);color:var(--hl3,#fff);text-align:left;font:inherit}
-body.mobileOwnerMode .mobileOverviewActions button>b{display:grid;place-items:center;width:42px;height:42px;border-radius:8px;background:var(--hl379,#351b24);color:var(--hl560,#ff8197);font-size:20px}
-body.mobileOwnerMode .mobileOverviewActions strong,body.mobileOwnerMode .mobileOverviewActions small{display:block}
-body.mobileOwnerMode .mobileOverviewActions small{margin-top:3px;color:var(--hl352,#b9aab4);font-size:12px}
-body.mobileOwnerMode .mobileOverviewActions i{color:var(--hl560,#ff8197);font-size:23px;font-style:normal}
 /* Older stylesheet supplied ::after and the audio component ::before. Render one icon. */
 body.mobileOwnerMode #stage #audioHud #soundBtn::after{content:none!important;display:none!important}
 body.mobileOwnerMode #stage #audioHud #soundBtn{display:flex!important;align-items:center;justify-content:center}
@@ -3501,9 +3489,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .mobileSettingCat
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .mobileSettingCategories button>i{color:var(--to-cyan)!important;font-style:normal}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .mobileSettingCategories button strong{color:var(--to-text)!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .mobileSettingsHome .eyebrow{font-family:var(--to-mono);color:var(--to-cyan)!important;letter-spacing:.16em}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app .mobileOverviewActions button{
-  display:grid!important;grid-template-columns:40px minmax(0,1fr) 16px!important;align-items:center!important;gap:12px!important;min-height:64px;
-}
 /* Telefon: długie teksty nigdy nie wychodzą poza kartę. */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app :is(.card,.panel,.mobileOverviewCard) :is(p,small,strong,span,h2,h3,li){overflow-wrap:anywhere;min-width:0}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) #app :is(.card,.panel) :is(button,.btn){max-width:100%;white-space:normal}
@@ -3744,8 +3729,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav{
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button{border:1px solid transparent!important;box-shadow:none!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button.active :is(b,svg){color:var(--pl-cyan)!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button.active::after{background:var(--pl-blue2)!important;box-shadow:none!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOverviewEyebrow{color:var(--pl-blue2)!important;font-size:11.5px!important;font-weight:700!important;letter-spacing:.08em!important;text-transform:uppercase!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOverviewStatus{color:var(--pl-amber)!important;font-size:13px!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.mobileOverviewActions,.mobileSettingCategories) button>b{
   background:rgba(236,66,77,0.14)!important;border:0!important;border-radius:var(--pl-radius-sm)!important;color:var(--pl-blue2)!important;
 }
@@ -3756,8 +3739,7 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileSetti
 html:not(.policeCommand):not(.usMilitary) body :is(.bootScreen,.lockScreen){
   background:radial-gradient(ellipse 760px 480px at 50% 0%,rgba(236,66,77,0.16),transparent 70%),var(--pl-bg)!important;
 }
-html:not(.policeCommand):not(.usMilitary) body :is(.bootCard,.pinCard),
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{
+html:not(.policeCommand):not(.usMilitary) body :is(.bootCard,.pinCard){
   background:linear-gradient(180deg,var(--pl-panel2),var(--pl-panel))!important;
   border:1px solid var(--pl-line2)!important;border-radius:12px!important;
   box-shadow:0 40px 90px -40px rgba(236,66,77,0.35),0 30px 60px -30px var(--hl53,#000)!important;color:var(--pl-text)!important;
@@ -3771,16 +3753,13 @@ html:not(.policeCommand):not(.usMilitary) body .lockScreen .keypad button:active
 html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinLogo{background:rgba(236,66,77,0.08)!important;border:1px solid var(--pl-line2)!important;border-radius:12px!important;box-shadow:0 0 34px -8px rgba(236,66,77,0.5)!important}
 html:not(.policeCommand):not(.usMilitary) body .lockScreen .pinMsg{font-family:var(--pl-sans)!important}
 html:not(.policeCommand):not(.usMilitary) body #bootProgress{background:linear-gradient(90deg,var(--pl-cyan),var(--pl-blue))!important;box-shadow:none!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{
-  background:linear-gradient(135deg,#ec424d,#e81725)!important;border:1px solid var(--pl-blue2)!important;color:#fff!important;border-radius:var(--pl-radius-sm)!important;
-  font-family:var(--pl-sans)!important;letter-spacing:normal!important;text-transform:none!important;font-weight:600!important;box-shadow:0 12px 28px -14px rgba(236,66,77,0.9)!important;
-}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary:hover{background:var(--pl-blue2)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authTextBtn{color:var(--pl-blue2)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authEyebrow{color:var(--pl-blue2)!important;font-family:var(--pl-sans)!important;letter-spacing:.08em!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog :is(.authClose,.hsPassToggle){border-radius:var(--pl-radius-sm)!important;background:var(--pl-raised)!important;border-color:var(--pl-line2)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton{border-radius:var(--pl-radius-sm)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand b{color:var(--pl-cyan)!important}
+
+
+
+
+
+
+
 /* ================= Szybkie menu ================= */
 html:not(.policeCommand):not(.usMilitary) body #quickMenu{background:var(--pl-bg2)!important;border-color:var(--pl-line2)!important}
 html:not(.policeCommand):not(.usMilitary) body #quickMenu button{border-radius:var(--pl-radius-sm)!important;background:var(--pl-panel)!important;border-color:var(--pl-line)!important}
@@ -3812,60 +3791,55 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContextA
    Zdjęcie domu nocą w tle, karta z marką, pola z ikonami, niebieski przycisk.
    Tylko wygląd — pola, kolejność kroków i obsługa konta bez zmian.
    ===================================================================== */
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBackdrop{
-  background:
-    radial-gradient(ellipse 900px 600px at 50% 40%,var(--hl608,rgba(10,10,10,0.15)),var(--hl609,rgba(10,10,10,0.75)) 78%),
-    linear-gradient(180deg,var(--hl610,rgba(10,10,10,0.25)),var(--hl611,rgba(10,10,10,0.8))),
-    url("assets/auth-night.webp") center/cover no-repeat,var(--hl85,#0a0a0a)!important;
-  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
-}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{
-  width:min(440px,calc(100vw - 24px))!important;padding:30px 30px 26px!important;
-  background:linear-gradient(180deg,var(--hl612,rgba(22,21,21,0.92)),var(--hl613,rgba(17,16,16,0.94)))!important;
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-  border:1px solid var(--hl38,rgba(238,79,89,0.28))!important;border-radius:12px!important;
-  box-shadow:0 0 0 1px rgba(236,66,77,0.08),0 40px 90px -30px rgba(236,66,77,0.45),0 30px 60px -20px var(--hl53,#000)!important;
-}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{
-  display:grid!important;grid-template-columns:auto auto;justify-content:center;align-items:center;column-gap:12px;row-gap:2px;
-  padding:0 0 18px!important;margin:0 0 18px!important;border-bottom:1px solid var(--pl-line)!important;text-align:left;
-}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand img{grid-row:1 / span 2;width:46px!important;height:46px!important;margin:0!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p{margin:0!important;font-size:20px!important;font-weight:800!important;letter-spacing:.01em!important;color:var(--hl603,#f9f9f9)!important;line-height:1.1}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p b{color:var(--pl-blue2)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand::after{content:"Monitoring · Ochrona · Kontrola";font-size:11.5px;color:var(--pl-muted);letter-spacing:.02em}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm h2{font-size:22px!important;margin:4px 0 4px!important;text-align:center}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm>p:not(.authEyebrow){text-align:center;font-size:13px!important;color:var(--pl-muted)!important;margin:0 0 14px!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authEyebrow{text-align:center;font-size:11px!important;margin:0!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label:not(.authCheck){display:block;font-size:12.5px!important;color:var(--pl-muted)!important;font-weight:500;margin:0 0 12px!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label:not(.authCheck) input:not([type="checkbox"]):not([type="radio"]){
-  display:block;width:100%;height:46px!important;margin-top:6px!important;padding:0 14px 0 42px!important;font-size:14px!important;
-  background-color:var(--hl614,rgba(10,10,10,0.7))!important;background-repeat:no-repeat!important;background-position:14px 50%!important;background-size:18px 18px!important;
-}
-/* Ikony pól (dekoracja, bez wpływu na wartości). */
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label>input[type="email"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.5' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E")!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label :is(input[type="password"],input[name="password"],input[name="password_repeat"]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='10.5' width='14' height='10' rx='2'/%3E%3Cpath d='M8 10.5V7.5a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E")!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label :is(input[name="first_name"],input[name="last_name"]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.5' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E")!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label :is(input[name="address_line"],input[name="postal_code"]){background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z'/%3E%3C/svg%3E")!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label>input[type="tel"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238394ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='7' y='2.5' width='10' height='19' rx='2'/%3E%3Cpath d='M11 18h2'/%3E%3C/svg%3E")!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .hsPassToggle{
-  height:32px!important;padding:0 10px!important;font-size:12px!important;color:var(--pl-muted)!important;
-  background:transparent!important;border:1px solid var(--pl-line2)!important;border-radius:8px!important;
-}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .hsPassToggle:hover{color:var(--hl3,#fff)!important;border-color:var(--pl-blue)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{width:100%;height:48px!important;font-size:15px!important;margin-top:6px!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authTextBtn{display:block;width:100%;text-align:center;font-size:13px!important;margin-top:12px!important;background:transparent!important;border:0!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider{color:var(--pl-muted)!important;font-size:12.5px!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider::before,
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider::after{background:var(--pl-line2)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton{
-  height:46px!important;background:var(--hl614,rgba(10,10,10,0.7))!important;color:var(--pl-text)!important;border:1px solid var(--pl-line2)!important;font-weight:600!important;
-}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton:hover{border-color:var(--pl-blue)!important;background:var(--pl-hover)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck{display:flex!important;gap:10px;align-items:flex-start;font-size:12.5px!important;color:var(--pl-muted)!important;margin:4px 0 10px!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck a{color:var(--pl-blue2)!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authGrid{gap:12px!important}
-html:not(.policeCommand):not(.usMilitary) body #authDialog .authClose{width:36px!important;height:36px!important}
+/* =====================================================================
+   Ekrany konta według projektu właściciela (11.11.2026): logowanie,
+   rejestracja, odzyskiwanie hasła, potwierdzenie e-maila. Tylko wygląd;
+   pola, nazwy i kolejność kroków obsługuje bez zmian auth.js.
+   ===================================================================== */
+html:not(.policeCommand):not(.usMilitary) body #authDialog{padding:0;overflow:auto;align-items:start}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBackdrop{background:radial-gradient(ellipse 120% 40% at 50% 112%,rgba(255,24,48,.38),transparent 62%),radial-gradient(ellipse 60% 40% at 90% 0%,rgba(255,24,48,.14),transparent 70%),#070707!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{display:flex;flex-direction:column;gap:14px;width:min(460px,100%);max-height:100dvh;padding:34px 30px 30px!important;background:transparent!important;border:0!important;box-shadow:none!important;text-align:center}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard>*{order:2;flex-shrink:0}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{order:0;display:grid;justify-items:center;gap:4px;margin:0 0 6px;padding:0;border:0}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand img{width:96px;height:96px;filter:drop-shadow(0 0 10px rgba(255,24,48,.6)) drop-shadow(0 0 26px rgba(255,24,48,.25))}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p{margin:6px 0 0;font-size:28px;font-weight:800;letter-spacing:.4px;color:#f5f6f8!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p b{color:#ff2947!important;text-shadow:0 0 16px rgba(255,41,71,.45)}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand small{font-size:14px;color:#d5d1d1}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authMessage{order:1}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleEntry{order:3;margin:0}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForgot{order:4}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authSwitch{order:5}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm{gap:12px;text-align:left}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authForm :is(h1,h2){margin:0;text-align:center;font-size:32px;font-weight:800;letter-spacing:-.02em}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authLead{margin:0 0 8px;text-align:center;font-size:16px;color:#d5d1d1!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField{position:relative;display:flex;align-items:center;gap:12px;min-height:54px;padding:0 14px;border:1px solid #3d3838;border-radius:12px;background:rgba(14,13,13,.92)}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField:focus-within{border-color:#ff2947;box-shadow:0 0 0 3px rgba(255,41,71,.18)}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField input:focus-visible{outline:0!important;box-shadow:none!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField .authIco{width:22px;height:22px;flex:none;color:#e6e2e2}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]){outline:0!important;flex:1;min-width:0;min-height:52px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;font-size:16px;color:#f5f4f4!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField input::placeholder{color:#c9c4c4;opacity:1}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField .hsPassWrap{flex:1;display:flex;align-items:center}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField .hsPassWrap input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]){padding-right:44px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField .hsPassToggle{right:-4px;width:40px;height:40px;min-height:0;padding:0;border:0!important;background:transparent!important;color:#e6e2e2!important;font-size:0}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authField .hsPassToggle svg{width:22px;height:22px}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{display:flex;align-items:center;justify-content:center;gap:12px;min-height:56px;margin-top:6px;border:0!important;border-radius:14px!important;background:linear-gradient(180deg,#ff2a40,#d10f23)!important;color:#fff!important;font-size:19px;font-weight:700;line-height:1;font-family:inherit!important;letter-spacing:0;text-transform:none;box-shadow:0 10px 30px -8px rgba(255,24,48,.7),inset 0 1px 0 rgba(255,255,255,.18)!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary .authIco{width:24px;height:24px}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authTextBtn{min-height:40px;border:0!important;background:transparent!important;box-shadow:none!important;justify-self:center;align-self:center;color:#e6e2e2!important;font-size:15px;font-weight:500}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authTextBtn b,html:not(.policeCommand):not(.usMilitary) body #authDialog .authForgot{color:#ff2947!important;text-decoration:underline;text-underline-offset:4px;font-weight:600}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck{display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:center;font-size:14px;color:#e6e2e2!important;text-align:left}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck input{width:22px;height:22px;min-height:0;margin:0;accent-color:#e8172d}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authCheck a{color:#ff2947!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authInfo{display:flex;gap:12px;align-items:flex-start;margin:6px 0 0;padding:14px;border:1px solid #3d3838;border-radius:12px;background:rgba(14,13,13,.9);font-size:14px;text-align:left}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authInfo .authIco{width:26px;height:26px;flex:none;color:#e6e2e2}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authStepIcon{justify-self:center;display:grid;place-items:center;width:84px;height:84px;color:#ff2947;filter:drop-shadow(0 0 14px rgba(255,41,71,.5))}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authStepIcon .authIco{width:72px;height:72px;stroke-width:1.4}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authDivider{font-size:14px;color:#d5d1d1}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleButton{min-height:52px;border-radius:12px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authGoogleEntry p{text-align:center}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authClose{top:16px;right:16px;border-radius:10px!important}
+html:not(.policeCommand):not(.usMilitary) body #authDialog .authNotice{border-radius:12px;text-align:left}
+html body #authDialog .srOnly{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media(min-width:761px){html:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{max-height:94dvh;padding:38px 36px 32px!important;border:1px solid #2c2828!important;border-radius:22px!important;background:rgba(10,10,10,.92)!important;box-shadow:0 0 80px -30px rgba(255,24,48,.5),0 30px 80px -30px #000!important}}
 /* PIN: zdjęcie w tle, pola cyfr jako kwadraty, niebieskie zatwierdzenie. */
 html:not(.policeCommand):not(.usMilitary) body .lockScreen{
   background:
@@ -4274,35 +4248,15 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body #app :is(input,select
     transition:none;
   }
 }
-html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authCard,
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .lockScreen{
   max-height:calc(100dvh - 28px);
   overflow-y:auto;
   overscroll-behavior:contain;
   scrollbar-color:rgba(238,79,89,0.48) rgba(16,16,16,0.6);
 }
-html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{
-  border:1px solid rgba(238,79,89,0.7)!important;
-  background:linear-gradient(125deg,#e81725,#ea2d39)!important;
-  color:#fff!important;
-  box-shadow:0 12px 28px -18px rgba(236,65,76,0.84)!important;
-}
-html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label a{
-  color:var(--hl14,#ee4f59)!important;
-  text-underline-offset:3px;
-}
-@media (max-height:820px){
-  html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{
-    padding:20px 24px!important;
-  }
-  html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{
-    margin-bottom:12px!important;
-    padding-bottom:12px!important;
-  }
-  html.desktopMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label:not(.authCheck){
-    margin-bottom:9px!important;
-  }
-}
+
+
+
 /* HOME SECURITY unified operator controls */
 html.desktopMode:not(.policeCommand):not(.usMilitary) :is(button,a[role="button"],.button,.action,.toolButton,.navItem):focus-visible{
   outline:3px solid #ea2633;
@@ -4602,25 +4556,12 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary){
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body{overflow-x:hidden;
 }
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app{padding-bottom:100px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{
-  display:grid!important;width:100%!important;margin:0 auto!important;border:0!important;box-shadow:none!important;
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{width:100%!important;margin:0 auto!important;border:0!important;
 }
 .mobileBrandName{display:block;font-size:13px;font-weight:800;line-height:1.2;letter-spacing:.05em}
 .mobileBrandName b{color:var(--ma-cyan)}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader :is(button,summary){border-radius:8px!important;border-color:var(--ma-line)!important;background:var(--ma-card)!important;color:var(--ma-text)!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mainCol{width:100%!important;max-width:var(--ma-width)!important;margin:0 auto!important;min-width:0}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOverview{padding:0 var(--ma-space) 20px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewCard h2{font-weight:800!important;color:var(--ma-text)!important;margin:0!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button{
-  display:flex!important;
-  width:100%!important;min-width:0;color:var(--ma-text)!important;font-size:16px!important;
-}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button:first-child{border-color:var(--ma-cyan)!important;box-shadow:0 0 20px rgba(233,29,43,0.2)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button>b{display:grid!important;place-items:center!important;background:none!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button:first-child>b{color:var(--ma-cyan)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions svg{width:40px;height:40px}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions strong{font-size:15px!important;font-weight:700!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.mobileOverviewStatus,.mobileOverviewHint){color:var(--ma-muted)!important;font-size:12px!important;line-height:1.5;text-align:center;margin:14px 0 0!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .mobileSettingCategories button{background:var(--ma-card)!important;border:1px solid var(--ma-line)!important;border-radius:12px!important;color:var(--ma-text)!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .mobileSettingCategories button>b{color:var(--ma-cyan)!important;background:none!important}
@@ -4636,24 +4577,20 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav 
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button.active b{color:var(--ma-cyan)!important;text-shadow:none!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body .mobileBottomNav button.active::after{display:none!important}
 /* Real account forms fill the phone instead of retaining a desktop photo/modal. */
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog{padding:0!important;align-items:start!important;overflow:auto!important;background:var(--ma-bg)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBackdrop{display:none!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{
-  width:100%!important;max-width:var(--ma-width)!important;min-height:100dvh!important;max-height:none!important;overflow:visible!important;
-  padding:max(36px,env(safe-area-inset-top)) 24px 28px!important;border:0!important;
-  background:radial-gradient(120% 60% at 50% 0,var(--hl680,#242222) 0,var(--ma-bg) 60%)!important;
-}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{display:flex!important;flex-direction:column!important;justify-content:center!important;gap:12px!important;margin-bottom:36px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand img{width:62px!important;height:62px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand p{font-size:23px!important;font-weight:800!important;color:var(--ma-text)!important;text-align:center}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand b{color:var(--ma-cyan)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm{gap:18px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authEyebrow{display:none!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog :is(.authForm h2,.authForm>p){text-align:center!important;color:var(--ma-text)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm h2{font-size:27px!important;font-weight:800!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm input:not([type="checkbox"]){border:1px solid var(--ma-line)!important;background:var(--ma-card)!important;border-radius:8px!important;min-height:52px!important;color:var(--ma-text)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{border:0!important;border-radius:999px!important;min-height:54px!important;font-size:16px!important;font-weight:800!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog :is(.authTextBtn,.authClose){color:var(--ma-cyan)!important}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* PIN verification itself is unchanged; keep the original keyboard and handlers. */
 .mobilePinHint{display:none}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock{min-height:100dvh!important;padding:28px 16px!important;background:var(--ma-bg)!important}
@@ -4669,12 +4606,11 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock .pinDots i.
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock .mobilePinHint{display:block;color:var(--ma-muted);font-size:12px;line-height:1.5}
 @media (orientation:landscape) and (max-height:500px){html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock .keypad button{min-height:44px!important}}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsRemoteEntry{grid-column:1 / -1!important;justify-self:end!important;width:auto!important;min-height:38px!important;padding:8px 14px!important;font-size:12px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand{border:0!important;padding-bottom:0!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authBrand::after{content:none!important}
+
+
 /* Settings has one entry point: the right navigation item disappears here. */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] .mobileBottomNav{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] .mobileBottomNav [data-mobile-view="settings"],
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] #mobilePageTitle,
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] .hsRemoteEntry{display:none!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsTitle{display:flex;align-items:center;gap:14px;text-align:left}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsTitle>button{border:1px solid var(--hl170,#353232);border-radius:8px;background:var(--hl244,#1d1b1b);color:var(--hl20,#e6e5e5);min-width:44px;min-height:44px;font-size:25px}
@@ -4695,9 +4631,9 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view=
 .mobileMediaTabs button{min-height:44px;padding:8px 24px;border:1px solid var(--hl139,#3b3838);border-radius:8px;background:var(--hl108,#222020);color:var(--hl684,#ebeaea)}
 /* One function per screen; no floating navigation or header popover. */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app{padding-bottom:max(28px,env(safe-area-inset-bottom))!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{align-items:center!important;box-sizing:border-box!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{box-sizing:border-box!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader>div{min-width:0!important;overflow:visible!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandName{white-space:nowrap!important;line-height:1.4!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandName{line-height:1.4!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileMenuBtn{display:grid!important;place-items:center!important;padding:0!important;margin:0!important;letter-spacing:3px;justify-self:end!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsRemoteEntry{display:none!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileBackHome{min-height:44px!important;text-align:left!important;font:inherit!important;align-self:flex-start}
@@ -4736,7 +4672,6 @@ html.mobileOwnerMode .toast{bottom:calc(84px + env(safe-area-inset-bottom));left
 /* Mapa jako kafelek Pulpitu; karta zostaje tylko jako nośnik okna zgody */
 html.mobileOwnerMode .mobileMapCard .mobileMapOpen{display:none}
 html.mobileOwnerMode .mobileMapCard{margin:0}
-html.mobileOwnerMode body #app #mobileOverview .mobileOverviewActions .mobileMapTile{grid-column:1/-1}
 /* Interaktywna mapa: pozycja na żywo, wyszukiwarka, firmy i adresy */
 .mobileMapDialog{width:min(calc(100vw - 16px),560px);max-height:calc(100dvh - 16px);overflow:auto;overscroll-behavior:contain}
 .mobileMapTools{display:grid;gap:8px;margin-bottom:10px}
@@ -4805,17 +4740,7 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileChoos
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileCameraInfo{background:var(--ma-card)!important;border:1px solid var(--ma-line)!important;border-radius:12px!important;color:var(--ma-text)!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileCameraInfo .mobileCameraInfoToggle{background:rgba(236,66,77,0.16)!important;border:1px solid var(--hl72,rgba(238,79,89,0.5))!important;color:var(--hl3,#fff)!important;border-radius:8px!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #audioHud{border-radius:12px!important;border-color:var(--ma-line)!important;background:var(--ma-card)!important}
-/* Pulpit telefonu: stan systemu od razu pod powitaniem, podgląd na żywo jednym dotknięciem (wzorzec aplikacji monitoringu). */
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview:not(.mobileHidden){display:flex!important;flex-direction:column!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.mobileOverviewCard{order:1}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.mobileOverviewStatus{display:flex!important;align-items:center;gap:10px;padding:12px 14px!important;border:1px solid var(--ma-line)!important;color:var(--ma-text)!important;font-size:13px!important;font-weight:600;text-align:left!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.mobileOverviewStatus::before{content:"";flex:none;width:10px;height:10px;border-radius:50%;background:var(--ma-muted);box-shadow:0 0 8px rgba(174,169,169,0.45)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.mobileOverviewHint{text-align:left!important;padding:0 2px}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>:not(.mobileOverviewCard):not(.mobileOverviewStatus):not(.mobileOverviewHint):not(.mobileOverviewActions){order:5}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button[data-open-mobile-view="camera"]{grid-column:1 / -1!important;flex-direction:row!important;justify-content:flex-start!important;gap:16px!important;text-align:left!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button[data-open-mobile-view="camera"] span::after{content:"Podgląd na żywo";display:block;margin-top:3px;font-size:12px;font-weight:500;color:var(--ma-muted)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button:not([data-open-mobile-view="camera"]){min-height:clamp(96px,15dvh,128px)!important;padding:14px 10px!important;gap:8px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button:not([data-open-mobile-view="camera"]) svg{width:32px;height:32px}
+
 /* ===== Kamery: zdarzenia pod obrazem na tym samym ekranie ===== */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app #mobileEventsWorkspace{margin:14px 16px 0!important;padding:14px!important;box-sizing:border-box;width:auto!important;max-width:calc(100% - 32px)!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app #mobileEventsWorkspace::before{content:"Ostatnie zdarzenia";display:block;font-size:16px;font-weight:800;color:var(--ma-text)}
@@ -4837,10 +4762,10 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body{
   font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif!important;-webkit-font-smoothing:antialiased}
 /* Nagłówek: marka, tytuł ekranu i stan połączenia w czytelnej pigułce. */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{
-  position:sticky!important;top:0;z-index:40;padding:12px 16px!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);max-width:none!important}
+  position:sticky!important;top:0;z-index:40;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);max-width:none!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandLogo{width:44px!important;height:44px!important;padding:0;border-radius:11px;background:#1a1a1a;border:0;box-sizing:border-box}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandName{font-size:11px!important;letter-spacing:.14em!important;color:var(--v2-muted)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandName b{color:var(--v2-cyan)}
+
+
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader h1{font-weight:800!important;margin:2px 0 3px!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader p{display:inline-flex!important;align-items:center;gap:6px;width:max-content;max-width:100%;margin:0!important;padding:3px 9px 3px 7px;border-radius:999px;border:1px solid var(--v2-line2);background:var(--hl695,rgba(22,21,21,0.8));font-weight:600}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader p>i{width:7px!important;height:7px!important;border-radius:50%}
@@ -4849,61 +4774,7 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileMenuB
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mainCol :is(.card,.panel,#mobileCameraInfo,#audioHud,.mobileRecordingStorage,.eventWorkspaceDetail){
   border-radius:var(--v2-r)!important;border:1px solid var(--v2-line)!important;
   background:linear-gradient(180deg,var(--hl696,rgba(27,26,26,0.92)),var(--hl612,rgba(22,21,21,0.92)))!important;box-shadow:var(--v2-shadow)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileBackHome{display:inline-flex!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"]:not([data-mobile-settings="root"]):not([data-mobile-settings=""]) #app .mobileSettingsBack{display:inline-flex!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileBackHome,
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileSettingsBack{
-  align-items:center;gap:8px;width:auto!important;margin:14px 16px 12px!important;padding:9px 14px!important;
-  border-radius:999px!important;border:1px solid var(--v2-line2)!important;background:var(--v2-panel)!important;color:var(--v2-text)!important;font-size:13.5px!important;font-weight:600!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileBackHome[hidden]{display:none!important}
-/* Pulpit: baner z nocnym zdjęciem domu, stan systemu, duży podgląd i kafelki z ikonami. */
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview{padding:14px 16px 24px!important;gap:0}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewCard{
-  position:relative;overflow:hidden;min-height:132px;margin:0 0 12px!important;padding:20px 18px!important;border-radius:12px!important;
-  border:1px solid var(--v2-line2)!important;display:flex;align-items:flex-end;
-  background:linear-gradient(90deg,var(--hl697,rgba(12,11,11,0.92)) 0,var(--hl698,rgba(12,11,11,0.55)) 60%,var(--hl699,rgba(12,11,11,0.2)) 100%),url("assets/site-hero-dom.webp") 70% 45%/cover no-repeat!important;
-  box-shadow:0 26px 50px -28px rgba(236,65,76,0.6)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewCard::before{content:"Twój dom pod kontrolą";position:absolute;top:16px;left:18px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--v2-cyan)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewCard h2{font-size:22px!important;line-height:1.2!important;max-width:15ch;text-shadow:0 2px 12px var(--hl120,rgba(0,0,0,.6))}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.mobileOverviewStatus{margin:0 0 4px!important;border-radius:8px!important;border-color:var(--v2-line)!important;background:var(--v2-panel)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.mobileOverviewHint{margin:6px 2px 16px!important;font-size:12px!important;color:var(--v2-muted)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions{gap:10px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button{
-  --chip:var(--v2-blue);
-  flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;gap:12px!important;
-  min-height:76px!important;padding:12px 12px!important;text-align:left!important;border-radius:12px!important;
-  border:1px solid var(--v2-line)!important;background:linear-gradient(180deg,var(--hl700,rgba(27,26,26,0.95)),var(--hl701,rgba(22,21,21,0.95)))!important;box-shadow:var(--v2-shadow)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button>b{
-  flex:none;width:42px!important;height:42px!important;border-radius:8px!important;color:var(--chip)!important;
-  background:color-mix(in srgb,var(--chip) 16%,transparent)!important;border:1px solid color-mix(in srgb,var(--chip) 40%,transparent)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button svg{width:22px!important;height:22px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button>span{min-width:0}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button strong{display:block;font-size:14.5px!important;font-weight:700!important;line-height:1.25}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button>span::after{display:block;margin-top:3px;font-size:11px;font-weight:500;line-height:1.3;color:var(--v2-muted)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions [data-open-mobile-view="recordings"]{--chip:var(--v2-violet)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions [data-open-mobile-view="recordings"]>span::after{content:"Archiwum i odtwarzanie"}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions [data-open-mobile-view="alerts"]{--chip:var(--v2-amber)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions [data-open-mobile-view="alerts"]>span::after{content:"Ruch i dźwięk"}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions [data-open-mobile-view="settings"]{--chip:var(--v2-blue)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions [data-open-mobile-view="settings"]>span::after{content:"Obraz, dźwięk, zapis"}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions [data-open-mobile-view="cloud"]{--chip:var(--v2-cyan)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions [data-open-mobile-view="cloud"]>span::after{content:"Miejsce zapisu"}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions [data-open-mobile-profile]{--chip:var(--v2-pink)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions [data-open-mobile-profile]>span::after{content:"Konto i PIN"}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions .mobileMapTile{--chip:var(--v2-green)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions .mobileMapTile>span::after{content:"Lokalizacja telefonu"}
-/* Główny przycisk: podgląd na żywo z ramką kamery. */
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button[data-open-mobile-view="camera"]{
-  --chip:var(--v2-cyan);position:relative;overflow:hidden;min-height:108px!important;padding:16px 64px 16px 18px!important;border-color:var(--hl702,rgba(234,42,55,0.45))!important;
-  background:radial-gradient(120% 140% at 100% 0,rgba(234,42,55,0.22),transparent 55%),linear-gradient(135deg,var(--hl108,#222020),var(--hl47,#191717))!important;box-shadow:0 22px 44px -24px rgba(234,42,55,0.55)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button[data-open-mobile-view="camera"]>b{width:54px!important;height:54px!important;border-radius:12px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button[data-open-mobile-view="camera"] svg{width:28px!important;height:28px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button[data-open-mobile-view="camera"] strong{font-size:18px!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button[data-open-mobile-view="camera"]>span::after{content:"Podgląd na żywo · dotknij, aby otworzyć";font-size:12px}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button[data-open-mobile-view="camera"]::after{
-  content:"";position:absolute;right:16px;top:50%;width:34px;height:34px;margin-top:-17px;border-radius:50%;
-  background:var(--v2-cyan) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 6l6 6-6 6' fill='none' stroke='%23031421' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat;
-  box-shadow:0 0 0 6px rgba(234,42,55,0.14)}
 /* Ustawienia: lista kategorii w tym samym stylu co kafelki. */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsTitle h2{font-size:24px!important;font-weight:800!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .mobileSettingCategories{gap:10px!important}
@@ -4997,11 +4868,7 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app{
 }
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{
   min-height:66px;
-  padding-inline:clamp(12px,4vw,20px)!important;
-  border-bottom:1px solid var(--hs3-edge)!important;
-  background:linear-gradient(180deg,var(--hl709,rgba(16,15,15,0.97)),var(--hl710,rgba(19,18,18,0.86)))!important;
-  box-shadow:0 8px 30px -24px rgba(237,70,81,0.55);
-}
+  padding-inline:clamp(12px,4vw,20px)!important;}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .mobileBrandLogo{
   width:42px;
   height:42px;
@@ -5043,20 +4910,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileFunct
   color:var(--hs3-muted)!important;
   font-size:13px;
   line-height:1.5;
-}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileBackHome,
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileSettingsBack{
-  min-height:46px;
-  width:100%;
-  justify-content:flex-start;
-  margin:10px 0 6px;
-  padding-inline:14px;
-  border:1px solid var(--hs3-edge);
-  border-radius:8px;
-  background:linear-gradient(120deg,var(--hl712,rgba(45,42,42,0.74)),var(--hl713,rgba(24,23,23,0.92)));
-  color:var(--hl20,#e6e5e5);
-  font-size:14px;
-  font-weight:650;
 }
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.card,.panel,#setCard,#ctrlBar,#dvrCard,#dvrListCard,#systemPanel,#modeCard,#mobileDiagnosticWorkspace,.mobileRecordingStorage){
   min-width:0;
@@ -5134,7 +4987,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #dvrCard inp
   accent-color:var(--hs3-cyan);
   touch-action:pan-x;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authCard,
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock .lockScreen{
   max-height:calc(100dvh - 20px);
   overflow-y:auto;
@@ -5143,28 +4995,13 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #lock .lockScreen
   border-radius:12px!important;
   box-shadow:0 28px 72px -38px rgba(232,23,37,0.62),inset 0 1px 0 rgba(255,255,255,.07)!important;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm :is(input,select,button){
-  min-height:48px;
-  border-radius:8px;
-}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authPrimary{
-  border:1px solid rgba(238,79,89,0.72);
-  background:linear-gradient(125deg,#e81927,#eb323f)!important;
-  color:#fff!important;
-  box-shadow:0 12px 28px -18px rgba(236,65,76,0.8);
-}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authForm label a{
-  color:var(--hl14,#ee4f59)!important;
-  text-underline-offset:3px;
-}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .hsPassToggle{
-  border-color:var(--hs3-edge);
-  background:var(--hl158,#252323);
-  color:var(--hl722,#ebe9e9);
-}
+
+
+
+
 @media (max-width:430px) and (max-height:740px){
   html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{min-height:58px}
-  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #authDialog .authCard{padding:18px 18px 22px!important}
+
 
 }
 @media (orientation:landscape) and (max-height:500px){
@@ -5202,19 +5039,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view=
   color:var(--hs3-muted)!important;
   font-size:11px!important;
   line-height:1.3;
-}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app #mobileBackHome:not([hidden]){
-  align-self:flex-start;
-  min-height:44px!important;
-  margin:8px 0 0!important;
-  padding:0 15px!important;
-  border:1px solid var(--hl726,rgba(184,179,179,0.24))!important;
-  border-radius:999px!important;
-  background:linear-gradient(145deg,var(--hl727,rgba(34,32,32,0.96)),var(--hl728,rgba(22,21,21,0.96)))!important;
-  color:var(--hl12,#f7f6f6)!important;
-  font-size:13px!important;
-  font-weight:680;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
 }
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app #stage{
   min-width:0;
@@ -5376,9 +5200,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view=
   html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app .mainCol{
     gap:7px!important;
   }
-  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app #mobileBackHome:not([hidden]){
-    margin-top:4px!important;
-  }
 
 }
 /* Rozmowa na telefonie: pełny opis przycisku i zawsze widoczny stan (nie chowa się z odsłuchem). */
@@ -5392,43 +5213,13 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body{--hp-panel:var(--
 html.mobileOwnerMode body #app .hsPhoneBell{display:grid;place-items:center;width:44px;height:44px;border-radius:8px;border:1px solid var(--hp-line);background:var(--hp-panel);color:var(--hl205,#f0f0f0);flex:none}
 html.mobileOwnerMode body #app .hsPhoneBell svg{width:22px;height:22px}
 html.mobileOwnerMode body #app .mobileAppHeader #mobileMenuBtn{margin-left:8px}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewCard.hsPhoneHero{display:flex!important;align-items:center;justify-content:space-between;gap:12px;min-height:0!important;padding:4px 2px 2px!important;background:none!important;border:0!important;box-shadow:none!important;order:1}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewCard.hsPhoneHero::before,html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewCard.hsPhoneHero::after{content:none!important;display:none!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneHero h2{font-size:26px!important;max-width:none!important;text-shadow:none!important}
-html.mobileOwnerMode body #app #mobileOverview .hsPhoneHero p{margin:3px 0 0;color:var(--hp-muted);font-size:14px}
-html.mobileOwnerMode body #app .hsPhonePill{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px 0 6px;border-radius:8px;border:1px solid var(--hl660,rgba(52,211,153,.45));background:var(--hl650,rgba(16,80,60,.45));color:var(--hl652,#eafff6);font-family:inherit;font-size:13.5px;line-height:1;font-weight:700;flex:none;white-space:nowrap}
-html.mobileOwnerMode body #app .hsPhonePill[data-tone="off"]{border-color:rgba(251,191,36,.45);background:var(--hl663,rgba(80,60,16,.4));color:var(--hl665,#fff3d6)}
-html.mobileOwnerMode body #app .hsPhonePill[data-tone="live"]{border-color:var(--hl666,rgba(236,68,79,0.45));background:var(--hl658,rgba(43,41,41,0.45));color:var(--hl125,#f4f3f3)}
-html.mobileOwnerMode body #app .hsPhonePill .hsShield{display:grid;place-items:center;width:28px;height:28px;color:var(--hp-green)}
-html.mobileOwnerMode body #app .hsPhonePill[data-tone="off"] .hsShield{color:var(--hp-amber)}
-html.mobileOwnerMode body #app .hsPhonePill[data-tone="live"] .hsShield{color:var(--hl740,#ec444f)}
-html.mobileOwnerMode body #app .hsPhonePill svg{width:20px;height:20px}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.hsPhoneLive{order:2}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.hsPhoneCams{order:3}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.hsPhoneEvents{order:4}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.hsPhoneShortcutsTitle{order:5;margin:6px 2px -2px;font-size:17px;color:var(--hl3,#fff)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.mobileOverviewActions{order:6}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.mobileOverviewStatus,html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>.mobileOverviewHint{order:8}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>:not(.mobileOverviewCard):not(.mobileOverviewStatus):not(.mobileOverviewHint):not(.mobileOverviewActions):not(.hsPhoneLive):not(.hsPhoneCams):not(.hsPhoneEvents):not(.hsPhoneShortcutsTitle){order:7}
-html.mobileOwnerMode body #app .hsPhoneLiveTile{position:relative;display:block;width:100%;aspect-ratio:16/10;padding:0;border-radius:12px;overflow:hidden;border:1px solid rgba(177,173,173,0.28);background:radial-gradient(80% 80% at 50% 40%,#282525,#0d0c0c);color:#fff}
-html.mobileOwnerMode body #app .hsPhoneLiveTile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-html.mobileOwnerMode body #app .hsPhoneLiveTile video[hidden],html.mobileOwnerMode body #app .hsPhoneLiveEmpty[hidden]{display:none}
-html.mobileOwnerMode body #app .hsPhoneLiveEmpty{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:6px;text-align:center;padding:16px}
-html.mobileOwnerMode body #app .hsPhoneLiveEmpty b{font-size:16px}
-html.mobileOwnerMode body #app .hsPhoneLiveEmpty small{color:var(--hp-muted);font-size:12.5px}
-html.mobileOwnerMode body #app .hsPhoneLiveEmpty .hsPlay{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#ea2633,#e81725);color:#fff;box-shadow:0 10px 30px -8px rgba(234,38,51,0.7)}
-html.mobileOwnerMode body #app .hsPhoneLiveEmpty .hsPlay svg{width:24px;height:24px;margin-left:3px}
-html.mobileOwnerMode body #app .hsPhoneLiveTile .hsChip{position:absolute;left:12px;top:12px;padding:7px 11px;border-radius:8px;background:rgba(12,11,11,0.75);font-size:13px;font-weight:700}
 html.mobileOwnerMode body #app :is(.hsPhoneCams,.hsPhoneEvents){padding:16px;border-radius:12px;border:1px solid var(--hp-line);background:linear-gradient(160deg,var(--hp-panel2),var(--hp-panel))}
 html.mobileOwnerMode body #app .hsCardHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
 html.mobileOwnerMode body #app .hsCardHead h2{margin:0;font-size:17px;color:var(--hl3,#fff)}
 html.mobileOwnerMode body #app .hsCardHead h2 span{color:var(--hp-muted)}
 html.mobileOwnerMode body #app .hsLink{border:0;background:none;color:var(--hl740,#ec444f);font-weight:600;font-size:13.5px;padding:4px;min-height:0}
-html.mobileOwnerMode body #app .hsPhoneCamStrip{display:flex;gap:10px;overflow-x:auto}
-html.mobileOwnerMode body #app .hsPhoneCamStrip .hsCamTile{position:relative;flex:0 0 46%;aspect-ratio:16/10;padding:0;border-radius:8px;overflow:hidden;border:2px solid var(--hp-cyan);background:#121111;color:#fff}
 html.mobileOwnerMode body #app .hsCamThumb{position:absolute;inset:0;display:grid;place-items:center;color:var(--hl144,#e81725)}
 html.mobileOwnerMode body #app .hsCamThumb svg{width:34px;height:34px}
-html.mobileOwnerMode body #app .hsPhoneCamStrip .hsCamLabel{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:6px;padding:16px 10px 8px;background:linear-gradient(180deg,transparent,var(--hl669,rgba(8,8,8,0.9)));font-size:13px;font-weight:700}
 html.mobileOwnerMode body #app .hsDot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:#7b7474}
 html.mobileOwnerMode body #app .hsDot.on{background:var(--hp-green)}
 html.mobileOwnerMode body #app .hsEventList{list-style:none;margin:0;padding:0;display:grid}
@@ -5468,18 +5259,13 @@ html.mobileOwnerMode body .hsTabBar button svg{width:23px;height:23px}
 html.mobileOwnerMode body .hsTabBar button.active{color:var(--hp-cyan)}
 html.mobileOwnerMode body.hsHasTabBar #app{padding-bottom:calc(84px + env(safe-area-inset-bottom))!important}
 html.mobileOwnerMode body.hsHasTabBar[data-mobile-view="playback"] .hsTabBar{display:none}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{grid-template-columns:40px minmax(0,1fr) 44px 48px!important;gap:10px!important}
+
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #mobileMenuBtn{margin-left:0!important}
 html.mobileOwnerMode body #app .hsPhoneBell{margin-left:0}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneHero{flex-wrap:wrap}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneHero h2{white-space:nowrap}
-html.mobileOwnerMode body #app .hsPhoneCamStrip .hsCamTile{display:block;text-align:left}
-html.mobileOwnerMode body #app .hsPhoneCamStrip .hsCamLabel{justify-content:flex-start;text-align:left;line-height:1.2}
 html.mobileOwnerMode body #app .hsCardHead h2,html.mobileOwnerMode body #app .hsLink{white-space:nowrap}
-html.mobileOwnerMode body #app .hsPhoneLiveEmpty{padding-top:44px}
-@media (max-width:360px){html.mobileOwnerMode body #app .hsPhonePill{font-size:12.5px;min-height:36px}html.mobileOwnerMode body #app .hsPhoneCamStrip .hsCamTile{flex-basis:62%}html.mobileOwnerMode body #app .hsEventRow{grid-template-columns:38px 30px minmax(0,1fr) 62px}html.mobileOwnerMode body #app .hsEventThumb{width:62px}}
+@media (max-width:360px){html.mobileOwnerMode body #app .hsPhonePill{font-size:12.5px;min-height:36px}html.mobileOwnerMode body #app .hsEventRow{grid-template-columns:38px 30px minmax(0,1fr) 62px}html.mobileOwnerMode body #app .hsEventThumb{width:62px}}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>:is(.hsPhoneLive,.hsPhoneCams,.hsPhoneEvents){margin:0 0 12px!important}
-@media (max-width:360px){html.mobileOwnerMode body #app .hsPhoneEvents .hsCardHead{flex-wrap:wrap;gap:2px}html.mobileOwnerMode body #app .hsPhoneLiveTile{aspect-ratio:auto;min-height:220px}}
+@media (max-width:360px){html.mobileOwnerMode body #app .hsPhoneEvents .hsCardHead{flex-wrap:wrap;gap:2px}}
 /* HOME SECURITY — unified modern panel skin v1
    One visual language for desktop, mobile, camera, events and settings.
    Presentation only: existing IDs, auth, PIN, WebRTC and recording stay untouched. */
@@ -5594,3 +5380,125 @@ html:not(.desktopMode) :is(.mobileTile,.cameraCard,.eventCard,.settingsCard){
   html.mobileOwnerMode body :is(#dvrCard,#dvrListCard) .dvrPrecisionClock{grid-column:1/-1;display:flex!important;flex-wrap:wrap;gap:6px;min-width:0}
   html.mobileOwnerMode body :is(#dvrCard,#dvrListCard) :is(input[type="range"],.dvrPrecisionClock input){min-width:0;max-width:100%;box-sizing:border-box}
 }
+
+/* =====================================================================
+   Pulpit aplikacji na telefonie według projektu właściciela (11.11.2026):
+   nagłówek z menu, karta „System chroniony”, kafelki, podgląd kamer,
+   pamięć i połączenie, tryby pracy, zdarzenia, dolny pasek. Dane są
+   prawdziwe (mobile.js → paintPhone); tu wyłącznie wygląd.
+   ===================================================================== */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app{--mp-red:#ff2947;--mp-red2:#e8172d;--mp-card:#141313;--mp-card2:#1b1a1a;--mp-line:#2e2a2a;--mp-text:#f5f4f4;--mp-muted:#bdb8b8;--mp-glow:rgba(255,24,48,.45)}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{display:grid!important;grid-template-columns:46px minmax(0,1fr) 46px!important;align-items:center!important;gap:6px!important;padding:10px 12px!important;background:#0b0b0b!important;border-bottom:1px solid var(--mp-line)!important;box-shadow:0 10px 30px -20px var(--mp-glow)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #mobileMenuBtn{order:0!important;display:grid!important;place-items:center!important;width:46px!important;height:46px!important;padding:0!important;border:0!important;background:transparent!important;color:var(--mp-text)!important;box-shadow:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #mobileMenuBtn svg{width:30px!important;height:30px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock{display:flex!important;align-items:center!important;justify-content:center!important;gap:10px!important;min-width:0!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock .mobileBrandLogo{width:46px!important;height:46px!important;flex:none!important;border-radius:10px!important;filter:drop-shadow(0 0 6px rgba(255,24,48,.55))!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock>div{display:grid!important;min-width:0!important;overflow:hidden!important;line-height:1.1!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandName{font-size:19px!important;font-weight:800!important;letter-spacing:.3px!important;color:var(--mp-text)!important;white-space:nowrap!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandName b{color:var(--mp-red)!important;text-shadow:0 0 14px rgba(255,41,71,.45)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandSub{font-size:11px!important;color:#d5d1d1!important;white-space:nowrap!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock h1,html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileOnlineLine{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsPhoneBell{position:relative!important;justify-self:end!important;display:grid!important;place-items:center!important;width:46px!important;height:46px!important;border:0!important;background:transparent!important;color:var(--mp-text)!important;box-shadow:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsPhoneBell svg{width:28px!important;height:28px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsPhoneBadge{position:absolute!important;top:2px!important;right:2px!important;display:grid!important;place-items:center!important;min-width:20px!important;height:20px!important;padding:0 5px!important;border-radius:999px!important;background:var(--mp-red2)!important;color:#fff!important;font:700 12px/1 system-ui,sans-serif!important;font-style:normal!important;box-shadow:0 0 10px var(--mp-glow)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsPhoneBadge[hidden]{display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview{display:grid;gap:14px;padding:14px 14px 24px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview.mobileHidden{display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview :is(.hsGuard,.hsPhoneLive,.hsPhoneEvents,.hsPhoneStat) {border:1px solid var(--mp-line)!important;border-radius:18px!important;background:linear-gradient(180deg,var(--mp-card2),var(--mp-card))!important;box-shadow:0 0 34px -26px var(--mp-glow)!important;color:var(--mp-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsGuard{position:relative!important;overflow:hidden!important;display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center!important;gap:14px!important;padding:22px 18px!important;background:linear-gradient(90deg,rgba(12,11,11,.96) 40%,rgba(12,11,11,.55)),url("assets/site-hero-dom.webp") 70% 40%/cover no-repeat!important;border-color:rgba(255,61,81,.45)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsGuardShield svg{width:62px!important;height:62px!important;color:var(--mp-red)!important;filter:drop-shadow(0 0 12px rgba(255,41,71,.6))!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsGuardText h2{margin:0!important;font-size:24px!important;font-weight:700!important;color:var(--mp-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsGuardText p{display:flex!important;align-items:center!important;gap:8px!important;margin:4px 0 2px!important;font-size:18px!important;color:#ffb3bc!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsGuard[data-tone="ok"] .hsGuardText p{color:#36d27e!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsGuardText small{display:block!important;font-size:12px!important;color:var(--mp-muted)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsDot{display:inline-block!important;width:11px!important;height:11px!important;flex:none!important;border-radius:50%!important;background:#7d7676!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsDot.on,html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsGuard[data-tone="ok"] .hsDot{background:#36d27e!important;box-shadow:0 0 8px rgba(54,210,126,.7)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsGuard .hsSwitch{position:relative!important;width:64px!important;height:36px!important;padding:0!important;border:0!important;border-radius:999px!important;background:#3b3636!important;box-shadow:inset 0 0 0 1px #4a4444!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsGuard .hsSwitch i{position:absolute!important;top:4px!important;left:4px!important;width:28px!important;height:28px!important;border-radius:50%!important;background:#fff!important;transition:transform .2s!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsGuard .hsSwitch[data-on="true"]{background:linear-gradient(180deg,#ff2a40,#d10f23)!important;box-shadow:0 0 16px var(--mp-glow)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsGuard .hsSwitch[data-on="true"] i{transform:translateX(28px)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions.hsTiles{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:8px!important;margin:0!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsTiles button{display:grid!important;justify-items:center!important;align-content:center!important;gap:6px!important;min-height:104px!important;padding:12px 4px!important;border:1px solid var(--mp-line)!important;border-radius:16px!important;background:linear-gradient(180deg,var(--mp-card2),var(--mp-card))!important;color:var(--mp-text)!important;text-align:center!important;box-shadow:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsTiles button:first-child{border-color:rgba(255,61,81,.75)!important;background:linear-gradient(180deg,rgba(255,31,53,.28),rgba(120,8,20,.35))!important;box-shadow:0 0 22px -8px var(--mp-glow)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsTiles button>b{position:relative!important;display:grid!important;place-items:center!important;width:auto!important;height:auto!important;border:0!important;background:none!important;color:var(--mp-red)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsTiles button>b svg{width:34px!important;height:34px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsTiles button>b .hsPhoneBadge{top:-8px!important;right:-12px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsTiles button>span{display:grid!important;gap:2px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsTiles strong{font-size:14px!important;font-weight:700!important;color:var(--mp-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsTiles small{font-size:12px!important;color:var(--mp-muted)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneLive{padding:14px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsCardHead{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;margin:0 0 12px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsCardHead h2{display:flex!important;align-items:center!important;gap:8px!important;margin:0!important;font-size:17px!important;font-weight:700!important;color:var(--mp-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsHeadIco svg{width:26px!important;height:26px!important;color:var(--mp-red)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsCardHead .hsLink{white-space:nowrap!important;border:0!important;background:none!important;padding:4px 0!important;color:var(--mp-red)!important;font-size:14px!important;font-weight:600!important;box-shadow:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneCamGrid{display:grid!important;grid-template-columns:1fr!important;gap:10px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneLiveTile{position:relative!important;overflow:hidden!important;display:grid!important;place-items:center!important;width:100%!important;aspect-ratio:16/9!important;padding:0!important;border:1px solid #3a3535!important;border-radius:14px!important;background:radial-gradient(circle at 50% 45%,#231f1f,#0a0a0a 70%)!important;color:var(--mp-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneLiveTile video{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneLiveEmpty{display:grid!important;justify-items:center!important;gap:6px!important;text-align:center!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneLiveEmpty .hsPlay{display:grid!important;place-items:center!important;width:54px!important;height:54px!important;border-radius:50%!important;background:var(--mp-red2)!important;color:#fff!important;box-shadow:0 0 20px var(--mp-glow)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneLiveEmpty .hsPlay svg{width:24px!important;height:24px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneLiveEmpty small{color:var(--mp-muted)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneLiveTile .hsChip{position:absolute!important;top:10px!important;left:10px!important;display:flex!important;align-items:center!important;gap:7px!important;padding:5px 10px!important;border-radius:9px!important;background:rgba(0,0,0,.6)!important;font-size:14px!important;font-weight:600!important;color:#fff!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsLiveBadge{position:absolute!important;top:10px!important;right:10px!important;padding:4px 9px!important;border-radius:999px!important;background:var(--mp-red2)!important;color:#fff!important;font-size:12px!important;font-weight:800!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsLiveBadge[hidden]{display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsFullIco{position:absolute!important;right:10px!important;bottom:10px!important;display:grid!important;place-items:center!important;width:34px!important;height:34px!important;border-radius:9px!important;background:rgba(0,0,0,.6)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsFullIco svg{width:20px!important;height:20px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneStats{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneStat{display:flex!important;align-items:center!important;gap:10px!important;min-width:0!important;min-height:86px!important;padding:12px!important;text-align:left!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneStat .hsStatIco{display:grid!important;place-items:center!important;width:40px!important;height:40px!important;flex:none!important;border-radius:50%!important;background:rgba(255,31,53,.14)!important;color:var(--mp-red)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneStat .hsStatIco svg{width:26px!important;height:26px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneStat>div{display:grid!important;gap:4px!important;flex:1!important;min-width:0!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneStat b{font-size:15px!important;font-weight:600!important;color:var(--mp-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneStat strong{display:flex!important;align-items:center!important;gap:7px!important;font-size:13px!important;font-weight:600!important;color:var(--mp-text)!important;overflow-wrap:anywhere!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneStat .hsBar{display:block!important;height:7px!important;border-radius:9px!important;background:#3a3535!important;overflow:hidden!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneStat .hsBar i{display:block!important;height:100%!important;width:2%!important;border-radius:9px!important;background:linear-gradient(90deg,#ff2a40,#d10f23)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneStat em{align-self:flex-end!important;font-style:normal!important;font-size:13px!important;color:var(--mp-muted)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneStat .hsChevron svg{width:20px!important;height:20px!important;color:var(--mp-muted)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneModes{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneModes button{display:grid!important;justify-items:center!important;align-content:center!important;gap:8px!important;min-height:96px!important;padding:10px 4px!important;border:1px solid var(--mp-line)!important;border-radius:16px!important;background:linear-gradient(180deg,var(--mp-card2),var(--mp-card))!important;color:var(--mp-text)!important;font-size:13px!important;font-weight:600!important;text-align:center!important;box-shadow:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneModes button svg{width:30px!important;height:30px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneModes button.on{border-color:rgba(255,61,81,.8)!important;background:linear-gradient(180deg,rgba(255,31,53,.42),rgba(150,8,22,.45))!important;box-shadow:0 0 22px -6px var(--mp-glow)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneEvents{padding:14px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverviewStatus{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar{position:fixed!important;z-index:40!important;left:0!important;right:0!important;bottom:0!important;display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:4px!important;padding:8px 8px max(8px,env(safe-area-inset-bottom))!important;background:rgba(10,10,10,.97)!important;border-top:1px solid var(--mp-line)!important;-webkit-backdrop-filter:blur(14px)!important;backdrop-filter:blur(14px)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar button{display:grid!important;justify-items:center!important;gap:4px!important;min-height:62px!important;padding:8px 2px!important;border:0!important;border-radius:16px!important;background:transparent!important;color:#d5d1d1!important;font-size:13px!important;box-shadow:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar button svg{width:28px!important;height:28px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar button.active{background:linear-gradient(180deg,#ff2a40,#c80f22)!important;color:#fff!important;box-shadow:0 0 20px -4px var(--mp-glow)!important}
+@media(max-width:400px){
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions.hsTiles{gap:6px!important}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsTiles button{min-height:92px!important;padding:10px 2px!important}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsTiles button>b svg{width:28px!important;height:28px!important}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsTiles strong{font-size:11.5px!important}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsTiles small{font-size:10.5px!important}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneModes{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandName{font-size:18px!important}
+}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview:not(.mobileHidden){display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:12px!important;padding:12px 0 96px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview>*{order:0!important;margin:0!important;width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button[data-open-mobile-view="camera"] span::after{content:none!important;display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button[data-open-mobile-view]{grid-column:auto!important;flex-direction:column!important;justify-content:center!important;min-height:104px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button{grid-template-columns:1fr!important;flex-direction:column!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions button>i{display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneMapCard{height:0!important;min-height:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneMapCard>.mobileMapOpen{display:none!important}
+@media(max-width:370px){
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{grid-template-columns:40px minmax(0,1fr) 40px!important;gap:6px!important;padding:8px 10px!important}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock{gap:7px!important}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock .mobileBrandLogo{width:34px!important;height:34px!important}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandName{font-size:15px!important}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandSub{display:none!important}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader :is(#mobileMenuBtn,.hsPhoneBell){width:40px!important;height:40px!important}
+}
+/* Nagłówek podstron jak w projekcie: „‹” + tytuł ekranu; pasek gestów i wcięcie iPhone'a. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{padding-top:max(10px,env(safe-area-inset-top))!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #mobileBackHome{display:grid!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader :is(#mobileBackHome,.mobileSettingsBack){place-items:center!important;justify-content:center!important;align-items:center!important;width:46px!important;height:46px!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:12px!important;background:transparent!important;box-shadow:none!important;color:var(--mp-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #mobileBackHome[hidden],html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #mobileMenuBtn[hidden]{display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader :is(#mobileBackHome,.mobileSettingsBack) svg{width:30px!important;height:30px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsSrOnly{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:not([data-mobile-view="home"]) #app .mobileBrandBlock{justify-content:flex-start!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:not([data-mobile-view="home"]) #app .mobileBrandBlock .mobileBrandLogo{width:34px!important;height:34px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:not([data-mobile-view="home"]) #app .mobileBrandBlock :is(.mobileBrandName,.mobileBrandSub){display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:not([data-mobile-view="home"]) #app .mobileBrandBlock h1{position:static!important;width:auto!important;height:auto!important;margin:0!important;overflow:hidden!important;clip:auto!important;font-size:22px!important;font-weight:800!important;color:var(--mp-text)!important;white-space:nowrap!important;text-overflow:ellipsis!important}
+body.hsHasTabBar.mobileOwnerMode #app .mainCol{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] #app #mobileSettingsHome .settingsTitle h2{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important}

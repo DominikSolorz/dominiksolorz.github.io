@@ -27,7 +27,7 @@ test('new homepage conversion actions point to actual account and contact paths'
  const home=await read('design/marketing/home.html');
  assert.ok(home.includes('href="panel.html?auth=register"'));
  assert.ok(home.includes('href="kontakt.html?temat=produkt"'));
- assert.ok(!home.includes('href="prezentacja.html"'),'outdated presentation page was removed');
+ assert.ok(home.includes('href="prezentacja.html"'),'homepage leads to the current presentation');
  assert.ok((await read('design/marketing/pytania.html')).includes('data-hs-open-support'));
  assert.ok(home.includes('polityka-prywatnosci.html'));
  assert.ok(home.includes('rodo.html'));
