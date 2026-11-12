@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { profileRows, mountAccountUI, validateProfile } from '../kamera/account-ui.mjs';
+import { profileRows, mountAccountUI, validateProfile, describeDevice } from '../kamera/account-ui.mjs';
 test('profile exposes only display fields, never credentials or tokens', () => {
  const user={email:'test@example.invalid',email_confirmed_at:'2026-01-01',access_token:'secret'};
  const p={first_name:'Jan',last_name:'Test',phone:'123',pin_hash:'sensitive',password:'password'};
@@ -61,4 +61,20 @@ test('profile renders text safely and logout finalizes before signout', async ()
  assert.ok(action.indexOf('await archive.prepareUpdate()')<action.indexOf('auth.signOut'));
  assert.ok(action.includes('scope: "local"'));assert.ok(action.includes('archive.abortUpdate()'));
  assert.ok(!app.includes('Zablokować stronę na tym urządzeniu?'));
+});
+
+test('sign-in history shows a short device label, never the raw browser header',()=>{
+ assert.equal(describeDevice('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'),'iPhone · Safari');
+ assert.equal(describeDevice('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36 Edg/130.0'),'Windows · Edge');
+ assert.equal(describeDevice('Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36'),'Android · Chrome');
+ assert.equal(describeDevice('Mozilla/5.0 (Windows NT 10.0) HomeSecurityNative/1.4'),'Windows · program HOME SECURITY');
+ assert.equal(describeDevice(''),'Nieznane urządzenie');
+});
+test('avatar and sign-in history stay server-owned and per account',async()=>{
+ const sql=await readFile(new URL('../supabase/migrations/20261112090000_profile_avatar_and_sign_in_history.sql',import.meta.url),'utf8');
+ assert.match(sql,/values \('avatars', 'avatars', false/);
+ assert.match(sql,/create trigger hs_record_sign_in after insert on auth\.sessions/);
+ assert.match(sql,/grant select on public\.hs_sign_in_events to authenticated/);
+ assert.ok(!/grant (insert|update|delete)[^;]*hs_sign_in_events/.test(sql),'the browser can never write sign-in history');
+ assert.match(sql,/\(storage\.foldername\(name\)\)\[1\] = \(select auth\.uid\(\)\)::text/);
 });

@@ -48,6 +48,13 @@ if (isMobileOwnerApp) {
     <div class="mobileBrandBlock"><img class="mobileBrandLogo" src="assets/hs-logo.webp" width="48" height="48" alt="HOME SECURITY"><div><span class="mobileBrandName">HOME <b>SECURITY</b></span><small class="mobileBrandSub">System Monitoringu Domowego</small><h1 id="mobilePageTitle">Pulpit</h1><p class="mobileOnlineLine"><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div></div>
     <div class="hsHeadActions"><button id="hsPhoneBell" class="hsPhoneBell" type="button" aria-label="Zdarzenia">${ICONS.bell}<span id="hsPhoneBellBadge" class="hsPhoneBadge" hidden>0</span></button><button id="hsPhoneAvatar" class="hsPhoneAvatar" type="button" data-open-mobile-profile aria-label="Mój profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="9" r="3.6"/><path d="M5.5 19.5c1.3-3.3 3.8-4.8 6.5-4.8s5.2 1.5 6.5 4.8"/></svg></button></div>`;
   app?.insertBefore(mobileHeader, app.firstChild);
+  // Awatar w nagłówku pokazuje zdjęcie profilu, gdy użytkownik je dodał (zdarzenie z profilu / po zalogowaniu).
+  document.addEventListener("hs-profile-avatar", event => {
+    const button = byId("hsPhoneAvatar"), url = String(event.detail?.url || "");
+    if (!button) return;
+    button.classList.toggle("hasPhoto", Boolean(url));
+    button.style.backgroundImage = url ? `url("${url.replace(/"/g, "%22")}")` : "";
+  });
   const makePage = (id, title, intro, content) => {
     const page = document.createElement('section');
     page.id = id; page.className = 'mobileFunctionPage mobileHidden';
