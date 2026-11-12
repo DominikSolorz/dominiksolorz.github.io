@@ -41,17 +41,8 @@
  #publicHome .mktMobileMenu>nav a,.marketingPage .mktMobileMenu>nav a{min-height:46px;font-size:14px;padding:11px 13px}
  .mktMobileMenu>nav .mktMenuGroup{width:100%;flex:none;align-items:stretch;padding:8px 4px}
  .mktMobileMenu>nav .mktMenuGroupLabel{width:100%;white-space:normal;font-size:11px}
- .mktFooter{grid-template-columns:repeat(2,minmax(0,1fr));gap:23px 16px}
- .mktFooter>div:first-child{grid-column:1/-1}
  .mktFooter nav{min-width:0}
- .mktFooter nav:last-of-type{grid-column:1/-1}
  .mktFooter nav a{overflow-wrap:anywhere}
-}
-@media(max-width:450px){
- .mktFooter{grid-template-columns:minmax(0,1fr)}
- .mktFooter nav,.mktFooter nav:last-of-type{grid-column:1/-1}
- .mktFooter nav{gap:5px}
- .mktFooter nav a{min-height:43px}
 }
 @media(prefers-reduced-motion:reduce){
  .mktMenuBars,.mktMenuBars i{animation:none!important;transition:none!important}
