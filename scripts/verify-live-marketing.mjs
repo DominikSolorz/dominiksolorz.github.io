@@ -63,7 +63,7 @@ const assets=[
  'core/web-updates.mjs?v=3','sw.js?v='+currentSW,'panel-entry.mjs?v=4','public-entry.js?v=9',
  'marketing-gallery.css?v=3','marketing-gallery.mjs?v=2',
  currentPanelCSS,
- 'marketing-motion.css?v=3',currentMarketingCSS,'marketing-navigation.css?v=4','marketing-navigation.mjs?v=2',
+ 'marketing-motion.css?v=3',currentMarketingCSS,'marketing-navigation.css?v=5','marketing-navigation.mjs?v=2',
  '../docs/ui-193/01-pulpit.png','../docs/ui-193/07-telefon.png',
  'assets/home-security-hero-640.webp','assets/home-security-hero.webp','assets/home-security-how-it-works-640.webp','assets/ds-logo-96.webp','assets/ds-logo-192.webp','../docs/ui-193/01-pulpit-480.webp','../docs/ui-193/01-pulpit-640.webp','../docs/ui-193/01-pulpit-720.webp','../docs/ui-193/01-pulpit-960.webp',
  'assets/home-security-hero.png','assets/hs-logo.webp','downloads/HOME-SECURITY-Desktop-Setup-'+expectedDesktop.version+'.exe'

@@ -58,7 +58,7 @@ test('install stores the shell from the network, never from the browser HTTP cac
   const panelCss = sw.fetches.find(f => f.url.includes('/kamera/panel.css?v='));
   assert.ok(panelCss, 'consolidated panel stylesheet is precached');
   assert.ok(sw.fetches.every(f => f.cache === 'reload'));
-  assert.ok(sw.fetches.some(f => f.url.endsWith('/kamera/marketing.css?v=19')), 'public start page styles remain available offline');
+  assert.ok(sw.fetches.some(f => f.url.endsWith('/kamera/marketing.css?v=20')), 'public start page styles remain available offline');
 });
 
 test('activation removes stylesheets that the current release no longer uses but keeps images', async () => {

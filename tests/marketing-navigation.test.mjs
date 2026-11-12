@@ -65,7 +65,7 @@ test('all public pages use one grouped navigation, deep footer and versioned ass
  for(const path of pages){
   const html=await read(path);
   const prefix=path.startsWith('kamera/blog/')?'../':'';
-  for(const asset of ['marketing-navigation.css?v=4','marketing-navigation.mjs?v=2']){
+  for(const asset of ['marketing-navigation.css?v=5','marketing-navigation.mjs?v=2']){
    assert.ok(html.includes(prefix+asset),path+' missing '+asset);
   }
   assert.equal((html.match(/class="mktMobileMenu"/g)||[]).length,1,path);
@@ -87,7 +87,7 @@ test('homepage header shows the eight main links, account buttons and a mobile m
  const top=header.match(/<nav class="mktTopNav" aria-label="Nawigacja strony">([\s\S]*?)<\/nav>/)?.[1];
  assert.ok(top);
  assert.equal((top.match(/<a /g)||[]).length,8);
- for(const label of ['Strona główna','Funkcje','Jak to działa','Pobierz','Prezentacja','Poradniki','Pomoc','Kontakt'])assert.ok(top.includes(label),label);
+ for(const label of ['Start','Możliwości','Jak działa','Prezentacja','Pobierz','Poradniki','Pomoc','Kontakt'])assert.ok(top.includes(label),label);
  assert.ok(header.includes('href="panel.html?auth=login"')&&header.includes('href="panel.html?auth=register"'));
  assert.ok(header.includes('aria-controls="mktMobileNavigation"'));
  assert.ok(header.includes('<details class="mktMobileMenu">'));
@@ -109,7 +109,7 @@ test('mobile navigation is legible, keyboard-accessible and supports reduced mot
   assert.ok(css.includes(part),'missing CSS behavior '+part);
  assert.equal((css.match(/\{/g)||[]).length,(css.match(/\}/g)||[]).length);
  const [sw,app,manifest]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/version.json'].map(read));
- assert.ok(sw.includes('./marketing-navigation.css?v=4'));
+ assert.ok(sw.includes('./marketing-navigation.css?v=5'));
  assert.ok(sw.includes('./marketing-navigation.mjs?v=2'));
  const currentRelease=JSON.parse(manifest).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];
