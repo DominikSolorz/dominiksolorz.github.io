@@ -4325,14 +4325,14 @@ html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext:
 html.desktopMode:not(.policeCommand):not(.usMilitary) body #app .desktopContext:not([data-view="live"])::after{content:"";display:block!important;position:absolute;inset:0 0 0 34%;background:linear-gradient(90deg,rgba(200,10,25,0),rgba(200,10,25,.9) 35%);mix-blend-mode:hue;pointer-events:none}
 html.desktopMode body #app .desktopContext:not([data-view="live"]) h1{font-size:40px!important}
 html.desktopMode body #app .desktopContext:not([data-view="live"]) .hsHeadCards{display:none}
-html.desktopMode body #app .hsScenes{display:flex;align-items:center;gap:12px;margin:0 0 18px;padding:12px;border-radius:18px;border:1px solid var(--hs-line);background:linear-gradient(160deg,var(--hs-panel2),var(--hs-panel));overflow-x:auto}
+html.desktopMode body #app .hsScenes{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 18px;padding:12px;border-radius:18px;border:1px solid var(--hs-line);background:linear-gradient(160deg,var(--hs-panel2),var(--hs-panel));overflow-x:auto}
 html.desktopMode body #app .hsScenes[hidden]{display:none}
 html.desktopMode body #app .hsScenes h2{display:flex;align-items:center;gap:10px;margin:0 8px 0 6px;font:800 20px var(--hs-font);white-space:nowrap}
 html.desktopMode body #app .hsScenes h2 svg{width:30px;height:30px;color:#ef3340;filter:drop-shadow(0 0 8px rgba(239,51,64,.6))}
-html.desktopMode body #app .hsScenes button{display:flex;align-items:center;gap:10px;flex:none;min-height:56px;padding:0 20px;border-radius:14px;border:1px solid var(--hs-line2);background:linear-gradient(180deg,var(--hs-panel2),var(--hs-panel));color:var(--hs-text);font:600 15.5px var(--hs-font);cursor:pointer}
+html.desktopMode body #app .hsScenes button{display:flex;align-items:center;gap:10px;flex:1 1 auto;justify-content:center;min-height:56px;padding:0 16px;border-radius:14px;border:1px solid var(--hs-line2);background:linear-gradient(180deg,var(--hs-panel2),var(--hs-panel));color:var(--hs-text);font:600 15.5px var(--hs-font);cursor:pointer}
 html.desktopMode body #app .hsScenes button svg{width:26px;height:26px}
 html.desktopMode body #app .hsScenes button.on{background:linear-gradient(135deg,#e5182b,#a50d1c);border-color:#ff4d5e;color:#fff;box-shadow:0 0 20px rgba(229,24,43,.55)}
-html.desktopMode body #app .hsScenes .hsScenesEdit{margin-left:auto;min-height:46px;font-size:14px}
+html.desktopMode body #app .hsScenes .hsScenesEdit{flex:none;margin-left:auto;min-height:46px;font-size:14px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsRoundBtn{position:relative;border:0!important;background:transparent!important}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .topbar .hsRoundBtn svg{width:30px;height:30px}
 html.desktopMode:not(.policeCommand):not(.usMilitary) body .hsBellBadge{position:absolute;top:2px;right:2px;display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#e5182b;color:#fff;font:800 11.5px var(--hs-font);font-style:normal;box-shadow:0 0 10px rgba(229,24,43,.7)}

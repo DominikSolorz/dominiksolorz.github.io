@@ -51,14 +51,14 @@ if (desktopRequested) {
       <button type="button" data-desktop-view="controls"><i>◉</i><span><b>Kamery</b><small>obraz, zapis i tryb pracy</small></span><kbd>2</kbd></button>
       <button type="button" data-desktop-view="archive"><i>⏪</i><span><b>Nagrania</b><small>archiwum DVR i folder zapisu</small></span><kbd>3</kbd></button>
       <button type="button" data-desktop-view="events"><i>♧</i><span><b>Zdarzenia</b><small>zdarzenia z kamery</small></span><em class="hsNavBadge" id="hsNavEvents" hidden>0</em><kbd>6</kbd></button>
-      <button type="button" class="hsNavLink" data-hs-go="ctrl"><i>${navIcon('<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/><path d="M4 12h6M14 12h6"/><circle cx="12" cy="12" r="2.2"/>')}</i><span><b>Sterowanie</b><small>tryb pracy i zapis</small></span></button>
+      <button type="button" class="hsNavLink" data-hs-go="map"><i>${navIcon('<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/>')}</i><span><b>Mapa</b><small>pozycja i adresy</small></span></button>
+      <button type="button" class="hsNavLink" data-hs-go="schedule"><i>${navIcon('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M5 3 2 6M19 3l3 3"/>')}</i><span><b>Harmonogram</b><small>godziny nagrywania</small></span></button>
       <button type="button" data-desktop-view="settings"><i>◌</i><span><b>Ustawienia</b><small>obraz, dźwięk i zapis</small></span><kbd>4</kbd></button>
       <button type="button" data-desktop-view="diagnostics"><i>⌁</i><span><b>Diagnostyka</b><small>stan systemu</small></span><kbd>5</kbd></button>
       <hr class="hsNavSep">
+      <button type="button" class="hsNavLink" data-hs-go="ctrl"><i>${navIcon('<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/><path d="M4 12h6M14 12h6"/><circle cx="12" cy="12" r="2.2"/>')}</i><span><b>Sterowanie</b><small>tryb pracy i zapis</small></span></button>
       <button type="button" class="hsNavLink" data-hs-go="account"><i>${navIcon('<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>')}</i><span><b>Konta</b><small>profil i dostęp</small></span></button>
-      <button type="button" class="hsNavLink" data-hs-go="schedule"><i>${navIcon('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M5 3 2 6M19 3l3 3"/>')}</i><span><b>Harmonogram</b><small>godziny nagrywania</small></span></button>
       <button type="button" class="hsNavLink" data-hs-go="updates"><i>${navIcon('<path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/>')}</i><span><b>Aktualizacje</b><small>wersja programu</small></span></button>
-      <button type="button" class="hsNavLink" data-hs-go="map"><i>${navIcon('<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/>')}</i><span><b>Mapa</b><small>pozycja i adresy</small></span></button>
     </nav>
     <button type="button" class="hsSideStatus" id="hsSideStatus" data-tone="off"><span class="hsShield">${ICONS.shield}</span><span><b id="hsSideStatusTitle">Brak transmisji</b><small id="hsSideStatusDetail">Sprawdzam system…</small></span></button>
     <section class="desktopCapabilities" aria-label="Możliwości urządzenia">
