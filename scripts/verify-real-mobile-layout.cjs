@@ -64,12 +64,16 @@ const artifacts=process.env.HS_MOBILE_PROOF;
    await page.locator('#lock [data-k=ok]').click();
    await page.locator('#app').waitFor({state:'visible'});
    await page.locator('#mobileOverview').waitFor({state:'visible'});
-   assert.equal(await page.locator('.mobileOverviewActions button').count(),7);
-   assert.equal(await page.locator('.mobileOverviewActions').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),2);
+   // Dashboard per owner design: protection card, five tiles in one row, live preview, modes, events.
+   assert.equal(await page.locator('.mobileOverviewActions button').count(),5);
+   assert.equal(await page.locator('.mobileOverviewActions').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),5);
+   assert.equal(await page.locator('#hsGuardSwitch[role="switch"]').count(),1);
+   assert.equal(await page.locator('.hsPhoneModes [data-hs-mode]').count(),4);
+   assert.equal(await page.locator('.hsTabBar [data-hs-tab]').count(),5);
    assert.equal(await page.locator('.mobileBottomNav').count(),0);
    assert.equal(await page.locator('.mobileAppHeader #deviceLayoutBtn').count(),0);
-   const brand=await page.locator('.mobileBrandName').boundingBox(),menu=await page.locator('#mobileMenuBtn').boundingBox();
-   assert.ok(brand.x+brand.width+8<=menu.x,'Brand and menu must have separate space');
+   const brand=await page.locator('.mobileBrandName').boundingBox(),menu=await page.locator('#mobileMenuBtn').boundingBox(),bell=await page.locator('#hsPhoneBell').boundingBox();
+   assert.ok(menu.x+menu.width<=brand.x&&brand.x+brand.width<=bell.x,'Menu, brand and bell must not overlap '+JSON.stringify({width,menu,brand,bell}));
    const originalVideo=await page.locator('#video').evaluateHandle(el=>el);
    await shot('04-real-dashboard');
    for(const view of ['camera','recordings','settings','cloud']){
@@ -105,10 +109,12 @@ const artifacts=process.env.HS_MOBILE_PROOF;
    }
    await page.locator('#mobileMenuBtn').click();
    assert.equal(await page.locator('#mobileOverview').isVisible(),true);
-   await page.locator('[data-open-mobile-profile]').click();
+   // Profile is opened from the menu ("Więcej"), as in the owner's design.
+   await page.locator('#mobileMenuBtn').click();
+   await page.locator('#mobileMenuPage [data-open-mobile-profile]').click();
    await page.locator('.accountDialog').waitFor({state:'visible'});
    assert.deepEqual(errors,[]);
-   console.log(`PASS ${width}x${height}: real home/login, wrong and correct PIN, six tiles, separate menu/cloud/settings, no bottom navigation, profile and preserved video node`);
+   console.log(`PASS ${width}x${height}: real home/login, wrong and correct PIN, protection card and five tiles, separate menu/cloud/settings, no bottom navigation, profile and preserved video node`);
    await page.close();
   }
  }finally{await browser.close();}
