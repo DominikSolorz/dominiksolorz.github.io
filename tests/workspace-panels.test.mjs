@@ -60,3 +60,16 @@ test('mirror shares stream without capture or track stops and cleans timer',()=>
  assert.equal(target.defaultMuted,true);
  dispose();assert.equal(stopped,0);assert.equal(source.srcObject,stream);
 });
+
+test('event history exports to an Excel-friendly CSV without formula injection',async()=>{
+ const {eventsToCsv,eventsCsvName}=await import('../kamera/workspace-panels.mjs');
+ const at=new Date(2026,10,12,8,5,9).getTime();
+ const csv=eventsToCsv([{at,kind:'ruch'},{at,kind:'dzwiek',thumbnail:'data:image/jpeg;base64,AAAA'},{at,kind:'=HYPERLINK("x")'},{at:NaN,kind:'ruch'}]);
+ assert.ok(csv.startsWith('﻿"Data";"Godzina";"Rodzaj zdarzenia";"Klatka z kamery"\r\n'));
+ assert.ok(csv.includes('"2026-11-12";"08:05:09";"Ruch w obrazie";"Nie"'));
+ assert.ok(csv.includes('"Dźwięk";"Tak"'));
+ assert.ok(csv.includes('"\'=HYPERLINK(""x"")"'),'formula cells are neutralised and quotes doubled');
+ assert.equal(csv.trim().split('\r\n').length,4,'events without a valid time are skipped');
+ assert.equal(eventsCsvName('2026-11-01'),'home-security-zdarzenia-2026-11-01.csv');
+ assert.match(eventsCsvName('../x',at),/^home-security-zdarzenia-2026-11-12\.csv$/);
+});

@@ -7,6 +7,14 @@ export function filterCameraEvents(items,{date='',motion=true,sound=true}={}) {
  return items.filter(e=>Number.isFinite(e.at) && (e.kind==='ruch'?motion:e.kind==='dzwiek'?sound:false) && (!date || localDate(e.at)===date));
 }
 function localDate(at){const d=new Date(at);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+// Raport zdarzeń: CSV dla Excela (średnik, BOM UTF-8). Komórki zaczynające się od =,+,-,@ są poprzedzone apostrofem (ochrona przed formułami).
+const csvCell=value=>{let text=String(value??'');if(/^[=+\-@\t\r]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';};
+export function eventsToCsv(items){
+ const rows=[['Data','Godzina','Rodzaj zdarzenia','Klatka z kamery']];
+ for(const e of items){if(!Number.isFinite(e.at))continue;const d=new Date(e.at);rows.push([localDate(e.at),`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`,e.kind==='ruch'?'Ruch w obrazie':e.kind==='dzwiek'?'Dźwięk':String(e.kind||'Inne'),validThumbnail(e.thumbnail)?'Tak':'Nie']);}
+ return '\ufeff'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n')+'\r\n';
+}
+export function eventsCsvName(date,now=Date.now()){return `home-security-zdarzenia-${/^\d{4}-\d{2}-\d{2}$/.test(date||'')?date:localDate(now)}.csv`;}
 export function diagnosticCards(snapshot,now=Date.now()) {
  const read=(id,maxAge=45000)=>{const c=snapshot.components[id];return !c?{status:'unknown'}:now-c.observedAt>maxAge&&!['error','auth_required','failed','degraded'].includes(c.status)?{...c,status:'stale'}:c;};
  const capture=read('capture'),recording=read('recording'),storage=read('storage',90000),cloud=read('cloudAccess',120000);
@@ -41,6 +49,7 @@ export function mountEventWorkspace(container,{store=systemStore}={}) {
  const toolbar=node('div',null,'workspaceToolbar'),dateLabel=node('label','Dzień '),date=node('input');date.type='date';date.setAttribute('aria-label','Dzień zdarzeń');dateLabel.append(date);toolbar.append(dateLabel);
  const filters={};for(const [key,text] of [['motion','Ruch'],['sound','Dźwięk']]){const l=node('label',null,'workspaceCheck'),i=node('input');i.type='checkbox';i.checked=true;l.append(i,node('span',text));filters[key]=i;toolbar.append(l);}
  const clear=node('button','Wszystkie dni','btn ghost');clear.type='button';toolbar.append(clear);
+ const exportCsv=node('button','Eksportuj CSV','btn ghost eventCsvExport');exportCsv.type='button';exportCsv.title='Zapisz zdarzenia widoczne na liście do pliku CSV (Excel, Arkusze Google)';toolbar.append(exportCsv);
  const layout=node('div',null,'eventWorkspace'),list=node('div',null,'eventWorkspaceList'),detail=node('section',null,'eventWorkspaceDetail');detail.setAttribute('aria-label','Szczegóły zdarzenia');layout.append(list,detail);container.append(toolbar,layout);
  let items=[],selected=null;const read=new Set();
  const key=e=>`${e.at}:${e.kind}`;
@@ -50,7 +59,8 @@ export function mountEventWorkspace(container,{store=systemStore}={}) {
   detail.append(node('p',clock(e.at)),node('h3',e.kind==='ruch'?'Wykryty ruch':'Wykryty dźwięk'));
   const ack=node('button',read.has(key(e))?'Przeczytane w tej sesji':'Oznacz jako przeczytane','btn primary');ack.disabled=read.has(key(e));ack.type='button';ack.addEventListener('click',()=>{read.add(key(e));show(e);render();});detail.append(ack,node('p','Oznaczenie dotyczy tej sesji panelu. Nie usuwa zdarzenia ani nagrania.','muted small'));
  }
- function render(){const filtered=filterCameraEvents(items,{date:date.value,motion:filters.motion.checked,sound:filters.sound.checked});list.replaceChildren();
+ let visible=[];
+ function render(){const filtered=filterCameraEvents(items,{date:date.value,motion:filters.motion.checked,sound:filters.sound.checked});visible=filtered;exportCsv.disabled=!filtered.length;list.replaceChildren();
   if(!filtered.length)list.append(node('p','Brak zdarzeń spełniających wybrane filtry.','workspaceEmpty'));
   for(const e of filtered){const button=node('button',null,'eventWorkspaceRow');button.type='button';button.classList.toggle('selected',selected&&key(selected)===key(e));button.setAttribute('aria-pressed',String(Boolean(selected&&key(selected)===key(e))));
    if(validThumbnail(e.thumbnail)){const image=node('img');image.src=e.thumbnail;image.alt='';button.append(image);}else button.append(node('span',e.kind==='ruch'?'◉':'◖','eventKindIcon'));
@@ -58,7 +68,8 @@ export function mountEventWorkspace(container,{store=systemStore}={}) {
   }
   if(selected&&!filtered.some(e=>key(e)===key(selected)))show(null);
  }
- [date,filters.motion,filters.sound].forEach(i=>i.addEventListener('change',render));clear.addEventListener('click',()=>{date.value='';render();});
+ [date,filters.motion,filters.sound].forEach(i=>i.addEventListener('change',render));
+ exportCsv.addEventListener('click',()=>{if(!visible.length)return;const url=URL.createObjectURL(new Blob([eventsToCsv(visible)],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=eventsCsvName(date.value);a.rel='noopener';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);});clear.addEventListener('click',()=>{date.value='';render();});
  const update=s=>{items=s.components.cameraEvents?.items||[];render();};const unsub=store.subscribe(update);show(null);update(store.snapshot());return unsub;
 }
 export function captureEventFrame(video) {

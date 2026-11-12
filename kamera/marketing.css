@@ -696,3 +696,57 @@
 #publicHome :is(.mktFeature,.mktScenarioCard,.mktHomeDestinations article),.marketingPage :is(.mktFeature,.mktScenarioCard){transition:border-color .2s,box-shadow .2s}
 #publicHome :is(.mktFeature,.mktScenarioCard):hover,.marketingPage :is(.mktFeature,.mktScenarioCard):hover{border-color:#837878;box-shadow:0 18px 48px rgba(22,21,21,.45)}
 #publicHome .mktTextLink,.marketingPage .mktTextLink{text-underline-offset:4px}
+/* Dla firm i Plany: karty funkcji, poziomy dostępu, plany i porównanie. Czerń i czerwień marki. */
+.mktVisuallyHidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mktBizHero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:40px;align-items:center;padding-block:24px 40px}
+.mktBizCopy h2{font-size:clamp(30px,4.2vw,52px);line-height:1.05;margin:0 0 18px;letter-spacing:-.02em}
+.mktBizCopy>p{color:var(--m-muted);font-size:16px;margin:0 0 24px;max-width:560px}
+.mktBizFigure{margin:0;position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--m-line);background:#0b0a0a;box-shadow:0 24px 60px rgba(0,0,0,.45),0 0 0 1px rgba(229,43,70,.08)}
+.mktBizFigure img{display:block;width:100%;height:auto;aspect-ratio:16/9}
+.mktBizFigure figcaption{position:absolute;left:10px;bottom:10px;font-size:11px;color:#d9d3d3;background:rgba(10,9,9,.72);padding:4px 8px;border-radius:5px}
+.mktBizGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.mktBizCard{border:1px solid var(--m-line);background:linear-gradient(180deg,#1d1b1b,#161515);border-radius:12px;padding:20px;min-width:0;transition:border-color .2s,transform .2s}
+.mktBizCard:hover{border-color:#6b3a42;transform:translateY(-2px)}
+.mktBizCard h3{font-size:16px;margin:12px 0 8px}.mktBizCard p{font-size:13px;color:var(--m-muted);margin:0;line-height:1.5}
+.mktBizCard a,.mktBizSteps a,.mktNote a,.mktFaq a{color:#ff8a98;text-decoration:underline}
+.mktBizIcon{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:11px;background:rgba(229,43,70,.12);color:#ff5c72;border:1px solid rgba(229,43,70,.35)}
+.mktBizIcon svg{width:22px;height:22px}
+.mktRoles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.mktRole{border:1px solid var(--m-line);border-top:3px solid var(--m-red);background:var(--m-surface);border-radius:10px;padding:18px}
+.mktRole b{display:block;font-size:15px;margin-bottom:6px}.mktRole p{margin:0;font-size:13px;color:var(--m-muted)}
+.mktNote .mktBadge{margin-right:8px;vertical-align:1px}
+.mktBizSteps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;counter-reset:bizstep}
+.mktBizSteps li{counter-increment:bizstep;border:1px solid var(--m-line);background:var(--m-surface);border-radius:12px;padding:20px;position:relative}
+.mktBizSteps li::before{content:counter(bizstep,decimal-leading-zero);display:block;font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--m-red);margin-bottom:10px}
+.mktBizSteps b{display:block;font-size:16px;margin-bottom:6px}.mktBizSteps p{margin:0;font-size:13px;color:var(--m-muted);line-height:1.5}
+.mktBizCta{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-block:10px 70px;padding:32px;border-radius:16px;border:1px solid #4a2a30;background:radial-gradient(120% 140% at 0% 0%,rgba(229,43,70,.22),transparent 55%),#171515}
+.mktBizCta h2{font-size:clamp(24px,3vw,36px);margin:0 0 8px}.mktBizCta p:not(.mktEyebrow){margin:0;color:var(--m-muted)}
+.mktBizCta .mktEyebrow{margin-bottom:10px}
+.mktPlans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.mktPlan{display:flex;flex-direction:column;border:1px solid var(--m-line);background:var(--m-surface);border-radius:16px;padding:28px;min-width:0}
+.mktPlanFeatured{border-color:#6b2c37;background:radial-gradient(120% 90% at 100% 0%,rgba(229,43,70,.18),transparent 60%),var(--m-surface)}
+.mktPlanTag{align-self:flex-start;font-size:12px;font-weight:800;letter-spacing:.14em;color:#fff;background:var(--m-red);border-radius:5px;padding:5px 9px}
+.mktPlan:not(.mktPlanFeatured) .mktPlanTag{background:#2c2828;color:#f1d0d4;border:1px solid #4a3a3d}
+.mktPlan h3{font-size:24px;margin:16px 0 8px}.mktPlan>p{color:var(--m-muted);font-size:14px;margin:0 0 16px}
+.mktPlanList{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:9px;font-size:14px}
+.mktPlanList li{position:relative;padding-left:26px;line-height:1.4}
+.mktPlanList li::before{content:"";position:absolute;left:2px;top:3px;width:14px;height:8px;border-left:2px solid #ff5c72;border-bottom:2px solid #ff5c72;transform:rotate(-45deg)}
+.mktPlanPrice{margin-top:auto!important;padding-top:14px;border-top:1px solid var(--m-line);font-weight:750;color:var(--m-text)!important;font-size:15px!important}
+.mktCompareWrap{border:1px solid var(--m-line);border-radius:14px;overflow:hidden;background:var(--m-surface)}
+.mktCompare{width:100%;border-collapse:collapse;font-size:14px}
+.mktCompare th,.mktCompare td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--m-line)}
+.mktCompare thead th{background:#221f1f;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#f1d0d4}
+.mktCompare tbody th{font-weight:600}.mktCompare td{color:var(--m-muted);width:22%}
+.mktCompare tbody tr:last-child>*{border-bottom:0}
+.mktPlansFaq{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:36px;align-items:start}
+.mktPlansFaq h2{margin:0 0 16px}.mktPlansFaq .mktFaq{border-bottom:1px solid var(--m-line)}
+.mktPlansFaq .mktFaq summary{cursor:pointer;padding:14px 0;font-weight:700;min-height:48px}
+.mktPlansFaq .mktFaq p{margin:0 0 14px;color:var(--m-muted);font-size:14px}
+@media(max-width:1050px){.mktBizGrid,.mktRoles,.mktBizSteps{grid-template-columns:repeat(2,minmax(0,1fr))}.mktBizHero{grid-template-columns:1fr;gap:24px}}
+@media(max-width:700px){.mktBizHero{padding-block:8px 24px}.mktBizCopy h2{font-size:30px}.mktBizCopy>p{font-size:15px}.mktBizGrid{grid-template-columns:1fr 1fr;gap:10px}.mktBizCard{padding:14px}.mktBizCard h3{font-size:14px;margin-top:10px}.mktBizCard p{font-size:12.5px}.mktBizIcon{width:36px;height:36px}.mktRoles,.mktBizSteps,.mktPlans,.mktPlansFaq{grid-template-columns:1fr;gap:10px}.mktPlan{padding:20px}.mktBizCta{flex-direction:column;align-items:stretch;padding:22px;margin-bottom:40px}
+ .mktCompare thead{display:none}.mktCompare,.mktCompare tbody,.mktCompare tr,.mktCompare th,.mktCompare td{display:block;width:auto}
+ .mktCompare tr{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--m-line)}.mktCompare tbody tr:last-child{border-bottom:0}
+ .mktCompare tbody th{grid-column:1/-1;border:0;padding:12px 14px 4px}.mktCompare td{border:0;padding:2px 14px 12px;font-size:13px}
+ .mktCompare td::before{content:attr(data-label)": ";color:#f1d0d4;font-weight:700}}
+@media(max-width:360px){.mktBizGrid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.mktBizCard{transition:none}.mktBizCard:hover{transform:none}}
