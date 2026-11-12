@@ -65,7 +65,7 @@ test('all public pages use one grouped navigation, deep footer and versioned ass
  for(const path of pages){
   const html=await read(path);
   const prefix=path.startsWith('kamera/blog/')?'../':'';
-  for(const asset of ['marketing-navigation.css?v=3','marketing-navigation.mjs?v=2']){
+  for(const asset of ['marketing-navigation.css?v=4','marketing-navigation.mjs?v=2']){
    assert.ok(html.includes(prefix+asset),path+' missing '+asset);
   }
   assert.equal((html.match(/class="mktMobileMenu"/g)||[]).length,1,path);
@@ -109,7 +109,7 @@ test('mobile navigation is legible, keyboard-accessible and supports reduced mot
   assert.ok(css.includes(part),'missing CSS behavior '+part);
  assert.equal((css.match(/\{/g)||[]).length,(css.match(/\}/g)||[]).length);
  const [sw,app,manifest]=await Promise.all(['kamera/sw.js','kamera/app.js','kamera/version.json'].map(read));
- assert.ok(sw.includes('./marketing-navigation.css?v=3'));
+ assert.ok(sw.includes('./marketing-navigation.css?v=4'));
  assert.ok(sw.includes('./marketing-navigation.mjs?v=2'));
  const currentRelease=JSON.parse(manifest).version;
  const shell=app.match(/SERVICE_WORKER_BUILD = "(\d+)"/)?.[1];

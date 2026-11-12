@@ -84,3 +84,46 @@
 .legalFooter{border-top-color:#2c3350}
 .legalFooter nav a:hover{color:#c7d2fe}
 @media print{.legalPage{background:#fff;color:#111}.legalPage .legalHero,.legalPage .legalContent,.legalPage .legalNotice{box-shadow:none;background:#fff;color:#111;border-color:#777}.legalPage .legalContent p,.legalPage .legalContent li,.legalPage .legalContent h2,.legalPage .legalHero h1,.legalPage .legalHero p{color:#111}.legalPage :is(.legalTabs,.legalToc,.legalNav,.legalFooter,.mktSkip){display:none}.legalPage main{width:100%;padding:0}.legalPage table{min-width:0;color:#111}.legalPage thead{background:#eee}.legalPage tbody th{color:#111}}
+/* Telefon: tabela jako karty — każdy wiersz to osobny blok z podpisem kolumny, bez przewijania w bok. */
+@media(max-width:640px){
+.legalPage .legalTableWrap{overflow:visible;border:0;margin:18px 0}
+.legalPage table{min-width:0;font-size:14px}
+.legalPage thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.legalPage caption{padding:0 0 10px}
+.legalPage tbody tr{display:block;margin:0 0 10px;padding:12px 14px;border:1px solid #343c5c;border-radius:12px;background:#141827}
+.legalPage tbody th,.legalPage tbody td{display:block;min-width:0;padding:4px 0;border:0}
+.legalPage tbody th{font-size:15px;padding-bottom:6px}
+.legalPage tbody td[data-label]::before{content:attr(data-label);display:block;margin-top:4px;color:#a5b4fc;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+}
+/* Nagłówek dokumentu jak w projekcie: strzałka wstecz, logo z podpisem, ikona przy tytule. */
+.legalPage .legalNav{display:flex;align-items:center;gap:12px}
+.legalPage .legalBack{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:12px;color:#fff}
+.legalPage .legalBack svg{width:26px;height:26px}
+.legalPage .legalBrand{display:flex;align-items:center;gap:10px;margin-right:auto;color:#fff;text-decoration:none;font-weight:800;letter-spacing:.02em}
+.legalPage .legalBrand img{width:40px;height:40px;object-fit:contain}
+.legalPage .legalBrand b{color:#ef233c}
+.legalPage .legalBrand small{display:block;font-size:11px;font-weight:500;letter-spacing:0;color:#b9b3b3}
+.legalPage .legalHeroIcon{display:block;width:58px;height:58px;margin-bottom:10px;color:#ef233c;filter:drop-shadow(0 0 14px rgba(239,35,60,.45))}
+.legalPage .legalHeroIcon svg{width:100%;height:100%}
+@media(max-width:640px){
+.legalPage .legalDocsLink{display:none}
+.legalPage .legalHero{display:grid;grid-template-columns:58px minmax(0,1fr);column-gap:14px;align-items:start}
+.legalPage .legalHeroIcon{grid-row:1/span 4;margin:4px 0 0}
+.legalPage .legalHero>:not(.legalHeroIcon){grid-column:2}
+.legalPage .legalHero h1{font-size:26px;line-height:1.15}
+.legalPage .legalHero{padding:18px 16px!important;margin-bottom:12px!important}
+.legalPage .legalHero .publicEyebrow{display:none}
+.legalPage .legalHero p{margin:6px 0 0;font-size:14.5px;line-height:1.45}
+.legalPage .legalHero .legalMeta{font-size:12px}
+/* Kolejność jak w projekcie: tytuł, zakładki, lista rozdziałów, dane administratora, treść. */
+.legalPage main{display:flex;flex-direction:column}
+.legalPage main>.legalHero{order:0}.legalPage main>.legalTabs{order:1}.legalPage main>.legalToc{order:2;margin-bottom:16px}.legalPage main>:is(.legalIdentity,.legalNotice){order:3}.legalPage main>.legalContent{order:4}
+/* Spis treści jako lista kart z numerem i strzałką — dotknięcie przewija do rozdziału. */
+.legalPage .legalToc{display:grid;grid-template-columns:1fr;gap:8px;padding:0;border:0;background:none;counter-reset:hsToc}
+.legalPage .legalToc a{position:relative;display:flex;align-items:center;gap:12px;min-height:54px;padding:10px 40px 10px 12px;border:1px solid #3a3333;border-radius:14px;background:linear-gradient(180deg,#1c1a1a,#121111);color:#f3f0f0;font-weight:650;counter-increment:hsToc}
+.legalPage .legalToc a::before{content:counter(hsToc);display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;background:#d90f24;color:#fff;font-size:13px;font-weight:800}
+.legalPage .legalToc a::after{content:"›";position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:24px;color:#c9c3c3}
+/* Zakładki dokumentów w jednym przewijanym rzędzie zamiast kilku wierszy. */
+.legalPage .legalTabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.legalPage .legalTabs a{flex:none;white-space:nowrap}
+}

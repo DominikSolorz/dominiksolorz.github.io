@@ -8,7 +8,7 @@ import { mountMobileCameraFrame } from './mobile-camera-frame.mjs?v=1';
 import { mountMobileCameraInfo } from './mobile-camera-status.mjs?v=1';
 import { createViewMemory } from './core/view-memory.mjs?v=1';
 import { mountEventWorkspace, mountDiagnosticWorkspace } from "./workspace-panels.mjs?v=2";
-import { mountLocationMap } from "./mobile-map.mjs?v=7";
+import { mountLocationMap } from "./mobile-map.mjs?v=8";
 import { ICONS, mountRecentEvents, mountLiveOverlay, systemStatus } from "./home-dashboard.mjs?v=2";
 import { systemStore } from "./core/store.mjs";
 import { mirrorLivePreview } from "./workspace-panels.mjs?v=4";
@@ -275,7 +275,7 @@ if (isMobileOwnerApp) {
 
   const views = {
     home: ["mobileOverview"],
-    camera: ["mobileCameraInfo", "stage", "zoomBar", "audioHud", "watchPanel", "mobileEventsWorkspace"],
+    camera: ["mobileCameraInfo", "stage", "zoomBar", "audioHud", "watchPanel"],
     alerts: ["mobileEventsWorkspace"],
     recordings: ["dvrCard", "dvrListCard"],
     cloud: ["mobileCloudHeading", "mobileRecordingStorage"],
@@ -301,6 +301,26 @@ if (isMobileOwnerApp) {
     <div id="mobileRecordingFolderControls"><button type="button" id="mobileChooseComputerFolder">📁 Wybierz folder komputera</button></div>
     <p class="muted small">Komputer musi być włączony. Widzisz miejsce wcześniej zatwierdzone w programie Windows; możesz otwierać podfoldery, tworzyć je i wybierać miejsce zapisu.</p>`;
   document.querySelector(".mainCol")?.append(recordingStorage);
+  // Chmura: trzy przyciski zamiast listy i „Zastosuj”. Każdy ustawia to samo pole
+  // [data-storage-mode] i wywołuje istniejące polecenie zapisu na komputerze z kamerą.
+  const storageChoice = byId("recordingStorageChoice");
+  const storageMode = storageChoice?.querySelector("[data-storage-mode]");
+  const storageApply = storageChoice?.querySelector("[data-storage-apply]");
+  if (storageChoice && storageMode && storageApply) {
+    const pick = document.createElement("div");
+    pick.className = "hsStoragePick"; pick.setAttribute("role", "group"); pick.setAttribute("aria-label", "Gdzie zapisywać nowe nagrania");
+    pick.innerHTML = [["local","Komputer","Folder na dysku"],["cloud","Google Drive","Tylko chmura"],["both","Oba miejsca","Komputer i Drive"]]
+      .map(([m,t,d]) => `<button type="button" data-storage-pick="${m}" aria-pressed="false"><strong>${t}</strong><small>${d}</small></button>`).join("");
+    storageChoice.querySelector("h3")?.after(pick);
+    const syncPick = () => pick.querySelectorAll("[data-storage-pick]").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.storagePick === storageMode.value)); b.disabled = storageMode.disabled; });
+    pick.addEventListener("click", event => {
+      const b = event.target.closest("[data-storage-pick]"); if (!b || b.disabled) return;
+      storageMode.value = b.dataset.storagePick; syncPick(); storageApply.click();
+    });
+    const storageStatus = storageChoice.querySelector("[data-storage-status]");
+    if (storageStatus) new MutationObserver(syncPick).observe(storageStatus, { childList: true, characterData: true, subtree: true });
+    syncPick();
+  }
   const managed = [...new Set([...Object.values(views).flat(),"viewEventsCard"])];
 
   function renderView(view) {
