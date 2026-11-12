@@ -5583,3 +5583,15 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view=
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] #app #modeCard .modeBtn.on{border-color:#ef202d!important;background:linear-gradient(160deg,rgba(239,32,45,.22),rgba(23,25,31,.95))!important;box-shadow:0 0 22px -10px rgba(239,32,45,.9)!important}
 /* Nagrywanie: bez powtórzonej karty trybów (jest w „Sterowaniu”) — tylko ustawienia zapisu. */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"][data-mobile-settings="recording"] #app #modeCard{display:none!important}
+/* Profil na telefonie i tablecie (specyfikacja APK): okrągły awatar zamiast logo DS, dane jako zwarta lista wierszy. */
+html.mobileOwnerMode .accountWorkspace .profileHero{display:grid!important;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:6px 14px;padding-bottom:18px;margin-bottom:16px}
+html.mobileOwnerMode .accountWorkspace .profileHero img{display:none}
+html.mobileOwnerMode .accountWorkspace .profileHero::before{content:"";grid-row:1;width:72px;height:72px;border-radius:50%;border:2px solid #ef202d;box-shadow:0 0 22px -6px rgba(239,32,45,.8);background:#17191f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f4f5f7' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='12' cy='9' r='3.6'/%3E%3Cpath d='M5.5 19.5c1.3-3.3 3.8-4.8 6.5-4.8s5.2 1.5 6.5 4.8'/%3E%3C/svg%3E") center/44px no-repeat}
+html.mobileOwnerMode .accountWorkspace .profileHero h2{font-size:22px;line-height:1.2;margin:0}
+html.mobileOwnerMode .accountWorkspace .profileHero p{margin:4px 0 0;color:#a5a8b2;font-size:13px}
+html.mobileOwnerMode .accountWorkspace .profileHero .profileBack{grid-column:1/-1;justify-self:start;width:auto!important;min-height:40px;padding:0 16px;border-radius:999px;font-size:13.5px}
+html.mobileOwnerMode .accountWorkspace .profileDetails{display:grid!important;grid-template-columns:1fr!important;gap:0!important;border:1px solid #34363d;border-radius:14px;background:#17191f;overflow:hidden}
+html.mobileOwnerMode .accountWorkspace .profileDetails>div{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:10px 14px;border:0;border-bottom:1px solid #2a2c33;border-radius:0;background:none}
+html.mobileOwnerMode .accountWorkspace .profileDetails>div:last-child{border-bottom:0}
+html.mobileOwnerMode .accountWorkspace .profileDetails dt{margin:0;flex:none;color:#a5a8b2;font-size:13px}
+html.mobileOwnerMode .accountWorkspace .profileDetails dd{min-width:0;font-size:15px;font-weight:600;text-align:right}
