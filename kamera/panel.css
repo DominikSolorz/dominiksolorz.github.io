@@ -4611,7 +4611,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHe
 /* Settings has one entry point: the right navigation item disappears here. */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] .mobileBottomNav{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] .mobileBottomNav [data-mobile-view="settings"],
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] #mobilePageTitle,
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] .hsRemoteEntry{display:none!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsTitle{display:flex;align-items:center;gap:14px;text-align:left}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsTitle>button{border:1px solid var(--hl170,#353232);border-radius:8px;background:var(--hl244,#1d1b1b);color:var(--hl20,#e6e5e5);min-width:44px;min-height:44px;font-size:25px}
@@ -4775,13 +4774,7 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileMenuB
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mainCol :is(.card,.panel,#mobileCameraInfo,#audioHud,.mobileRecordingStorage,.eventWorkspaceDetail){
   border-radius:var(--v2-r)!important;border:1px solid var(--v2-line)!important;
   background:linear-gradient(180deg,var(--hl696,rgba(27,26,26,0.92)),var(--hl612,rgba(22,21,21,0.92)))!important;box-shadow:var(--v2-shadow)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileBackHome{display:inline-flex!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"]:not([data-mobile-settings="root"]):not([data-mobile-settings=""]) #app .mobileSettingsBack{display:inline-flex!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileBackHome,
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileSettingsBack{
-  align-items:center;gap:8px;width:auto!important;margin:14px 16px 12px!important;padding:9px 14px!important;
-  border-radius:999px!important;border:1px solid var(--v2-line2)!important;background:var(--v2-panel)!important;color:var(--v2-text)!important;font-size:13.5px!important;font-weight:600!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileBackHome[hidden]{display:none!important}
 /* Ustawienia: lista kategorii w tym samym stylu co kafelki. */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .settingsTitle h2{font-size:24px!important;font-weight:800!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileSettingsHome .mobileSettingCategories{gap:10px!important}
@@ -4918,20 +4911,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileFunct
   font-size:13px;
   line-height:1.5;
 }
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileBackHome,
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileSettingsBack{
-  min-height:46px;
-  width:100%;
-  justify-content:flex-start;
-  margin:10px 0 6px;
-  padding-inline:14px;
-  border:1px solid var(--hs3-edge);
-  border-radius:8px;
-  background:linear-gradient(120deg,var(--hl712,rgba(45,42,42,0.74)),var(--hl713,rgba(24,23,23,0.92)));
-  color:var(--hl20,#e6e5e5);
-  font-size:14px;
-  font-weight:650;
-}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app :is(.card,.panel,#setCard,#ctrlBar,#dvrCard,#dvrListCard,#systemPanel,#modeCard,#mobileDiagnosticWorkspace,.mobileRecordingStorage){
   min-width:0;
   max-width:100%;
@@ -5060,19 +5039,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view=
   color:var(--hs3-muted)!important;
   font-size:11px!important;
   line-height:1.3;
-}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app #mobileBackHome:not([hidden]){
-  align-self:flex-start;
-  min-height:44px!important;
-  margin:8px 0 0!important;
-  padding:0 15px!important;
-  border:1px solid var(--hl726,rgba(184,179,179,0.24))!important;
-  border-radius:999px!important;
-  background:linear-gradient(145deg,var(--hl727,rgba(34,32,32,0.96)),var(--hl728,rgba(22,21,21,0.96)))!important;
-  color:var(--hl12,#f7f6f6)!important;
-  font-size:13px!important;
-  font-weight:680;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
 }
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app #stage{
   min-width:0;
@@ -5233,9 +5199,6 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view=
 @media (max-width:430px) and (max-height:640px){
   html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app .mainCol{
     gap:7px!important;
-  }
-  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="camera"] #app #mobileBackHome:not([hidden]){
-    margin-top:4px!important;
   }
 
 }
@@ -5526,3 +5489,16 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverv
  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandSub{display:none!important}
  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader :is(#mobileMenuBtn,.hsPhoneBell){width:40px!important;height:40px!important}
 }
+/* Nagłówek podstron jak w projekcie: „‹” + tytuł ekranu; pasek gestów i wcięcie iPhone'a. */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{padding-top:max(10px,env(safe-area-inset-top))!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #mobileBackHome{display:grid!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader :is(#mobileBackHome,.mobileSettingsBack){place-items:center!important;justify-content:center!important;align-items:center!important;width:46px!important;height:46px!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:12px!important;background:transparent!important;box-shadow:none!important;color:var(--mp-text)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #mobileBackHome[hidden],html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #mobileMenuBtn[hidden]{display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader :is(#mobileBackHome,.mobileSettingsBack) svg{width:30px!important;height:30px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsSrOnly{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:not([data-mobile-view="home"]) #app .mobileBrandBlock{justify-content:flex-start!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:not([data-mobile-view="home"]) #app .mobileBrandBlock .mobileBrandLogo{width:34px!important;height:34px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:not([data-mobile-view="home"]) #app .mobileBrandBlock :is(.mobileBrandName,.mobileBrandSub){display:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:not([data-mobile-view="home"]) #app .mobileBrandBlock h1{position:static!important;width:auto!important;height:auto!important;margin:0!important;overflow:hidden!important;clip:auto!important;font-size:22px!important;font-weight:800!important;color:var(--mp-text)!important;white-space:nowrap!important;text-overflow:ellipsis!important}
+body.hsHasTabBar.mobileOwnerMode #app .mainCol{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body[data-mobile-view="settings"] #app #mobileSettingsHome .settingsTitle h2{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important}

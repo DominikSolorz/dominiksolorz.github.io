@@ -82,8 +82,11 @@ if (isMobileOwnerApp) {
   updatesPage.querySelector('[data-web-update]').addEventListener('click',()=>document.dispatchEvent(new Event('hs-check-web-update')));
   document.dispatchEvent(new Event('hs-web-update-ui-ready'));
   const backHome=document.createElement('button');
-  backHome.type='button';backHome.id='mobileBackHome';backHome.textContent='← Wróć do pulpitu';backHome.hidden=true;
-  document.querySelector('.mainCol')?.prepend(backHome);
+  backHome.type='button';backHome.id='mobileBackHome';backHome.hidden=true;
+  backHome.setAttribute('aria-label','Wróć do pulpitu');
+  backHome.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg><span class="hsSrOnly">Wróć do pulpitu</span>';
+  // Projekt: na podstronach nagłówek ma strzałkę „wstecz” i tytuł ekranu zamiast menu i logo.
+  mobileHeader.prepend(backHome);
 
   const deviceSheet = document.createElement("section");
   deviceSheet.id = "mobileAppearancePage";
@@ -153,13 +156,14 @@ if (isMobileOwnerApp) {
   const backSettings = document.createElement("button");
   backSettings.type = "button";
   backSettings.className = "mobileSettingsBack";
-  backSettings.textContent = "← Kategorie ustawień";
+  backSettings.setAttribute("aria-label", "Kategorie ustawień");
+  backSettings.innerHTML = backHome.innerHTML.replace("Wróć do pulpitu", "Kategorie ustawień");
   const mediaTabs = document.createElement("div");
   mediaTabs.className = "mobileMediaTabs";
   mediaTabs.innerHTML = '<button type="button" data-setting-section="image">Obraz</button><button type="button" data-setting-section="sound">Dźwięk</button>';
   document.querySelector(".mainCol")?.prepend(mediaTabs);
-  document.querySelector(".mainCol")?.prepend(backSettings);
-  backSettings.addEventListener("click", () => { document.body.dataset.mobileSettings = "root"; });
+  mobileHeader.prepend(backSettings);
+  backSettings.addEventListener("click", () => { document.body.dataset.mobileSettings = "root"; byId("mobilePageTitle").textContent = "Ustawienia"; });
 
   const overview = document.createElement("section");
   overview.id = "mobileOverview";
@@ -305,7 +309,8 @@ if (isMobileOwnerApp) {
     document.body.dataset.mobileView = view;
     document.querySelectorAll(".hsTabBar [data-hs-tab]").forEach(b => b.classList.toggle("active", b.dataset.hsTab === view));
     document.body.dataset.mobileSettings = view === "settings" ? "root" : "";
-    backHome.hidden = view === 'home';
+    backHome.hidden = view === 'home' || view === 'menu';
+    byId('mobileMenuBtn').hidden = !(view === 'home' || view === 'menu');
     byId('mobileMenuBtn').setAttribute('aria-expanded',String(view==='menu'));
     byId('mobileMenuBtn').setAttribute('aria-label',view==='menu'?'Zamknij menu':'Otwórz menu');
     settingsHome.classList.toggle("mobileHidden", view !== "settings");
@@ -355,6 +360,7 @@ if (isMobileOwnerApp) {
     document.body.dataset.mobileSettings = button.dataset.settingSection;
     const title=({controls:'Sterowanie i zapis na komputerze',image:'Ustawienia obrazu',sound:'Ustawienia dźwięku',recording:'Ustawienia nagrywania',system:'Ustawienia systemu i diagnostyki'})[button.dataset.settingSection] || 'Ustawienia';
     const card=byId('setCard');
+    byId('mobilePageTitle').textContent=title;
     if(card){card.setAttribute('aria-label',title);const heading=card.querySelector('h2');if(heading)heading.textContent=title;}
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
