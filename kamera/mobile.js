@@ -143,13 +143,13 @@ if (isMobileOwnerApp) {
   settingsHome.innerHTML = `
     <header class="settingsTitle"><div><h2>Ustawienia</h2><p>Dostosuj swój system</p></div></header>
     <div class="mobileSettingCategories">
-      <button type="button" data-setting-section="controls"><b>▣</b><span><strong>Urządzenia i kamery</strong><small>Połączone źródła obrazu</small></span><i>›</i></button>
-      <button type="button" data-setting-section="image"><b>◉</b><span><strong>Obraz i dźwięk</strong><small>Jakość, mikrofon i odsłuch</small></span><i>›</i></button>
-      <button type="button" data-setting-section="recording"><b>▤</b><span><strong>Nagrywanie i archiwum</strong><small>Zapis i przechowywanie</small></span><i>›</i></button>
-      <button type="button" data-settings-events><b>♧</b><span><strong>Powiadomienia</strong><small>Zdarzenia i alerty</small></span><i>›</i></button>
-      <button type="button" data-settings-remote><b>⌘</b><span><strong>Dostęp zdalny</strong><small>Komputer i połączenia</small></span><i>›</i></button>
-      <button type="button" data-settings-account><b>◇</b><span><strong>Bezpieczeństwo</strong><small>Konto i kod PIN</small></span><i>›</i></button>
-      <a href="https://dominiksolorz.github.io/kamera/dokumenty.html" target="_blank" rel="noopener"><b>▧</b><span><strong>Prywatność i dokumenty</strong><small>Zgody i informacje</small></span><i>›</i></a>
+      <button type="button" data-setting-section="controls"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg></b><span><strong>Urządzenia i kamery</strong><small>Połączone źródła obrazu</small></span><i>›</i></button>
+      <button type="button" data-setting-section="image"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3.2"/><path d="M7 8h.01"/></svg></b><span><strong>Obraz i dźwięk</strong><small>Jakość, mikrofon i odsłuch</small></span><i>›</i></button>
+      <button type="button" data-setting-section="recording"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/></svg></b><span><strong>Nagrywanie i archiwum</strong><small>Zapis i przechowywanie</small></span><i>›</i></button>
+      <button type="button" data-settings-events><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></b><span><strong>Powiadomienia</strong><small>Zdarzenia i alerty</small></span><i>›</i></button>
+      <button type="button" data-settings-remote><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></b><span><strong>Dostęp zdalny</strong><small>Komputer i połączenia</small></span><i>›</i></button>
+      <button type="button" data-settings-account><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.2 7.5 9.5 4.4-1.3 7.5-4.9 7.5-9.5V6z"/><rect x="9" y="10.5" width="6" height="5" rx="1"/><path d="M10.2 10.5V9a1.8 1.8 0 0 1 3.6 0v1.5"/></svg></b><span><strong>Bezpieczeństwo</strong><small>Konto i kod PIN</small></span><i>›</i></button>
+      <a href="https://dominiksolorz.github.io/kamera/dokumenty.html" target="_blank" rel="noopener"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5h7l4 4v13H7z"/><path d="M14 3.5v4h4"/><path d="M9.5 12h6M9.5 15.5h6"/></svg></b><span><strong>Prywatność i dokumenty</strong><small>Zgody i informacje</small></span><i>›</i></a>
     </div>
     <button id="deviceLayoutBtn" type="button" class="settingsAbout" data-open-mobile-view="appearance">Wygląd i urządzenie <span>›</span></button>
     <button type="button" class="settingsAbout" data-setting-section="system">ⓘ Informacje o aplikacji <span>›</span></button>
@@ -400,7 +400,7 @@ if (isMobileOwnerApp) {
     document.body.dataset.mobileSettings = button.dataset.settingSection;
     const title=({controls:'Sterowanie i zapis na komputerze',image:'Ustawienia obrazu',sound:'Ustawienia dźwięku',recording:'Ustawienia nagrywania',system:'Ustawienia systemu i diagnostyki'})[button.dataset.settingSection] || 'Ustawienia';
     const card=byId('setCard');
-    byId('mobilePageTitle').textContent=title;
+    byId('mobilePageTitle').textContent=({controls:'Sterowanie',image:'Obraz',sound:'Dźwięk',recording:'Nagrywanie',system:'System'})[button.dataset.settingSection]||title;
     if(card){card.setAttribute('aria-label',title);const heading=card.querySelector('h2');if(heading)heading.textContent=title;}
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
