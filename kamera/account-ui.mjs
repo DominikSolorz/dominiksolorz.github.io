@@ -18,7 +18,32 @@ export function validateProfile(values) {
   return { ...data, phone: data.phone || null };
 }
 
-export function mountAccountUI({ loadProfile, saveProfile, requestReset, changePin, logout, onError }) {
+// Etykieta urządzenia z historii logowań (system · przeglądarka). Pełny nagłówek nie trafia do widoku.
+export function describeDevice(userAgent) {
+  const ua = String(userAgent || '');
+  if (!ua) return 'Nieznane urządzenie';
+  const system = /iPad/.test(ua) ? 'iPad' : /iPhone/.test(ua) ? 'iPhone' : /Android/.test(ua) ? 'Android'
+    : /Windows/.test(ua) ? 'Windows' : /Mac OS X|Macintosh/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : 'Inne urządzenie';
+  const browser = /HomeSecurityNative/.test(ua) ? 'program HOME SECURITY' : /Edg\//.test(ua) ? 'Edge' : /CriOS|Chrome\//.test(ua) ? 'Chrome'
+    : /FxiOS|Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'przeglądarka';
+  return `${system} · ${browser}`;
+}
+
+// Zdjęcie profilu: środkowy kwadrat 512 × 512 px, WebP (albo JPEG, gdy przeglądarka nie zapisuje WebP).
+async function squareAvatar(file) {
+  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const side = Math.min(bitmap.width, bitmap.height), canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 512;
+  canvas.getContext('2d').drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 512, 512);
+  bitmap.close?.();
+  const encode = (type, quality) => new Promise(resolve => canvas.toBlob(resolve, type, quality));
+  let blob = await encode('image/webp', 0.86);
+  if (!blob || blob.type !== 'image/webp') blob = await encode('image/jpeg', 0.88);
+  if (!blob || blob.size > 1024 * 1024) throw new Error('Nie udało się przygotować zdjęcia. Wybierz inne.');
+  return blob;
+}
+
+export function mountAccountUI({ loadProfile, saveProfile, requestReset, changePin, logout, onError, avatar = null, loadActivity = null }) {
   const actions = document.createElement('div');
   actions.className = 'accountActions';
   const profileButton = document.createElement('button');
@@ -38,7 +63,9 @@ export function mountAccountUI({ loadProfile, saveProfile, requestReset, changeP
   close.className = 'profileBack';
   const hero = document.createElement('header'); hero.className = 'profileHero';
   const logo = document.createElement('img'); logo.src = 'assets/ds-logo.jpg'; logo.alt = 'Logo DS';
-  const heading = document.createElement('div'); heading.append(title, intro); hero.append(logo, heading, close);
+  const heading = document.createElement('div'); heading.append(title, intro);
+  const heroAvatar = document.createElement('img'); heroAvatar.className = 'profileAvatar'; heroAvatar.alt = 'Zdjęcie profilu'; heroAvatar.hidden = true;
+  hero.append(logo, heroAvatar, heading, close);
   const content = document.createElement('section'); content.className = 'profileContent';
   const card = document.createElement('section'); card.className = 'profileCard';
   const subtitle = document.createElement('h3'); subtitle.textContent = 'Dane osobowe i kontaktowe';
@@ -92,7 +119,88 @@ export function mountAccountUI({ loadProfile, saveProfile, requestReset, changeP
     finally{pinInputs.current.value='';pinInputs.next.value='';pinInputs.repeat.value='';securityBusy=false;pinSave.disabled=false;pinCancel.disabled=false;close.disabled=false;}
   });
   pinForm.append(pinSave,pinCancel);security.append(resetLink,pinButton,securityStatus,pinForm);
-  card.append(subtitle, status, details, edit, form); content.append(card, security);
+  // Zdjęcie profilu (wybór → podgląd → zapisz lub anuluj) i historia logowań — tylko gdy aplikacja je obsługuje.
+  let avatarCard = null, avatarPreview = null, avatarStatus = null, avatarInput = null, avatarSave = null, avatarCancel = null, avatarRemove = null;
+  let avatarBlob = null, avatarObjectUrl = '', avatarBusy = false;
+  const setAvatar = url => {
+    heroAvatar.src = url || ''; heroAvatar.hidden = !url; hero.className = url ? 'profileHero hasAvatar' : 'profileHero';
+    if (avatarRemove) avatarRemove.hidden = !url;
+    if (typeof CustomEvent === 'function') document.dispatchEvent?.(new CustomEvent('hs-profile-avatar', { detail: { url: url || '' } }));
+  };
+  const dropPreview = () => {
+    if (avatarObjectUrl) URL.revokeObjectURL(avatarObjectUrl);
+    avatarObjectUrl = ''; avatarBlob = null;
+    if (avatarPreview) { avatarPreview.hidden = true; avatarPreview.src = ''; avatarSave.hidden = true; avatarCancel.hidden = true; avatarInput.value = ''; }
+  };
+  if (avatar) {
+    avatarCard = document.createElement('section'); avatarCard.className = 'profileCard profileAvatarCard';
+    const avatarTitle = document.createElement('h3'); avatarTitle.textContent = 'Zdjęcie profilu';
+    const avatarText = document.createElement('p'); avatarText.textContent = 'Wybierz dowolne zdjęcie z telefonu lub komputera. Zapisujemy kwadrat 512 × 512 px widoczny tylko na Twoim koncie.';
+    avatarPreview = document.createElement('img'); avatarPreview.className = 'profileAvatarPreview'; avatarPreview.alt = 'Podgląd nowego zdjęcia'; avatarPreview.hidden = true;
+    const pick = document.createElement('label'); pick.className = 'profileAvatarPick'; pick.textContent = 'Wybierz zdjęcie';
+    avatarInput = document.createElement('input'); avatarInput.type = 'file'; avatarInput.accept = 'image/*'; avatarInput.className = 'profileAvatarInput';
+    pick.append(avatarInput);
+    avatarSave = document.createElement('button'); avatarSave.type = 'button'; avatarSave.textContent = 'Zapisz zdjęcie'; avatarSave.hidden = true; avatarSave.className = 'profileSave';
+    avatarCancel = document.createElement('button'); avatarCancel.type = 'button'; avatarCancel.textContent = 'Anuluj'; avatarCancel.hidden = true;
+    avatarRemove = document.createElement('button'); avatarRemove.type = 'button'; avatarRemove.textContent = 'Usuń zdjęcie'; avatarRemove.hidden = true;
+    avatarStatus = document.createElement('p'); avatarStatus.setAttribute('role', 'status');
+    avatarCard.append(avatarTitle, avatarText, avatarPreview, pick, avatarSave, avatarCancel, avatarRemove, avatarStatus);
+    avatarInput.addEventListener('change', async () => {
+      const file = avatarInput.files?.[0]; if (!file || avatarBusy) return;
+      if (!/^image\//.test(file.type) || file.size > 20 * 1024 * 1024) { avatarStatus.textContent = 'Wybierz plik zdjęcia (JPG, PNG, HEIC, WebP) do 20 MB.'; avatarInput.value = ''; return; }
+      avatarStatus.textContent = 'Przygotowuję podgląd…';
+      try {
+        const blob = await squareAvatar(file); dropPreview(); avatarBlob = blob; avatarObjectUrl = URL.createObjectURL(blob);
+        avatarPreview.src = avatarObjectUrl; avatarPreview.hidden = false; avatarSave.hidden = false; avatarCancel.hidden = false;
+        avatarStatus.textContent = 'Tak będzie wyglądać zdjęcie. Zapisz albo anuluj.';
+      } catch (error) { avatarStatus.textContent = error.message || 'Tego pliku nie da się odczytać. Wybierz inne zdjęcie.'; avatarInput.value = ''; }
+    });
+    avatarCancel.addEventListener('click', () => { if (!avatarBusy) { dropPreview(); avatarStatus.textContent = 'Zdjęcie nie zostało zmienione.'; } });
+    avatarSave.addEventListener('click', async () => {
+      if (!current || !avatarBlob || avatarBusy) return;
+      avatarBusy = true; avatarSave.disabled = true; avatarCancel.disabled = true; close.disabled = true; avatarStatus.textContent = 'Zapisuję zdjęcie…';
+      try { const url = await avatar.save(avatarBlob, current.user.id); dropPreview(); setAvatar(url); avatarStatus.textContent = 'Zdjęcie zostało zapisane.'; }
+      catch (error) { avatarStatus.textContent = error.message || 'Nie udało się zapisać zdjęcia. Spróbuj ponownie.'; }
+      finally { avatarBusy = false; avatarSave.disabled = false; avatarCancel.disabled = false; close.disabled = false; }
+    });
+    avatarRemove.addEventListener('click', async () => {
+      if (!current || avatarBusy || !confirm('Usunąć zdjęcie profilu?')) return;
+      avatarBusy = true; avatarRemove.disabled = true; avatarStatus.textContent = 'Usuwam zdjęcie…';
+      try { await avatar.remove(current.user.id); setAvatar(null); avatarStatus.textContent = 'Zdjęcie zostało usunięte.'; }
+      catch (error) { avatarStatus.textContent = error.message || 'Nie udało się usunąć zdjęcia.'; }
+      finally { avatarBusy = false; avatarRemove.disabled = false; }
+    });
+  }
+  let activityCard = null, activitySummary = null, activityList = null, activityStatus = null;
+  if (loadActivity) {
+    activityCard = document.createElement('section'); activityCard.className = 'profileCard profileActivity';
+    const activityTitle = document.createElement('h3'); activityTitle.textContent = 'Historia logowań';
+    activitySummary = document.createElement('dl'); activitySummary.className = 'profileActivityStats';
+    activityList = document.createElement('ol'); activityList.className = 'profileSignIns';
+    activityStatus = document.createElement('p'); activityStatus.setAttribute('role', 'status');
+    activityCard.append(activityTitle, activitySummary, activityList, activityStatus);
+  }
+  function renderActivity({ events = [], count30 = 0, failedPin = 0 }) {
+    activitySummary.replaceChildren(); activityList.replaceChildren();
+    for (const [label, value] of [['Udane logowania (30 dni)', String(count30)], ['Nieudane próby PIN-u od ostatniego odblokowania', String(failedPin)], ['Ostatnie logowanie', events[0] ? new Date(events[0].created_at).toLocaleString('pl-PL') : 'Brak danych']]) {
+      const group = document.createElement('div'); const dt = document.createElement('dt'); dt.textContent = label; const dd = document.createElement('dd'); dd.textContent = value;
+      group.append(dt, dd); activitySummary.append(group);
+    }
+    for (const event of events) {
+      const item = document.createElement('li'); const when = document.createElement('strong'); when.textContent = new Date(event.created_at).toLocaleString('pl-PL');
+      const device = document.createElement('span'); device.textContent = describeDevice(event.user_agent); item.append(when, device); activityList.append(item);
+    }
+    activityStatus.textContent = events.length ? 'Pokazujemy 10 ostatnich logowań. Historia jest przechowywana 180 dni.' : 'Nowe logowania pojawią się tutaj.';
+  }
+  async function loadExtras(userId, id) {
+    if (avatar) { try { const url = await avatar.load(userId); if (id === request && dialog.open) setAvatar(url); } catch { if (id === request) setAvatar(null); } }
+    if (loadActivity) {
+      activityStatus.textContent = 'Wczytuję historię logowań…';
+      try { const data = await loadActivity(userId); if (id === request && dialog.open) renderActivity(data); }
+      catch (error) { if (id === request && dialog.open) { activitySummary.replaceChildren(); activityList.replaceChildren(); activityStatus.textContent = error?.code === 'missing' ? 'Historia logowań pojawi się po aktualizacji bazy danych konta.' : 'Nie udało się pobrać historii logowań. Sprawdź połączenie.'; } }
+    }
+  }
+  card.append(subtitle, status, details, edit, form); content.append(...[avatarCard, card, activityCard, security].filter(Boolean));
   dialog.append(hero, content); document.body.append(dialog);
   let current = null, saving = false;
   function endEdit() { form.hidden = true; details.hidden = false; edit.hidden = false; }
@@ -103,7 +211,7 @@ export function mountAccountUI({ loadProfile, saveProfile, requestReset, changeP
   }
   close.addEventListener('click', leave);
   dialog.addEventListener('cancel', event => { event.preventDefault(); leave(); });
-  dialog.addEventListener('close', () => { ++request; details.replaceChildren(); status.textContent = ''; securityStatus.textContent = '';clearPins();current = null; endEdit(); });
+  dialog.addEventListener('close', () => { ++request; dropPreview(); details.replaceChildren(); status.textContent = ''; securityStatus.textContent = '';clearPins();current = null; endEdit(); });
   edit.addEventListener('click', () => {
     if (!current || saving) return;
     for (const [name,input] of Object.entries(inputs)) input.value = current.profile?.[name] || '';
@@ -142,7 +250,7 @@ export function mountAccountUI({ loadProfile, saveProfile, requestReset, changeP
     try {
       const { user, profile } = await loadProfile();
       if (id !== request || !dialog.open) return;
-      current = {user, profile}; renderProfile(current); edit.disabled = false; resetLink.disabled = false; pinButton.disabled = false;
+      current = {user, profile}; renderProfile(current); edit.disabled = false; resetLink.disabled = false; pinButton.disabled = false; loadExtras(user.id, id);
       status.textContent = profile ? '' : 'Brak zapisanych dodatkowych danych profilu.';
     } catch { if (id === request && dialog.open) status.textContent = 'Nie udało się pobrać danych. Sprawdź połączenie i spróbuj ponownie.'; }
   }

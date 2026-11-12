@@ -5595,3 +5595,22 @@ html.mobileOwnerMode .accountWorkspace .profileDetails>div{display:flex;align-it
 html.mobileOwnerMode .accountWorkspace .profileDetails>div:last-child{border-bottom:0}
 html.mobileOwnerMode .accountWorkspace .profileDetails dt{margin:0;flex:none;color:#a5a8b2;font-size:13px}
 html.mobileOwnerMode .accountWorkspace .profileDetails dd{min-width:0;font-size:15px;font-weight:600;text-align:right}
+/* Zdjęcie profilu: w nagłówku (awatar) i w profilu (duże zdjęcie zamiast ikony). */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsPhoneAvatar.hasPhoto{background-size:cover!important;background-position:center!important;border-color:#ef202d}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsPhoneAvatar.hasPhoto svg{display:none}
+.accountWorkspace .profileHero .profileAvatar{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #ef202d;box-shadow:0 0 22px -6px rgba(239,32,45,.8)}
+.accountWorkspace .profileHero.hasAvatar::before{display:none!important}
+html.mobileOwnerMode .accountWorkspace .profileHero .profileAvatar{grid-row:1}
+.accountWorkspace .profileAvatarCard{display:grid;gap:10px;align-content:start}
+.accountWorkspace .profileAvatarPreview{width:160px;height:160px;border-radius:50%;object-fit:cover;border:2px solid #34363d;justify-self:center}
+.accountWorkspace .profileAvatarPick{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border:1px solid #ef202d;border-radius:12px;background:linear-gradient(180deg,#f0263b,#b80d1f);color:#fff;font-weight:700;cursor:pointer;position:relative;overflow:hidden}
+.accountWorkspace .profileAvatarInput{position:absolute;inset:0;opacity:0;cursor:pointer}
+.accountWorkspace .profileActivityStats{display:grid;gap:0;margin:0 0 12px;border:1px solid #34363d;border-radius:14px;background:#17191f;overflow:hidden}
+.accountWorkspace .profileActivityStats>div{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid #2a2c33}
+.accountWorkspace .profileActivityStats>div:last-child{border-bottom:0}
+.accountWorkspace .profileActivityStats dt{margin:0;color:#a5a8b2;font-size:13px}
+.accountWorkspace .profileActivityStats dd{margin:0;font-weight:700;text-align:right}
+.accountWorkspace .profileSignIns{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.accountWorkspace .profileSignIns li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;padding:10px 12px;border:1px solid #2a2c33;border-radius:10px;background:#121317}
+.accountWorkspace .profileSignIns strong{font-size:14px}
+.accountWorkspace .profileSignIns span{color:#a5a8b2;font-size:13px}

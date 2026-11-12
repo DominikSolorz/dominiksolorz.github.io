@@ -29,7 +29,7 @@ import { serve as serveRecordings, createClient as createRecClient } from "./rec
 import { mountDvr } from "./dvr-ui.js?v=109";
 import { accountClient } from "./auth.js?v=17";
 import { currentAccountUser, requestPasswordReset, changeCurrentPin } from "./auth.js?v=17";
-import { mountAccountUI } from "./account-ui.mjs?v=3";
+import { mountAccountUI } from "./account-ui.mjs?v=4";
 import { audioConstraints, applyAudioProfile, audioStatus } from './audio-profile.mjs?v=2';
 import { createCleanAudioStream } from './audio-cleaner.mjs?v=3';
 import { preferCameraMicrophone } from './audio-source.mjs?v=1';
@@ -2953,7 +2953,55 @@ if (RECEIVER_ONLY) {
     try{setLocationStore(createLocationStore({client:accountClient,ownerId:panelAccount.id}));}
     catch{/* Mapa działa bez historii tras. */}
   }
+  // Zdjęcie profilu: prywatny schowek „avatars” (<id konta>/avatar), adres podpisany na godzinę.
+  // Historia logowań: tabela hs_sign_in_events zapisywana przez bazę (migracja 20261112090000).
+  const AVATAR_BUCKET = "avatars";
+  const missingSetup = error => /bucket not found|does not exist|PGRST205|42P01|42703|schema cache/i.test(`${error?.code || ""} ${error?.message || ""}`);
+  const sameAccount = async expectedUserId => {
+    const user = await currentAccountUser();
+    if (!user || user.id !== expectedUserId) throw new Error("Sesja konta zmieniła się. Otwórz profil ponownie.");
+    return user;
+  };
+  const loadAvatarUrl = async userId => {
+    const { data, error } = await accountClient.from("user_profiles").select("avatar_path").eq("user_id", userId).maybeSingle();
+    if (error || !data?.avatar_path) return null;
+    const signed = await accountClient.storage.from(AVATAR_BUCKET).createSignedUrl(data.avatar_path, 3600);
+    return signed.error ? null : signed.data?.signedUrl || null;
+  };
+  // Zdjęcie w nagłówku (awatar obok dzwonka): wczytywane raz po zalogowaniu.
+  currentAccountUser().then(user => user ? loadAvatarUrl(user.id) : null).then(url => {
+    if (url) document.dispatchEvent(new CustomEvent("hs-profile-avatar", { detail: { url } }));
+  }).catch(() => {});
   mountAccountUI({
+    avatar: {
+      load: async userId => { await sameAccount(userId); return loadAvatarUrl(userId); },
+      save: async (blob, userId) => {
+        await sameAccount(userId);
+        const path = `${userId}/avatar`;
+        const upload = await accountClient.storage.from(AVATAR_BUCKET).upload(path, blob, { upsert: true, contentType: blob.type, cacheControl: "60" });
+        if (upload.error) throw new Error(missingSetup(upload.error) ? "Zapis zdjęć pojawi się po aktualizacji bazy danych konta." : "Nie udało się wysłać zdjęcia. Sprawdź połączenie i spróbuj ponownie.");
+        const { error } = await accountClient.from("user_profiles").update({ avatar_path: path, updated_at: new Date().toISOString() }).eq("user_id", userId);
+        if (error) throw new Error(missingSetup(error) ? "Zapis zdjęć pojawi się po aktualizacji bazy danych konta." : "Zdjęcie wysłano, ale nie potwierdzono zapisu w profilu.");
+        return loadAvatarUrl(userId);
+      },
+      remove: async userId => {
+        await sameAccount(userId);
+        const { error } = await accountClient.from("user_profiles").update({ avatar_path: null, updated_at: new Date().toISOString() }).eq("user_id", userId);
+        if (error) throw new Error("Nie potwierdzono usunięcia zdjęcia.");
+        await accountClient.storage.from(AVATAR_BUCKET).remove([`${userId}/avatar`]);
+      }
+    },
+    loadActivity: async userId => {
+      await sameAccount(userId);
+      const since = new Date(Date.now() - 30 * 864e5).toISOString();
+      const [list, count, security] = await Promise.all([
+        accountClient.from("hs_sign_in_events").select("created_at,user_agent").eq("user_id", userId).order("created_at", { ascending: false }).limit(10),
+        accountClient.from("hs_sign_in_events").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", since),
+        accountClient.from("user_security").select("failed_attempts").eq("user_id", userId).maybeSingle()
+      ]);
+      if (list.error || count.error) { const error = list.error || count.error; throw missingSetup(error) ? Object.assign(new Error("missing"), { code: "missing" }) : error; }
+      return { events: list.data || [], count30: count.count || 0, failedPin: Number(security.data?.failed_attempts) || 0 };
+    },
     requestReset: async expectedUserId => {
       const user = await currentAccountUser();
       if (!user || user.id !== expectedUserId) throw new Error("Sesja konta zmieniła się. Otwórz profil ponownie.");
