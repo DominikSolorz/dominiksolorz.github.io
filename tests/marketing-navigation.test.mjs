@@ -80,14 +80,14 @@ test('all public pages use one grouped navigation, deep footer and versioned ass
  }
 });
 
-test('homepage header shows the eight main links, account buttons and a mobile menu',async()=>{
+test('homepage header shows the nine main links, account buttons and a mobile menu',async()=>{
  const home=await read('design/marketing/home.html');
  const header=home.match(/<header class="mktHeader">([\s\S]*?)<\/header>/)?.[1];
  assert.ok(header);
  const top=header.match(/<nav class="mktTopNav" aria-label="Nawigacja strony">([\s\S]*?)<\/nav>/)?.[1];
  assert.ok(top);
- assert.equal((top.match(/<a /g)||[]).length,8);
- for(const label of ['Start','Możliwości','Jak działa','Prezentacja','Pobierz','Poradniki','Pomoc','Kontakt'])assert.ok(top.includes(label),label);
+ assert.equal((top.match(/<a /g)||[]).length,9);
+ for(const label of ['Start','Możliwości','Jak działa','Prezentacja','Oferta','Pobierz','Poradniki','Pomoc','Kontakt'])assert.ok(top.includes(label),label);
  assert.ok(header.includes('href="panel.html?auth=login"')&&header.includes('href="panel.html?auth=register"'));
  assert.ok(header.includes('aria-controls="mktMobileNavigation"'));
  assert.ok(header.includes('<details class="mktMobileMenu">'));
@@ -95,7 +95,8 @@ test('homepage header shows the eight main links, account buttons and a mobile m
  assert.ok(header.includes('mktMenuTextClosed'));
  const footer=home.match(/<footer class="mktFooter">([\s\S]*?)<\/footer>/)?.[1];
  assert.ok(footer);
- assert.equal((footer.match(/<nav aria-label=/g)||[]).length,3);
+ assert.equal((footer.match(/<nav aria-label=/g)||[]).length,4);
+ assert.ok(footer.includes('href="dla-firm.html"')&&footer.includes('href="plany.html"'));
  assert.ok(footer.includes('href="rodo.html">RODO'));
  assert.ok(footer.includes('Wydanie rozwojowe.'));
  for(const page of ['jak-dziala','mozliwosci','prezentacja','wymagania','stan-projektu'])

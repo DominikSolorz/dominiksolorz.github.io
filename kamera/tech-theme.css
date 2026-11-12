@@ -376,6 +376,15 @@ body.marketingPage,body.legalPage{background-color:var(--t-bg)!important}
 :is(#publicHome.mktSite,.marketingPage) .mktTopNav a[aria-current="page"]{background:linear-gradient(180deg,#f0263b,#c80f22)!important;color:#fff!important;box-shadow:0 6px 20px -6px var(--hs-glow)!important}
 :is(#publicHome.mktSite,.marketingPage) .mktAccountLinks{display:flex;gap:8px;align-items:center}
 :is(#publicHome.mktSite,.marketingPage) .mktAccountLinks a{display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:0 16px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
+/* 1180–1439 px: dziewięć linków i konto mieszczą się w jednym rzędzie — ciaśniejsze linki, „Logowanie” jako ikona (nazwa zostaje dla czytników ekranu). */
+@media(min-width:1180px) and (max-width:1439px){
+ :is(#publicHome.mktSite,.marketingPage) .mktHeader{gap:12px!important;padding-inline:20px!important}
+ :is(#publicHome.mktSite,.marketingPage) .mktTopNav a{padding:8px 8px!important;font-size:13.5px!important}
+ :is(#publicHome.mktSite,.marketingPage) .mktAccountLinks a{padding:0 13px}
+ :is(#publicHome.mktSite,.marketingPage) .mktLoginLink{width:42px;padding:0!important;justify-content:center}
+ :is(#publicHome.mktSite,.marketingPage) .mktLoginLink span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+}
+@media(min-width:1440px){:is(#publicHome.mktSite,.marketingPage) .mktTopNav a{padding:9px 10px!important}}
 :is(#publicHome.mktSite,.marketingPage) .mktLoginLink{color:#f5f4f4;border:1px solid #4a4444;background:rgba(18,17,17,.7)}
 :is(#publicHome.mktSite,.marketingPage) .mktLoginLink .hsIco{width:18px;height:18px}
 :is(#publicHome.mktSite,.marketingPage) .mktRegister{color:#fff;background:linear-gradient(180deg,#f0263b,#c80f22);box-shadow:0 8px 22px -8px var(--hs-glow)}
@@ -450,7 +459,7 @@ body.marketingPage,body.legalPage{background-color:var(--t-bg)!important}
 
 /* Stopka z kontaktem i dolny pasek informacji */
 :is(#publicHome.mktSite,.marketingPage) .mktFooter{display:block!important;padding:0!important;margin-top:20px;background:linear-gradient(180deg,rgba(14,13,13,.9),#080808)}
-:is(#publicHome.mktSite,.marketingPage) .mktFooterInner{display:grid;grid-template-columns:minmax(220px,1.4fr) repeat(3,minmax(0,1fr)) minmax(240px,1.4fr);gap:24px;padding-block:34px 22px}
+:is(#publicHome.mktSite,.marketingPage) .mktFooterInner{display:grid;grid-template-columns:minmax(220px,1.4fr) repeat(4,minmax(0,1fr)) minmax(240px,1.4fr);gap:24px;padding-block:34px 22px}
 :is(#publicHome.mktSite,.marketingPage) .mktFooter nav,:is(#publicHome.mktSite,.marketingPage) .mktFooterContact{display:grid;align-content:start;gap:8px}
 :is(#publicHome.mktSite,.marketingPage) .mktFooter nav a{min-height:0!important;padding:2px 0!important;font-size:14px}
 :is(#publicHome.mktSite,.marketingPage) .mktFooterContact b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#fff}
@@ -481,8 +490,8 @@ body.marketingPage,body.legalPage{background-color:var(--t-bg)!important}
  :is(#publicHome.mktSite,.marketingPage) .mktPageTitle{font-size:30px!important;line-height:1.12}
  :is(#publicHome.mktSite,.marketingPage) .mktPageLead{font-size:14.5px;line-height:1.5}
  :is(#publicHome.mktSite,.marketingPage) .mktSectionHead{margin-bottom:16px!important;gap:10px!important}
- /* Telefon: trzy krótkie kolumny linków zamiast długiej listy — stopka mieści się na jednym ekranie. */
- :is(#publicHome.mktSite,.marketingPage) .mktFooterInner{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 12px;padding-block:24px 14px}
+ /* Telefon: dwie krótkie kolumny linków (2×2) zamiast długiej listy — stopka mieści się na jednym ekranie. */
+ :is(#publicHome.mktSite,.marketingPage) .mktFooterInner{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px;padding-block:24px 14px}
  :is(#publicHome.mktSite,.marketingPage) .mktFooterBrand,:is(#publicHome.mktSite,.marketingPage) .mktFooterContact{grid-column:1/-1}
  :is(#publicHome.mktSite,.marketingPage) .mktFooterBrand p{margin-top:8px;font-size:13px}
  :is(#publicHome.mktSite,.marketingPage) .mktFooter nav{gap:2px}
@@ -495,7 +504,7 @@ body.marketingPage,body.legalPage{background-color:var(--t-bg)!important}
 @media(min-width:761px) and (max-width:1100px){
  #publicHome.mktSite .hsWhyGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
  #publicHome.mktSite .hsAppBand{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
- :is(#publicHome.mktSite,.marketingPage) .mktFooterInner{grid-template-columns:repeat(3,minmax(0,1fr))}
+ :is(#publicHome.mktSite,.marketingPage) .mktFooterInner{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 
 /* Prezentacja aplikacji: prawdziwe ekrany panelu i kroki uruchomienia */

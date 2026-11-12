@@ -2,7 +2,7 @@
 // „Monitoring domu / Mój dom”. Wyłącznie prawdziwe dane: zdarzenia z kamery,
 // stan transmisji i zapisu, istniejące przyciski aplikacji. Bez atrap.
 import {systemStore} from './core/store.mjs';
-import {validThumbnail} from './workspace-panels.mjs?v=4';
+import {validThumbnail} from './workspace-panels.mjs?v=5';
 
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
 const svg = path => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;

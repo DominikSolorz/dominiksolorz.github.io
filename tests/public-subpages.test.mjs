@@ -26,7 +26,7 @@ test('header and footer navigate to pages instead of old homepage sections',asyn
   const page=await read('kamera/'+file);
   const footer=page.match(/<footer class="mktFooter">[\s\S]*?<\/footer>/)?.[0];
   assert.ok(footer,file+' must include the shared footer');
-  assert.equal((footer.match(/<nav aria-label=/g)||[]).length,3,file+' must include all three footer navigation groups');
+  assert.equal((footer.match(/<nav aria-label=/g)||[]).length,4,file+' must include all four footer navigation groups');
   assert.ok(footer.includes('aria-label="Kontakt"'),file+' footer shows contact details');
   for(const label of ['Nawigacja','Pomoc','Dokumenty'])
    assert.ok(footer.includes('aria-label="'+label+'"'),file+' missing footer group '+label);
