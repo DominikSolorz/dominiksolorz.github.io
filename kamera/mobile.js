@@ -46,7 +46,7 @@ if (isMobileOwnerApp) {
   mobileHeader.innerHTML = `
     <button id="mobileMenuBtn" type="button" aria-label="Otwórz menu" aria-controls="mobileMenuPage" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <div class="mobileBrandBlock"><img class="mobileBrandLogo" src="assets/hs-logo.webp" width="48" height="48" alt="HOME SECURITY"><div><span class="mobileBrandName">HOME <b>SECURITY</b></span><small class="mobileBrandSub">System Monitoringu Domowego</small><h1 id="mobilePageTitle">Pulpit</h1><p class="mobileOnlineLine"><i></i><span id="mobileOnline">Sprawdzam połączenie…</span></p></div></div>
-    <button id="hsPhoneBell" class="hsPhoneBell" type="button" aria-label="Zdarzenia">${ICONS.bell}<span id="hsPhoneBellBadge" class="hsPhoneBadge" hidden>0</span></button>`;
+    <div class="hsHeadActions"><button id="hsPhoneBell" class="hsPhoneBell" type="button" aria-label="Zdarzenia">${ICONS.bell}<span id="hsPhoneBellBadge" class="hsPhoneBadge" hidden>0</span></button><button id="hsPhoneAvatar" class="hsPhoneAvatar" type="button" data-open-mobile-profile aria-label="Mój profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="9" r="3.6"/><path d="M5.5 19.5c1.3-3.3 3.8-4.8 6.5-4.8s5.2 1.5 6.5 4.8"/></svg></button></div>`;
   app?.insertBefore(mobileHeader, app.firstChild);
   const makePage = (id, title, intro, content) => {
     const page = document.createElement('section');
@@ -61,6 +61,8 @@ if (isMobileOwnerApp) {
       <button type="button" data-open-mobile-profile>Mój profil <span>›</span></button>
       <button type="button" data-open-mobile-view="camera">Kamery <span>›</span></button>
       <button type="button" data-open-mobile-view="recordings">Nagrania <span>›</span></button>
+      <button type="button" data-open-mobile-view="alerts">Zdarzenia <span>›</span></button>
+      <button type="button" data-open-mobile-map>Mapa <span>›</span></button>
       <button type="button" data-open-mobile-view="cloud">Chmura i miejsce zapisu <span>›</span></button>
       <button type="button" data-open-mobile-view="settings">Ustawienia <span>›</span></button>
       <button type="button" data-open-mobile-view="appearance">Wygląd i urządzenie <span>›</span></button>
@@ -219,14 +221,12 @@ if (isMobileOwnerApp) {
   const isNativeShell = /HomeSecurityNative/i.test(navigator.userAgent);
   const tabBar = document.createElement("nav");
   tabBar.className = "hsTabBar"; tabBar.setAttribute("aria-label", "Główne sekcje");
-  const pinIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
   const gridIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>';
-  tabBar.innerHTML = [["home","Pulpit",ICONS.home],["camera","Kamery",ICONS.record],["recordings","Nagrania",ICONS.play],["map","Mapa",pinIcon],["menu","Więcej",gridIcon]]
+  tabBar.innerHTML = [["home","Pulpit",ICONS.home],["camera","Kamery",ICONS.record],["recordings","Nagrania",ICONS.play],["alerts","Zdarzenia",ICONS.bell],["menu","Więcej",gridIcon]]
     .map(([v,l,i]) => `<button type="button" data-hs-tab="${v}">${i}<span>${l}</span></button>`).join("");
   if (!isNativeShell) { app?.append(tabBar); document.body.classList.add("hsHasTabBar"); }
   tabBar.addEventListener("click", event => {
     const b = event.target.closest("[data-hs-tab]"); if (!b) return;
-    if (b.dataset.hsTab === "map") { setView("home"); setTimeout(() => mapCard.querySelector(".mobileMapOpen")?.click(), 0); return; }
     setView(b.dataset.hsTab);
   });
   // Tryby pracy: te same przyciski co w ustawieniach komputera (#modeCard).
@@ -362,6 +362,10 @@ if (isMobileOwnerApp) {
   app.addEventListener('click',event=>{
     const button=event.target.closest('[data-open-mobile-view]');
     if(button)setView(button.dataset.openMobileView);
+  });
+  // Mapa z menu „Więcej”: ten sam pełnoekranowy widok z przyciskiem „‹ Wstecz”.
+  app.addEventListener("click", event => {
+    if (event.target.closest('[data-open-mobile-map]')) mapCard.querySelector(".mobileMapOpen")?.click();
   });
   app.addEventListener("click", event => {
     if (event.target.closest('[data-open-mobile-profile]')) {
