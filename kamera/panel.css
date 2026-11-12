@@ -5224,7 +5224,7 @@ html.mobileOwnerMode body #app :is(.hsPhoneCams,.hsPhoneEvents){padding:16px;bor
 html.mobileOwnerMode body #app .hsCardHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
 html.mobileOwnerMode body #app .hsCardHead h2{margin:0;font-size:17px;color:var(--hl3,#fff)}
 html.mobileOwnerMode body #app .hsCardHead h2 span{color:var(--hp-muted)}
-html.mobileOwnerMode body #app .hsLink{border:0;background:none;color:var(--hl740,#ec444f);font-weight:600;font-size:13.5px;padding:4px;min-height:0}
+html.mobileOwnerMode body #app .hsLink{border:0;background:none;color:var(--hl740,#ec444f);font-weight:600;font-size:13.5px;padding:8px 6px;min-height:40px;display:inline-flex;align-items:center}
 html.mobileOwnerMode body #app .hsCamThumb{position:absolute;inset:0;display:grid;place-items:center;color:var(--hl144,#e81725)}
 html.mobileOwnerMode body #app .hsCamThumb svg{width:34px;height:34px}
 html.mobileOwnerMode body #app .hsDot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:#7b7474}
@@ -5467,9 +5467,11 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverv
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneModes button.on{border-color:rgba(255,61,81,.8)!important;background:linear-gradient(180deg,rgba(255,31,53,.42),rgba(150,8,22,.45))!important;box-shadow:0 0 22px -6px var(--mp-glow)!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneEvents{padding:14px!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverviewStatus{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar{position:fixed!important;z-index:40!important;left:0!important;right:0!important;bottom:0!important;display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:4px!important;padding:8px 8px max(8px,env(safe-area-inset-bottom))!important;background:rgba(10,10,10,.97)!important;border-top:1px solid var(--mp-line)!important;-webkit-backdrop-filter:blur(14px)!important;backdrop-filter:blur(14px)!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar button{display:grid!important;justify-items:center!important;gap:4px!important;min-height:62px!important;padding:8px 2px!important;border:0!important;border-radius:16px!important;background:transparent!important;color:#d5d1d1!important;font-size:13px!important;box-shadow:none!important}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar button svg{width:28px!important;height:28px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar{position:fixed!important;z-index:40!important;left:0!important;right:0!important;bottom:0!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:2px!important;padding:5px 6px max(5px,env(safe-area-inset-bottom))!important;background:rgba(10,10,10,.97)!important;border-top:1px solid var(--mp-line)!important;-webkit-backdrop-filter:blur(14px)!important;backdrop-filter:blur(14px)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar button{display:grid!important;justify-items:center!important;align-content:center!important;gap:3px!important;min-width:0!important;min-height:52px!important;padding:5px 2px!important;border:0!important;border-radius:14px!important;background:transparent!important;color:#d5d1d1!important;font-size:11.5px!important;line-height:1.1!important;box-shadow:none!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar button svg{width:24px!important;height:24px!important}
+/* Tablet i większe ekrany: pasek nie rozciąga się na całą szerokość — zwarta, wyśrodkowana „pigułka” dopasowana do pięciu przycisków. */
+@media (min-width:600px){html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar{left:50%!important;right:auto!important;bottom:max(12px,env(safe-area-inset-bottom))!important;width:min(520px,calc(100% - 32px))!important;transform:translateX(-50%)!important;padding:6px!important;border:1px solid var(--mp-line)!important;border-radius:22px!important;box-shadow:0 12px 32px -12px rgba(0,0,0,.8)!important}}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsTabBar button.active{background:linear-gradient(180deg,#ff2a40,#c80f22)!important;color:#fff!important;box-shadow:0 0 20px -4px var(--mp-glow)!important}
 @media(max-width:400px){
  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .mobileOverviewActions.hsTiles{gap:6px!important}
