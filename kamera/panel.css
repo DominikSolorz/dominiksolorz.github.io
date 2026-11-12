@@ -5395,7 +5395,7 @@ html:not(.desktopMode) :is(.mobileTile,.cameraCard,.eventCard,.settingsCard){
    prawdziwe (mobile.js → paintPhone); tu wyłącznie wygląd.
    ===================================================================== */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app{--mp-red:#ff2947;--mp-red2:#e8172d;--mp-card:#141313;--mp-card2:#1b1a1a;--mp-line:#2e2a2a;--mp-text:#f5f4f4;--mp-muted:#bdb8b8;--mp-glow:rgba(255,24,48,.45)}
-html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{display:grid!important;grid-template-columns:46px minmax(0,1fr) 46px!important;align-items:center!important;gap:6px!important;padding:10px 12px!important;background:#0b0b0b!important;border-bottom:1px solid var(--mp-line)!important;box-shadow:0 10px 30px -20px var(--mp-glow)!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{display:grid!important;grid-template-columns:46px minmax(0,1fr) auto!important;align-items:center!important;gap:6px!important;padding:10px 12px!important;background:#0b0b0b!important;border-bottom:1px solid var(--mp-line)!important;box-shadow:0 10px 30px -20px var(--mp-glow)!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #mobileMenuBtn{order:0!important;display:grid!important;place-items:center!important;width:46px!important;height:46px!important;padding:0!important;border:0!important;background:transparent!important;color:var(--mp-text)!important;box-shadow:none!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader #mobileMenuBtn svg{width:30px!important;height:30px!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock{display:flex!important;align-items:center!important;justify-content:center!important;gap:10px!important;min-width:0!important}
@@ -5491,10 +5491,10 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverv
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneMapCard{height:0!important;min-height:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app #mobileOverview .hsPhoneMapCard>.mobileMapOpen{display:none!important}
 @media(max-width:370px){
- html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{grid-template-columns:40px minmax(0,1fr) 40px!important;gap:6px!important;padding:8px 10px!important}
- html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock{gap:7px!important}
- html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock .mobileBrandLogo{width:34px!important;height:34px!important}
- html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandName{font-size:15px!important}
+ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{grid-template-columns:40px minmax(0,1fr) auto!important;padding:8px 10px!important}
+
+
+
  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandSub{display:none!important}
  html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader :is(#mobileMenuBtn,.hsPhoneBell){width:40px!important;height:40px!important}
 }
@@ -5537,3 +5537,27 @@ html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsStoragePi
 /* Podstrony ze strzałką „wstecz”: tytuł jest w nagłówku, więc duży nagłówek na stronie jest tylko dla czytników ekranu. */
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body:not([data-mobile-view="menu"]) #app .mobileFunctionHeading h2{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important}
 html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .hsStoragePick strong{overflow-wrap:normal;word-break:normal;hyphens:none}
+/* Prawy róg nagłówka: dzwonek zdarzeń i okrągły awatar profilu (specyfikacja APK). */
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsHeadActions{display:flex;align-items:center;gap:2px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsPhoneAvatar{display:grid;place-items:center;width:38px;height:38px;margin:0 2px;padding:0;border:1.5px solid #5a3a3d;border-radius:50%;background:radial-gradient(circle at 50% 35%,#2a1d1f,#141213);color:#f4f5f7;cursor:pointer}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsPhoneAvatar svg{width:24px;height:24px}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsPhoneAvatar:focus-visible{outline:2px solid #ef202d;outline-offset:2px}
+@media(max-width:370px){html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsPhoneAvatar{}}
+/* Telefon: z dzwonkiem i awatarem po prawej logo i nazwa są nieco mniejsze, żeby nic na siebie nie nachodziło. */
+@media(max-width:430px){
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{gap:4px!important;padding-inline:8px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock{justify-content:flex-start!important;gap:7px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock .mobileBrandLogo{width:38px!important;height:38px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandName{font-size:16px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandSub{font-size:10.5px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsPhoneBell{width:42px!important;height:42px!important}
+}
+@media(max-width:370px){
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock .mobileBrandLogo{width:30px!important;height:30px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandBlock{gap:5px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandName{font-size:12.5px!important;letter-spacing:0!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsPhoneBell{width:36px!important;height:36px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader{padding-inline:6px!important;gap:3px!important}
+html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileAppHeader .hsPhoneAvatar{width:32px;height:32px}
+}
+@media(max-width:380px){html.mobileOwnerMode:not(.policeCommand):not(.usMilitary) body #app .mobileBrandSub{display:none!important}}
